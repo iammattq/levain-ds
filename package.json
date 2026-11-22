@@ -4,10 +4,11 @@
   "private": true,
   "type": "module",
   "packageManager": "pnpm@10.27.0",
-  "description": "levain DS: design tokens and React components. TypeScript source, no build; consumers transpile it.",
+  "description": "levain DS: design tokens and React components. TypeScript source; consumers transpile it (smoke/ builds it as one would).",
   "scripts": {
-    "test": "pnpm -r test",
-    "check:types": "tsc --noEmit -p packages/tokens && tsc --noEmit -p packages/ui-react"
+    "test": "pnpm --filter './packages/*' test",
+    "check:types": "tsc --noEmit -p packages/tokens && tsc --noEmit -p packages/ui-react",
+    "build": "pnpm --filter @levain/smoke build"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
