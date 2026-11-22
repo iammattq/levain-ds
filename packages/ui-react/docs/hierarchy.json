@@ -805,5 +805,33 @@
     "Adherence: remove styles that do not follow these standards. An arbitrary value that survives review becomes precedent.",
     "Consistency beats local optimisation. A component that is slightly wrong but consistent is easier to fix than one that is locally perfect and unique.",
     "Communication: say so before applying a change that will visibly alter existing layout, explaining the deviation and the proposed correction. Deviating silently and deviating by mistake look identical afterwards."
-  ]
+  ],
+  "motionTokens": {
+    "source": "@levain/tokens src/motion.ts, mirrored as CSS custom properties in shared.css",
+    "durations": {
+      "instant": "0ms",
+      "quick": "150ms: feedback",
+      "base": "220ms: most UI",
+      "slow": "300ms: the largest moves, and the limit"
+    },
+    "easings": {
+      "--ease-out": "enter, leave, default",
+      "--ease-in-out": "moving from one place to another",
+      "--ease-standard": "colour and opacity on hover"
+    },
+    "springs": {
+      "layout": "duration 0.28, no bounce",
+      "lift": "duration 0.18, no bounce",
+      "settle": "duration 0.3, bounce 0.12 (the only bounce)",
+      "follow": "stiffness 900, damping 60, mass 0.6",
+      "tilt": "stiffness 380, damping 32, mass 0.8"
+    },
+    "drag": {
+      "liftScale": 1.03,
+      "maxTilt": "5°",
+      "tiltAtSpeed": "1600 px/s",
+      "mouseSlop": "4 px",
+      "touchHold": "180 ms"
+    }
+  }
 }
