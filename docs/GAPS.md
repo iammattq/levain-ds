@@ -14,6 +14,9 @@ The first consumer outside the portfolio was a web board for running a team of c
 - **Board column and layout primitives.** A column with a header, count and scrolling body; stack and cluster layouts. Composed from Card and Tailwind each time.
 - **Timeline is career-specific.** Its props are `company` and `roles`, and it hard-codes a "History" heading, so a release history couldn't reuse it. Wants a general timeline (date, title, body) with the career version built on top.
 
+- **Card stack.** Loose notes shown as a horizontal row whose trailing cards pile into a stack, peeled off right to left as you scroll (desktop), and as a pile that fans open into the full list or steps one card at a time (phone). Prototyped in the consumer.
+- **Actions slot on StatusCard.** A decision card with its answer buttons on the face (the recommended one filled); today the buttons are passed as children.
+
 ### Phone patterns
 - **Bottom sheet.** A panel that rises from the bottom with a drag handle and snap heights.
 - **Swipeable column strip.** One column a screen wide, swiped with snap, with pills to jump; while a card is held, resting at either edge slides the strip one column on a spring. Built in the consumer on top of `SortableGroup`'s `onDragMove`.
