@@ -14,7 +14,7 @@
  * Wrap the lists in one <SortableGroup onMove>. Each <SortableList id> renders its items through `renderItem`.
  */
 import { animate, motion, useMotionValue, useReducedMotion, useSpring, useTransform, useVelocity } from 'framer-motion';
-import { drag as DRAG, motion as motionFor, recipe, tiltSpring } from '@levain/tokens';
+import { drag as DRAG, duration, motion as motionFor, recipe, tiltSpring } from '@levain/tokens';
 import {
   createContext,
   useCallback,
@@ -272,7 +272,7 @@ export function SortableList<T>({ id, label, items, getKey, renderItem, empty, c
   const d = g.drag;
   const shift = motionFor('shift', g.reduce);
   // what the list shows: its items, minus the one lifted out of it, plus a gap where it would land
-  type Row = { kind: 'item'; item: T; key: string } | { kind: 'carried'; key: string } | { kind: 'gap' };
+  type Row = { kind: 'item'; item: T; key: string } | { kind: 'carried'; key: string } | { kind: 'gap' } | { kind: 'leaving'; item: T; key: string };
   const rows: Row[] = items.filter(it => !(d?.mode === 'pointer' && getKey(it) === d.key)).map(it => ({ kind: 'item', item: it, key: getKey(it) }));
   if (d?.mode === 'keyboard') {
     // the carried item is drawn in the list it is over, wherever it came from
@@ -287,10 +287,35 @@ export function SortableList<T>({ id, label, items, getKey, renderItem, empty, c
   }, [d?.mode, d?.to, d?.key, id]);
   const carrying = d?.mode === 'keyboard';
 
+  // lists-close-gaps: an item that was on screen and leaves the list (answered, started, dropped, moved by someone else)
+  // stays a moment, collapsing, while its neighbours close the gap. A dragged or carried item is already off screen in
+  // its source list, so it never counts as leaving.
+  const shown = useRef(new Map<string, { item: T; index: number }>());
+  const [leaving, setLeaving] = useState<{ key: string; item: T; index: number }[]>([]);
+  useLayoutEffect(() => {
+    const present = new Set(keys);
+    const gone = [...shown.current].filter(([k]) => !present.has(k)).map(([key, v]) => ({ key, ...v }));
+    const next = new Map<string, { item: T; index: number }>();
+    rows.forEach((r, index) => { if (r.kind === 'item') next.set(r.key, { item: r.item, index }); });
+    shown.current = next;
+    if (!gone.length) return;
+    setLeaving(l => [...l.filter(x => !present.has(x.key)), ...gone.filter(x => !l.some(y => y.key === x.key))]);
+    // a timer, not the animation's end, decides when it's gone (motion-never-blocks); not cleared on the next render,
+    // which comes at once
+    setTimeout(() => setLeaving(l => l.filter(x => !gone.some(y => y.key === x.key))), g.reduce ? 0 : duration.shift);
+  });
+  for (const l of leaving) if (!keys.includes(l.key)) rows.splice(Math.min(l.index, rows.length), 0, { kind: 'leaving', item: l.item, key: l.key });
+
   return (
     <div ref={ref} className={`flex flex-col gap-2xs ${className}`} role="list" aria-label={label}>
       {rows.map(r =>
-        r.kind === 'gap' ? (
+        r.kind === 'leaving' ? (
+          <motion.div key={'leaving-' + r.key} aria-hidden layout transition={shift}
+            initial={{ opacity: 1, height: 'auto' }} animate={{ opacity: 0, height: 0, transition: { height: shift, opacity: motionFor('contentOut', g.reduce) } }}
+            style={{ overflow: 'hidden', pointerEvents: 'none' }}>
+            {renderItem(r.item, { dragging: false, lifted: false })}
+          </motion.div>
+        ) : r.kind === 'gap' ? (
           <motion.div key="__gap" data-sortable-placeholder layout transition={shift} style={{ height: d!.height }}
             className="rounded-[var(--radius-lg)] border border-dashed border-[var(--color-border-subtle)]" />
         ) : r.kind === 'carried' ? (
