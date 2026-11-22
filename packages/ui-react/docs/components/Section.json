@@ -1,0 +1,66 @@
+{
+  "name": "Section",
+  "description": "A styled container for grouping related content, offering flexible layout options. Unlike Card, it doesn't have link functionality or hover effects, making it ideal for structuring static content areas.",
+  "category": "components",
+  "props": [
+    {
+      "name": "children",
+      "type": "ReactNode",
+      "optional": false,
+      "description": "Section content"
+    },
+    {
+      "name": "className",
+      "type": "string",
+      "optional": true,
+      "defaultValue": "''",
+      "description": "Additional CSS classes"
+    },
+    {
+      "name": "padding",
+      "type": "'none' | 'sm' | 'md' | 'lg'",
+      "optional": true,
+      "defaultValue": "'md'",
+      "description": "Inner padding size. Also determines the gap between columns in grid layouts ('sm'=gap-4, 'md'=gap-8, 'lg'=gap-12)."
+    },
+    {
+      "name": "layout",
+      "type": "'single-column' | 'two-column-equal' | 'two-column-sidebar-right'",
+      "optional": true,
+      "defaultValue": "'single-column'",
+      "description": "Layout structure for the content area ('single-column', 'two-column-equal', 'two-column-sidebar-right')"
+    },
+    {
+      "name": "roundedTop",
+      "type": "boolean",
+      "optional": true,
+      "defaultValue": "true",
+      "description": "Whether the top corners should be rounded."
+    }
+  ],
+  "usage": [
+    "Import Section and CardContent from '@/lib/designsystem'",
+    "Use Section as a container for grouping related content",
+    "For single-column layouts, simply wrap content in Section with desired padding",
+    "For two equal columns, set layout='two-column-equal' - columns split 50/50 on medium screens and larger",
+    "For sidebar layout, set layout='two-column-sidebar-right' and specify column spans on direct children using Tailwind classes (e.g., 'lg:col-span-8', 'lg:col-span-4')",
+    "The padding prop controls both inner padding and gap between columns in grid layouts",
+    "Grid layouts automatically stack to a single column on smaller screens",
+    "Pair with CardContent for consistent inner spacing within columns/content areas, especially when Section padding is set to 'none'"
+  ],
+  "examples": [
+    "import { Section, CardContent } from '@/lib/designsystem';\n\n<Section layout=\"single-column\" padding=\"md\">\n  <CardContent>\n    <h2>Section Title</h2>\n    <p>Section content goes here</p>\n  </CardContent>\n</Section>;",
+    "<Section padding=\"md\">\n  <CardContent>\n    <h2 className=\"mb-2 text-lg font-medium\">Content Area</h2>\n    <p>This is static content in a styled container.</p>\n  </CardContent>\n</Section>",
+    "<Section layout=\"two-column-equal\" padding=\"lg\">\n  {/* lg padding = gap-12 */}\n  {/* Column 1 */}\n  <CardContent>\n    <h2 className=\"mb-2 text-lg font-medium\">First Column</h2>\n    <p>Content for the first column</p>\n  </CardContent>\n  {/* Column 2 */}\n  <CardContent>\n    <h2 className=\"mb-2 text-lg font-medium\">Second Column</h2>\n    <p>Content for the second column</p>\n  </CardContent>\n</Section>",
+    "<Section layout=\"two-column-sidebar-right\" padding=\"md\">\n  {/* md padding = gap-8 */}\n  {/* Main Content (8/12 cols on lg) */}\n  <div className=\"lg:col-span-8\">\n    <CardContent>\n      <h2 className=\"mb-2 text-lg font-medium\">Main Content Area</h2>\n      <p>This area takes up more space.</p>\n    </CardContent>\n  </div>\n  {/* Sidebar (4/12 cols on lg) */}\n  <aside className=\"lg:col-span-4\">\n    <CardContent>\n      <h3 className=\"text-md mb-2 font-medium\">Sidebar</h3>\n      <ul>\n        <li>Link 1</li>\n        <li>Link 2</li>\n      </ul>\n    </CardContent>\n  </aside>\n</Section>"
+  ],
+  "design": [
+    "Provides a consistent container style (background, border-radius) without interactive elements",
+    "Offers 'single-column', 'two-column-equal', and 'two-column-sidebar-right' layout options via the layout prop",
+    "The padding prop controls both the inner padding and the gap between columns in grid layouts",
+    "Grid layouts stack to a single column on smaller screens",
+    "For 'two-column-sidebar-right', children must specify their responsive column spans (e.g., 'lg:col-span-8')",
+    "Pairs well with CardContent for consistent inner spacing within columns/content areas, especially when Section padding is set to 'none'",
+    "More semantically accurate than using Card for non-interactive content grouping"
+  ]
+}

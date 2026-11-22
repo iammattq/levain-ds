@@ -1,0 +1,176 @@
+{
+  "name": "PageTemplate",
+  "description": "A standardized layout template for front-end (non-admin) pages that provides consistent structure, spacing, and layout options. It includes the PageTransition component to ensure smooth transitions between pages.",
+  "category": "templates",
+  "usage": [
+    "Import from barrel: `import { PageTemplate } from '@/lib/designsystem'`",
+    "Use for front-end (non-admin) pages to maintain consistent layout structure",
+    "Choose appropriate layout: 'single-column', 'two-column-equal', 'two-column-sidebar-right', or 'two-column-sidebar-left'",
+    "In 'single-column' and 'two-column-equal' layouts, the H1 title is rendered above the content",
+    "In 'two-column-sidebar-right' and 'two-column-sidebar-left' layouts, the title is rendered within the main content column (the children prop column)",
+    "Use 'sidebar' prop only with 'two-column-sidebar-right' or 'two-column-sidebar-left' layouts",
+    "Use 'secondColumn' prop only with 'two-column-equal' layout",
+    "Control sidebar width using 'sidebarColumns' prop (1-5 columns out of 12-column grid, defaults to 4)",
+    "Set maxWidth to false for full-width pages that need to expand to viewport width",
+    "Use backLink and backLinkTitle props to add navigation breadcrumb to the heading"
+  ],
+  "examples": [
+    "Standard Page (Single Column):\n```tsx\nimport { PageTemplate } from '@/lib/designsystem';\n\nexport default function MyPage() {\n  return (\n    <PageTemplate title=\"My Page Title\" layout=\"single-column\">\n      {/* Single-column page content */}\n      <p>Your main content here.</p>\n    </PageTemplate>\n  );\n}\n```",
+    "Standard Page with Content Section:\n```tsx\n<PageTemplate title=\"Standard Page\">\n  <div className=\"bg-surface-1 rounded p-4\">\n    Content section that spans the full available width.\n  </div>\n</PageTemplate>\n```",
+    "Two Equal Columns:\n```tsx\n<PageTemplate title=\"Two Column Page\" layout=\"two-column-equal\" secondColumn={\n  <div className=\"bg-surface-1 rounded p-4\">\n    Content for the right column.\n  </div>\n}>\n  {/* First Column (children) */}\n  <div className=\"bg-surface-1 rounded p-4\">Content for the left column.</div>\n</PageTemplate>\n```",
+    "Two Columns (Sidebar Right Layout):\n```tsx\nimport { PageTemplate, Placeholder } from '@/lib/designsystem';\n\n<PageTemplate\n  title=\"Right Sidebar Layout Page\"\n  layout=\"two-column-sidebar-right\"\n  // sidebarColumns={3} // Example: Use 3 columns for sidebar (9 for main)\n  sidebar={\n    <Placeholder height=\"200px\">Sidebar Content (Default 4 cols)</Placeholder>\n  }\n>\n  {/* Main Content (children) */}\n  <Placeholder height=\"300px\">Main Content Area (Default 8 cols)</Placeholder>\n</PageTemplate>\n```",
+    "Two Columns (Sidebar Left Layout):\n```tsx\nimport { PageTemplate, Placeholder } from '@/lib/designsystem';\n\n<PageTemplate\n  title=\"Left Sidebar Layout Page\"\n  layout=\"two-column-sidebar-left\"\n  sidebarColumns={3} // Example: Use 3 columns for sidebar (9 for main)\n  sidebar={<Placeholder height=\"200px\">Sidebar Content (3 cols)</Placeholder>}\n>\n  {/* Main Content (children) */}\n  <Placeholder height=\"300px\">Main Content Area (9 cols)</Placeholder>\n</PageTemplate>\n```",
+    "Full-Width Page:\n```tsx\n<PageTemplate title=\"Full Width Page\" maxWidth={false}>\n  <div className=\"bg-surface-1 w-full p-4\">\n    This content will expand to the full width of the viewport\n  </div>\n</PageTemplate>\n```",
+    "Page with Back Link:\n```tsx\n<PageTemplate\n  title=\"Detail Page\"\n  backLink=\"/parent-section\"\n  backLinkTitle=\"Back to Section\"\n>\n  <div className=\"p-4\">\n    This page has a back button that navigates to the parent section\n  </div>\n</PageTemplate>\n```"
+  ],
+  "design": [
+    "The template automatically handles responsive padding and margins",
+    "Title Placement: The H1 title is rendered above the content in 'single-column' and 'two-column-equal' layouts. In 'two-column-sidebar-right' and 'two-column-sidebar-left' layouts, the title is rendered within the main content column (the children prop column)",
+    "Layout Structure for 'single-column': Renders children below the title",
+    "Layout Structure for 'two-column-equal': Renders children in the left column and secondColumn content in the right column, below the title",
+    "Layout Structure for 'two-column-sidebar-left': Renders sidebar content in a left column (width determined by sidebarColumns, default lg:col-span-4) and children (including the title) in a right column (width 12 - sidebarColumns)",
+    "Layout Structure for 'two-column-sidebar-right': Renders children (including the title) in a left column (width 12 - sidebarColumns) and sidebar content in a right column (width determined by sidebarColumns, default lg:col-span-4)",
+    "The template internally uses Tailwind Grid for layouts involving columns",
+    "When maxWidth is true, content is constrained to max-w-7xl",
+    "When maxWidth is false, content will expand to the full width of its container",
+    "Includes PageTransition component for smooth transitions",
+    "Back link option is part of the Heading component",
+    "No top padding on mobile since desktop nav is hidden on mobile",
+    "fullViewportMobile option removes padding on mobile for full-viewport content (useful for photo galleries)"
+  ],
+  "accessibility": [
+    "Title is rendered as an H1 heading for proper document structure",
+    "Back link includes backLinkTitle prop for accessibility context",
+    "Uses semantic HTML elements (main, aside) for proper document structure"
+  ],
+  "props": [
+    {
+      "name": "title",
+      "type": "string",
+      "optional": false,
+      "defaultValue": null,
+      "description": "Title for the page (H1 heading). Position depends on layout.",
+      "configurable": true
+    },
+    {
+      "name": "children",
+      "type": "React.ReactNode",
+      "optional": false,
+      "defaultValue": null,
+      "description": "Main content (or first column in 'two-column-equal').",
+      "configurable": false
+    },
+    {
+      "name": "sidebar",
+      "type": "React.ReactNode",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Content for the sidebar (used only with 'two-column-sidebar-right' or 'two-column-sidebar-left' layouts).",
+      "configurable": false
+    },
+    {
+      "name": "secondColumn",
+      "type": "React.ReactNode",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Content for the second column (used only with 'two-column-equal' layout).",
+      "configurable": false
+    },
+    {
+      "name": "maxWidth",
+      "type": "boolean",
+      "optional": true,
+      "defaultValue": "true",
+      "description": "Whether to constrain the page width to max-w-7xl.",
+      "configurable": true
+    },
+    {
+      "name": "className",
+      "type": "string",
+      "optional": true,
+      "defaultValue": "",
+      "description": "Custom CSS classes applied to the main page wrapper element.",
+      "configurable": false
+    },
+    {
+      "name": "backLink",
+      "type": "string",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Optional back link URL for the heading.",
+      "configurable": true
+    },
+    {
+      "name": "backLinkTitle",
+      "type": "string",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Optional back link title for accessibility.",
+      "configurable": true
+    },
+    {
+      "name": "layout",
+      "type": "PageLayout",
+      "optional": true,
+      "defaultValue": "single-column",
+      "description": "Layout structure ('single-column', 'two-column-equal', 'two-column-sidebar-right', 'two-column-sidebar-left').",
+      "configurable": true
+    },
+    {
+      "name": "sidebarColumns",
+      "type": "1 | 2 | 3 | 4 | 5",
+      "optional": true,
+      "defaultValue": "4",
+      "description": "Number of columns (out of 12) for the sidebar in sidebar layouts (lg breakpoint).",
+      "configurable": true
+    },
+    {
+      "name": "asciiTitle",
+      "type": "AsciiTitleOption",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Use ASCII art header instead of regular heading. Options: 'Matt Quinn', 'Work', 'Photos', 'Journal', 'Dashboard', 'Admin', 'Sign In'.",
+      "configurable": true
+    },
+    {
+      "name": "asciiColorVariant",
+      "type": "AsciiColorVariant",
+      "optional": true,
+      "defaultValue": "secondary",
+      "description": "Color variant for ASCII header: 'gradient' or 'secondary' (defaults to 'secondary' for sub-pages).",
+      "configurable": true
+    },
+    {
+      "name": "hideTitle",
+      "type": "boolean",
+      "optional": true,
+      "defaultValue": "false",
+      "description": "Hide the title (useful when title is rendered inside content, e.g. bento grids).",
+      "configurable": true
+    },
+    {
+      "name": "fullViewportMobile",
+      "type": "boolean",
+      "optional": true,
+      "defaultValue": "false",
+      "description": "Remove padding on mobile for full-viewport content (e.g. photo galleries).",
+      "configurable": true
+    },
+    {
+      "name": "showBar",
+      "type": "boolean",
+      "optional": true,
+      "defaultValue": "true",
+      "description": "Show/hide the decorative accent bar on the heading.",
+      "configurable": true
+    },
+    {
+      "name": "compactTitle",
+      "type": "boolean",
+      "optional": true,
+      "defaultValue": "false",
+      "description": "Reduce spacing between title and content for denser layouts.",
+      "configurable": true
+    }
+  ]
+}

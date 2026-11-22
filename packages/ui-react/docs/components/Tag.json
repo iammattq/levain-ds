@@ -1,0 +1,89 @@
+{
+  "name": "Tag",
+  "description": "The Tag component provides a visually distinct label that can be used to categorize content, display status, or highlight key information.",
+  "category": "components",
+  "usage": [
+    "Clean, pill-shaped visual design",
+    "Multiple color variants for different contexts",
+    "Two sizes: md (default) and sm for compact layouts",
+    "Optional icon support with proper vertical alignment",
+    "Consistent styling with the design system",
+    "Use for category labels (e.g., Photography)",
+    "Use for status indicators with icons (e.g., Pending, Approved)",
+    "Use for metadata display (e.g., 2 min read)",
+    "Designed for inline display with text content",
+    "Use success/error/info/caution variants for status feedback",
+    "Icons automatically sized based on tag size (h-3 w-3 for sm, h-4 w-4 for md)"
+  ],
+  "examples": [
+    "<Tag>Technology</Tag>",
+    "<Tag variant=\"accent\">New</Tag>",
+    "<Tag variant=\"muted\">Archived</Tag>",
+    "<Tag size=\"sm\">Compact Tag</Tag>",
+    "<Tag variant=\"success\">Published</Tag>",
+    "<Tag variant=\"error\">Failed</Tag>",
+    "<Tag variant=\"info\">Beta</Tag>",
+    "<Tag variant=\"caution\">Review Required</Tag>",
+    "<Tag size=\"sm\" variant=\"success\">Active</Tag>",
+    "<Tag Icon={Clock} size=\"sm\">Pending</Tag>",
+    "<Tag Icon={CheckCircle} variant=\"success\" size=\"sm\">Approved</Tag>",
+    "<Tag Icon={Loader2} variant=\"info\" iconClassName=\"animate-spin\" size=\"sm\">Processing</Tag>"
+  ],
+  "design": [
+    "Rounded-full shape creates a pill design",
+    "md size: type-label with px-3 py-2 padding and gap-2 for icon/text spacing",
+    "sm size: type-label-compact with px-3 py-1.5 padding and gap-1.5 for icon/text spacing",
+    "Icon and text in separate flex containers for proper vertical alignment",
+    "Text wrapper uses leading-none and mt-0.5 to compensate for font baseline offset",
+    "Icons sized automatically: h-3 w-3 for sm, h-4 w-4 for md",
+    "Uses flexbox gap for consistent spacing between icon and text",
+    "Uses design token color variables for proper theming",
+    "default variant: Primary background with --color-text-on-primary for WCAG compliance",
+    "accent variant: Accent background with --color-text-on-accent for WCAG compliance",
+    "muted variant: Subtle section background with default text color",
+    "success variant: Success background (--color-success-bg) with success foreground text",
+    "error variant: Error background (--color-error-bg) with error foreground text",
+    "info variant: Info background (--color-info-bg) with info foreground text",
+    "caution variant: Caution background (--color-caution-bg) with caution foreground text"
+  ],
+  "props": [
+    {
+      "name": "children",
+      "type": "React.ReactNode",
+      "optional": false,
+      "description": "Content of the tag"
+    },
+    {
+      "name": "className",
+      "type": "string",
+      "optional": true,
+      "description": "Additional CSS classes"
+    },
+    {
+      "name": "variant",
+      "type": "'default' | 'accent' | 'muted' | 'success' | 'error' | 'info' | 'caution'",
+      "optional": true,
+      "defaultValue": "'default'",
+      "description": "Visual style variant"
+    },
+    {
+      "name": "size",
+      "type": "'sm' | 'md'",
+      "optional": true,
+      "defaultValue": "'md'",
+      "description": "Size of the tag"
+    },
+    {
+      "name": "Icon",
+      "type": "React.ElementType<LucideProps>",
+      "optional": true,
+      "description": "Optional icon component from lucide-react"
+    },
+    {
+      "name": "iconClassName",
+      "type": "string",
+      "optional": true,
+      "description": "Additional CSS classes for the icon (e.g., animate-spin)"
+    }
+  ]
+}

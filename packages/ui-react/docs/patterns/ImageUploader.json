@@ -1,0 +1,119 @@
+{
+  "$schema": "../component-schema.json",
+  "name": "ImageUploader",
+  "description": "The ImageUploader pattern provides a user-friendly interface for uploading images with preview capabilities, drag-and-drop functionality, and validation.",
+  "category": "patterns",
+  "usage": [
+    "Use react-dropzone for drag-and-drop functionality",
+    "Creates object URLs for previewing images before upload",
+    "Handles file validation before allowing upload",
+    "Uses FormData for multipart/form-data uploads",
+    "Cleans up object URLs to prevent memory leaks",
+    "Fully responsive design with appropriate spacing on all device sizes",
+    "Supports single or multiple image uploads",
+    "Provides upload progress indication with real-time feedback",
+    "Handles error states for validation and upload failures",
+    "Mobile-friendly design with touch-friendly interactions"
+  ],
+  "examples": [
+    "// Basic usage with callback\n<ImageUploader\n  entityType=\"profile\"\n  onImagesUploaded={(urls) => console.log('Images uploaded:', urls)}\n/>",
+    "// Single image upload with label\n<ImageUploader\n  entityType=\"avatar\"\n  maxImages={1}\n  label=\"Profile Picture\"\n  description=\"Upload your profile picture\"\n  onImagesUploaded={(urls) => updateUserProfile({ avatarUrl: urls[0] })}\n/>",
+    "// Multiple images for a gallery\n<ImageUploader\n  entityId={galleryId}\n  entityType=\"gallery\"\n  maxImages={10}\n  initialImages={existingImages}\n  onImagesUploaded={(urls) => saveGalleryImages(urls)}\n/>",
+    "// With existing images (edit mode)\n<ImageUploader\n  entityId={journalId}\n  entityType=\"journal\"\n  initialImages={['/path/to/existing-image.jpg']}\n  onImagesUploaded={(urls) => updateJournalImages(urls)}\n/>",
+    "// Preserve original format (no conversion)\n<ImageUploader\n  entityType=\"artwork\"\n  preserveFormat={true}\n  onImagesUploaded={(urls) => handleArtworkUpload(urls)}\n/>",
+    "// Hide preview (upload only)\n<ImageUploader\n  entityType=\"document\"\n  hidePreview={true}\n  onImagesUploaded={(urls) => processImages(urls)}\n/>"
+  ],
+  "design": [
+    "Uses drag-and-drop interface with visual feedback during drag operations",
+    "Shows image preview grid for multiple uploaded images",
+    "Displays upload progress bars with percentage and status indicators",
+    "Provides clear error messages for validation failures",
+    "Hover effects reveal delete buttons for uploaded images",
+    "Responsive grid layout adapts to different screen sizes",
+    "Uses design tokens for colors and spacing",
+    "Disabled state when max images reached",
+    "Visual feedback for drag-active state with primary color"
+  ],
+  "accessibility": [
+    "Input has aria-label for screen readers",
+    "Delete buttons include title attribute for tooltip",
+    "Clear visual states for uploading, error, and success",
+    "Keyboard accessible file input",
+    "Progress information conveyed through text and visual indicators",
+    "Error messages are clearly associated with the component"
+  ],
+  "props": [
+    {
+      "name": "entityId",
+      "type": "string",
+      "optional": true,
+      "defaultValue": null,
+      "description": "The ID of the entity to associate the image with. Use 'temp' for new entities without an ID yet.",
+      "configurable": false
+    },
+    {
+      "name": "entityType",
+      "type": "string",
+      "optional": false,
+      "defaultValue": null,
+      "description": "The type of entity (e.g., 'journal', 'gallery', 'profile'). Used to determine the correct API endpoint.",
+      "configurable": true
+    },
+    {
+      "name": "maxImages",
+      "type": "number",
+      "optional": true,
+      "defaultValue": "1",
+      "description": "Maximum number of images allowed. Set to 1 for single image upload.",
+      "configurable": true
+    },
+    {
+      "name": "initialImages",
+      "type": "string[]",
+      "optional": true,
+      "defaultValue": "[]",
+      "description": "Initial image URLs if editing an existing entity. Empty strings are filtered out.",
+      "configurable": false
+    },
+    {
+      "name": "onImagesUploaded",
+      "type": "(imageUrls: string[]) => void",
+      "optional": false,
+      "defaultValue": null,
+      "description": "Callback fired when images are successfully uploaded. Returns array of image URLs.",
+      "configurable": false
+    },
+    {
+      "name": "label",
+      "type": "string",
+      "optional": true,
+      "defaultValue": "\"Upload Image\"",
+      "description": "Optional label displayed above the uploader.",
+      "configurable": true
+    },
+    {
+      "name": "description",
+      "type": "string",
+      "optional": true,
+      "defaultValue": "\"Drag & drop an image here, or click to select\"",
+      "description": "Optional description text shown in the upload area.",
+      "configurable": true
+    },
+    {
+      "name": "preserveFormat",
+      "type": "boolean",
+      "optional": true,
+      "defaultValue": "false",
+      "description": "Whether to preserve the original image format instead of converting.",
+      "configurable": true
+    },
+    {
+      "name": "hidePreview",
+      "type": "boolean",
+      "optional": true,
+      "defaultValue": "false",
+      "description": "Whether to hide the preview of uploaded images.",
+      "configurable": true
+    }
+  ]
+}

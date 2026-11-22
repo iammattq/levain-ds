@@ -1,0 +1,176 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "utility-schema.json",
+  "title": "Design System Utility Documentation",
+  "description": "Schema for documenting design system utility functions and hooks",
+  "type": "object",
+  "required": ["name", "description", "category"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "The utility module name (e.g., 'popupPosition')"
+    },
+    "description": {
+      "type": "string",
+      "description": "A brief description of the utility's purpose"
+    },
+    "category": {
+      "type": "string",
+      "const": "utils",
+      "description": "Always 'utils' for utility modules"
+    },
+    "features": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Key features and capabilities"
+    },
+    "usage": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Usage guidelines and best practices"
+    },
+    "examples": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Code examples demonstrating usage"
+    },
+    "types": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/typeDefinition" },
+      "description": "Type aliases and union types exported by the module"
+    },
+    "interfaces": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/interfaceDefinition" },
+      "description": "Interfaces exported by the module"
+    },
+    "functions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/functionDefinition" },
+      "description": "Functions exported by the module"
+    },
+    "considerations": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Important notes, caveats, or considerations for usage"
+    }
+  },
+  "$defs": {
+    "typeDefinition": {
+      "type": "object",
+      "required": ["name", "type"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The type name"
+        },
+        "type": {
+          "type": "string",
+          "description": "The TypeScript type definition"
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the type"
+        }
+      }
+    },
+    "interfaceDefinition": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The interface name"
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the interface"
+        },
+        "properties": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/propertyDefinition" },
+          "description": "Properties of the interface"
+        }
+      }
+    },
+    "propertyDefinition": {
+      "type": "object",
+      "required": ["name", "type"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The property name"
+        },
+        "type": {
+          "type": "string",
+          "description": "The TypeScript type"
+        },
+        "optional": {
+          "type": "boolean",
+          "description": "Whether the property is optional"
+        },
+        "defaultValue": {
+          "type": ["string", "null"],
+          "description": "The default value, if any"
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the property"
+        }
+      }
+    },
+    "functionDefinition": {
+      "type": "object",
+      "required": ["name", "signature"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The function name"
+        },
+        "signature": {
+          "type": "string",
+          "description": "The full TypeScript function signature"
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of what the function does"
+        },
+        "parameters": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/parameterDefinition" },
+          "description": "Function parameters"
+        },
+        "returns": {
+          "type": "string",
+          "description": "Description of the return value"
+        }
+      }
+    },
+    "parameterDefinition": {
+      "type": "object",
+      "required": ["name", "type"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The parameter name"
+        },
+        "type": {
+          "type": "string",
+          "description": "The TypeScript type"
+        },
+        "optional": {
+          "type": "boolean",
+          "description": "Whether the parameter is optional"
+        },
+        "defaultValue": {
+          "type": ["string", "null"],
+          "description": "The default value, if any"
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the parameter"
+        }
+      }
+    }
+  }
+}

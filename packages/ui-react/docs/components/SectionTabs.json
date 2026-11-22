@@ -1,0 +1,118 @@
+{
+  "$schema": "../component-schema.json",
+  "name": "SectionTabs",
+  "description": "A component for organizing content into distinct sections accessible via tab navigation. Can operate in controlled or uncontrolled mode.",
+  "category": "components",
+  "usage": [
+    "Use for organizing content into distinct sections accessible via tab navigation",
+    "Supports both controlled (state managed by parent via activeTabId/onTabChange) and uncontrolled (internal state managed, uses initialSectionId and children render prop) modes",
+    "In uncontrolled mode with children render prop, component manages internal state and wraps content in Section component",
+    "In controlled mode, component only renders tab buttons; parent is responsible for rendering content and any desired Section wrapper",
+    "contentPadding prop has no effect in controlled mode",
+    "Each tab can include optional icon before the title and optional badge after the title",
+    "Allows disabling specific tabs via disabled property on section data",
+    "Designed to be placed within a Section or Card component (Level 2 or 3 in hierarchy)"
+  ],
+  "examples": [
+    "import { SectionTabs } from '@/lib/designsystem';\n\nconst sections = [\n  { id: 'profile', title: 'Profile' },\n  { id: 'settings', title: 'Settings' },\n];\n\nexport default function MyComponent() {\n  return (\n    <SectionTabs\n      sections={sections}\n      initialSectionId=\"profile\"\n      contentPadding=\"sm\"\n    >\n      {(activeSectionId) => (\n        <div>\n          {activeSectionId === 'profile' && <div>Profile Content</div>}\n          {activeSectionId === 'settings' && <div>Settings Content</div>}\n        </div>\n      )}\n    </SectionTabs>\n  );\n}",
+    "import { SectionTabs } from '@/lib/designsystem';\nimport { useState } from 'react';\n\nconst sections = [\n  { id: 'preview', title: 'Preview' },\n  { id: 'creator', title: 'Creator' },\n];\n\nexport default function MyPage() {\n  const [activeTab, setActiveTab] = useState('preview');\n\n  return (\n    <>\n      <SectionTabs\n        sections={sections}\n        activeTabId={activeTab}\n        onTabChange={setActiveTab}\n      />\n      {/* Render content externally based on activeTab state */}\n      {/* Note: contentPadding prop has no effect in controlled mode */}\n      <div>\n        {activeTab === 'preview' && <div>Preview Content Area</div>}\n        {activeTab === 'creator' && <div>Creator Content Area</div>}\n      </div>\n    </>\n  );\n}",
+    "import { SectionTabs } from '@/lib/designsystem';\nimport { Home, Settings, Bell } from 'lucide-react';\n\nconst sections = [\n  {\n    id: 'home',\n    title: 'Home',\n    icon: <Home className=\"h-4 w-4\" />,\n  },\n  {\n    id: 'settings',\n    title: 'Settings',\n    icon: <Settings className=\"h-4 w-4\" />,\n  },\n  {\n    id: 'notifications',\n    title: 'Notifications',\n    icon: <Bell className=\"h-4 w-4\" />,\n    badge: (\n      <span className=\"rounded-full bg-red-500 px-2 py-0.5 text-xs text-white\">\n        3\n      </span>\n    ),\n  },\n];\n\nexport default function MyComponent() {\n  const [activeTab, setActiveTab] = useState('home');\n\n  return (\n    <SectionTabs\n      sections={sections}\n      activeTabId={activeTab}\n      onTabChange={setActiveTab}\n    />\n  );\n}"
+  ],
+  "design": [
+    "Supports both controlled (state managed by parent via activeTabId/onTabChange) and uncontrolled (internal state managed, uses initialSectionId and children render prop) modes",
+    "Parent determines content rendering location (via children prop if uncontrolled, or externally if controlled)",
+    "In uncontrolled mode, the content rendered by the children prop is automatically wrapped in a Section component. The contentPadding and contentClassName props customize this internal Section",
+    "In controlled mode, the component only renders the tab buttons; the parent is responsible for rendering the content and any desired Section wrapper",
+    "Uses design system tokens for styling (--color-primary, --color-text-muted, --color-border-subtle)",
+    "Allows disabling specific tabs",
+    "Provides className props for customizing different parts of the component (container, tabs, content section, individual buttons)",
+    "Designed to be placed within a Section or Card component (Level 2 or 3 in hierarchy)"
+  ],
+  "accessibility": [
+    "Applies appropriate ARIA attributes (future enhancement, currently basic)",
+    "Disabled tabs use disabled attribute and have reduced opacity with cursor-not-allowed",
+    "Buttons have focus-visible ring styling for keyboard navigation"
+  ],
+  "props": [
+    {
+      "name": "sections",
+      "type": "SectionTabData[]",
+      "optional": false,
+      "defaultValue": null,
+      "description": "An array of objects defining the tabs. Each object has shape: { id: string; title: string; disabled?: boolean; icon?: ReactNode; badge?: ReactNode }",
+      "configurable": true
+    },
+    {
+      "name": "children",
+      "type": "(activeSectionId: string) => ReactNode",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Optional render prop function. If provided, component acts uncontrolled and renders content wrapped in Section component",
+      "configurable": false
+    },
+    {
+      "name": "activeTabId",
+      "type": "string",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Optional. If provided, component acts controlled. Active tab ID is managed externally",
+      "configurable": true
+    },
+    {
+      "name": "onTabChange",
+      "type": "(tabId: string) => void",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Optional callback triggered on tab click. Required if controlled",
+      "configurable": false
+    },
+    {
+      "name": "initialSectionId",
+      "type": "string",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Optional. Sets the initial active tab for uncontrolled mode",
+      "configurable": true
+    },
+    {
+      "name": "className",
+      "type": "string",
+      "optional": true,
+      "defaultValue": "''",
+      "description": "Custom CSS classes for individual tab buttons",
+      "configurable": true
+    },
+    {
+      "name": "containerClassName",
+      "type": "string",
+      "optional": true,
+      "defaultValue": "''",
+      "description": "Custom CSS classes for the outer container div",
+      "configurable": true
+    },
+    {
+      "name": "tabsClassName",
+      "type": "string",
+      "optional": true,
+      "defaultValue": "''",
+      "description": "Custom CSS classes for the div containing the tab buttons",
+      "configurable": true
+    },
+    {
+      "name": "contentClassName",
+      "type": "string",
+      "optional": true,
+      "defaultValue": "''",
+      "description": "Custom CSS classes for the internal Section component (uncontrolled mode only)",
+      "configurable": true
+    },
+    {
+      "name": "contentPadding",
+      "type": "'none' | 'sm' | 'md' | 'lg'",
+      "optional": true,
+      "defaultValue": "'md'",
+      "description": "Padding prop passed to the internal Section component (uncontrolled mode only)",
+      "configurable": true
+    }
+  ]
+}

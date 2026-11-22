@@ -1,0 +1,470 @@
+/* =========================================================================
+ * Shared Design System Styles
+ * Single source of truth for design primitives, typography utilities,
+ * scrollbar styling, and animations used across all apps.
+ * ========================================================================= */
+
+/* =========================================================================
+ * Section 1: Design Token Primitives (@theme)
+ * Consumed by Tailwind CSS and available as CSS custom properties.
+ * ========================================================================= */
+
+/*
+ * Tailwind v4 `@theme` block.
+ * ONLY include tokens here that Tailwind itself consumes to generate utility
+ * classes (e.g. `font-sans`, `text-3xs`). Anything else placed inside @theme
+ * is subject to tree-shaking: Tailwind only emits :root declarations for
+ * tokens whose corresponding utility appears in scanned source. CSS that is
+ * injected at runtime (themeManager's <style id="theme-styles">) is invisible
+ * to Tailwind's scanner, so any primitive only used by runtime CSS would be
+ * stripped in production — producing a silent prod regression where every
+ * downstream var resolves empty.
+ */
+@theme {
+  --font-sans: ui-sans-serif, system-ui, -apple-system, sans-serif;
+
+  /* Tailwind v4 text-* utilities (smaller than default xs) */
+  --text-3xs: 0.5rem;
+  --text-2xs: 0.625rem;
+
+  /*
+   * Spacing scale — generates p-md, gap-lg, mt-xl and friends.
+   *
+   * These are deliberate literals rather than var(--space-*) references.
+   * Tailwind strips @theme tokens whose utility never appears in scanned
+   * source (see ADR-010), so a token defined here can vanish in prod; the
+   * :root block below carries the same values for anything read at runtime.
+   * The two lists MUST agree — enforced by scale.test.ts.
+   *
+   * Tailwind's numeric scale (p-4, gap-8) still resolves. It is being
+   * migrated away from, not removed: these names are the source of truth.
+   */
+  --spacing-3xs: 0.25rem; /* 4px  */
+  --spacing-2xs: 0.5rem; /* 8px  */
+  --spacing-xs: 0.75rem; /* 12px */
+  --spacing-sm: 1rem; /* 16px */
+  --spacing-md: 1.5rem; /* 24px */
+  --spacing-lg: 2rem; /* 32px */
+  --spacing-xl: 3rem; /* 48px */
+  --spacing-2xl: 4rem; /* 64px */
+  --spacing-3xl: 6rem; /* 96px */
+  --spacing-4xl: 8rem; /* 128px */
+
+  /*
+   * Restore Tailwind's container widths for max-w-*.
+   *
+   * Tailwind resolves `max-w-<name>` through --max-width, then --spacing, then
+   * --container. Naming the spacing scale above therefore hijacked every
+   * max-w-* whose name collides: max-w-2xl resolved to --spacing-2xl (4rem)
+   * instead of 42rem, and max-w-md to 1.5rem instead of 28rem. Content capped
+   * at those widths collapses to the width of its longest word.
+   *
+   * --max-width outranks --spacing, so redeclaring the colliding keys here
+   * fixes every call site at once. Values are Tailwind's own container scale,
+   * written as literals rather than var(--container-*) because those are
+   * themselves tree-shakeable (see ADR-010).
+   *
+   * The names only collide from 3xs to 4xl; max-w-5xl and up never broke,
+   * which is why page wrappers kept working and this went unnoticed.
+   */
+  --max-width-3xs: 16rem; /* 256px */
+  --max-width-2xs: 18rem; /* 288px */
+  --max-width-xs: 20rem; /* 320px */
+  --max-width-sm: 24rem; /* 384px */
+  --max-width-md: 28rem; /* 448px */
+  --max-width-lg: 32rem; /* 512px */
+  --max-width-xl: 36rem; /* 576px */
+  --max-width-2xl: 42rem; /* 672px */
+  --max-width-3xl: 48rem; /* 768px */
+  --max-width-4xl: 56rem; /* 896px */
+}
+
+/*
+ * Design primitives referenced only by runtime-injected CSS (themeManager's
+ * semantic vars like `--type-heading-4-tracking: var(--type-tracking-tight)`)
+ * and by component-level `var(--radius-md)` / `var(--elevation-2)` lookups.
+ * These MUST live in a plain :root block — declaring them inside @theme
+ * makes them tree-shakeable in prod, and the runtime references aren't
+ * visible to Tailwind's static scan.
+ */
+:root {
+  /*
+   * Spacing Scale
+   *
+   * Mirrors the @theme block above for runtime and var() use. Values grow by
+   * roughly 1.4x per step rather than linearly: adjacent steps have to be
+   * visibly different, or the choice between them is arbitrary and the result
+   * reads as noise rather than rhythm.
+   *
+   * Two budgets share one scale. 3xs-lg builds a thing (padding inside a card,
+   * gap between fields); md-4xl separates things (space between sections). The
+   * overlap is intentional.
+   *
+   * The governing rule is proximity: space *inside* a group must be smaller
+   * than the space *around* it. See assembly rules in ui-react/docs.
+   */
+  --space-0: 0;
+  --space-3xs: 0.25rem; /* 4px  — icon to label, hairline insets */
+  --space-2xs: 0.5rem; /* 8px  — inside dense controls, tag padding */
+  --space-xs: 0.75rem; /* 12px — between tight controls */
+  --space-sm: 1rem; /* 16px — default control padding, list row gap */
+  --space-md: 1.5rem; /* 24px — card inset, gap between cards */
+  --space-lg: 2rem; /* 32px — section inset */
+  --space-xl: 3rem; /* 48px — between blocks within a section */
+  --space-2xl: 4rem; /* 64px — between sections */
+  --space-3xl: 6rem; /* 96px — between major page regions */
+  --space-4xl: 8rem; /* 128px — page top/bottom breathing room */
+
+  /*
+   * Containment
+   *
+   * A reading surface is one grid: a metadata gutter plus a content column
+   * whose width IS the measure. Capping text at a measure *inside* a wider
+   * container is what produces a void down one side and lets the container
+   * edge and the text edge disagree — the column has to be the constraint,
+   * not a limit applied within one.
+   */
+  /* 672px. Characters-per-line depends on the face: roughly 70ch in the
+   * reading serif, nearer 84ch in the sans — the wide end of the classic
+   * 45-75ch guidance. Promoted from lennys-brain as-is; tighten deliberately
+   * rather than by accident. */
+  --measure: 42rem;
+  --gutter: 8.5rem; /* 136px — metadata column: labels, marks, counts */
+  --gutter-gap: var(--space-md); /* 24px — gutter to content */
+  --spine: calc(var(--gutter) + var(--gutter-gap) + var(--measure));
+  --container-page: 80rem; /* 1280px — app/admin shells and wide layouts */
+
+  /* Typography Scale */
+  --type-size-3xs: 0.625rem;
+  --type-size-2xs: 0.75rem;
+  --type-size-xs: 0.875rem;
+  --type-size-sm: 1rem;
+  --type-size-md: 1.25rem;
+  --type-size-lg: 1.5rem;
+  --type-size-xl: 1.75rem;
+  --type-size-2xl: 2rem;
+  --type-size-3xl: 2.25rem;
+  --type-size-4xl: 2.5rem;
+  --type-size-5xl: 2.75rem;
+  --type-size-6xl: 3rem;
+  --type-size-7xl: 3.75rem;
+  --type-size-8xl: 4.5rem;
+
+  /* Font Weights */
+  --type-weight-regular: 400;
+  --type-weight-medium: 500;
+  --type-weight-bold: 700;
+
+  /* Line Heights */
+  --type-leading-none: 1;
+  --type-leading-tight: 1.2;
+  --type-leading-snug: 1.375;
+  --type-leading-normal: 1.5;
+  --type-leading-relaxed: 1.75;
+
+  /* Letter Spacing */
+  --type-tracking-tight: -0.025em;
+  --type-tracking-normal: 0;
+  --type-tracking-wide: 0.025em;
+
+  /* Border Radius */
+  --radius-none: 0px;
+  --radius-xs: 0.125rem;
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
+  --radius-3xl: 1.5rem;
+  --radius-4xl: 2rem;
+  --radius-full: 9999px;
+
+  /*
+   * Elevations — pre-hydration fallbacks only.
+   *
+   * ThemeManager injects accent-tinted --elevation-1/2/3 with !important once
+   * the theme loads; these neutral values are what paints before that. Their
+   * geometry mirrors DEFAULT_ELEVATION_STYLES so the swap changes hue, not
+   * shape. Keep the two in sync.
+   *
+   * Levels are boundaries, not components: 1 = L2 on canvas, 2 = L3 in a
+   * section, 3 = floating (modal, dropdown, popover).
+   */
+  --elevation-1: 0px 2px 8px 0px rgba(0, 0, 0, 0.06);
+  --elevation-2: 0px 6px 16px 0px rgba(0, 0, 0, 0.08);
+  --elevation-3: 0px 10px 30px 0px rgba(0, 0, 0, 0.1);
+
+  /* Overrides Tailwind's shadow-2xl utility so it participates in theming.
+   * TODO: migrate `shadow-2xl` call sites to --elevation-3 and drop this. */
+  --shadow-2xl: 0 10px 30px 0 rgba(0, 0, 0, 0.1);
+}
+
+/*
+ * Dark mode renders elevation as a centred glow rather than a cast shadow —
+ * a drop shadow on a near-black canvas is invisible. Offset goes to 0 and the
+ * blur widens by 6px, matching generateElevationStyles().
+ */
+.dark {
+  --elevation-1: 0px 0px 14px 0px
+    var(--color-elevation-low, rgba(255, 255, 255, 0.05));
+  --elevation-2: 0px 0px 22px 0px
+    var(--color-elevation-default, rgba(255, 255, 255, 0.08));
+  --elevation-3: 0px 0px 36px 0px
+    var(--color-elevation-high, rgba(255, 255, 255, 0.12));
+  --shadow-2xl: 0 0 36px 0
+    var(--color-elevation-high, rgba(255, 255, 255, 0.12));
+}
+
+/* =========================================================================
+ * Section 2: Semantic Typography Utilities
+ * Composes primitives into reusable styles. Values set via CSS custom
+ * properties injected by ThemeManager for runtime preset switching.
+ *
+ * Uses .type-* prefix to avoid tailwind-merge conflicts with .text-*
+ * ========================================================================= */
+
+/* Body Styles */
+.type-body {
+  font-size: var(--type-body-size);
+  line-height: var(--type-body-leading);
+  font-weight: var(--type-body-weight);
+}
+
+.type-body-sm {
+  font-size: var(--type-body-sm-size);
+  line-height: var(--type-body-sm-leading);
+  font-weight: var(--type-body-sm-weight);
+}
+
+.type-body-lg {
+  font-size: var(--type-body-lg-size);
+  line-height: var(--type-body-lg-leading);
+  font-weight: var(--type-body-lg-weight);
+}
+
+/* Label Styles */
+.type-label {
+  font-size: var(--type-label-size);
+  line-height: var(--type-label-leading);
+  font-weight: var(--type-label-weight);
+}
+
+.type-label-sm {
+  font-size: var(--type-label-sm-size);
+  line-height: var(--type-label-sm-leading);
+  font-weight: var(--type-label-sm-weight);
+}
+
+.type-label-compact {
+  font-size: var(--type-label-compact-size);
+  line-height: var(--type-label-compact-leading);
+  font-weight: var(--type-label-compact-weight);
+}
+
+/* Display Style */
+.type-display {
+  font-family: var(--type-family-heading);
+  font-size: var(--type-display-size);
+  line-height: var(--type-display-leading);
+  font-weight: var(--type-display-weight);
+  letter-spacing: var(--type-display-tracking);
+}
+
+/* Heading Styles */
+.type-heading-1 {
+  font-family: var(--type-family-heading);
+  font-size: var(--type-heading-1-size);
+  line-height: var(--type-heading-1-leading);
+  font-weight: var(--type-heading-1-weight);
+  letter-spacing: var(--type-heading-1-tracking);
+}
+
+.type-heading-2 {
+  font-family: var(--type-family-heading);
+  font-size: var(--type-heading-2-size);
+  line-height: var(--type-heading-2-leading);
+  font-weight: var(--type-heading-2-weight);
+  letter-spacing: var(--type-heading-2-tracking);
+}
+
+.type-heading-3 {
+  font-family: var(--type-family-heading);
+  font-size: var(--type-heading-3-size);
+  line-height: var(--type-heading-3-leading);
+  font-weight: var(--type-heading-3-weight);
+  letter-spacing: var(--type-heading-3-tracking);
+}
+
+.type-heading-4 {
+  font-family: var(--type-family-heading);
+  font-size: var(--type-heading-4-size);
+  line-height: var(--type-heading-4-leading);
+  font-weight: var(--type-heading-4-weight);
+  letter-spacing: var(--type-heading-4-tracking);
+}
+
+/* Caption Styles */
+.type-caption {
+  font-size: var(--type-caption-size);
+  line-height: var(--type-caption-leading);
+  font-weight: var(--type-caption-weight);
+  color: var(--type-caption-color);
+}
+
+.type-caption-compact {
+  font-size: var(--type-caption-compact-size);
+  line-height: var(--type-caption-compact-leading);
+  font-weight: var(--type-caption-compact-weight);
+  color: var(--type-caption-compact-color);
+}
+
+/* Code Style */
+.type-code {
+  font-size: var(--type-code-size);
+  line-height: var(--type-code-leading);
+  font-weight: var(--type-code-weight);
+  font-family: var(--type-family-mono);
+}
+
+/* =========================================================================
+ * Section 3: Scrollbar Styling
+ * Consistent scrollbar appearance across apps.
+ * ========================================================================= */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-surface-section);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-surface-inverted);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-primary);
+}
+
+/*
+ * Thin scrollbar, inset from the edge it runs along.
+ *
+ * The track is --space-2xs wide and the thumb wears a transparent border, so
+ * what you see is a 4px bar with 2px of air on either side of it. Without
+ * that inset the thumb sits hard against the container edge and, on a rounded
+ * surface, crosses the corner radius.
+ *
+ * A transparent border rather than padding because a scrollbar is not in the
+ * flow: the browser paints it between the border box and the padding box, so
+ * padding on the scroll container moves the content away from the bar and
+ * leaves the bar itself where it was. The thumb's own border is the only
+ * place the air can go.
+ *
+ * The 2px is deliberately off the spacing scale: this is the internal
+ * geometry of an 8px control, an optical adjustment rather than layout, and
+ * --space-3xs at 4px would leave the thumb no width at all. Named here per
+ * the assembly rules' allowance for optical exceptions.
+ *
+ * Webkit pseudo-elements only, with no `scrollbar-width` / `scrollbar-color`
+ * fallback. Those standard properties do not combine with the rules below —
+ * their mere presence makes Chrome discard every one of them — so shipping
+ * both silently loses the inset. Firefox keeps its default bar instead.
+ */
+.scrollbar-thin::-webkit-scrollbar {
+  width: var(--space-2xs);
+  height: var(--space-2xs);
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: var(--color-surface-inverted);
+  border: 2px solid transparent;
+  background-clip: content-box;
+  border-radius: var(--radius-full);
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: var(--color-primary);
+  background-clip: content-box;
+}
+
+/* No steppers. They are the browser's furniture, not ours, and they cannot
+   be made to match anything else here. */
+.scrollbar-thin::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+/*
+ * Wrapper that holds a scroll area in from the edge it runs along.
+ *
+ * The gutter cannot go on the scroll container itself. A scrollbar is painted
+ * between the border box and the padding box, so padding there moves the
+ * content away from the bar and leaves the bar where it was. Insetting the
+ * whole scroll area by wrapping it is the only way to put air at the ends of
+ * the bar as well as its sides.
+ *
+ * Carries the surface colour of whatever it wraps, so the gutter reads as
+ * part of that surface rather than a seam in it.
+ */
+.scrollbar-frame {
+  padding: var(--space-3xs);
+}
+
+/* Nothing in the corner where two scrollbars would meet. */
+.scrollbar-thin::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* =========================================================================
+ * Section 4: Animations
+ * Shared animation utilities.
+ * ========================================================================= */
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.2s ease-in-out;
+}
+
+/* Gradient border utility for pill buttons (used by ui-react Button outline variant) */
+.pill-gradient-border {
+  position: relative;
+  border: 0.5px solid transparent;
+  background:
+    linear-gradient(var(--color-surface-canvas), var(--color-surface-canvas))
+      padding-box,
+    linear-gradient(
+        135deg,
+        var(--color-gradient-start),
+        var(--color-gradient-end)
+      )
+      border-box;
+}
+
+.pill-gradient-border:hover {
+  background:
+    linear-gradient(var(--color-surface-section), var(--color-surface-section))
+      padding-box,
+    linear-gradient(
+        135deg,
+        var(--color-gradient-start),
+        var(--color-gradient-end)
+      )
+      border-box;
+}

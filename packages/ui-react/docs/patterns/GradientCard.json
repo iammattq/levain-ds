@@ -1,0 +1,162 @@
+{
+  "name": "GradientCard",
+  "description": "A card component with configurable gradient borders using a three-layer system. Supports named presets or custom configurations for light and dark modes. Built with the Cardopia gradient system.",
+  "category": "patterns",
+  "usage": [
+    "Use named presets ('elevated', 'inset', 'matts') for quick styling",
+    "Provide custom lightConfig/darkConfig for full control over gradients",
+    "Automatically switches between light and dark mode configurations",
+    "Use href prop to render as a clickable link",
+    "Combine with other Card sub-components for complex layouts"
+  ],
+  "examples": [
+    "```tsx\n// Using a preset\nimport { GradientCard } from '@/lib/designsystem';\n\n<GradientCard preset=\"elevated\">\n  <div className=\"p-6\">\n    <h3>Elevated Card</h3>\n    <p>Appears to float above the surface</p>\n  </div>\n</GradientCard>\n```",
+    "```tsx\n// As a link\n<GradientCard href=\"/articles/my-article\" preset=\"matts\">\n  <div className=\"p-6\">\n    <h3>Clickable Card</h3>\n  </div>\n</GradientCard>\n```",
+    "```tsx\n// Custom configuration\n<GradientCard\n  lightConfig={{\n    surface: { startIndex: 22, endIndex: 20, angle: 180 },\n    borderTop: { colorIndex: 25, angle: 180, width: 1 },\n    borderBottom: { colorIndex: 18, angle: 180, width: 1 },\n  }}\n  darkConfig={{\n    surface: { startIndex: 6, endIndex: 4, angle: 180 },\n    borderTop: { colorIndex: 8, angle: 180, width: 1 },\n    borderBottom: { colorIndex: 2, angle: 180, width: 1 },\n  }}\n>\n  <div className=\"p-6\">Custom Gradient Card</div>\n</GradientCard>\n```",
+    "```tsx\n// Without hover effect\n<GradientCard preset=\"inset\" hoverEffect={false}>\n  <div className=\"p-6\">Static Card</div>\n</GradientCard>\n```"
+  ],
+  "design": [
+    "Three-layer gradient system: borderBottom → borderTop → surface",
+    "Border layers fade to transparent for natural alpha blending",
+    "Surface layer uses solid gradient fill",
+    "Presets match Cardopia tool output for consistency",
+    "Uses CSS custom properties for efficient theme switching",
+    "Shadow on hover disabled by default (configurable)",
+    "Surface indices 0-25 map to design system surface ramp"
+  ],
+  "accessibility": [
+    "When used with href, renders as a proper Next.js Link for navigation",
+    "Focus and hover states are visually indicated via shadow changes",
+    "Ensure sufficient color contrast between border and surface colors"
+  ],
+  "props": [
+    {
+      "name": "children",
+      "type": "ReactNode",
+      "optional": false,
+      "defaultValue": null,
+      "description": "Card content"
+    },
+    {
+      "name": "href",
+      "type": "string",
+      "optional": true,
+      "defaultValue": "undefined",
+      "description": "Link destination - renders as Next.js Link when provided"
+    },
+    {
+      "name": "preset",
+      "type": "'elevated' | 'inset' | 'matts'",
+      "optional": true,
+      "defaultValue": "'matts'",
+      "description": "Named preset configuration"
+    },
+    {
+      "name": "lightConfig",
+      "type": "GradientLayerConfig",
+      "optional": true,
+      "defaultValue": "undefined",
+      "description": "Custom light mode configuration (overrides preset)"
+    },
+    {
+      "name": "darkConfig",
+      "type": "GradientLayerConfig",
+      "optional": true,
+      "defaultValue": "undefined",
+      "description": "Custom dark mode configuration (overrides preset)"
+    },
+    {
+      "name": "borderRadius",
+      "type": "number",
+      "optional": true,
+      "defaultValue": "8",
+      "description": "Border radius in pixels"
+    },
+    {
+      "name": "className",
+      "type": "string",
+      "optional": true,
+      "defaultValue": "''",
+      "description": "Additional CSS classes"
+    },
+    {
+      "name": "onClick",
+      "type": "(e: React.MouseEvent) => void",
+      "optional": true,
+      "defaultValue": "undefined",
+      "description": "Click handler"
+    },
+    {
+      "name": "hoverEffect",
+      "type": "boolean",
+      "optional": true,
+      "defaultValue": "true",
+      "description": "Apply hover effect (shadow removal)"
+    }
+  ],
+  "types": [
+    {
+      "name": "GradientConfig",
+      "description": "Configuration for surface gradient",
+      "properties": [
+        {
+          "name": "startIndex",
+          "type": "number",
+          "description": "Start surface index (0-25)"
+        },
+        {
+          "name": "endIndex",
+          "type": "number",
+          "description": "End surface index (0-25)"
+        },
+        {
+          "name": "angle",
+          "type": "number",
+          "description": "Gradient angle (0-360 degrees)"
+        }
+      ]
+    },
+    {
+      "name": "BorderConfig",
+      "description": "Configuration for border gradient",
+      "properties": [
+        {
+          "name": "colorIndex",
+          "type": "number",
+          "description": "Surface index for border color (0-25)"
+        },
+        {
+          "name": "angle",
+          "type": "number",
+          "description": "Gradient angle (0-360 degrees)"
+        },
+        {
+          "name": "width",
+          "type": "number",
+          "description": "Border width in pixels (1-10)"
+        }
+      ]
+    },
+    {
+      "name": "GradientLayerConfig",
+      "description": "Complete gradient layer configuration",
+      "properties": [
+        {
+          "name": "surface",
+          "type": "GradientConfig",
+          "description": "Surface gradient configuration"
+        },
+        {
+          "name": "borderTop",
+          "type": "BorderConfig",
+          "description": "Top border configuration"
+        },
+        {
+          "name": "borderBottom",
+          "type": "BorderConfig",
+          "description": "Bottom border configuration"
+        }
+      ]
+    }
+  ]
+}

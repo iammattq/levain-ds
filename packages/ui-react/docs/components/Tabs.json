@@ -1,0 +1,117 @@
+{
+  "name": "Tabs",
+  "description": "Pill-style tabs for switching between views or filtering content. Features a subtle container background with solid primary-colored active tab.",
+  "category": "components",
+  "usage": [
+    "Use for switching between mutually exclusive views or content sections",
+    "Prefer over SegmentedControl when you want a pill-in-container visual style",
+    "Use size='compact' for dense UIs, 'sm' for secondary contexts, 'md' (default) for primary navigation",
+    "Supports keyboard navigation with arrow keys, Home, and End",
+    "Always provide meaningful labels for accessibility"
+  ],
+  "examples": [
+    "```tsx\nimport { Tabs } from '@/lib/designsystem';\n\nconst tabs = [\n  { value: 'style', label: 'Style' },\n  { value: 'image', label: 'Image' },\n  { value: 'arrange', label: 'Arrange' },\n];\n\n<Tabs\n  tabs={tabs}\n  value={activeTab}\n  onChange={setActiveTab}\n/>\n```",
+    "```tsx\n// With disabled tab\nconst tabs = [\n  { value: 'active', label: 'Active' },\n  { value: 'disabled', label: 'Disabled', disabled: true },\n  { value: 'another', label: 'Another' },\n];\n\n<Tabs tabs={tabs} value={value} onChange={setValue} />\n```",
+    "```tsx\n// Compact size for dense UIs\n<Tabs\n  tabs={tabs}\n  value={value}\n  onChange={setValue}\n  size=\"compact\"\n/>\n```",
+    "```tsx\n// With accessible label\n<Tabs\n  tabs={tabs}\n  value={value}\n  onChange={setValue}\n  label=\"View options\"\n/>\n```"
+  ],
+  "design": [
+    "Container uses --color-surface-subtle for subtle background",
+    "Active tab uses --color-primary with --color-text-on-primary text",
+    "Inactive tabs use --color-text-default with hover state --color-state-hover",
+    "Container has rounded-lg corners, individual tabs have rounded-md",
+    "Focus ring uses --color-border-focus for accessibility"
+  ],
+  "accessibility": [
+    "Uses role='tablist' on container and role='tab' on each tab button",
+    "aria-selected indicates the active tab",
+    "tabIndex roving focus: only active tab is in tab order",
+    "Arrow keys navigate between tabs, Home/End jump to first/last",
+    "Disabled tabs have aria-disabled and are skipped during keyboard navigation",
+    "Optional label prop provides accessible name for the tablist"
+  ],
+  "props": [
+    {
+      "name": "tabs",
+      "type": "TabItem[]",
+      "optional": false,
+      "defaultValue": null,
+      "description": "Array of tab items with value, label, and optional disabled flag",
+      "configurable": true
+    },
+    {
+      "name": "value",
+      "type": "string",
+      "optional": false,
+      "defaultValue": null,
+      "description": "Currently selected tab value",
+      "configurable": true
+    },
+    {
+      "name": "onChange",
+      "type": "(value: string) => void",
+      "optional": false,
+      "defaultValue": null,
+      "description": "Callback when tab selection changes",
+      "configurable": false
+    },
+    {
+      "name": "size",
+      "type": "'compact' | 'sm' | 'md'",
+      "optional": true,
+      "defaultValue": "'md'",
+      "description": "Size variant controlling height and typography",
+      "configurable": true
+    },
+    {
+      "name": "disabled",
+      "type": "boolean",
+      "optional": true,
+      "defaultValue": "false",
+      "description": "Disable all tabs",
+      "configurable": true
+    },
+    {
+      "name": "className",
+      "type": "string",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Additional classes for the container element",
+      "configurable": false
+    },
+    {
+      "name": "label",
+      "type": "string",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Accessible label for the tablist (aria-label)",
+      "configurable": true
+    }
+  ],
+  "subcomponents": [
+    {
+      "name": "TabItem",
+      "description": "Type definition for individual tab items",
+      "props": [
+        {
+          "name": "value",
+          "type": "string",
+          "optional": false,
+          "description": "Unique identifier for the tab"
+        },
+        {
+          "name": "label",
+          "type": "React.ReactNode",
+          "optional": false,
+          "description": "Tab label content"
+        },
+        {
+          "name": "disabled",
+          "type": "boolean",
+          "optional": true,
+          "description": "Whether this specific tab is disabled"
+        }
+      ]
+    }
+  ]
+}

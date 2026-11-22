@@ -1,0 +1,114 @@
+{
+  "$schema": "../component-schema.json",
+  "name": "ConfirmationModal",
+  "description": "Reusable confirmation dialog for destructive or important actions. Supports optional type-to-confirm for high-risk operations like cascading deletes.",
+  "category": "patterns",
+  "usage": [
+    "Use for any destructive action (delete, remove, cancel)",
+    "Use type-to-confirm (requireConfirmText) for cascading deletes or irreversible actions",
+    "Simple confirm/cancel is sufficient for single-item deletions",
+    "Supports async onConfirm handlers with automatic loading state",
+    "Close modal on success, keep open on error for retry opportunity"
+  ],
+  "examples": [
+    "// Simple confirmation\n<ConfirmationModal\n  isOpen={isOpen}\n  onClose={() => setIsOpen(false)}\n  onConfirm={handleDelete}\n  title=\"Delete Image\"\n  message=\"Are you sure you want to delete this image?\"\n  variant=\"danger\"\n  confirmButtonText=\"Delete\"\n/>",
+    "// Type-to-confirm for cascading delete\n<ConfirmationModal\n  isOpen={isOpen}\n  onClose={() => setIsOpen(false)}\n  onConfirm={handleDeleteGallery}\n  title=\"Delete Gallery\"\n  message=\"This will permanently delete the gallery and all 12 images. This action cannot be undone.\"\n  variant=\"danger\"\n  confirmButtonText=\"Delete Gallery\"\n  requireConfirmText=\"DELETE\"\n/>",
+    "// Warning variant\n<ConfirmationModal\n  isOpen={isOpen}\n  onClose={() => setIsOpen(false)}\n  onConfirm={handleArchive}\n  title=\"Archive Project\"\n  message=\"This project will be moved to archive and won't appear in active projects.\"\n  variant=\"warning\"\n  confirmButtonText=\"Archive\"\n/>"
+  ],
+  "design": [
+    "Uses Modal component for consistent overlay and animation",
+    "Danger variant uses red confirm button for visual warning",
+    "Type-to-confirm input is case-sensitive and disables button until matched",
+    "Loading state shown on confirm button during async operations",
+    "Cancel button uses ghost variant for secondary action",
+    "Compact size (sm) appropriate for confirmation dialogs"
+  ],
+  "accessibility": [
+    "Uses Modal's built-in focus trap and escape key handling",
+    "Confirm button clearly disabled until conditions met",
+    "TextInput has descriptive label for type-to-confirm",
+    "Loading state prevents double-submission"
+  ],
+  "props": [
+    {
+      "name": "isOpen",
+      "type": "boolean",
+      "optional": false,
+      "defaultValue": null,
+      "description": "Whether the modal is visible.",
+      "configurable": false
+    },
+    {
+      "name": "onClose",
+      "type": "() => void",
+      "optional": false,
+      "defaultValue": null,
+      "description": "Called when modal is closed (cancel or backdrop click).",
+      "configurable": false
+    },
+    {
+      "name": "onConfirm",
+      "type": "() => void | Promise<void>",
+      "optional": false,
+      "defaultValue": null,
+      "description": "Called when user confirms. Can be async - modal handles loading state.",
+      "configurable": false
+    },
+    {
+      "name": "title",
+      "type": "string",
+      "optional": false,
+      "defaultValue": null,
+      "description": "Modal title displayed in header.",
+      "configurable": true
+    },
+    {
+      "name": "message",
+      "type": "string | React.ReactNode",
+      "optional": false,
+      "defaultValue": null,
+      "description": "Message explaining what will happen on confirmation.",
+      "configurable": true
+    },
+    {
+      "name": "variant",
+      "type": "'danger' | 'warning' | 'info'",
+      "optional": true,
+      "defaultValue": "'danger'",
+      "description": "Visual variant indicating severity. Affects confirm button color.",
+      "configurable": true
+    },
+    {
+      "name": "confirmButtonText",
+      "type": "string",
+      "optional": true,
+      "defaultValue": "'Confirm'",
+      "description": "Text for the confirm button.",
+      "configurable": true
+    },
+    {
+      "name": "cancelButtonText",
+      "type": "string",
+      "optional": true,
+      "defaultValue": "'Cancel'",
+      "description": "Text for the cancel button.",
+      "configurable": true
+    },
+    {
+      "name": "requireConfirmText",
+      "type": "string",
+      "optional": true,
+      "defaultValue": null,
+      "description": "If set, user must type this exact text to enable confirm button. Case-sensitive.",
+      "configurable": true
+    },
+    {
+      "name": "loading",
+      "type": "boolean",
+      "optional": true,
+      "defaultValue": "false",
+      "description": "External loading state (merged with internal async loading).",
+      "configurable": false
+    }
+  ]
+}

@@ -1,0 +1,123 @@
+{
+  "name": "MenuItem",
+  "description": "A row in a menu, dropdown or sidebar. Renders the element that matches what it does \u2014 an anchor for `href`, a real button for `onClick`, a div otherwise \u2014 so keyboard and assistive-technology behaviour comes from the platform. Supports optional icons, active state and a pill shape.",
+  "category": "components",
+  "usage": [
+    "Use within lists or navigation structures.",
+    "Provide `href` to render as an internal Next.js link.",
+    "Use `onClick` for non-navigation actions; the item renders as a `<button>`.",
+    "Set `isActive` to true to apply active styling; links also receive `aria-current=\"page\"`.",
+    "Pass icon components (e.g., from lucide-react) to `LeftIcon` or `RightIcon`.",
+    "Use `size` ('sm', 'md', 'lg') to control overall item size, including text and icons.",
+    "`rightContent` keeps the item a `<div>` even with `onClick`, since that slot usually holds its own buttons.",
+    "Use `iconSize` and `iconStrokeWidth` when the icon should not inherit the text size or lucide's default weight.",
+    "Set `radius` from the nested-radius rule: the container's radius minus the inset between it and the row. Equal radii on parent and child widen the gap at the corners."
+  ],
+  "examples": [
+    "```tsx\n// Basic Menu Item\n<MenuItem>Profile</MenuItem>\n```",
+    "```tsx\n// Active Menu Item as a Link with Left Icon\nimport { User } from 'lucide-react';\n<MenuItem href=\"/profile\" LeftIcon={User} isActive>Profile</MenuItem>\n```",
+    "```tsx\n// Renders a real <button> \u2014 keyboard operable without extra ARIA\nimport { ChevronRight } from 'lucide-react';\n<MenuItem RightIcon={ChevronRight} onClick={() => openSubmenu()} size=\"lg\">Settings</MenuItem>\n```",
+    "```tsx\n// rightContent holds its own buttons, so the row stays a <div>\n<MenuItem onClick={load} rightContent={<Button size=\"xs\" Icon={Pencil} iconOnly aria-label=\"Edit\" />}>Preset</MenuItem>\n```",
+    "```tsx\n// Body-sized text with small, hairline icons\nimport { ChevronRight } from 'lucide-react';\n<MenuItem size=\"lg\" iconSize=\"sm\" iconStrokeWidth={1.5} RightIcon={ChevronRight} onClick={open}>\n  Settings\n</MenuItem>\n```",
+    "```tsx\n// A menu on --radius-xl padded by --space-2xs: rows take radius 'sm'\n<MenuItem size=\"xl\" radius=\"sm\" iconSize=\"sm\" href=\"/journal\">Journal</MenuItem>\n```"
+  ],
+  "design": [
+    "Use consistent text sizes within a single menu structure.",
+    "Ensure icons clearly relate to the menu item's action or destination.",
+    "Active state should clearly differentiate the selected item.",
+    "Maintain sufficient padding and spacing for readability and touch targets.",
+    "Menus are drawn on `surface-section`. Hover fills with `surface-canvas` \u2014 a rung down the ramp, so the row reads as pressed into the surface rather than lifted off it.",
+    "Whatever the hover fill, it must differ from the surface the menu is drawn on. Hover previously used `surface-section`, the same token as its own container, and so was invisible on every menu that used it.",
+    "Icons are an affordance, not the content. Where the text is large, `iconSize` can hold them smaller, and `iconStrokeWidth` can match the surrounding rule weight \u2014 align their outer edge with any control in the menu's header rather than with the text.",
+    "Row inset is the dropdown-item recipe: --space-xs horizontal, --space-2xs vertical."
+  ],
+  "accessibility": [
+    "The rendered element follows the item's behaviour: `href` gives an `<a>` via next/link, `onClick` gives a `<button>`, and neither gives a `<div>`. Interactive items are therefore focusable and operable by keyboard without added `role` or `tabIndex`.",
+    "The focus-visible ring is applied to whichever element receives focus. A previous version wrapped a styled div in a bare anchor, which left link items focusable with no visible indicator.",
+    "`isActive` sets `aria-current=\"page\"` on link items so the current destination is announced, not merely coloured.",
+    "Long labels truncate rather than overflow; make sure the full text is available elsewhere if it carries meaning.",
+    "Icons are decorative and marked `aria-hidden`; if a row's text is ambiguous, provide an `aria-label`.",
+    "Ensure sufficient contrast between text, icons and background, especially in active and hover states."
+  ],
+  "props": [
+    {
+      "name": "children",
+      "type": "React.ReactNode",
+      "optional": false,
+      "description": "The text content of the menu item."
+    },
+    {
+      "name": "LeftIcon",
+      "type": "string",
+      "optional": true,
+      "description": "Optional Lucide icon name (e.g., 'Home') to display on the left."
+    },
+    {
+      "name": "RightIcon",
+      "type": "string",
+      "optional": true,
+      "description": "Optional Lucide icon name (e.g., 'ChevronRight') to display on the right."
+    },
+    {
+      "name": "rightContent",
+      "type": "React.ReactNode",
+      "optional": true,
+      "configurable": false,
+      "description": "Content slot on the right, such as action buttons. Clicks are isolated from the item's own onClick, and its presence keeps the row a <div> so buttons are not nested."
+    },
+    {
+      "name": "isActive",
+      "type": "boolean",
+      "optional": true,
+      "defaultValue": "false",
+      "description": "Whether the menu item is currently active/selected. Link items also receive aria-current=\"page\"."
+    },
+    {
+      "name": "href",
+      "type": "string",
+      "optional": true,
+      "description": "If provided, renders the item as an internal Next.js Link.",
+      "configurable": false
+    },
+    {
+      "name": "size",
+      "type": "'sm' | 'md' | 'lg' | 'xl'",
+      "optional": true,
+      "defaultValue": "'sm'",
+      "description": "Text step for the row, which icons follow unless iconSize overrides it. sm/md/lg map to label-sm, label and body; xl maps to heading-4, for a menu that is a view's primary navigation rather than a list of secondary actions."
+    },
+    {
+      "name": "radius",
+      "type": "'none' | 'xs' | 'sm' | 'md' | 'lg' | 'full'",
+      "optional": true,
+      "defaultValue": "'md'",
+      "description": "Corner radius as a token step. Per the nested-radius rule, a row's radius is its container's radius minus the inset between them \u2014 a menu on --radius-xl (12px) padded by --space-2xs (8px) wants 'sm' (4px)."
+    },
+    {
+      "name": "iconSize",
+      "type": "'sm' | 'md' | 'lg'",
+      "optional": true,
+      "defaultValue": "matches `size`",
+      "description": "Icon scale, when it should not follow the text size. Body-sized rows with 24px icons read as icon-led, when the icon is usually only an affordance."
+    },
+    {
+      "name": "iconStrokeWidth",
+      "type": "number",
+      "optional": true,
+      "defaultValue": "2 (lucide default)",
+      "description": "Stroke weight passed through to the icons. Lighter values suit menus whose other rules are hairlines."
+    },
+    {
+      "name": "className",
+      "type": "string",
+      "optional": true,
+      "description": "Additional CSS classes to apply to the menu item's container element."
+    },
+    {
+      "name": "onClick",
+      "type": "(event: React.MouseEvent<HTMLElement>) => void",
+      "optional": true,
+      "description": "Handler for click events. Without `href` or `rightContent`, the item renders as a `<button>`."
+    }
+  ]
+}

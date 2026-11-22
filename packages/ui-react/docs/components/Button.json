@@ -1,0 +1,140 @@
+{
+  "name": "Button",
+  "description": "A versatile button component supporting various styles (primary, accent, outline, ghost, link, danger), sizes (xs, sm, md, lg, icon), loading states, active states for navigation, link behavior (internal/external), and icon integration. Uses V2 design tokens with color-mix() for interactive states.",
+  "category": "components",
+  "usage": [
+    "Use the `variant` prop to control the visual style. Default is 'outline' with gradient border and shadow.",
+    "Use the `size` prop to control the button dimensions.",
+    "Provide an `href` prop to render the button as a link (using Next.js Link for internal, `<a>` for external).",
+    "Set `external={true}` for links opening in a new tab.",
+    "Set `loading={true}` to display a spinner and disable the button.",
+    "Set `disabled={true}` to disable interactions.",
+    "Set `active={true}` to show the button in an active/selected state (e.g., for navigation).",
+    "Use the `Icon` prop (e.g., from lucide-react) to include an icon.",
+    "Control icon placement with `iconPosition` ('left' or 'right').",
+    "Use `iconOnly={true}` for buttons containing only an icon (requires `Icon` prop).",
+    "Set `fullWidth={true}` to make the button span its container's width."
+  ],
+  "examples": [
+    "```tsx\n// Outline Button (Default) - gradient border with shadow\n<Button>Click Me</Button>\n```",
+    "```tsx\n// Primary Button - solid primary background\n<Button variant=\"primary\">Submit</Button>\n```",
+    "```tsx\n// Accent Button - solid accent background\n<Button variant=\"accent\">Learn More</Button>\n```",
+    "```tsx\n// Active Navigation Button\n<Button href=\"/dashboard\" active={true}>Dashboard</Button>\n```",
+    "```tsx\n// Ghost Button - transparent with hover background\nimport { ArrowRight } from 'lucide-react';\n<Button variant=\"ghost\" Icon={ArrowRight} iconPosition=\"right\">Next Step</Button>\n```",
+    "```tsx\n// Button with Icon in Loading State - spinner replaces icon, text updates\nimport { Trash2 } from 'lucide-react';\n<Button variant=\"danger\" Icon={Trash2} loading={isDeleting}>\n  {isDeleting ? 'Deleting...' : 'Delete'}\n</Button>\n```",
+    "```tsx\n// Icon Only Button (requires aria-label or accessible text child)\nimport { Search } from 'lucide-react';\n<Button variant=\"primary\" iconOnly={true} Icon={Search} aria-label=\"Search\" />\n```",
+    "```tsx\n// Link Button Opening Externally\n<Button variant=\"link\" href=\"https://example.com\" external>Visit External Site</Button>\n```"
+  ],
+  "design": [
+    "Use the 'primary' variant for the main call-to-action on a page or within a component.",
+    "Use 'accent' for complementary actions that pair with primary buttons.",
+    "Use 'outline' (default) for navigation buttons or less prominent actions with the gradient border style.",
+    "Use 'ghost' for actions within toolbars, tables, or inline where a filled button would be too heavy.",
+    "Use 'link' variant sparingly, primarily for navigation or actions that mimic standard hyperlinks.",
+    "Use the 'danger' variant exclusively for actions that have destructive consequences (e.g., delete, remove).",
+    "Maintain consistent sizing within sections where multiple buttons appear together.",
+    "For `iconOnly` buttons, ensure the icon choice clearly communicates the button's action. Provide an `aria-label` if the icon alone is not sufficient.",
+    "Avoid using `fullWidth` buttons in contexts where they might become excessively wide on large screens, unless constrained by a parent container.",
+    "Typography uses `.type-label` (14px medium) for md/lg sizes and `.type-label-sm` (12px medium) for xs/sm sizes."
+  ],
+  "accessibility": [
+    "Focus states are handled with `focus-visible` styles.",
+    "Disabled states use `disabled:opacity-50` and `disabled:pointer-events-none`.",
+    "When using `iconOnly={true}`, ensure meaningful text is provided either as `children` or via the `aria-label` prop for screen reader users."
+  ],
+  "props": [
+    {
+      "name": "variant",
+      "type": "'primary' | 'accent' | 'outline' | 'ghost' | 'link' | 'danger' | 'secondary'",
+      "optional": true,
+      "defaultValue": "'outline'",
+      "description": "The visual style variant of the button. Primary and accent have solid backgrounds with auto-calculated contrasting text. Outline (default) has gradient border with shadow. Ghost is transparent with state overlays. 'secondary' is deprecated (alias for 'accent')."
+    },
+    {
+      "name": "active",
+      "type": "boolean",
+      "optional": true,
+      "defaultValue": "false",
+      "description": "When true, shows the button in an active/selected state with primary background. Useful for navigation buttons."
+    },
+    {
+      "name": "size",
+      "type": "'xs' | 'sm' | 'md' | 'lg' | 'icon'",
+      "optional": true,
+      "defaultValue": "'md'",
+      "description": "The size of the button. 'xs' is extra small for compact UIs (h-7, px-2). 'icon' size is automatically used if `iconOnly` is true."
+    },
+    {
+      "name": "fullWidth",
+      "type": "boolean",
+      "optional": true,
+      "defaultValue": "false",
+      "description": "If true, the button will take the full width of its container."
+    },
+    {
+      "name": "href",
+      "type": "string",
+      "optional": true,
+      "defaultValue": "undefined",
+      "description": "If provided, the button renders as a link (NextLink for internal, `<a>` for external).",
+      "configurable": false
+    },
+    {
+      "name": "external",
+      "type": "boolean",
+      "optional": true,
+      "defaultValue": "false",
+      "description": "If `href` is provided, set to true to open the link in a new tab (`target=\"_blank\"`).",
+      "configurable": false
+    },
+    {
+      "name": "loading",
+      "type": "boolean",
+      "optional": true,
+      "defaultValue": "false",
+      "description": "If true, displays a spinning Loader2 icon (from lucide-react) in place of the Icon prop and disables the button. Text content remains visible. Uses currentColor for proper contrast across all variants."
+    },
+    {
+      "name": "disabled",
+      "type": "boolean",
+      "optional": true,
+      "defaultValue": "false",
+      "description": "If true, the button is disabled and interaction is prevented."
+    },
+    {
+      "name": "Icon",
+      "type": "React.ElementType<LucideProps>",
+      "optional": true,
+      "defaultValue": "undefined",
+      "description": "An optional icon component (e.g., from lucide-react) to display within the button.",
+      "configurable": false
+    },
+    {
+      "name": "iconName",
+      "type": "string",
+      "optional": true,
+      "description": "Name of the Lucide icon to display (e.g., 'Home', 'Search', 'ArrowRight').",
+      "configurable": true
+    },
+    {
+      "name": "iconPosition",
+      "type": "'left' | 'right'",
+      "optional": true,
+      "defaultValue": "'left'",
+      "description": "Specifies the position of the icon relative to the button text."
+    },
+    {
+      "name": "iconOnly",
+      "type": "boolean",
+      "optional": true,
+      "defaultValue": "false",
+      "description": "If true, styles the button specifically for displaying only an icon (requires the `Icon` prop)."
+    },
+    {
+      "name": "className",
+      "type": "string",
+      "optional": true,
+      "description": "Additional CSS classes to apply to the button element."
+    }
+  ]
+}

@@ -1,0 +1,83 @@
+{
+  "name": "Switch",
+  "description": "The Switch component provides a toggle control that allows users to switch between two states (on/off).",
+  "category": "components",
+  "usage": [
+    "Three size options: small, medium, and large",
+    "Optional label support",
+    "Disabled state",
+    "Animated state transitions",
+    "Accessible with keyboard navigation"
+  ],
+  "examples": [
+    "import { Switch } from '@/lib/designsystem';\n\nfunction MyComponent() {\n  const [isEnabled, setIsEnabled] = useState(false);\n\n  return (\n    <Switch\n      id=\"my-switch\"\n      checked={isEnabled}\n      onChange={setIsEnabled}\n      label=\"Enable feature\"\n    />\n  );\n}",
+    "<Switch id=\"small-switch\" checked={checked} onChange={handleChange} size=\"sm\" label=\"Small\" />\n<Switch id=\"medium-switch\" checked={checked} onChange={handleChange} size=\"md\" label=\"Medium\" />\n<Switch id=\"large-switch\" checked={checked} onChange={handleChange} size=\"lg\" label=\"Large\" />",
+    "<Switch\n  id=\"disabled-switch\"\n  checked={true}\n  onChange={() => {}}\n  disabled={true}\n  label=\"Disabled switch\"\n/>",
+    "<Switch id=\"no-label-switch\" checked={checked} onChange={handleChange} />"
+  ],
+  "design": [
+    "Background (unchecked): var(--color-surface-card)",
+    "Background (checked): var(--color-accent)",
+    "Border: var(--color-border-default)",
+    "Handle color: var(--color-surface-inverted)",
+    "Label text: var(--color-text-default)",
+    "Focus ring: var(--color-primary)",
+    "Uses CSS variables for theming"
+  ],
+  "accessibility": [
+    "Uses a standard checkbox input (visually hidden) for native keyboard navigation",
+    "Maintains proper focus states",
+    "Labels are properly associated with inputs",
+    "Disabled state is properly conveyed"
+  ],
+  "props": [
+    {
+      "name": "id",
+      "type": "string",
+      "optional": false,
+      "defaultValue": null,
+      "description": "Unique identifier for the input (required)",
+      "configurable": false
+    },
+    {
+      "name": "checked",
+      "type": "boolean",
+      "optional": false,
+      "defaultValue": null,
+      "description": "The state of the switch (required)",
+      "configurable": true
+    },
+    {
+      "name": "onChange",
+      "type": "(checked: boolean) => void",
+      "optional": false,
+      "defaultValue": null,
+      "description": "Callback when the switch state changes (required)",
+      "configurable": false
+    },
+    {
+      "name": "label",
+      "type": "string",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Optional text label",
+      "configurable": true
+    },
+    {
+      "name": "disabled",
+      "type": "boolean",
+      "optional": true,
+      "defaultValue": "false",
+      "description": "Whether the switch is disabled",
+      "configurable": true
+    },
+    {
+      "name": "size",
+      "type": "'sm' | 'md' | 'lg'",
+      "optional": true,
+      "defaultValue": "'md'",
+      "description": "Size of the switch",
+      "configurable": true
+    }
+  ]
+}

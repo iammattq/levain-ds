@@ -1,0 +1,123 @@
+{
+  "name": "ContentNavigation",
+  "description": "A navigation pattern for content pages that provides previous/next links with smooth transitions. Features desktop sticky navigation (fixed to viewport sides) and mobile bottom navigation. Includes delayed visibility for smooth page transitions and text truncation for long titles.",
+  "category": "patterns",
+  "usage": [
+    "Use for navigating between sequential content items (e.g., blog posts, articles, case studies)",
+    "Desktop view shows fixed chevron buttons on left/right sides of viewport with hover-revealed titles",
+    "Mobile view shows bottom navigation with vertical layout and truncated titles",
+    "Component is hidden on initial render and fades in after a configurable delay to allow page transitions to complete",
+    "Automatically scrolls to top when navigation links are clicked",
+    "Optional back link can be displayed in mobile view for returning to index/list page"
+  ],
+  "examples": [
+    "// Basic usage with previous and next items\n<ContentNavigation\n  previous={{ title: 'Previous Article', slug: 'previous-article' }}\n  next={{ title: 'Next Article', slug: 'next-article' }}\n  basePath=\"/journal\"\n/>",
+    "// With back link to index page\n<ContentNavigation\n  previous={previousPost}\n  next={nextPost}\n  basePath=\"/journal\"\n  backLinkText=\"Back to Journal\"\n/>",
+    "// Desktop only navigation\n<ContentNavigation\n  previous={previousPost}\n  next={nextPost}\n  basePath=\"/work\"\n  displayMode=\"desktop-only\"\n/>",
+    "// Mobile only with custom position\n<ContentNavigation\n  previous={previousPost}\n  next={nextPost}\n  basePath=\"/journal\"\n  displayMode=\"mobile-only\"\n  mobilePosition=\"top\"\n/>",
+    "// With custom delay and text truncation\n<ContentNavigation\n  previous={previousPost}\n  next={nextPost}\n  basePath=\"/journal\"\n  delayMs={800}\n  truncateLength={25}\n/>"
+  ],
+  "design": [
+    "Desktop navigation uses fixed positioning at viewport edges (left: 8rem, right: 8rem)",
+    "Chevron buttons use rounded-full shape with bg-[var(--color-surface-card)]",
+    "Titles appear on hover with slide-in animation and bg-[var(--color-accent)]",
+    "Mobile navigation uses smaller circular buttons with titles shown below",
+    "Opacity transitions (300ms duration) provide smooth fade-in effect",
+    "Mobile titles are truncated with ellipsis (default 30 chars, configurable via truncateLength)",
+    "Back link appears with border-top separator in mobile view"
+  ],
+  "accessibility": [
+    "Desktop navigation links include descriptive aria-labels: 'Previous: {title}' and 'Next: {title}'",
+    "Clicking navigation links scrolls to top with 'instant' behavior for immediate navigation",
+    "Chevron icons are from lucide-react for consistent vector rendering",
+    "Text truncation preserves readability while preventing layout overflow"
+  ],
+  "props": [
+    {
+      "name": "previous",
+      "type": "ContentItem | null",
+      "optional": false,
+      "defaultValue": "undefined",
+      "description": "The previous content item with title and slug. Pass null if there is no previous item.",
+      "configurable": true
+    },
+    {
+      "name": "next",
+      "type": "ContentItem | null",
+      "optional": false,
+      "defaultValue": "undefined",
+      "description": "The next content item with title and slug. Pass null if there is no next item.",
+      "configurable": true
+    },
+    {
+      "name": "basePath",
+      "type": "string",
+      "optional": false,
+      "defaultValue": "undefined",
+      "description": "The base URL path for content items (e.g., '/journal' or '/work'). Used to construct navigation URLs.",
+      "configurable": true
+    },
+    {
+      "name": "backLinkText",
+      "type": "string",
+      "optional": true,
+      "defaultValue": "undefined",
+      "description": "Optional text for back link to index page. When provided, displays a back link in mobile view with chevron icon.",
+      "configurable": true
+    },
+    {
+      "name": "mobilePosition",
+      "type": "'top' | 'bottom'",
+      "optional": true,
+      "defaultValue": "'bottom'",
+      "description": "Controls vertical position of mobile navigation. 'bottom' adds mt-16 spacing, 'top' removes it.",
+      "configurable": true
+    },
+    {
+      "name": "displayMode",
+      "type": "'all' | 'desktop-only' | 'mobile-only'",
+      "optional": true,
+      "defaultValue": "'all'",
+      "description": "Controls which navigation parts are displayed. 'all' shows both desktop and mobile, 'desktop-only' hides mobile, 'mobile-only' hides desktop.",
+      "configurable": true
+    },
+    {
+      "name": "delayMs",
+      "type": "number",
+      "optional": true,
+      "defaultValue": "600",
+      "description": "Delay in milliseconds before showing navigation. Allows page transition to complete before navigation fades in.",
+      "configurable": true
+    },
+    {
+      "name": "truncateLength",
+      "type": "number",
+      "optional": true,
+      "defaultValue": "undefined",
+      "description": "Maximum length of title before truncation with ellipsis. If not provided, desktop titles are not truncated. Mobile view uses 30 characters as default if not specified.",
+      "configurable": true
+    }
+  ],
+  "subcomponents": [
+    {
+      "name": "ContentItem",
+      "description": "Interface for content items used in navigation",
+      "props": [
+        {
+          "name": "title",
+          "type": "string",
+          "optional": false,
+          "defaultValue": null,
+          "description": "Display text for the content item"
+        },
+        {
+          "name": "slug",
+          "type": "string",
+          "optional": false,
+          "defaultValue": null,
+          "description": "URL slug for the content item, combined with basePath to create the navigation URL"
+        }
+      ]
+    }
+  ]
+}

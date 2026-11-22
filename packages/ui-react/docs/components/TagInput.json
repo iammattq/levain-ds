@@ -1,0 +1,163 @@
+{
+  "name": "TagInput",
+  "description": "The TagInput component provides an interactive, accessible way to select and create tags from a predefined list of options.",
+  "category": "components",
+  "usage": [
+    "Use TagInput when users need to select multiple tags from a predefined list",
+    "Allow users to create new tags by providing the onCreateTag handler",
+    "Display validation errors with the error prop (respects touched state)",
+    "Limit the number of tags that can be selected using maxTags prop",
+    "Use keyboard shortcuts: Enter key to add tags without form submission",
+    "Tag suggestions show up to 5 relevant suggestions as you type",
+    "Helper text is displayed below the input (not shown when error is displayed)",
+    "Use touched prop to control when errors are shown (e.g., only after user interaction)"
+  ],
+  "examples": [
+    "import { TagInput } from '@/lib/designsystem';\nimport { useState } from 'react';\n\nfunction TagSelector() {\n  const [selectedTags, setSelectedTags] = useState<string[]>([]);\n\n  return (\n    <TagInput\n      id=\"categories\"\n      label=\"Categories\"\n      availableTags={[\n        { id: '1', name: 'Technology' },\n        { id: '2', name: 'Design' },\n        { id: '3', name: 'Marketing' },\n      ]}\n      selectedTags={selectedTags}\n      onChange={setSelectedTags}\n      helperText=\"Select categories for your content\"\n    />\n  );\n}",
+    "<TagInput\n  id=\"skills\"\n  label=\"Skills\"\n  availableTags={availableSkills}\n  selectedTags={selectedSkills}\n  onChange={setSelectedSkills}\n  onCreateTag={async (tagName) => {\n    // API call to create a new tag\n    const response = await fetch('/api/skills', {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify({ name: tagName }),\n    });\n    const newSkill = await response.json();\n    return newSkill; // Should return { id: string, name: string }\n  }}\n  helperText=\"Select skills or create new ones by typing and pressing Enter\"\n/>",
+    "<TagInput\n  id=\"topics\"\n  label=\"Topics\"\n  availableTags={availableTopics}\n  selectedTags={selectedTopics}\n  onChange={setSelectedTopics}\n  error=\"At least one topic is required\"\n  touched={hasSubmitted}\n  required\n/>",
+    "<TagInput\n  id=\"keywords\"\n  label=\"Keywords\"\n  availableTags={availableKeywords}\n  selectedTags={selectedKeywords}\n  onChange={setSelectedKeywords}\n  maxTags={5}\n  helperText=\"Select up to 5 keywords\"\n/>",
+    "import { useState, FormEvent } from 'react';\nimport { TagInput, Button } from '@/lib/designsystem';\n\nfunction ArticleForm() {\n  const [title, setTitle] = useState('');\n  const [selectedTags, setSelectedTags] = useState<string[]>([]);\n  const [errors, setErrors] = useState<{ [key: string]: string }>({});\n\n  const availableTags = [\n    { id: 'tech', name: 'Technology' },\n    { id: 'design', name: 'Design' },\n    { id: 'business', name: 'Business' },\n  ];\n\n  const handleSubmit = (e: FormEvent) => {\n    e.preventDefault();\n\n    // Validate form\n    const newErrors: { [key: string]: string } = {};\n\n    if (!title.trim()) {\n      newErrors.title = 'Title is required';\n    }\n\n    if (selectedTags.length === 0) {\n      newErrors.tags = 'At least one tag is required';\n    }\n\n    if (Object.keys(newErrors).length > 0) {\n      setErrors(newErrors);\n      return;\n    }\n\n    // Submit form...\n    console.log({ title, tags: selectedTags });\n  };\n\n  return (\n    <form onSubmit={handleSubmit} className=\"space-y-4\">\n      <div>\n        <label htmlFor=\"title\" className=\"block text-sm font-medium\">\n          Title\n        </label>\n        <input\n          id=\"title\"\n          type=\"text\"\n          value={title}\n          onChange={(e) => setTitle(e.target.value)}\n          className=\"w-full rounded-md border p-2\"\n        />\n        {errors.title && <p className=\"text-sm text-red-500\">{errors.title}</p>}\n      </div>\n\n      <TagInput\n        id=\"tags\"\n        label=\"Tags\"\n        availableTags={availableTags}\n        selectedTags={selectedTags}\n        onChange={setSelectedTags}\n        error={errors.tags}\n        helperText=\"Select at least one tag for your article\"\n        required\n      />\n\n      <Button type=\"submit\">Submit Article</Button>\n    </form>\n  );\n}"
+  ],
+  "design": [
+    "Focus states provide visual indication when the input is focused with border and ring styling",
+    "Error states display with red border and error message",
+    "Loading state shows spinner with 'Loading tags...' message",
+    "Tag suggestions are limited to 5 items to prevent overwhelming the user",
+    "Selected tags display with Tag component and remove button (X icon)",
+    "Create new tag button appears when onCreateTag handler is provided and input doesn't match existing tags",
+    "Maximum tags limit visually prevents adding more tags and hides input when reached"
+  ],
+  "accessibility": [
+    "Proper labeling with associated IDs using htmlFor attribute",
+    "ARIA attributes for error states (aria-invalid)",
+    "Keyboard navigation support (Tab, Enter)",
+    "Visual feedback for focus states",
+    "Error messages are properly associated with the input",
+    "Interactive elements have appropriate roles and focus states",
+    "Remove tag buttons have aria-label describing the action",
+    "Required fields indicated with visual asterisk and required prop"
+  ],
+  "props": [
+    {
+      "name": "id",
+      "type": "string",
+      "optional": false,
+      "defaultValue": null,
+      "description": "Unique identifier for the input (required for accessibility)",
+      "configurable": false
+    },
+    {
+      "name": "label",
+      "type": "string",
+      "optional": false,
+      "defaultValue": null,
+      "description": "Text label displayed above the input",
+      "configurable": true
+    },
+    {
+      "name": "availableTags",
+      "type": "TagOption[]",
+      "optional": false,
+      "defaultValue": "[]",
+      "description": "Array of all available tags. TagOption interface: { id: string; name: string; }",
+      "configurable": true
+    },
+    {
+      "name": "selectedTags",
+      "type": "string[]",
+      "optional": false,
+      "defaultValue": "[]",
+      "description": "Array of selected tag IDs",
+      "configurable": true
+    },
+    {
+      "name": "onChange",
+      "type": "(tags: string[]) => void",
+      "optional": false,
+      "defaultValue": null,
+      "description": "Called when selected tags change",
+      "configurable": false
+    },
+    {
+      "name": "loading",
+      "type": "boolean",
+      "optional": true,
+      "defaultValue": "false",
+      "description": "Whether the tags are currently being loaded",
+      "configurable": true
+    },
+    {
+      "name": "disabled",
+      "type": "boolean",
+      "optional": true,
+      "defaultValue": "false",
+      "description": "Whether the field is disabled",
+      "configurable": true
+    },
+    {
+      "name": "onCreateTag",
+      "type": "(tagName: string) => Promise<TagOption>",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Optional function to handle creating new tags",
+      "configurable": false
+    },
+    {
+      "name": "error",
+      "type": "string",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Error message to display when validation fails (only shown when touched is true)",
+      "configurable": true
+    },
+    {
+      "name": "touched",
+      "type": "boolean",
+      "optional": true,
+      "defaultValue": "false",
+      "description": "Whether the field has been touched/interacted with (controls error visibility)",
+      "configurable": true
+    },
+    {
+      "name": "helperText",
+      "type": "string",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Helper text displayed below the input (not shown when error is displayed)",
+      "configurable": true
+    },
+    {
+      "name": "className",
+      "type": "string",
+      "optional": true,
+      "defaultValue": "\"\"",
+      "description": "Additional CSS class for the container element",
+      "configurable": false
+    },
+    {
+      "name": "required",
+      "type": "boolean",
+      "optional": true,
+      "defaultValue": "false",
+      "description": "Indicates if the field is required",
+      "configurable": true
+    },
+    {
+      "name": "maxTags",
+      "type": "number",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Maximum number of tags that can be selected",
+      "configurable": true
+    },
+    {
+      "name": "compact",
+      "type": "boolean",
+      "optional": true,
+      "defaultValue": "false",
+      "description": "Whether to use compact sizing (smaller typography and reduced padding)",
+      "configurable": true
+    }
+  ]
+}

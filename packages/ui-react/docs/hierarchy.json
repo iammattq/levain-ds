@@ -1,0 +1,809 @@
+{
+  "guidelineTitle": "Design System Hierarchy Guidelines",
+  "introduction": "The REFERENCE for the design system: what it contains. Token lists, scale values, ladders, ramps, and which level uses what. Organised by domain — page hierarchy, surfaces, colour, elevation, spacing, containment, radius, typography.",
+  "readAlso": {
+    "assembly.json": "Read this FIRST. It answers 'how do I build this?' — the invariants that must hold, and the recipes that map a situation straight to a token. Come back here only when no recipe fits, or when you need a value this file defines.",
+    "manifest.json": "What components already exist. Check before building anything."
+  },
+  "howTheseFilesSplit": "Facts vs instructions. A fact about the system ('--space-md is 24px', 'surface-card is rung 3') lives here. An instruction for building ('cards in a carousel use gap-sm', 'a heading sits closer to what follows it') lives in assembly.json. If you are deciding where something belongs, ask which of those two it is.",
+  "twoAxes": "Two different meanings of 'level' appear in this file and they are not the same axis. COMPOSITION level (L0-L4, under pageHierarchy) is about nesting: what contains what in the component tree. STACKING level (the surface ladder) is about depth: what sits visually on top of what. A Card is L3 by composition and rung 3 by stacking, which is why they usually agree — but a dropdown is composed inside a component while stacking above everything, so a floating surface has no composition level at all.",
+  "pageHierarchy": {
+    "title": "Page & Component Hierarchy",
+    "description": "Composition levels: what contains what. Each level owns a band of the spacing scale, a rung of the surface ladder and a radius range, so knowing an element's level answers most styling questions at once.",
+    "levels": [
+      {
+        "level": 0,
+        "elementType": "Root Layout",
+        "location": "/layout.tsx",
+        "description": "Site root: metadata, global providers, persistent navigation and footer.",
+        "owns": "The canvas. Sets --color-surface-canvas and the outermost width constraint. Adds no inset of its own — that belongs to the template.",
+        "surface": "--color-surface-canvas",
+        "spacing": "--space-3xl between major regions"
+      },
+      {
+        "level": 1,
+        "elementType": "Page Template",
+        "location": "templates/PageTemplate.tsx",
+        "description": "Structure for a page type: title heading, main content area, optional sidebar columns.",
+        "owns": "The page inset and the width constraint (--container-page, or a --spine for reading surfaces). This is where a page's single left edge is established.",
+        "surface": "--color-surface-canvas",
+        "spacing": "inset --space-md mobile / --space-lg desktop; --space-2xl between Sections"
+      },
+      {
+        "level": 2,
+        "elementType": "Page Section",
+        "location": "components/Section.tsx",
+        "description": "Groups related blocks of content within a page, with its own background.",
+        "owns": "Grouping. A Section's job is proximity made visible: everything inside it reads as one thing because it shares a surface and an inset.",
+        "surface": "--color-surface-section",
+        "spacing": "inset --space-sm mobile / --space-lg desktop; --space-md between blocks inside"
+      },
+      {
+        "level": 3,
+        "elementType": "Pattern / Feature",
+        "location": "patterns/",
+        "description": "Reusable structures composed of several components — MediaCard, ImageUploader, Timeline. Usually inside a Section, sometimes directly on a template.",
+        "owns": "A self-contained unit of content. Takes a surface step up from its parent, which is what makes it read as a distinct object rather than a region of the Section.",
+        "surface": "--color-surface-card",
+        "spacing": "inset --space-md; --space-md between siblings"
+      },
+      {
+        "level": 4,
+        "elementType": "Component / Building Block",
+        "location": "components/ (excluding Section)",
+        "description": "The atoms — Button, TextInput, Slider. Composed into Patterns or used directly.",
+        "owns": "Interaction. Density lives here: a control's inset is the smallest space on the page that still reads as deliberate.",
+        "surface": "--color-surface-component",
+        "spacing": "inset --space-2xs to --space-sm; --space-xs between related controls"
+      }
+    ],
+    "principles": [
+      "Each level inward uses a smaller step on the spacing scale, a higher rung on the surface ladder, and an equal or smaller radius. If a level breaks that pattern, either the nesting is wrong or the styling is.",
+      "Grouping is the point. A container exists to say 'these belong together' — which it does through proximity and a shared surface, not through decoration.",
+      "Composition level is not stacking level. A dropdown is composed inside an L4 control but stacks above the entire page; it takes the floating surface, not the component surface.",
+      "Build complex UIs by composing smaller, focused components. Patterns encapsulate common combinations; check manifest.json before writing a new one.",
+      "Decoration decreases with depth. A page title can carry an accent bar; the same treatment inside a card is noise."
+    ],
+    "componentSpecificRules": [
+      {
+        "componentName": "Heading",
+        "rules": [
+          {
+            "context": {
+              "description": "When placed inside containers like Section or Card (Levels 2+)",
+              "parentLevel": [2, 3, 4]
+            },
+            "propsToSet": {
+              "showBar": false
+            },
+            "reason": "Avoid excessive decoration within nested containers."
+          },
+          {
+            "context": {
+              "description": "When used directly on Root or Page Template (Levels 0, 1)",
+              "parentLevel": [0, 1]
+            },
+            "propsToSet": {
+              "showBar": true,
+              "align": "left"
+            },
+            "reason": "Primary page/layout titles can have decoration and should align left by default."
+          }
+        ]
+      },
+      {
+        "componentName": "PageTemplate",
+        "rules": [
+          {
+            "context": {
+              "description": "For standard front-end/public user pages",
+              "pageType": "public"
+            },
+            "propsToSet": {
+              "maxWidth": true
+            },
+            "reason": "Constrains the page to --container-page (80rem). For a reading surface — prose, an article, a findings list — prefer a --spine grid instead: the content column should BE the measure rather than a measure applied inside a wider box. See containmentTokens."
+          },
+          {
+            "context": {
+              "description": "For admin section pages",
+              "pageType": "admin"
+            },
+            "propsToSet": {
+              "maxWidth": false
+            },
+            "reason": "Allow admin interfaces to use full width for complex layouts/data tables."
+          }
+        ]
+      },
+      {
+        "componentName": "DataTable",
+        "rules": [
+          {
+            "context": {
+              "description": "When placing DataTable components in page layouts",
+              "validContainerLevels": [0, 1]
+            },
+            "placementGuidance": {
+              "parentComponent": "PageTemplate",
+              "avoidParentComponent": "Section"
+            },
+            "reason": "DataTables should be placed directly into PageTemplate (level 1) and never inside Section components. This ensures proper space utilization for data-dense interfaces and maintains consistent layout patterns for tabular data across the application."
+          }
+        ]
+      }
+    ]
+  },
+  "surfaceTokens": {
+    "title": "Surface Hierarchy & Tokens",
+    "description": "Surface tokens define the background colors used at different levels of the UI hierarchy, creating a sense of depth and organization. The system uses a 26-stop OKLCH-based surface ramp (0-25) with semantic aliases for common use cases.",
+    "componentSpecificRules": [
+      {
+        "componentName": ["Section", "SectionTabs"],
+        "rules": [
+          {
+            "context": {
+              "description": "Default styling for Level 2 containers"
+            },
+            "styleGuidance": {
+              "surfaceToken": "--color-surface-section",
+              "border": "none",
+              "boxShadow": "none"
+            },
+            "reason": "Level 2 containers like Section and SectionTabs should typically use --color-surface-section and should not have default borders or shadows for a cleaner base layout. Elevation is added contextually via elevation tokens or within specific patterns like Card."
+          }
+        ]
+      }
+    ],
+    "rungs": [
+      {
+        "rung": 1,
+        "token": "--color-surface-canvas",
+        "usedAtCompositionLevel": "0-1",
+        "description": "Page background. The ground everything else is measured against."
+      },
+      {
+        "rung": 2,
+        "token": "--color-surface-section",
+        "usedAtCompositionLevel": "2",
+        "description": "Section backgrounds — one step of separation from the canvas beneath."
+      },
+      {
+        "rung": 3,
+        "token": "--color-surface-card",
+        "usedAtCompositionLevel": "3",
+        "description": "Cards and panels placed within Sections."
+      },
+      {
+        "rung": 4,
+        "token": "--color-surface-component",
+        "usedAtCompositionLevel": "4",
+        "description": "Interactive element bases — inputs, buttons, form controls."
+      },
+      {
+        "rung": 5,
+        "token": "--color-surface-elevated",
+        "usedAtCompositionLevel": "any (floating)",
+        "description": "Floating surfaces: modals, dropdowns, popovers. One rung above component so a dropdown always reads lighter than the input that opened it, in both modes. Has no composition level — it stacks above the page regardless of where it is composed."
+      }
+    ],
+    "offLadder": [
+      {
+        "token": "--color-surface-inverted",
+        "description": "Not a rung. Jumps to the opposite end of the ramp for maximum contrast: tooltips, badges, and distinct interactive PARTS within a control (slider thumb, switch handle, selected items). Because it inverts rather than climbs, it reads as a different material, not a higher layer."
+      }
+    ],
+    "additionalSemanticTokens": [
+      {
+        "token": "--color-surface-subtle",
+        "description": "Subtle background for hover states or slight emphasis. Use for hover effects on interactive elements."
+      },
+      {
+        "token": "--color-surface-interactive",
+        "description": "Interactive element backgrounds. Alternative to --color-surface-component for buttons and inputs."
+      }
+    ],
+    "surfaceRamp": {
+      "description": "The design system provides a 26-stop surface ramp (--color-surface-0 through --color-surface-25) for fine-grained control. Lower indices are darker, higher are lighter. Prefer semantic tokens for most cases.",
+      "range": "0-25",
+      "usage": "Use --color-surface-{n} when semantic tokens don't fit. Common for custom gradients or specific contrast needs."
+    },
+    "surfaceLadder": {
+      "description": "Every layer that sits on top of another sits one rung higher on the ramp. Higher index is lighter in BOTH modes, so elevation always climbs — a modal is lighter than the card beneath it in dark mode exactly as it is in light mode.",
+      "light": {
+        "surface-canvas": 21,
+        "surface-section": 22,
+        "surface-card": 23,
+        "surface-component": 24,
+        "surface-elevated": 25
+      },
+      "dark": {
+        "surface-canvas": 1,
+        "surface-section": 2,
+        "surface-card": 3,
+        "surface-component": 4,
+        "surface-elevated": 5
+      },
+      "sharedRungs": {
+        "surface-interactive": "same rung as surface-component",
+        "surface-subtle": "same rung as surface-section"
+      },
+      "invariant": "canvas < section < card < component < elevated, strictly, in both modes. Two levels landing on the same rung leaves the boundary between them with no tonal signal, forcing a shadow to do work the surface should be doing. Enforced by tests in packages/tokens/src/generator/__tests__/defaults.test.ts.",
+      "note": "Light steps are ~3 L units and dark steps ~4. The asymmetry is deliberate: near white, larger steps read as dirty rather than layered."
+    },
+    "principles": [
+      "The ramp IS the elevation system. Higher rung = closer to the viewer, in both modes. This is tonal elevation; shadow is a reinforcement, not the mechanism.",
+      "Surface carries containment — it tells you what is inside what. Spacing carries hierarchy — it tells you what matters more. Don't ask either to do the other's job.",
+      "One rung per boundary. Skipping rungs to make a boundary louder is the wrong lever; if a boundary needs more emphasis, it probably needs more space, not more contrast.",
+      "Colour steps are linear across the ladder while spacing steps are geometric. That asymmetry is correct, not an oversight: OKLCH lightness is already perceptually uniform, whereas spatial perception is ratio-based.",
+      "Prefer semantic tokens (canvas, section, card, elevated) over raw ramp indices. Reach for --color-surface-{n} only for gradients or a specific contrast need.",
+      "Borders and text live outside the ladder — see the borders-outside-the-ladder invariant in assembly.json."
+    ]
+  },
+  "baseColors": {
+    "title": "Brand & Interactive Color Tokens",
+    "description": "These tokens define the core brand colors, their contrast variants, and gradient combinations.",
+    "brandTokens": [
+      {
+        "token": "--color-primary",
+        "usage": "Primary brand color. Used for primary buttons, links, active states, and key interactive elements requiring strong emphasis."
+      },
+      {
+        "token": "--color-accent",
+        "usage": "Accent brand color. Used for secondary highlights, decorative elements, hover states, and visual interest."
+      },
+      {
+        "token": "--color-text-on-primary",
+        "usage": "Auto-calculated contrasting text color for use on primary backgrounds. Ensures WCAG compliance."
+      },
+      {
+        "token": "--color-text-on-accent",
+        "usage": "Auto-calculated contrasting text color for use on accent backgrounds. Ensures WCAG compliance."
+      }
+    ],
+    "gradientTokens": [
+      {
+        "token": "--color-grad-1",
+        "usage": "Linear gradient from primary to accent, flowing top-left to bottom-right. For decorative backgrounds and emphasis."
+      },
+      {
+        "token": "--color-grad-2",
+        "usage": "Linear gradient from primary to accent, flowing left to right. For horizontal elements like headers."
+      }
+    ],
+    "textTokens": [
+      {
+        "token": "--color-text-emphasis",
+        "usage": "Highest contrast. Headings and the one thing on screen that matters most."
+      },
+      {
+        "token": "--color-text-default",
+        "usage": "Body text. The content itself."
+      },
+      {
+        "token": "--color-text-muted",
+        "usage": "Secondary information: captions, hints, supporting copy."
+      },
+      {
+        "token": "--color-text-faint",
+        "usage": "Apparatus: timestamps, counts, labels that describe the content rather than being it."
+      },
+      {
+        "token": "--color-text-disabled",
+        "usage": "Non-interactive or unavailable. The only token that signals state rather than rank."
+      },
+      {
+        "token": "--color-text-inverted",
+        "usage": "Text on --color-surface-inverted."
+      },
+      {
+        "token": "--color-text-link",
+        "usage": "Links. Maps to the primary brand colour."
+      }
+    ],
+    "textHierarchy": {
+      "description": "The text ramp is a rank, not a palette. Pick by how much the reader needs this, relative to everything else on screen.",
+      "rule": "Apparatus recedes, content advances. Anything that DESCRIBES the content — speaker, date, count, section label, strength mark — takes muted or faint. Anything that IS the content takes default or emphasis. When apparatus is set at the same weight and size as the content it describes, it competes with it, and the reader has to do the sorting the design should have done.",
+      "encodeByDimming": "Prefer dimming to labelling. A low-quality or empty item should recede, not carry a loud badge announcing that it is unimportant — a filled pill reading 'empty' becomes the loudest mark on the row, which is backwards.",
+      "caution": "Only one element per view should use --color-text-emphasis. If everything is emphasised, nothing is."
+    },
+    "borderTokens": [
+      {
+        "token": "--color-border-subtle",
+        "usage": "Subtle borders. Soft separators, dividers."
+      },
+      {
+        "token": "--color-border-default",
+        "usage": "Default border color. Standard container outlines."
+      },
+      {
+        "token": "--color-border-emphasis",
+        "usage": "Emphasized borders. Stronger visual separation."
+      },
+      {
+        "token": "--color-border-focus",
+        "usage": "Focus ring color. Maps to primary brand color."
+      },
+      {
+        "token": "--color-border-decorative",
+        "usage": "Decorative borders using brand color."
+      }
+    ],
+    "actionTokens": {
+      "description": "Action colors with base, foreground (-fg), and background (-bg) variants. The -fg variant is for text on neutral backgrounds, -bg is for subtle background fills.",
+      "categories": [
+        {
+          "name": "success",
+          "tokens": [
+            "--color-success",
+            "--color-success-fg",
+            "--color-success-bg"
+          ],
+          "usage": "Confirmations, completed states, positive feedback."
+        },
+        {
+          "name": "error",
+          "tokens": ["--color-error", "--color-error-fg", "--color-error-bg"],
+          "usage": "Validation errors, destructive actions, alerts."
+        },
+        {
+          "name": "caution",
+          "tokens": [
+            "--color-caution",
+            "--color-caution-fg",
+            "--color-caution-bg"
+          ],
+          "usage": "Warnings, attention-needed states."
+        },
+        {
+          "name": "info",
+          "tokens": ["--color-info", "--color-info-fg", "--color-info-bg"],
+          "usage": "Informational messages, tips, notices."
+        }
+      ]
+    },
+    "stateTokens": {
+      "description": "Interactive state overlays using native OKLCH. Apply as background-color with mix-blend-mode or as overlay.",
+      "tokens": [
+        {
+          "token": "--color-state-hover",
+          "usage": "Hover state overlay. Subtle darkening/lightening on hover."
+        },
+        {
+          "token": "--color-state-focus",
+          "usage": "Focus state overlay. Slightly stronger than hover."
+        },
+        {
+          "token": "--color-state-active",
+          "usage": "Active/pressed state overlay. Strongest interaction state."
+        }
+      ]
+    },
+    "principles": [
+      "Use colors semantically based on their intended purpose.",
+      "--color-primary is for primary actions and key interactive elements.",
+      "--color-accent is for secondary highlights and decorative elements.",
+      "Always use --color-text-on-primary or --color-text-on-accent for text on brand-colored backgrounds.",
+      "Use action tokens (success, error, caution, info) with their -fg and -bg variants appropriately."
+    ]
+  },
+  "elevationTokens": {
+    "title": "Elevation & Shadow Tokens",
+    "description": "Shadow reinforces the layering the surface ladder already establishes. Elevation is a property of the BOUNDARY between two layers, not of a component — the same card takes a different shadow depending on what it sits on. Tokens are therefore named by level, never by component.",
+    "generation": "ThemeManager injects --elevation-1/2/3 at runtime, tinted with the theme's accent (see DEFAULT_ELEVATION_COLORS). packages/tokens/src/styles/shared.css carries neutral fallbacks with matching geometry for the pre-hydration paint.",
+    "tokens": [
+      {
+        "token": "--elevation-1",
+        "geometry": "0 2px 8px, low intensity",
+        "usage": "A Section (L2) resting on the page canvas (L0/L1). Also the resting shadow for buttons."
+      },
+      {
+        "token": "--elevation-2",
+        "geometry": "0 6px 16px, default intensity",
+        "usage": "A Card-like component (L3) inside a Section (L2). The common case for cards."
+      },
+      {
+        "token": "--elevation-3",
+        "geometry": "0 10px 30px, high intensity",
+        "usage": "Genuinely floating surfaces — modals, dropdowns, popovers. Pair with --color-surface-elevated."
+      }
+    ],
+    "darkMode": "Dark mode renders elevation as a centred glow, not a cast shadow: offset collapses to 0 and blur widens by 6px. A drop shadow is invisible against a near-black canvas — lightness separates layers there, not darkness.",
+    "principles": [
+      "Tonal first, shadow selectively. The surface ladder is the default separator; reach for shadow when something genuinely floats above the plane.",
+      "One dominant separation signal per boundary — surface step, border, or shadow. Stacking all three is the tell of an unsystematic UI. Shadow may reinforce a surface step; it should not compete with a border as well.",
+      "Elevation is contextual, not intrinsic. Pick the token from the boundary, not from the component's name.",
+      "Never name an elevation token after a component. --elevation-card and --elevation-button were removed for exactly this reason."
+    ],
+    "deprecated": {
+      "--elevation-card": "Removed. Use --elevation-2 (card inside a section) or --elevation-3 (floating).",
+      "--elevation-button": "Removed. Use --elevation-1.",
+      "--shadow-2xl": "Still live as a Tailwind utility override. Pending migration to --elevation-3; do not use in new code."
+    }
+  },
+  "spacingTokens": {
+    "title": "Spacing Scale",
+    "description": "One scale, declared in packages/tokens/src/styles/shared.css. Available as Tailwind utilities (p-md, gap-lg, mt-xl) and as CSS vars (var(--space-md)). Tailwind's numeric scale (p-4, gap-8) still resolves but is being migrated away from — these names are the source of truth.",
+    "scale": [
+      {
+        "token": "--space-3xs",
+        "utility": "3xs",
+        "size": "4px",
+        "usage": "Icon to its label, hairline insets. The smallest gap that still reads as a gap."
+      },
+      {
+        "token": "--space-2xs",
+        "utility": "2xs",
+        "size": "8px",
+        "usage": "Inside dense controls, tag and badge padding."
+      },
+      {
+        "token": "--space-xs",
+        "utility": "xs",
+        "size": "12px",
+        "usage": "Between tightly related controls in a stack."
+      },
+      {
+        "token": "--space-sm",
+        "utility": "sm",
+        "size": "16px",
+        "usage": "Default control padding, list row gap, Section inset on mobile."
+      },
+      {
+        "token": "--space-md",
+        "utility": "md",
+        "size": "24px",
+        "usage": "Card inset, gap between cards, gutter to content."
+      },
+      {
+        "token": "--space-lg",
+        "utility": "lg",
+        "size": "32px",
+        "usage": "Section inset on desktop, page inset."
+      },
+      {
+        "token": "--space-xl",
+        "utility": "xl",
+        "size": "48px",
+        "usage": "Between distinct blocks inside a Section."
+      },
+      {
+        "token": "--space-2xl",
+        "utility": "2xl",
+        "size": "64px",
+        "usage": "Between Sections."
+      },
+      {
+        "token": "--space-3xl",
+        "utility": "3xl",
+        "size": "96px",
+        "usage": "Between major page regions."
+      },
+      {
+        "token": "--space-4xl",
+        "utility": "4xl",
+        "size": "128px",
+        "usage": "Page top and bottom breathing room."
+      }
+    ],
+    "intents": {
+      "description": "Pick the token by what the space is DOING, not by which CSS property you happen to be reaching for. The same value means different things in different roles.",
+      "inset": "Padding on all sides of a container. The primary intent — most spacing decisions are an inset.",
+      "squish": "Reduced vertical inset for buttons and list rows: one step down vertically from the horizontal value.",
+      "stack": "Vertical gap between blocks in a column.",
+      "inline": "Horizontal gap between items in a row — tags, pills, button groups.",
+      "gutter": "The layout-level column gap. See containment."
+    },
+    "byLevel": [
+      {
+        "level": "0-1",
+        "element": "Root layout / PageTemplate",
+        "inset": "--space-md on mobile, --space-lg from md up",
+        "stack": "--space-2xl between Sections, --space-3xl between major regions"
+      },
+      {
+        "level": "2",
+        "element": "Section",
+        "inset": "--space-sm on mobile, --space-lg from md up",
+        "stack": "--space-md between blocks inside the Section"
+      },
+      {
+        "level": "3",
+        "element": "Card / Pattern",
+        "inset": "--space-md",
+        "stack": "--space-md between cards, --space-sm between rows inside one"
+      },
+      {
+        "level": "4",
+        "element": "Component",
+        "inset": "--space-2xs to --space-sm depending on density",
+        "stack": "--space-xs between related controls, --space-2xs inside a control"
+      }
+    ],
+    "principles": [
+      "Internal <= external, stated per element: the space INSIDE an element must not exceed the space AROUND that same element. A Card's inset (--space-md) sits inside a gap to its siblings of at least --space-md; a Section's inset (--space-lg) sits inside --space-2xl between Sections. Compare an element's own padding against its own margin — not a container's padding against its children's gap, which gives the wrong answer at page level, where Sections are meant to read as separate regions rather than as one group.",
+      "The rule binds hardest where proximity is the ONLY grouping signal. Where an element has its own fill or border, the boundary is already explicit and the ratio matters less — which is why a button with --space-sm padding can sit --space-2xs from its neighbour without reading as broken.",
+      "Space encodes level. The gap between Sections is several steps larger than the gap between fields. Equal gaps at every level read as a dump; it is the ratio between levels that reads as designed.",
+      "Space carries hierarchy, surface carries containment. Colour tells you what is inside what; spacing tells you what matters more. Don't ask either to do the other's job.",
+      "Start loose, then tighten. The default failure is under-spacing, and cramped is harder to diagnose than airy.",
+      "Never use an arbitrary value. p-[14px] and mt-[22px] are always wrong; if no step fits, the layout is wrong, not the scale."
+    ],
+    "seeAlso": "assembly.json carries the recipes (situation -> token) and the text stack. This section is the reference: what the scale IS. Go there for what to type."
+  },
+  "containmentTokens": {
+    "title": "Containment & Layout",
+    "description": "A reading surface is ONE grid: a metadata gutter plus a content column whose width IS the measure. Capping text at a measure inside a wider container produces a void down one side and lets the container edge and the text edge disagree — the column has to be the constraint, not a limit applied within one.",
+    "tokens": [
+      {
+        "token": "--measure",
+        "size": "42rem / 672px",
+        "usage": "Prose cap. Roughly 70ch in the reading serif, nearer 84ch in the sans — the wide end of the classic 45-75ch guidance."
+      },
+      {
+        "token": "--gutter",
+        "size": "8.5rem / 136px",
+        "usage": "The metadata column: section labels, strength marks, counts, timestamps. Apparatus, not content."
+      },
+      {
+        "token": "--gutter-gap",
+        "size": "24px (--space-md)",
+        "usage": "Gap between the gutter and the content column."
+      },
+      {
+        "token": "--spine",
+        "size": "calc(gutter + gutter-gap + measure)",
+        "usage": "Total width of a reading surface. Use as max-width on the grid itself."
+      },
+      {
+        "token": "--container-page",
+        "size": "80rem / 1280px",
+        "usage": "App and admin shells, data tables, and any layout that is not a reading column."
+      }
+    ],
+    "grid": {
+      "description": "The reading grid, as shipped in apps/lennys-brain/src/components/Spine.tsx.",
+      "pattern": "grid max-w-[var(--spine)] grid-cols-1 gap-x-[var(--gutter-gap)] sm:grid-cols-[var(--gutter)_minmax(0,1fr)]",
+      "note": "Collapses to a single column below sm, where a 136px gutter would eat the content."
+    },
+    "principles": [
+      "One left edge for content, one for apparatus. Two mechanisms for one alignment is how a layout loses its spine.",
+      "Don't cap text inside a wider container. Make the container the constraint.",
+      "Rows over cards when values must be compared. Variable-height cells make a column uncomparable; a fixed gutter lands every count in the same place.",
+      "A reading column is not the only layout. Video, transcripts, data tables and dashboards legitimately use --container-page instead."
+    ],
+    "knownIssues": [
+      "apps/lennys-brain/src/app/globals.css defines --measure-high / -mid / -low / -none as COLOURS for evidence strength, alongside --measure as a width. No CSS conflict, but the names collide semantically and should be renamed (e.g. --strength-*)."
+    ]
+  },
+  "borderRadiusTokens": {
+    "title": "Border Radius Tokens",
+    "description": "Radius is a function of container size, not of taste. A badge and a modal sharing a radius makes one look bloated and the other look sharp — the curve has to stay proportional to the box it is turning.",
+    "tokens": [
+      {
+        "token": "--radius-none",
+        "size": "0px",
+        "usage": "Full-bleed elements, table cells, and anything inset far enough inside a rounded parent that a curve would do nothing."
+      },
+      {
+        "token": "--radius-xs",
+        "size": "2px",
+        "usage": "Marks and swatches under ~16px. Just enough to take the hard edge off."
+      },
+      {
+        "token": "--radius-sm",
+        "size": "4px",
+        "usage": "Badges, tags, checkboxes, and children nested inside a --radius-md parent."
+      },
+      {
+        "token": "--radius-md",
+        "size": "6px",
+        "usage": "Inputs, selects, small buttons. The default for interactive controls."
+      },
+      {
+        "token": "--radius-lg",
+        "size": "8px",
+        "usage": "Cards and Sections. The default for content containers."
+      },
+      {
+        "token": "--radius-xl",
+        "size": "12px",
+        "usage": "Modals, dropdowns, popovers — floating surfaces read as slightly softer than the page."
+      },
+      {
+        "token": "--radius-2xl",
+        "size": "16px",
+        "usage": "Large feature panels and hero containers, roughly 400px and up."
+      },
+      {
+        "token": "--radius-3xl",
+        "size": "24px",
+        "usage": "Full-width media blocks and image containers."
+      },
+      {
+        "token": "--radius-4xl",
+        "size": "32px",
+        "usage": "Page-scale decorative containers. Rare — at this size the curve becomes a visual statement rather than a softening."
+      },
+      {
+        "token": "--radius-full",
+        "size": "9999px",
+        "usage": "Pills, avatars, icon buttons. Only for shapes whose height defines them."
+      }
+    ],
+    "nesting": {
+      "rule": "inner radius = outer radius - inset",
+      "why": "Equal radii on a parent and its child make the gap wider at the corners than along the sides. The eye reads that as sloppy without being able to name why.",
+      "examples": [
+        "Card at --radius-lg (8px) with --space-2xs (8px) inset: child takes --radius-none.",
+        "Panel at --radius-2xl (16px) with --space-xs (12px) inset: child takes --radius-xs (2px, nearest step to 4px).",
+        "Modal at --radius-xl (12px) with --space-md (24px) inset: child takes --radius-none — it is far enough in that rounding does nothing."
+      ],
+      "shortcut": "Most nested content is inset far enough that the correct inner radius is 0. Rounding a child inside a well-inset parent is usually the mistake, not the fix."
+    },
+    "principles": [
+      "Radius scales with container size. Match the token to the box, not to the component category.",
+      "Pick one radius per component type and hold it. Two cards with different curves read as two systems.",
+      "--radius-full is for shapes defined by their height. A wide container at --radius-full becomes a lozenge, which is a decision, not a default.",
+      "See the nested-radius and geometry-scales-with-size invariants in assembly.json."
+    ]
+  },
+  "typographyTokens": {
+    "title": "Typography Tokens",
+    "description": "Typography system with primitives and semantic styles. Use semantic CSS utility classes (.type-*) in components.",
+    "families": [
+      {
+        "token": "--type-family-sans",
+        "usage": "Default sans-serif font stack. Used for body text and UI."
+      },
+      {
+        "token": "--type-family-heading",
+        "usage": "Heading font stack. Defaults to the default sans stack unless a typography preset sets a heading font override."
+      },
+      {
+        "token": "--type-family-mono",
+        "usage": "Monospace font stack for code blocks and technical content."
+      }
+    ],
+    "semanticStyles": {
+      "description": "Use .type-* CSS utility classes in components (not .text-* to avoid tailwind-merge conflicts).",
+      "styles": [
+        {
+          "class": ".type-body",
+          "usage": "Default body text for paragraphs (16px, regular, 1.5 leading)."
+        },
+        {
+          "class": ".type-body-sm",
+          "usage": "Smaller body text for dense content (14px)."
+        },
+        {
+          "class": ".type-label",
+          "usage": "Form labels, buttons, navigation items (14px, medium, 1.2 leading)."
+        },
+        {
+          "class": ".type-label-sm",
+          "usage": "Smaller labels, badge text (12px, medium)."
+        },
+        {
+          "class": ".type-label-compact",
+          "usage": "Compact labels for tight spaces (10px, medium)."
+        },
+        {
+          "class": ".type-heading-1",
+          "usage": "Page titles, primary headings (28px → 48px responsive, bold, heading font)."
+        },
+        {
+          "class": ".type-heading-2",
+          "usage": "Section headings (24px → 36px responsive, bold, heading font)."
+        },
+        {
+          "class": ".type-heading-3",
+          "usage": "Subsection headings (24px → 32px responsive, bold, heading font)."
+        },
+        {
+          "class": ".type-heading-4",
+          "usage": "Small headings, card titles (20px fixed, bold, heading font)."
+        },
+        {
+          "class": ".type-caption",
+          "usage": "Helper text, timestamps, metadata (12px, muted color)."
+        },
+        {
+          "class": ".type-caption-compact",
+          "usage": "Compact captions for tight spaces (10px, muted color)."
+        },
+        {
+          "class": ".type-code",
+          "usage": "Inline code and code blocks (14px, mono font)."
+        }
+      ]
+    },
+    "sizePrimitives": {
+      "description": "Raw size tokens for custom typography needs. Prefer semantic styles.",
+      "tokens": [
+        {
+          "token": "--type-size-3xs",
+          "size": "10px"
+        },
+        {
+          "token": "--type-size-2xs",
+          "size": "12px"
+        },
+        {
+          "token": "--type-size-xs",
+          "size": "14px"
+        },
+        {
+          "token": "--type-size-sm",
+          "size": "16px"
+        },
+        {
+          "token": "--type-size-md",
+          "size": "20px"
+        },
+        {
+          "token": "--type-size-lg",
+          "size": "24px"
+        },
+        {
+          "token": "--type-size-xl",
+          "size": "28px"
+        },
+        {
+          "token": "--type-size-2xl",
+          "size": "32px"
+        },
+        {
+          "token": "--type-size-3xl",
+          "size": "36px"
+        },
+        {
+          "token": "--type-size-4xl",
+          "size": "40px"
+        },
+        {
+          "token": "--type-size-5xl",
+          "size": "44px"
+        },
+        {
+          "token": "--type-size-6xl",
+          "size": "48px"
+        },
+        {
+          "token": "--type-size-7xl",
+          "size": "60px"
+        },
+        {
+          "token": "--type-size-8xl",
+          "size": "72px"
+        }
+      ]
+    },
+    "rhythm": {
+      "description": "Type and layout share one vertical rhythm, because text blocks and boxes have to land on the same grid or the page reads as two systems overlaid.",
+      "leading": "Line heights are multiples of 4px at every step, which is why the spacing scale is built on 4px too.",
+      "measure": "Prose is capped by --measure, never by an arbitrary width. Line length is the single biggest lever on readability — see containmentTokens.",
+      "pairing": "Space above a heading belongs to the heading, not to the block before it. A heading should sit closer to the content it introduces than to the content it follows — internal <= external applied to type."
+    },
+    "roles": {
+      "description": "Three jobs, distinguished by family and weight before size. Size alone is a weak signal.",
+      "content": ".type-body and .type-heading-* — the thing the reader came for.",
+      "apparatus": ".type-caption, .type-label-* — anything describing the content rather than being it. Set smaller, and in --color-text-muted or --color-text-faint.",
+      "code": ".type-code — mono, for anything the reader might copy."
+    },
+    "principles": [
+      "Prefer semantic styles (.type-heading-1, .type-body) over raw primitives. Use --type-size-* only when no semantic style fits.",
+      "Headings use tight letter-spacing (-0.025em) and tight leading (1.2); large type needs less air between lines, not more.",
+      "Body text uses 1.5 leading. Longer measures need more leading, not less.",
+      "Differentiate roles by family and weight first, size second. Two things at 15px and 16px in the same face read as an accident.",
+      "Don't skip heading levels for visual reasons. Use the semantic level the document needs, then style it."
+    ]
+  },
+  "generalPrinciples": [
+    "Level first. Establish where an element sits in the composition before choosing any token — level answers surface, spacing, radius and elevation together, and guessing them independently is how a UI drifts.",
+    "Structure before surface. Get the grid, the measure and the spacing right first. Colour and shadow cannot rescue a layout whose alignment is wrong, and they usually hide it long enough for it to ship.",
+    "Restraint. When a boundary needs more emphasis, add space before adding contrast, and contrast before adding decoration. Most 'this looks unfinished' problems are spacing problems.",
+    "Adherence: remove styles that do not follow these standards. An arbitrary value that survives review becomes precedent.",
+    "Consistency beats local optimisation. A component that is slightly wrong but consistent is easier to fix than one that is locally perfect and unique.",
+    "Communication: say so before applying a change that will visibly alter existing layout, explaining the deviation and the proposed correction. Deviating silently and deviating by mistake look identical afterwards."
+  ]
+}

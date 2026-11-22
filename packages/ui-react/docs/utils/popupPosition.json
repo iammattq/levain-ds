@@ -1,0 +1,217 @@
+{
+  "name": "popupPosition",
+  "description": "Utility for positioning dropdown menus, popovers, tooltips, and other popup elements to ensure they remain within viewport boundaries.",
+  "category": "utils",
+  "features": [
+    "Automatically flips popups to the opposite side when there's not enough space",
+    "Adjusts position to keep popups within viewport boundaries",
+    "Supports different placement options (top, right, bottom, left)",
+    "Supports different alignment options (start, center, end)",
+    "Calculates optimal transform origin for animations",
+    "Provides React hook for easy integration in components"
+  ],
+  "usage": [
+    "Use calculatePopupPosition() for imperative positioning of popup elements",
+    "Use usePopupPosition() hook in React components for declarative positioning",
+    "Use getPositionStyles() to convert position data to CSS styles",
+    "Set preferredPlacement to control initial popup direction relative to trigger",
+    "Set preferredAlignment to control alignment within the placement direction",
+    "Enable allowFlipping (default: true) to automatically flip when space constrained",
+    "Enable autoAdjust (default: true) to keep popups within viewport bounds"
+  ],
+  "examples": [
+    "```tsx\n// Basic usage with calculatePopupPosition\nimport { calculatePopupPosition } from '@/lib/designsystem/utils/popupPosition';\n\nconst handleOpenPopup = () => {\n  const triggerElement = document.getElementById('trigger-button');\n  const popupElement = document.getElementById('popup-content');\n\n  if (triggerElement && popupElement) {\n    const position = calculatePopupPosition(triggerElement, popupElement);\n    Object.assign(popupElement.style, {\n      position: 'absolute',\n      left: `${position.x}px`,\n      top: `${position.y}px`,\n      transformOrigin: position.transformOrigin,\n    });\n  }\n};\n```",
+    "```tsx\n// With custom configuration\nimport { calculatePopupPosition } from '@/lib/designsystem/utils/popupPosition';\n\nconst position = calculatePopupPosition(triggerElement, popupElement, {\n  preferredPlacement: 'top',\n  preferredAlignment: 'center',\n  allowFlipping: true,\n  autoAdjust: true,\n  viewportMargin: 16,\n  offset: 8,\n});\n```",
+    "```tsx\n// React hook usage\nimport { useRef, useState } from 'react';\nimport { usePopupPosition } from '@/lib/designsystem/utils/popupPosition';\n\nfunction DropdownMenu() {\n  const [isOpen, setIsOpen] = useState(false);\n  const triggerRef = useRef(null);\n  const menuRef = useRef(null);\n\n  const positionStyles = usePopupPosition(triggerRef, menuRef, {\n    preferredPlacement: 'bottom',\n    preferredAlignment: 'start',\n  });\n\n  return (\n    <div>\n      <button ref={triggerRef} onClick={() => setIsOpen(!isOpen)}>\n        Open Menu\n      </button>\n      {isOpen && (\n        <div ref={menuRef} style={positionStyles} className=\"dropdown-menu\">\n          {/* Menu items */}\n        </div>\n      )}\n    </div>\n  );\n}\n```"
+  ],
+  "types": [
+    {
+      "name": "PopupPlacement",
+      "type": "'top' | 'bottom' | 'left' | 'right'",
+      "description": "Direction to place the popup relative to the trigger element"
+    },
+    {
+      "name": "PopupAlignment",
+      "type": "'start' | 'center' | 'end'",
+      "description": "Alignment of the popup within the placement direction"
+    }
+  ],
+  "interfaces": [
+    {
+      "name": "PopupPosition",
+      "description": "Result object containing calculated position data",
+      "properties": [
+        {
+          "name": "placement",
+          "type": "PopupPlacement",
+          "optional": false,
+          "description": "Final placement after flipping (if applicable)"
+        },
+        {
+          "name": "alignment",
+          "type": "PopupAlignment",
+          "optional": false,
+          "description": "Final alignment"
+        },
+        {
+          "name": "transformOrigin",
+          "type": "string",
+          "optional": false,
+          "description": "CSS transform-origin value for animations"
+        },
+        {
+          "name": "x",
+          "type": "number",
+          "optional": false,
+          "description": "Horizontal offset in pixels"
+        },
+        {
+          "name": "y",
+          "type": "number",
+          "optional": false,
+          "description": "Vertical offset in pixels"
+        }
+      ]
+    },
+    {
+      "name": "PositionConfig",
+      "description": "Configuration options for positioning calculations",
+      "properties": [
+        {
+          "name": "preferredPlacement",
+          "type": "PopupPlacement",
+          "optional": true,
+          "defaultValue": "'bottom'",
+          "description": "Preferred placement of popup relative to trigger"
+        },
+        {
+          "name": "preferredAlignment",
+          "type": "PopupAlignment",
+          "optional": true,
+          "defaultValue": "'start'",
+          "description": "Preferred alignment within the placement direction"
+        },
+        {
+          "name": "viewportMargin",
+          "type": "number",
+          "optional": true,
+          "defaultValue": "8",
+          "description": "Minimum distance (in pixels) from viewport edges"
+        },
+        {
+          "name": "allowFlipping",
+          "type": "boolean",
+          "optional": true,
+          "defaultValue": "true",
+          "description": "Whether to flip to opposite side when space constrained"
+        },
+        {
+          "name": "autoAdjust",
+          "type": "boolean",
+          "optional": true,
+          "defaultValue": "true",
+          "description": "Whether to adjust position to stay within viewport"
+        },
+        {
+          "name": "popupWidth",
+          "type": "number",
+          "optional": true,
+          "defaultValue": null,
+          "description": "Optional fixed width for calculations (if element not in DOM)"
+        },
+        {
+          "name": "popupHeight",
+          "type": "number",
+          "optional": true,
+          "defaultValue": null,
+          "description": "Optional fixed height for calculations (if element not in DOM)"
+        },
+        {
+          "name": "offset",
+          "type": "number",
+          "optional": true,
+          "defaultValue": "4",
+          "description": "Gap between trigger and popup (in pixels)"
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "name": "calculatePopupPosition",
+      "signature": "function calculatePopupPosition(triggerElement: HTMLElement, popupElement?: HTMLElement | null, config?: PositionConfig): PopupPosition",
+      "description": "Calculates the optimal position for a popup element relative to its trigger, accounting for viewport boundaries and configuration options.",
+      "parameters": [
+        {
+          "name": "triggerElement",
+          "type": "HTMLElement",
+          "optional": false,
+          "description": "The element that triggers the popup (button, input, etc.)"
+        },
+        {
+          "name": "popupElement",
+          "type": "HTMLElement | null",
+          "optional": true,
+          "description": "The popup element to position (for size measurements)"
+        },
+        {
+          "name": "config",
+          "type": "PositionConfig",
+          "optional": true,
+          "defaultValue": "{}",
+          "description": "Configuration options for positioning"
+        }
+      ],
+      "returns": "PopupPosition object containing placement, alignment, transformOrigin, x, and y"
+    },
+    {
+      "name": "getPositionStyles",
+      "signature": "function getPositionStyles(position: PopupPosition): React.CSSProperties",
+      "description": "Converts a PopupPosition object into CSS styles that can be applied to an element.",
+      "parameters": [
+        {
+          "name": "position",
+          "type": "PopupPosition",
+          "optional": false,
+          "description": "The position data calculated by calculatePopupPosition"
+        }
+      ],
+      "returns": "CSS styles object with position, left, top, and transformOrigin properties"
+    },
+    {
+      "name": "usePopupPosition",
+      "signature": "function usePopupPosition(triggerRef: React.RefObject<HTMLElement>, popupRef: React.RefObject<HTMLElement>, config?: PositionConfig): React.CSSProperties | null",
+      "description": "React hook for calculating and applying popup positioning in components. Returns null if triggerRef is not available.",
+      "parameters": [
+        {
+          "name": "triggerRef",
+          "type": "React.RefObject<HTMLElement>",
+          "optional": false,
+          "description": "Ref to the trigger element"
+        },
+        {
+          "name": "popupRef",
+          "type": "React.RefObject<HTMLElement>",
+          "optional": false,
+          "description": "Ref to the popup element"
+        },
+        {
+          "name": "config",
+          "type": "PositionConfig",
+          "optional": true,
+          "defaultValue": "{}",
+          "description": "Configuration options for positioning"
+        }
+      ],
+      "returns": "CSS styles object to apply to the popup element, or null if trigger not available"
+    }
+  ],
+  "considerations": [
+    "Uses getBoundingClientRect() to determine element positions, which accounts for scrolling and absolute positioning",
+    "For optimal results, ensure trigger elements have a defined size and position before calculation",
+    "Calculations include viewport dimensions, so popups reposition correctly even at screen edges",
+    "Does not handle scrolling events automatically - recalculation may be needed on scroll",
+    "For dynamic content, you may need to recalculate position after content changes size",
+    "Used internally by DateInput, Select, Tooltip, and other popup-based components"
+  ]
+}

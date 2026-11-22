@@ -1,0 +1,316 @@
+{
+  "name": "DataTable",
+  "description": "A versatile, customizable table for displaying structured data with features like sorting, pagination, column width control, row selection with bulk actions, filtering, and an 'add item' action button.",
+  "category": "components",
+  "usage": [
+    "Import `DataTable` and `ColumnDef` from `@tanstack/react-table`.",
+    "Define your data type (e.g., `interface User { ... }`).",
+    "Define your columns using `ColumnDef<YourDataType>[]`. Specify `accessorKey` and `header`.",
+    "Use `cell` for custom rendering and `meta: { width: '...' }` for column width.",
+    "Pass `columns` and `data` props.",
+    "Enable pagination with `showPagination` (default true). Customize `pageSize` (default 10).",
+    "Enable row selection with `enableRowSelection={true}` and provide `getRowId={(row) => row.uniqueId}`.",
+    "Define `selectionActions: DataTableSelectionAction<TData>[]` for bulk operations on selected rows.",
+    "Define `addAction: DataTableAddAction` for a primary 'Add Item' button.",
+    "Define `utilityActions: DataTableUtilityAction[]` for secondary actions.",
+    "Define `filterGroups: FilterGroup[]` to enable filtering.",
+    "Use `statusMessage` to display messages (error, warning, success, info) above the table."
+  ],
+  "examples": [
+    "```tsx\n// Basic Usage\nimport { DataTable } from '@/lib/designsystem';\nimport { type ColumnDef } from '@tanstack/react-table';\n\ninterface User { id: string; name: string; email: string; role: string; }\n\nconst columns: ColumnDef<User>[] = [\n  { accessorKey: 'name', header: 'Name' },\n  { accessorKey: 'email', header: 'Email' },\n  { accessorKey: 'role', header: 'Role' },\n];\n\nconst data: User[] = [\n  { id: '1', name: 'John Doe', email: 'john@example.com', role: 'Admin' },\n  { id: '2', name: 'Jane Smith', email: 'jane@example.com', role: 'User' },\n];\n\nfunction UserTable() {\n  return <DataTable columns={columns} data={data} showPagination={true} />;\n}\n```",
+    "```tsx\n// With Row Selection and Actions\nimport { DataTable, DataTableSelectionAction } from '@/lib/designsystem';\nimport { Trash2 } from 'lucide-react';\n// ... (User type, columns, data defined as above)\n\nconst handleBulkDelete = (selectedUsers: User[]) => {\n  console.log('Deleting:', selectedUsers.map(u => u.id));\n};\n\nconst selectionActions: DataTableSelectionAction<User>[] = [\n  { label: 'Delete Selected', onClick: handleBulkDelete, icon: <Trash2 />, variant: 'danger' }\n];\n\nfunction SelectableUserTable() {\n  return (\n    <DataTable\n      columns={columns}\n      data={data}\n      enableRowSelection={true}\n      selectionActions={selectionActions}\n      getRowId={(row) => row.id}\n    />\n  );\n}\n```",
+    "```tsx\n// With Add Action and Filtering\nimport { DataTable, DataTableAddAction, FilterGroup } from '@/lib/designsystem';\nimport { Plus } from 'lucide-react';\n// ... (User type, columns, data defined as above)\n\nconst handleAddItem = () => { console.log('Add item clicked'); };\n\nconst addAction: DataTableAddAction = {\n  label: 'Add User',\n  onClick: handleAddItem,\n  icon: <Plus className=\"h-4 w-4 mr-1\" />\n};\n\nconst filterGroups: FilterGroup[] = [{\n  id: 'role', label: 'Role', options: [\n    { id: 'role-admin', label: 'Admin', value: 'Admin', column: 'role' },\n    { id: 'role-user', label: 'User', value: 'User', column: 'role' }\n  ]\n}];\n\nfunction FilterableUserTable() {\n  return (\n    <DataTable\n      columns={columns}\n      data={data}\n      addAction={addAction}\n      filterGroups={filterGroups}\n    />\n  );\n}\n```"
+  ],
+  "design": [
+    "Use clear and concise `header` text for columns.",
+    "Leverage `cell` rendering for status indicators, badges, or action buttons.",
+    "Ensure action buttons (`selectionActions`, `addAction`, `utilityActions`) have clear labels and appropriate icons/variants.",
+    "Group filters logically using `filterGroups`.",
+    "Use `statusMessage` sparingly for important table-level feedback."
+  ],
+  "accessibility": [
+    "Column headers are sortable buttons.",
+    "Pagination controls are implemented as accessible buttons.",
+    "Row selection uses standard checkboxes associated with rows.",
+    "Status messages provide feedback to assistive technologies.",
+    "Action buttons follow standard button accessibility practices.",
+    "Ensure custom `cell` renderers maintain accessibility (e.g., proper labels for interactive elements)."
+  ],
+  "props": [
+    {
+      "name": "columns",
+      "type": "ColumnDef<TData, TValue>[]",
+      "optional": false,
+      "description": "Array of column definitions using TanStack Table's ColumnDef type.",
+      "configurable": false
+    },
+    {
+      "name": "data",
+      "type": "TData[]",
+      "optional": false,
+      "description": "Array of data objects to display in the table.",
+      "configurable": false
+    },
+    {
+      "name": "className",
+      "type": "string",
+      "optional": true,
+      "description": "Additional CSS classes for the main table container.",
+      "configurable": false
+    },
+    {
+      "name": "showPagination",
+      "type": "boolean",
+      "optional": true,
+      "defaultValue": "true",
+      "description": "Whether to display pagination controls below the table.",
+      "configurable": true
+    },
+    {
+      "name": "pageSize",
+      "type": "number",
+      "optional": true,
+      "defaultValue": "10",
+      "description": "Number of rows to display per page when pagination is enabled.",
+      "configurable": false
+    },
+    {
+      "name": "statusMessage",
+      "type": "DataTableStatusMessage",
+      "optional": true,
+      "description": "Object { type: 'error'|'warning'|'success'|'info'|'default', message: string } to display a status message.",
+      "configurable": true
+    },
+    {
+      "name": "enableRowSelection",
+      "type": "boolean",
+      "optional": true,
+      "defaultValue": "false",
+      "description": "Enables checkboxes for selecting rows.",
+      "configurable": false
+    },
+    {
+      "name": "selectionActions",
+      "type": "DataTableSelectionAction<TData>[]",
+      "optional": true,
+      "defaultValue": "[]",
+      "description": "Array of actions available when rows are selected.",
+      "configurable": false
+    },
+    {
+      "name": "getRowId",
+      "type": "(row: TData) => string",
+      "optional": true,
+      "description": "Function to extract a unique ID from a row object (required if `enableRowSelection` is true).",
+      "configurable": false
+    },
+    {
+      "name": "addAction",
+      "type": "DataTableAddAction",
+      "optional": true,
+      "description": "Configuration for the primary 'Add Item' action button.",
+      "configurable": false
+    },
+    {
+      "name": "utilityActions",
+      "type": "DataTableUtilityAction[]",
+      "optional": true,
+      "defaultValue": "[]",
+      "description": "Array of secondary utility action buttons.",
+      "configurable": false
+    },
+    {
+      "name": "filterGroups",
+      "type": "FilterGroup[]",
+      "optional": true,
+      "defaultValue": "[]",
+      "description": "Configuration for filter groups and options.",
+      "configurable": false
+    }
+  ],
+  "auxiliaryTypes": [
+    {
+      "name": "ColumnMeta",
+      "description": "Used within ColumnDef.meta to control properties like width.",
+      "props": [
+        {
+          "name": "width",
+          "type": "string | number",
+          "optional": true,
+          "description": "Sets column width (e.g., '150px', '40%')."
+        }
+      ]
+    },
+    {
+      "name": "DataTableStatusMessage",
+      "description": "Shape for the statusMessage prop.",
+      "props": [
+        {
+          "name": "type",
+          "type": "'default' | 'error' | 'warning' | 'success' | 'info'",
+          "optional": false,
+          "description": "Determines the message styling."
+        },
+        {
+          "name": "message",
+          "type": "string",
+          "optional": false,
+          "description": "The text content of the message."
+        }
+      ]
+    },
+    {
+      "name": "FilterOption",
+      "description": "Defines a single filter choice within a FilterGroup.",
+      "props": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false,
+          "description": "Unique ID for the option."
+        },
+        {
+          "name": "label",
+          "type": "string",
+          "optional": false,
+          "description": "Display text for the option."
+        },
+        {
+          "name": "value",
+          "type": "string",
+          "optional": false,
+          "description": "The value to filter by."
+        },
+        {
+          "name": "column",
+          "type": "string",
+          "optional": false,
+          "description": "The data column (accessorKey/id) to apply the filter to."
+        }
+      ]
+    },
+    {
+      "name": "FilterGroup",
+      "description": "Groups related FilterOptions together.",
+      "props": [
+        {
+          "name": "id",
+          "type": "string",
+          "optional": false,
+          "description": "Unique ID for the group."
+        },
+        {
+          "name": "label",
+          "type": "string",
+          "optional": false,
+          "description": "Display label for the filter group."
+        },
+        {
+          "name": "options",
+          "type": "FilterOption[]",
+          "optional": false,
+          "description": "Array of filter options."
+        }
+      ]
+    },
+    {
+      "name": "DataTableSelectionAction<TData>",
+      "description": "Defines an action button shown when rows are selected.",
+      "props": [
+        {
+          "name": "label",
+          "type": "string",
+          "optional": false,
+          "description": "Button text."
+        },
+        {
+          "name": "onClick",
+          "type": "(selectedRows: TData[]) => void",
+          "optional": false,
+          "description": "Callback function receiving selected row data."
+        },
+        {
+          "name": "icon",
+          "type": "React.ReactNode",
+          "optional": true,
+          "description": "Optional icon element."
+        },
+        {
+          "name": "variant",
+          "type": "'primary' | 'secondary' | 'outline' | 'ghost' | 'link' | 'danger'",
+          "optional": true,
+          "description": "Button style variant."
+        }
+      ]
+    },
+    {
+      "name": "DataTableAddAction",
+      "description": "Defines the primary 'Add Item' button.",
+      "props": [
+        {
+          "name": "label",
+          "type": "string",
+          "optional": false,
+          "description": "Button text."
+        },
+        {
+          "name": "onClick",
+          "type": "() => void",
+          "optional": false,
+          "description": "Callback function."
+        },
+        {
+          "name": "icon",
+          "type": "React.ReactNode",
+          "optional": true,
+          "description": "Optional icon element (defaults to Plus)."
+        },
+        {
+          "name": "position",
+          "type": "'top-left' | 'top-right'",
+          "optional": true,
+          "defaultValue": "'top-right'",
+          "description": "Position of the button."
+        },
+        {
+          "name": "variant",
+          "type": "'primary' | 'secondary' | 'outline' | 'ghost' | 'link'",
+          "optional": true,
+          "defaultValue": "'primary'",
+          "description": "Button style variant."
+        }
+      ]
+    },
+    {
+      "name": "DataTableUtilityAction",
+      "description": "Defines secondary action buttons shown in the action bar.",
+      "props": [
+        {
+          "name": "label",
+          "type": "string",
+          "optional": false,
+          "description": "Button text."
+        },
+        {
+          "name": "onClick",
+          "type": "() => void",
+          "optional": false,
+          "description": "Callback function."
+        },
+        {
+          "name": "icon",
+          "type": "React.ReactNode",
+          "optional": true,
+          "description": "Optional icon element."
+        },
+        {
+          "name": "variant",
+          "type": "'primary' | 'secondary' | 'outline' | 'ghost' | 'link'",
+          "optional": true,
+          "defaultValue": "'outline'",
+          "description": "Button style variant."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,137 @@
+{
+  "name": "Heading",
+  "description": "A flexible heading component that renders semantic heading elements (h1-h4) with consistent styling using the typography system, optional accent bar, text alignment, color inversion, an optional back link, and optional in-place editing functionality.",
+  "category": "components",
+  "usage": [
+    "Use the `level` prop ('h1', 'h2', 'h3', 'h4') to determine the semantic heading tag and apply appropriate typography styling via `.type-heading-N` utilities, including the active `--type-family-heading` font.",
+    "Use the `align` prop ('left', 'center', 'right') to control text alignment.",
+    "Set `showBar={false}` to hide the decorative accent bar on the left.",
+    "Set `inverted={true}` to render the heading with inverted text color (suitable for dark backgrounds).",
+    "Set `noSpacing={true}` to remove all default margins and padding for fine-tuned layout control.",
+    "Provide a `backLink` URL (string) to prepend a styled back arrow link to the heading.",
+    "Alternatively, use `onBackClick` callback to render a back button that triggers custom navigation (e.g., router.back()).",
+    "Use `backLinkTitle` to provide an accessible label for the back link or button (defaults to 'Go back').",
+    "Set `editable={true}` to make the heading editable with double-click or pencil icon.",
+    "Provide `onEditSave` callback function to handle the updated heading text when editing is saved.",
+    "Use `eyebrow` for a label above the heading and `caption` for a date or byline below it, rather than rendering that text as a sibling. Both sit on the heading's spine and inside its accent bar; a sibling sits outside both and reads as body copy.",
+    "An unused `eyebrow` or `caption` renders no element at all, so it costs nothing in layouts that do not need one."
+  ],
+  "examples": [
+    "```tsx\n// Simple H1 heading\n<Heading level=\"h1\">Page Title</Heading>\n```",
+    "```tsx\n// Centered H2 heading without the accent bar\n<Heading level=\"h2\" align=\"center\" showBar={false}>Section Title</Heading>\n```",
+    "```tsx\n// H3 heading with a back link\n<Heading level=\"h3\" backLink=\"/previous-page\">Sub Section</Heading>\n```",
+    "```tsx\n// H1 heading with back button using browser history\nimport { useRouter } from 'next/navigation';\n\nfunction PageWithBackButton() {\n  const router = useRouter();\n  return (\n    <Heading \n      level=\"h1\" \n      onBackClick={() => router.back()}\n      backLinkTitle=\"Go back\"\n      showBar={false}\n    >\n      Detail Page\n    </Heading>\n  );\n}\n```",
+    "```tsx\n// H4 heading with inverted color for dark backgrounds\n<div style={{ backgroundColor: 'black', padding: '1rem' }}>\n  <Heading level=\"h4\" inverted={true}>Widget Title</Heading>\n</div>\n```",
+    "```tsx\n// Editable H2 heading\nimport { useState } from 'react';\n\nfunction EditableHeadingExample() {\n  const [title, setTitle] = useState('Click to edit me');\n  \n  return (\n    <Heading \n      level=\"h2\" \n      editable={true} \n      onEditSave={setTitle}\n    >\n      {title}\n    </Heading>\n  );\n}\n```",
+    "```tsx\n// H3 heading with no spacing for custom layouts\n<Heading level=\"h3\" showBar={false} noSpacing>Section Title</Heading>\n```",
+    "```tsx\n// H1 with a date below it\n<Heading level=\"h1\" caption={<time>May 8, 2026</time>}>\n  Design and AI Collide\n</Heading>\n```"
+  ],
+  "design": [
+    "Headings establish visual hierarchy. Use levels sequentially (h1, then h2, then h3) without skipping levels for semantic correctness.",
+    "Typography is handled via semantic `.type-heading-N` utilities which provide the active heading font family, responsive sizing (mobile \u2192 desktop at 768px breakpoint), font weight, line-height, and letter-spacing.",
+    "The default left alignment with the accent bar provides a strong visual anchor.",
+    "Centered alignment can be used for main page titles or section titles where appropriate.",
+    "Use the `inverted` prop when placing headings on dark or colored surfaces where standard text color lacks contrast.",
+    "The `backLink` provides a clear visual cue for navigating back within a workflow or page structure.",
+    "Editable mode integrates seamlessly with a pencil icon appearing on hover and maintains the same visual style when editing.",
+    "Eyebrow and caption use the caption type face and muted colour so they support the heading rather than compete with it.",
+    "With an eyebrow or a caption the accent bar spans the whole block rather than the heading alone, and the block's vertical padding moves to the wrapper \u2014 so the space above the heading matches the space below the caption, and the small text reads as part of the heading instead of the first line of the body."
+  ],
+  "accessibility": [
+    "Using the correct `level` prop ensures semantic structure for screen readers.",
+    "When using `backLink` or `onBackClick`, ensure `backLinkTitle` provides clear context for the link's destination or action.",
+    "Editable headings support keyboard navigation with Enter to save and Escape to cancel edits."
+  ],
+  "props": [
+    {
+      "name": "level",
+      "type": "'h1' | 'h2' | 'h3' | 'h4'",
+      "optional": false,
+      "description": "Determines the semantic heading element (h1-h4) and applies corresponding styles."
+    },
+    {
+      "name": "children",
+      "type": "React.ReactNode",
+      "optional": false,
+      "description": "The content of the heading."
+    },
+    {
+      "name": "className",
+      "type": "string",
+      "optional": true,
+      "description": "Additional CSS classes to apply to the wrapper div."
+    },
+    {
+      "name": "align",
+      "type": "'left' | 'center' | 'right'",
+      "optional": true,
+      "defaultValue": "'left'",
+      "description": "Controls the horizontal alignment of the heading text."
+    },
+    {
+      "name": "backLink",
+      "type": "string",
+      "optional": true,
+      "description": "If provided, renders a styled back arrow link before the heading content."
+    },
+    {
+      "name": "backLinkTitle",
+      "type": "string",
+      "optional": true,
+      "defaultValue": "'Go back'",
+      "description": "Accessible label for the back link or button."
+    },
+    {
+      "name": "onBackClick",
+      "type": "() => void",
+      "optional": true,
+      "description": "If provided, renders a styled back arrow button that calls this callback when clicked. Use as an alternative to backLink when you need custom navigation behavior (e.g., router.back())."
+    },
+    {
+      "name": "showBar",
+      "type": "boolean",
+      "optional": true,
+      "defaultValue": "true",
+      "description": "If true, displays the decorative accent bar on the left side of the heading."
+    },
+    {
+      "name": "inverted",
+      "type": "boolean",
+      "optional": true,
+      "defaultValue": "false",
+      "description": "If true, applies inverted text color suitable for dark backgrounds."
+    },
+    {
+      "name": "editable",
+      "type": "boolean",
+      "optional": true,
+      "defaultValue": "false",
+      "description": "If true, makes the heading editable with the EditableText component."
+    },
+    {
+      "name": "onEditSave",
+      "type": "(value: string) => void",
+      "optional": true,
+      "description": "Callback function that receives the updated text when editing is saved."
+    },
+    {
+      "name": "noSpacing",
+      "type": "boolean",
+      "optional": true,
+      "defaultValue": "false",
+      "description": "If true, removes all default margins and padding from the heading for fine-tuned layout control."
+    },
+    {
+      "name": "eyebrow",
+      "type": "React.ReactNode",
+      "optional": true,
+      "description": "Small text above the heading \u2014 a section label, a category, a kicker. Sits inside the accent bar, which spans the whole block when this or `caption` is used. Renders nothing, and adds no height, when omitted."
+    },
+    {
+      "name": "caption",
+      "type": "React.ReactNode",
+      "optional": true,
+      "description": "Small text below the heading \u2014 a date, a byline, a count. Sits inside the accent bar, which spans the whole block when this or `eyebrow` is used. Renders nothing, and adds no height, when omitted."
+    }
+  ]
+}

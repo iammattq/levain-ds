@@ -1,0 +1,145 @@
+{
+  "name": "AdminPageTemplate",
+  "description": "A condensed page template for admin interfaces with a compact header layout. Title and back button on the left, status indicators and action buttons on the right. Designed for functional admin UIs with minimal spacing.",
+  "category": "templates",
+  "usage": [
+    "Import from barrel: `import { AdminPageTemplate } from '@/lib/designsystem'`",
+    "Use for admin pages that need a compact, functional header with actions",
+    "Pass action buttons via the `actions` prop - they appear on the right side of the header",
+    "Use `status` prop for inline status indicators (e.g., Tag components) next to the title",
+    "Use `asciiTitle` prop for ASCII art headers on top-level admin sections",
+    "Use `backLink` or `onBackClick` to add a back button to the header",
+    "Template handles loading and error states automatically via `loading` and `error` props"
+  ],
+  "examples": [
+    "Basic Admin Page:\n```tsx\nimport { AdminPageTemplate, Button } from '@/lib/designsystem';\nimport { Plus } from 'lucide-react';\n\nexport default function GalleriesPage() {\n  return (\n    <AdminPageTemplate\n      title=\"Galleries\"\n      actions={\n        <Button variant=\"primary\" Icon={Plus}>\n          New Gallery\n        </Button>\n      }\n    >\n      {/* Page content */}\n    </AdminPageTemplate>\n  );\n}\n```",
+    "Detail Page with Back Button and Status:\n```tsx\nimport { AdminPageTemplate, Tag, Button } from '@/lib/designsystem';\nimport { useRouter } from 'next/navigation';\n\nexport default function AnalysisDetailPage() {\n  const router = useRouter();\n  \n  return (\n    <AdminPageTemplate\n      title=\"image-filename.jpg\"\n      onBackClick={() => router.back()}\n      status={<Tag variant=\"success\">Approved</Tag>}\n      actions={\n        <Button variant=\"secondary\">Re-analyze</Button>\n      }\n    >\n      {/* Detail content */}\n    </AdminPageTemplate>\n  );\n}\n```",
+    "Top-Level Section with ASCII Title:\n```tsx\nimport { AdminPageTemplate, Button } from '@/lib/designsystem';\nimport { FolderOpen, Sparkles, Plus } from 'lucide-react';\n\nexport default function PhotosPage() {\n  return (\n    <AdminPageTemplate\n      title=\"Photos\"\n      asciiTitle=\"Photos\"\n      actions={\n        <>\n          <Button Icon={FolderOpen}>Image Manager</Button>\n          <Button Icon={Sparkles}>Analyze Photos</Button>\n          <Button variant=\"primary\" Icon={Plus}>New Gallery</Button>\n        </>\n      }\n    >\n      {/* Gallery grid */}\n    </AdminPageTemplate>\n  );\n}\n```",
+    "Page with Loading State:\n```tsx\n<AdminPageTemplate\n  title=\"Analysis Details\"\n  onBackClick={() => router.back()}\n  loading={isLoading}\n>\n  {/* Content only renders when loading is false */}\n</AdminPageTemplate>\n```",
+    "Page with Error State:\n```tsx\n<AdminPageTemplate\n  title=\"Analysis Details\"\n  onBackClick={() => router.back()}\n  error={error}\n>\n  {/* Content only renders when error is null */}\n</AdminPageTemplate>\n```"
+  ],
+  "design": [
+    "Uses tight padding (py-4 px-4/6/9) compared to PageTemplate's more spacious layout",
+    "Header is a single flexbox row with `justify-between` for title/actions alignment",
+    "Title and back button align to the left with `items-center`",
+    "Actions align to the right in a flex container with gap-2",
+    "Status indicator appears inline next to the title",
+    "mb-6 gap between header and content for minimal spacing",
+    "Always full-width (no maxWidth constraint) - admin pages use full viewport",
+    "No decorative accent bar - functional over presentational",
+    "Loading state shows centered spinner with header still visible",
+    "Error state shows centered error message with optional back button"
+  ],
+  "accessibility": [
+    "Title is rendered as an H1 heading for proper document structure",
+    "Back button includes aria-label with backLinkTitle prop",
+    "Uses semantic HTML elements (main) for proper document structure",
+    "Loading and error states maintain heading visibility for context"
+  ],
+  "props": [
+    {
+      "name": "title",
+      "type": "string",
+      "optional": false,
+      "defaultValue": null,
+      "description": "Title for the page (H1 heading or ASCII art).",
+      "configurable": true
+    },
+    {
+      "name": "children",
+      "type": "React.ReactNode",
+      "optional": false,
+      "defaultValue": null,
+      "description": "Main content for the page.",
+      "configurable": false
+    },
+    {
+      "name": "className",
+      "type": "string",
+      "optional": true,
+      "defaultValue": "''",
+      "description": "Custom CSS classes applied to the main wrapper element.",
+      "configurable": false
+    },
+    {
+      "name": "backLink",
+      "type": "string",
+      "optional": true,
+      "defaultValue": null,
+      "description": "URL for the back button navigation.",
+      "configurable": true
+    },
+    {
+      "name": "backLinkTitle",
+      "type": "string",
+      "optional": true,
+      "defaultValue": "'Go back'",
+      "description": "Accessible label for the back button.",
+      "configurable": true
+    },
+    {
+      "name": "onBackClick",
+      "type": "() => void",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Callback for back button (alternative to backLink, e.g., router.back()).",
+      "configurable": false
+    },
+    {
+      "name": "actions",
+      "type": "React.ReactNode",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Actions (buttons, etc.) displayed on the right side of the header.",
+      "configurable": false
+    },
+    {
+      "name": "status",
+      "type": "React.ReactNode",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Status indicator displayed next to the title (e.g., Tag component).",
+      "configurable": false
+    },
+    {
+      "name": "asciiTitle",
+      "type": "AsciiTitleOption",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Use ASCII art header instead of regular heading. Options match AsciiHeader component.",
+      "configurable": true
+    },
+    {
+      "name": "loading",
+      "type": "boolean",
+      "optional": true,
+      "defaultValue": "false",
+      "description": "Shows loading spinner instead of content when true.",
+      "configurable": true
+    },
+    {
+      "name": "error",
+      "type": "string | null",
+      "optional": true,
+      "defaultValue": "null",
+      "description": "Shows error message instead of content when set.",
+      "configurable": true
+    },
+    {
+      "name": "loadingContent",
+      "type": "React.ReactNode",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Custom loading content to replace the default spinner.",
+      "configurable": false
+    },
+    {
+      "name": "errorContent",
+      "type": "React.ReactNode",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Custom error content to replace the default error display.",
+      "configurable": false
+    }
+  ]
+}

@@ -1,0 +1,58 @@
+{
+  "name": "Loader",
+  "description": "A simple, animated loading indicator that displays bouncing dots, ideal for indicating loading states or background processes.",
+  "category": "components",
+  "usage": [
+    "Use for indicating loading states or background processes",
+    "Customize dot size (small, medium, large) based on context",
+    "Customize color to match your design",
+    "Lightweight and performant with Framer Motion",
+    "Responsive and accessible",
+    "Small dots (8px × 8px) for inline or compact UIs",
+    "Medium dots (12px × 12px) for general-purpose usage",
+    "Large dots (16px × 16px) for prominent loading states"
+  ],
+  "examples": [
+    "// Basic usage with default settings\n<Loader />",
+    "// Small loader with custom color\n<Loader size=\"sm\" color=\"#4F46E5\" />",
+    "// Large loader with custom class\n<Loader size=\"lg\" className=\"mx-auto mt-8\" />",
+    "// Inside a button\n<Button disabled={isLoading}>\n  {isLoading ? <Loader size=\"sm\" color=\"white\" className=\"mx-auto\" /> : 'Submit'}\n</Button>"
+  ],
+  "design": [
+    "Uses Framer Motion for smooth animations",
+    "Each dot is animated with a slight delay for a pleasing staggered effect",
+    "Color is applied through inline styles for maximum flexibility",
+    "Size variants use Tailwind CSS classes for consistent scaling",
+    "Animated bouncing effect with staggered animation"
+  ],
+  "accessibility": [
+    "The Loader component should be accompanied by appropriate ARIA attributes in the parent context to ensure accessibility for screen readers",
+    "Example: <div aria-live=\"polite\" aria-busy={isLoading}>\n  {isLoading && <Loader />}\n  {!isLoading && <div>Content is loaded</div>}\n</div>"
+  ],
+  "props": [
+    {
+      "name": "color",
+      "type": "string",
+      "optional": true,
+      "defaultValue": "var(--color-primary)",
+      "description": "The color of the loader dots",
+      "configurable": true
+    },
+    {
+      "name": "size",
+      "type": "'sm' | 'md' | 'lg'",
+      "optional": true,
+      "defaultValue": "md",
+      "description": "The size of the loader dots",
+      "configurable": true
+    },
+    {
+      "name": "className",
+      "type": "string",
+      "optional": true,
+      "defaultValue": "",
+      "description": "Additional CSS classes for the loader container",
+      "configurable": false
+    }
+  ]
+}

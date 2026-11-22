@@ -1,0 +1,440 @@
+{
+  "title": "Assembly Rules",
+  "introduction": "How to build UI with this design system. Two parts: `rules` are the invariants that must always hold, and `recipes` map a situation straight to a token so you never have to derive one. Read it in full before building \u2014 it is deliberately short enough to hold in context.",
+  "howTheseFilesSplit": "Facts vs instructions. hierarchy.json is the reference \u2014 what the system CONTAINS ('--space-md is 24px', 'surface-card is rung 3'). This file is the instructions \u2014 what to DO ('cards in a carousel use gap-sm', 'a heading sits closer to what follows it'). Reach for hierarchy.json only when no recipe covers your situation.",
+  "rules": [
+    {
+      "id": "internal-lte-external",
+      "rule": "For any element, the space INSIDE it must not exceed the space AROUND it.",
+      "why": "Gestalt proximity: things closer together read as one group. An element with more padding than margin claims more territory inside itself than it is given outside, so it stops reading as one object among peers.",
+      "check": "Compare an element's own padding to its own margin. Card: --space-md inset inside a --space-md sibling gap. Section: --space-lg inset inside --space-2xl between Sections.",
+      "checkable": true,
+      "note": "State it per element, not as 'container inset >= children's gap'. That framing gives the wrong answer at page level, where Sections sit --space-2xl apart inside a --space-lg page inset \u2014 correct, because a page separates its regions rather than grouping them. The rule binds hardest where proximity is the only grouping signal; a filled or bordered element already declares its own boundary, which is why a button with --space-sm padding can sit --space-2xs from its neighbour."
+    },
+    {
+      "id": "heading-belongs-below",
+      "rule": "A heading sits far closer to the content it introduces than to the content it follows.",
+      "why": "A heading belongs to what comes after it. When the space above and below are equal it floats between two blocks and the reader cannot tell which one it heads \u2014 which reads as 'no hierarchy' even when every type size is correct. This is the highest-yield fix for flat-looking text, and it is spacing, not typography.",
+      "check": "space-above(heading) > space-below(heading), by at least two steps on the scale. The reference pair is heading-to-body --space-2xs against body-to-next-heading --space-lg: a 4x ratio.",
+      "checkable": true,
+      "commonFailure": "Reaching for a bigger or bolder heading when the real problem is symmetric margins."
+    },
+    {
+      "id": "one-emphasis-lever",
+      "rule": "Change at most two of size, weight, colour, and case to signal one step of rank.",
+      "why": "Each is an independent way of saying 'this matters more'. Pulling all four at once does not make the rank clearer, it makes the interface shout \u2014 and it burns the whole emphasis budget on a single element, leaving nothing to distinguish the next level down.",
+      "check": "Compare an element to its neighbour in the hierarchy. If it differs in size AND weight AND colour AND case, drop the least load-bearing ones.",
+      "checkable": true,
+      "note": "Related: only one element per view should use --color-text-emphasis. Prefer dimming what is unimportant over amplifying what is."
+    },
+    {
+      "id": "space-scales-with-level",
+      "rule": "Space grows with hierarchy level. Between page regions > between sections > between blocks > between fields.",
+      "why": "Whitespace ranks importance. Uniform gaps at every level read as an undifferentiated dump; the ratio between levels is what reads as designed.",
+      "check": "Walk the nesting from page to control. Each step inward should use a smaller step on the scale, never a larger or equal one.",
+      "checkable": true
+    },
+    {
+      "id": "one-dominant-signal",
+      "rule": "Each boundary between two layers gets ONE dominant separation signal: a surface step, a border, or a shadow. Others may reinforce it; they must not compete.",
+      "why": "Stacking a surface step, a border and a shadow on the same edge is the tell of an unsystematic UI. Each signal says 'this is a boundary'; saying it three times does not make the boundary clearer, it makes the interface louder.",
+      "check": "For a container: count its surface step vs its parent, its border, and its shadow. More than one carrying real weight is a smell. Floating surfaces (modal, dropdown, popover) take surface step + shadow and no border.",
+      "checkable": true,
+      "note": "This is 'one dominant', not 'exactly one'. Surface steps are ~3-4 L units and are deliberately subtle; a shadow reinforcing a surface step is correct. A border AND a shadow AND a step is not."
+    },
+    {
+      "id": "tonal-first",
+      "rule": "Separate layers with the surface ladder first. Reach for shadow only when something genuinely floats above the plane.",
+      "why": "The surface ramp is a tonal elevation system \u2014 the same model Material 3 moved to. Shadow is for things that leave the page: modals, dropdowns, popovers, drag states.",
+      "check": "If a container is not floating, it should be separated by its surface token, not by a shadow.",
+      "checkable": false
+    },
+    {
+      "id": "elevation-is-contextual",
+      "rule": "Pick an elevation token from the boundary, not from the component's name.",
+      "why": "The same card takes a different shadow depending on what it sits on. --elevation-card and --elevation-button were removed for baking a component identity into a value that belongs to a boundary.",
+      "check": "Never introduce an elevation, spacing or surface token named after a component.",
+      "checkable": true
+    },
+    {
+      "id": "borders-outside-the-ladder",
+      "rule": "Border tokens sit outside the surface ladder \u2014 below it in light mode, above it in dark.",
+      "why": "A border that lands on a ladder rung is the same colour as a surface it can legally sit on, so it disappears. Enforced by tests over every shipped theme.",
+      "check": "light: every border index < surface-canvas. dark: every border index > surface-elevated.",
+      "checkable": true
+    },
+    {
+      "id": "scrollbars-thin-and-inset",
+      "rule": "Every scrollable surface uses the thin scrollbar, and its thumb is inset from the edge it runs along.",
+      "why": "A default scrollbar is a piece of someone else's design dropped into the middle of yours \u2014 it arrives at the operating system's width and colour, ignores the surface it sits on, and on a rounded container runs straight across the corner radius. The thin variant answers the first two. The inset answers the third: a thumb pressed against the edge reads as a fault in the container rather than a control within it, and gives the eye nothing to separate the two.",
+      "check": "Any element with overflow-auto or overflow-scroll carries `scrollbar-thin`, and sits inside a wrapper carrying `scrollbar-frame`, which holds it in from the edge and wears the surface colour. Do not restyle scrollbars per component: the two utilities carry the track width, the thumb colour and the inset, so a local override is either duplicating them or disagreeing with them.",
+      "checkable": true,
+      "note": "The wrapper's gutter is --space-3xs. It cannot be padding on the scroll container itself: a scrollbar is painted between the border box and the padding box, so padding there moves the content away from the bar and leaves the bar against the edge. The thumb additionally wears a 2px transparent border, off the scale on purpose \u2014 that one is the internal geometry of an 8px control rather than layout between elements."
+    },
+    {
+      "id": "nested-radius",
+      "rule": "inner radius = outer radius - inset.",
+      "why": "Equal radii on a parent and its child make the gap at the corners wider than the gap along the sides. The eye reads that as sloppy even when it can't name why.",
+      "check": "A child inset by --space-md (24px) inside a container with --radius-2xl (16px) should have a radius of 0 \u2014 it is far enough in that rounding it does nothing.",
+      "checkable": true
+    },
+    {
+      "id": "geometry-scales-with-size",
+      "rule": "Radius and inset both scale with container size.",
+      "why": "A badge and a modal sharing a radius makes one look bloated or the other look sharp. Small things get small geometry.",
+      "check": "Compare against borderRadiusTokens usage notes in hierarchy.json.",
+      "checkable": false
+    },
+    {
+      "id": "column-is-the-constraint",
+      "rule": "Constrain the column, don't cap text inside a wider container.",
+      "why": "A measure applied within a wider box leaves a void down one side and puts the container edge and the text edge in disagreement \u2014 two left edges where there should be one.",
+      "check": "max-width belongs on the grid or column, not on a paragraph inside a full-width parent.",
+      "checkable": true
+    },
+    {
+      "id": "one-spine",
+      "rule": "One left edge for content, one for apparatus.",
+      "why": "Three mechanisms for one alignment is how a layout loses its spine \u2014 a grid on the header, a margin on the body and a full-width panel produce three different left edges on what should be one page.",
+      "check": "Count the distinct mechanisms establishing horizontal alignment on a page. More than the grid itself is a smell.",
+      "checkable": false
+    },
+    {
+      "id": "density-is-a-multiplier",
+      "rule": "Compact and comfortable scale the one spacing scale. They are never a second set of rules.",
+      "why": "A forked ruleset drifts from the original within a release.",
+      "check": "A density variant should change which step is selected, not introduce new values.",
+      "checkable": false
+    },
+    {
+      "id": "start-loose",
+      "rule": "Start with too much space and remove.",
+      "why": "The default failure mode is under-spacing. Cramped is harder to diagnose than airy, because airy looks like a choice and cramped looks like a bug you can't find.",
+      "check": null,
+      "checkable": false
+    },
+    {
+      "id": "no-arbitrary-values",
+      "rule": "No arbitrary spacing, colour or radius values. Ever.",
+      "why": "p-[14px] and #6b7280 defeat the entire system and cannot be themed, scaled or audited.",
+      "check": "Grep the diff for bracket-arbitrary spacing and hex colours.",
+      "checkable": true
+    },
+    {
+      "id": "named-optical-exceptions",
+      "rule": "Optical adjustment may override the scale, but the exception must be named in a comment.",
+      "why": "Visual weight sometimes genuinely demands an off-scale value. The difference between a considered exception and a lapse is whether anyone wrote down which it was.",
+      "check": "An off-scale value with no comment explaining the optical reason is a lapse.",
+      "checkable": true
+    }
+  ],
+  "howToUse": [
+    "This file answers \"how do I build this?\". hierarchy.json answers \"what does the system contain?\". Facts about the system live there; instructions for building live here.",
+    "Before building: read the rules in full, then look up your situation in recipes. Fall back to hierarchy.json only when no recipe fits.",
+    "While building: rules marked checkable:true can be verified mechanically \u2014 the design-reviewer agent checks them against a diff.",
+    "When a rule and a mockup disagree: say so before deviating. A deviation nobody flagged is indistinguishable from a mistake."
+  ],
+  "recipes": {
+    "description": "Situation to token, without derivation. If a situation is missing here, derive it from byLevel and the intents \u2014 and treat the gap as a signal that the system has not been asked that question yet.",
+    "howToRead": "Situation to token, without derivation. Grouped by where you are working. A situation missing here is a gap in the system, not licence to invent a value \u2014 derive it from spacingTokens.byLevel in hierarchy.json and say that you did.",
+    "page": [
+      {
+        "situation": "Page inset, mobile",
+        "token": "--space-md",
+        "utility": "px-md"
+      },
+      {
+        "situation": "Page inset, desktop",
+        "token": "--space-lg",
+        "utility": "lg:px-lg"
+      },
+      {
+        "situation": "Page top and bottom",
+        "token": "--space-lg",
+        "utility": "py-lg"
+      },
+      {
+        "situation": "Between Sections",
+        "token": "--space-2xl",
+        "utility": "space-y-2xl"
+      },
+      {
+        "situation": "Between major page regions",
+        "token": "--space-3xl",
+        "utility": "space-y-3xl"
+      },
+      {
+        "situation": "Page title to first content",
+        "token": "--space-md",
+        "utility": "mt-md"
+      }
+    ],
+    "section": [
+      {
+        "situation": "Section inset, mobile",
+        "token": "--space-sm",
+        "utility": "p-sm"
+      },
+      {
+        "situation": "Section inset, desktop",
+        "token": "--space-lg",
+        "utility": "md:p-lg"
+      },
+      {
+        "situation": "Section heading to its content",
+        "token": "--space-md",
+        "utility": "mb-md"
+      },
+      {
+        "situation": "Between blocks inside a Section",
+        "token": "--space-md",
+        "utility": "space-y-md",
+        "note": "One step below the Section's own inset, so the blocks read as belonging to the Section rather than as loose peers. Section.tsx currently ships one step looser (gap == inset) \u2014 see knownDeviations."
+      }
+    ],
+    "card": [
+      {
+        "situation": "Card inset",
+        "token": "--space-md",
+        "utility": "p-md"
+      },
+      {
+        "situation": "Dense or compact card inset",
+        "token": "--space-sm",
+        "utility": "p-sm"
+      },
+      {
+        "situation": "Card media to content",
+        "token": "--space-0",
+        "note": "Media runs flush to the card edge; the inset begins at the content below it. Padding around a cover image is the most common card mistake."
+      },
+      {
+        "situation": "Card title to body",
+        "token": "--space-2xs",
+        "utility": "mb-2xs"
+      },
+      {
+        "situation": "Card body to its action row",
+        "token": "--space-md",
+        "utility": "mt-md"
+      },
+      {
+        "situation": "Between rows inside one card",
+        "token": "--space-sm",
+        "utility": "space-y-sm"
+      },
+      {
+        "situation": "Between cards in a grid",
+        "token": "--space-md",
+        "utility": "gap-md"
+      },
+      {
+        "situation": "Between cards in a carousel",
+        "token": "--space-sm",
+        "utility": "gap-sm",
+        "note": "One step tighter than a grid. The peek of the next card supplies most of the separation, and a grid-width gap makes a scroller read as a broken grid."
+      }
+    ],
+    "form": [
+      {
+        "situation": "Label to input",
+        "token": "--space-3xs",
+        "utility": "mb-3xs"
+      },
+      {
+        "situation": "Input to helper or error text",
+        "token": "--space-3xs",
+        "utility": "mt-3xs"
+      },
+      {
+        "situation": "Between form fields",
+        "token": "--space-sm",
+        "utility": "space-y-sm"
+      },
+      {
+        "situation": "Between field groups or fieldsets",
+        "token": "--space-lg",
+        "utility": "space-y-lg"
+      },
+      {
+        "situation": "Form to its action row",
+        "token": "--space-lg",
+        "utility": "mt-lg"
+      },
+      {
+        "situation": "Between buttons in an action row",
+        "token": "--space-2xs",
+        "utility": "gap-2xs"
+      }
+    ],
+    "control": [
+      {
+        "situation": "Icon to its label",
+        "token": "--space-3xs",
+        "utility": "gap-3xs"
+      },
+      {
+        "situation": "Inside a button",
+        "token": "--space-sm horizontal, --space-2xs vertical",
+        "utility": "px-sm py-2xs",
+        "note": "A squish inset \u2014 vertical is one or two steps below horizontal. Equal padding makes a button look like a box with a word in it."
+      },
+      {
+        "situation": "Inside a small or dense button",
+        "token": "--space-xs horizontal, --space-3xs vertical",
+        "utility": "px-xs py-3xs"
+      },
+      {
+        "situation": "Between buttons in a group",
+        "token": "--space-2xs",
+        "utility": "gap-2xs"
+      },
+      {
+        "situation": "Between toolbar items",
+        "token": "--space-xs",
+        "utility": "gap-xs"
+      },
+      {
+        "situation": "Between tags or pills",
+        "token": "--space-2xs",
+        "utility": "gap-2xs"
+      }
+    ],
+    "listAndTable": [
+      {
+        "situation": "List row inset",
+        "token": "--space-sm",
+        "utility": "p-sm"
+      },
+      {
+        "situation": "Between list rows, with dividers",
+        "token": "--space-0",
+        "note": "The divider carries the separation. Adding a gap as well double-signals the boundary \u2014 inset the row instead."
+      },
+      {
+        "situation": "Between list rows, no dividers",
+        "token": "--space-xs",
+        "utility": "space-y-xs"
+      },
+      {
+        "situation": "Table cell inset",
+        "token": "--space-sm horizontal, --space-xs vertical",
+        "utility": "px-sm py-xs"
+      },
+      {
+        "situation": "Table header to first row",
+        "token": "--space-0",
+        "note": "The header's own border is the separator."
+      },
+      {
+        "situation": "Any scrolling region",
+        "token": "--space-2xs track, 2px thumb inset",
+        "utility": "scrollbar-thin",
+        "note": "Applies to windows, menus, sidebars, dropdowns and tables alike. The utility is the whole answer; see the scrollbars-thin-and-inset rule."
+      }
+    ],
+    "overlay": [
+      {
+        "situation": "Modal inset",
+        "token": "--space-md",
+        "utility": "p-md"
+      },
+      {
+        "situation": "Modal header to body",
+        "token": "--space-md",
+        "utility": "mb-md"
+      },
+      {
+        "situation": "Modal body to footer",
+        "token": "--space-lg",
+        "utility": "mt-lg"
+      },
+      {
+        "situation": "Dropdown or menu outer padding",
+        "token": "--space-2xs",
+        "utility": "py-2xs"
+      },
+      {
+        "situation": "Dropdown item inset",
+        "token": "--space-xs horizontal, --space-2xs vertical",
+        "utility": "px-xs py-2xs"
+      },
+      {
+        "situation": "Toast inset",
+        "token": "--space-sm",
+        "utility": "p-sm"
+      },
+      {
+        "situation": "Tooltip inset",
+        "token": "--space-2xs horizontal, --space-3xs vertical",
+        "utility": "px-2xs py-3xs"
+      }
+    ],
+    "navigation": [
+      {
+        "situation": "Nav bar inset",
+        "token": "--space-md horizontal, --space-sm vertical",
+        "utility": "px-md py-sm"
+      },
+      {
+        "situation": "Between top-level nav items",
+        "token": "--space-md",
+        "utility": "gap-md"
+      },
+      {
+        "situation": "Sidebar inset",
+        "token": "--space-sm",
+        "utility": "p-sm"
+      },
+      {
+        "situation": "Between sidebar sections",
+        "token": "--space-md",
+        "utility": "space-y-md"
+      },
+      {
+        "situation": "Sidebar section header to its controls",
+        "token": "--space-xs",
+        "utility": "mb-xs"
+      },
+      {
+        "situation": "Between sidebar controls",
+        "token": "--space-2xs",
+        "utility": "space-y-2xs"
+      }
+    ]
+  },
+  "textStack": {
+    "description": "Text hierarchy is a spacing problem before it is a type problem. These values do more work than the type scale does \u2014 a perfect scale with wrong spacing still reads as flat.",
+    "values": [
+      {
+        "situation": "Label to its value",
+        "token": "--space-3xs"
+      },
+      {
+        "situation": "Caption or metadata to what it describes",
+        "token": "--space-3xs"
+      },
+      {
+        "situation": "Heading to its own body copy",
+        "token": "--space-2xs"
+      },
+      {
+        "situation": "Between list items",
+        "token": "--space-xs"
+      },
+      {
+        "situation": "Paragraph to paragraph",
+        "token": "--space-sm"
+      },
+      {
+        "situation": "Body copy to the NEXT heading",
+        "token": "--space-lg"
+      }
+    ],
+    "theRatio": "Heading-to-body is --space-2xs (8px); body-to-next-heading is --space-lg (32px). That 4x difference IS the hierarchy. A heading belongs to the content BELOW it, so it must sit far closer to what it introduces than to what it follows. When the two are equal the heading floats between blocks and the reader cannot tell which one it heads \u2014 which reads as 'no hierarchy' even when every type size is correct.",
+    "commonFailure": "Reaching for a bigger or bolder heading when the real problem is that the space above and below it are the same."
+  },
+  "knownDeviations": [
+    "Section.tsx ships gap == inset (p-lg with gap-lg) where the recipe says one step below. Changing it restyles every Section in every app, so it is documented rather than changed in passing."
+  ]
+}

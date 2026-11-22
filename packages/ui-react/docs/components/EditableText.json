@@ -1,0 +1,92 @@
+{
+  "name": "EditableText",
+  "description": "An interactive text component that can be edited in-place, transforming between text display and input field modes based on user interaction.",
+  "category": "components",
+  "usage": [
+    "Use for in-place editing of titles, labels, and short text content.",
+    "Double-clicking text or clicking the optional pencil icon enters edit mode.",
+    "Control whether to show the pencil icon with the `showEditIcon` prop.",
+    "Edit mode includes a text input with save (check) and cancel (X) buttons.",
+    "Pressing Enter in the input field saves the changes, Escape cancels them.",
+    "Style the component with `className` and the input with `inputClassName`.",
+    "Use the `disabled` prop to prevent editing."
+  ],
+  "examples": [
+    "```tsx\n// Basic usage\nimport { EditableText } from '@/lib/designsystem';\nimport { useState } from 'react';\n\nfunction SimpleExample() {\n  const [text, setText] = useState('Click to edit me');\n  \n  return (\n    <EditableText \n      value={text} \n      onSave={setText} \n    />\n  );\n}\n```",
+    "```tsx\n// With edit icon\nimport { EditableText } from '@/lib/designsystem';\nimport { useState } from 'react';\n\nfunction WithIconExample() {\n  const [title, setTitle] = useState('Project Title');\n  \n  return (\n    <EditableText \n      value={title} \n      onSave={setTitle}\n      showEditIcon={true}\n    />\n  );\n}\n```",
+    "```tsx\n// Custom styling\nimport { EditableText } from '@/lib/designsystem';\nimport { useState } from 'react';\n\nfunction StyledExample() {\n  const [name, setName] = useState('Jane Doe');\n  \n  return (\n    <EditableText \n      value={name} \n      onSave={setName}\n      showEditIcon={true}\n      className=\"font-bold text-xl text-[var(--color-primary)]\"\n      inputClassName=\"bg-[var(--color-surface-section)]\"\n    />\n  );\n}\n```",
+    "```tsx\n// Disabled state\nimport { EditableText } from '@/lib/designsystem';\nimport { useState } from 'react';\n\nfunction DisabledExample() {\n  const [value, setValue] = useState('Cannot edit this text');\n  \n  return (\n    <EditableText \n      value={value} \n      onSave={setValue}\n      disabled={true}\n    />\n  );\n}\n```"
+  ],
+  "design": [
+    "The component maintains the same text styling when transitioning between display and edit modes.",
+    "Input field width dynamically adjusts to match the text content length.",
+    "Edit icon (pencil) only appears on hover when `showEditIcon` is true, following progressive disclosure patterns.",
+    "Action buttons use semantic colors: success (green) for save, error (red) for cancel.",
+    "The component visually indicates its disabled state with reduced opacity.",
+    "Edit mode uses a slightly different background color to indicate the mode change."
+  ],
+  "accessibility": [
+    "Appropriate aria-labels are provided for the edit, save, and cancel buttons.",
+    "The component maintains focus when transitioning to edit mode.",
+    "When entering edit mode, text is automatically selected for easy replacement.",
+    "Keyboard support includes Enter to save and Escape to cancel edits.",
+    "Disabled state properly prevents interaction with appropriate cursor styling."
+  ],
+  "props": [
+    {
+      "name": "value",
+      "type": "string",
+      "optional": false,
+      "defaultValue": "Editable Text",
+      "description": "The text value to display and edit.",
+      "configurable": true
+    },
+    {
+      "name": "onSave",
+      "type": "(value: string) => void",
+      "optional": false,
+      "description": "Callback function executed when the edited text is saved (via Enter key or save button).",
+      "configurable": false
+    },
+    {
+      "name": "showEditIcon",
+      "type": "boolean",
+      "optional": true,
+      "defaultValue": "false",
+      "description": "Whether to show the pencil icon beside the text which can be clicked to enter edit mode.",
+      "configurable": true
+    },
+    {
+      "name": "className",
+      "type": "string",
+      "optional": true,
+      "defaultValue": "''",
+      "description": "Additional CSS class for the text container.",
+      "configurable": false
+    },
+    {
+      "name": "inputClassName",
+      "type": "string",
+      "optional": true,
+      "defaultValue": "''",
+      "description": "Additional CSS class specifically for the input element when in edit mode.",
+      "configurable": false
+    },
+    {
+      "name": "placeholder",
+      "type": "string",
+      "optional": true,
+      "defaultValue": "'Enter text...'",
+      "description": "Placeholder text shown when value is empty.",
+      "configurable": false
+    },
+    {
+      "name": "disabled",
+      "type": "boolean",
+      "optional": true,
+      "defaultValue": "false",
+      "description": "Whether the editable text is disabled, preventing any editing.",
+      "configurable": true
+    }
+  ]
+}

@@ -1,0 +1,114 @@
+{
+  "name": "ChatInput",
+  "description": "A chat-style input component with an auto-growing textarea and submit button. Designed for conversational UIs like refinement prompts or chat interfaces.",
+  "category": "components",
+  "usage": [
+    "Chat-style input with textarea and submit button side by side",
+    "Auto-growing textarea that expands with content up to a max height",
+    "Submit on Enter key (Shift+Enter for newlines)",
+    "Optional character limit with visual counter",
+    "Loading state disables input and shows spinner on button",
+    "Primary button with ArrowUp icon for submission"
+  ],
+  "design": [
+    "Stacked layout: chromeless textarea on top, action row below.",
+    "Outer container has rounded border that shows focus/error states.",
+    "Textarea is borderless with transparent background (chromeless inside container).",
+    "Bottom row has character counter (left) and primary submit button (right).",
+    "Character counter uses `.type-caption` with muted color, error color when over limit.",
+    "Submit button is a primary iconOnly Button with ArrowUp icon (xs size).",
+    "Textarea auto-grows from 1 line up to ~5 lines, then scrolls."
+  ],
+  "examples": [
+    "import { ChatInput } from '@/lib/designsystem';\nimport { useState } from 'react';\n\nfunction RefinePanel() {\n  const [instruction, setInstruction] = useState('');\n  const [loading, setLoading] = useState(false);\n\n  const handleSubmit = async () => {\n    setLoading(true);\n    await refineImage(instruction);\n    setInstruction('');\n    setLoading(false);\n  };\n\n  return (\n    <ChatInput\n      value={instruction}\n      onChange={(e) => setInstruction(e.target.value)}\n      onSubmit={handleSubmit}\n      placeholder=\"Describe how to modify the image...\"\n      maxLength={500}\n      loading={loading}\n      submitLabel=\"Refine image\"\n    />\n  );\n}",
+    "// Basic usage without character limit\n<ChatInput\n  value={message}\n  onChange={(e) => setMessage(e.target.value)}\n  onSubmit={() => sendMessage(message)}\n  placeholder=\"Type a message...\"\n/>",
+    "// Disabled state\n<ChatInput\n  value={message}\n  onChange={(e) => setMessage(e.target.value)}\n  onSubmit={handleSubmit}\n  placeholder=\"Select an item first...\"\n  disabled\n/>"
+  ],
+  "accessibility": [
+    "Textarea has aria-label set to placeholder text for screen readers",
+    "Submit button has configurable aria-label via submitLabel prop",
+    "Character limit is visually displayed but not announced (decorative)"
+  ],
+  "props": [
+    {
+      "name": "id",
+      "type": "string",
+      "optional": true,
+      "defaultValue": "auto-generated",
+      "description": "Unique identifier for the textarea (auto-generated if not provided)",
+      "configurable": false
+    },
+    {
+      "name": "value",
+      "type": "string",
+      "optional": false,
+      "defaultValue": null,
+      "description": "Current value of the textarea",
+      "configurable": true
+    },
+    {
+      "name": "onChange",
+      "type": "(event: React.ChangeEvent<HTMLTextAreaElement>) => void",
+      "optional": false,
+      "defaultValue": null,
+      "description": "Function called when the textarea value changes",
+      "configurable": false
+    },
+    {
+      "name": "onSubmit",
+      "type": "() => void",
+      "optional": false,
+      "defaultValue": null,
+      "description": "Function called when the form is submitted (button click or Enter key)",
+      "configurable": false
+    },
+    {
+      "name": "placeholder",
+      "type": "string",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Placeholder text displayed when the textarea is empty",
+      "configurable": true
+    },
+    {
+      "name": "maxLength",
+      "type": "number",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Maximum character limit (displays counter when set)",
+      "configurable": true
+    },
+    {
+      "name": "loading",
+      "type": "boolean",
+      "optional": true,
+      "defaultValue": "false",
+      "description": "Whether the input is in a loading state (disables input and shows spinner)",
+      "configurable": true
+    },
+    {
+      "name": "disabled",
+      "type": "boolean",
+      "optional": true,
+      "defaultValue": "false",
+      "description": "Whether the input is disabled",
+      "configurable": true
+    },
+    {
+      "name": "className",
+      "type": "string",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Additional CSS class for the container element",
+      "configurable": false
+    },
+    {
+      "name": "submitLabel",
+      "type": "string",
+      "optional": true,
+      "defaultValue": "\"Submit\"",
+      "description": "Accessible label for the submit button",
+      "configurable": true
+    }
+  ]
+}

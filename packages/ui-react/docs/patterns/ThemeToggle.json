@@ -1,0 +1,59 @@
+{
+  "name": "ThemeToggle",
+  "description": "The ThemeToggle component provides an intuitive button for cycling between theme modes (light, dark, and system).",
+  "category": "patterns",
+  "usage": [
+    "Cycles between light, dark, and system theme modes",
+    "Displays appropriate icon for the current theme",
+    "Smooth transitions between states",
+    "Accessible with appropriate aria labels",
+    "Compact design that works well in navigation bars",
+    "Theme cycles in the following order: Light → Dark → System",
+    "Uses the useEnhancedTheme hook to interact with the application's theme system",
+    "Forward ref enables parent components to access the button DOM node",
+    "Provides helpful title attribute for user guidance",
+    "Designed to be used in navigation bars and other UI elements where theme toggling is needed"
+  ],
+  "examples": [
+    "// Basic usage\n<ThemeToggle />",
+    "// With custom className\n<ThemeToggle className=\"bg-gray-100\" />",
+    "// Using a ref\nconst themeToggleRef = useRef<HTMLButtonElement>(null);\n<ThemeToggle ref={themeToggleRef} />"
+  ],
+  "design": [
+    "Light mode displays a Sun icon",
+    "Dark mode displays a Moon icon",
+    "System mode displays a Monitor icon",
+    "Icons are rendered at 16px size with 1px stroke width"
+  ],
+  "accessibility": [
+    "Button has aria-label=\"Toggle theme\" for screen readers",
+    "Title attribute shows current theme state",
+    "Keyboard accessible (button element)"
+  ],
+  "props": [
+    {
+      "name": "className",
+      "type": "string",
+      "optional": true,
+      "defaultValue": "''",
+      "description": "Additional CSS classes for the toggle button",
+      "configurable": true
+    },
+    {
+      "name": "style",
+      "type": "React.CSSProperties",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Inline styles for the toggle button",
+      "configurable": false
+    },
+    {
+      "name": "ref",
+      "type": "React.Ref<HTMLButtonElement>",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Ref forwarded to the button element",
+      "configurable": false
+    }
+  ]
+}

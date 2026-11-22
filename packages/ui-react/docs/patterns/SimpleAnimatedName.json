@@ -1,0 +1,51 @@
+{
+  "name": "SimpleAnimatedName",
+  "description": "Creates an animated gradient text effect that responds to user interaction, allowing theme color changes through keyboard input.",
+  "category": "patterns",
+  "props": [
+    {
+      "name": "name",
+      "type": "string",
+      "optional": true,
+      "defaultValue": "Matt Quinn",
+      "description": "The text to display with the animation effect",
+      "configurable": true
+    },
+    {
+      "name": "className",
+      "type": "string",
+      "optional": true,
+      "defaultValue": "",
+      "description": "Additional CSS classes for the text element",
+      "configurable": false
+    }
+  ],
+  "usage": [
+    "Use for creating eye-catching animated text with gradient effects",
+    "Interactive hover state indicates keyboard shortcuts are available",
+    "Press Space key while hovering to cycle through different theme colors",
+    "Press 'S' key while hovering to save the current color preference permanently",
+    "Supports both old and new theme systems for backward compatibility",
+    "Includes a helpful title tooltip explaining keyboard interactions"
+  ],
+  "examples": [
+    "// Basic usage with default name\n<SimpleAnimatedName />",
+    "// With custom name\n<SimpleAnimatedName name=\"John Doe\" />",
+    "// With custom styling\n<SimpleAnimatedName\n  name=\"Portfolio\"\n  className=\"text-3xl font-bold\"\n/>"
+  ],
+  "design": [
+    "Animated gradient flows at 135 degrees (diagonal direction)",
+    "Uses application's primary and secondary colors from CSS variables (--color-base and --color-accent)",
+    "Continuous 6-second animation cycle with ease timing function",
+    "Background size set to 200% to enable the flowing effect",
+    "Smooth 0.3s transitions for all property changes",
+    "Uses CSS animation 'gradientMove' for the flowing effect (defined in global styles)"
+  ],
+  "accessibility": [
+    "Includes descriptive title tooltip: 'Press space to change colors when hovering, press 'S' to save your favorite color'",
+    "Cursor changes to pointer on hover to indicate interactivity",
+    "Keyboard-accessible color changing functionality",
+    "Provides fallback text color for browsers that don't support background-clip: text",
+    "Prevents default space key behavior to avoid page scrolling during interaction"
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "name": "Calendar",
+  "description": "A versatile calendar component for displaying and selecting dates, with month and year navigation and selection capabilities.",
+  "category": "components",
+  "usage": [
+    "Use the `selectedDate` prop to control the highlighted date.",
+    "Provide an `onDateSelect` callback to handle date selection.",
+    "Customize appearance with the `className` prop.",
+    "Month and year can be navigated using the built-in controls.",
+    "Supports full keyboard accessibility for navigation and selection."
+  ],
+  "examples": [
+    "```tsx\nimport { Calendar } from '@/lib/designsystem';\nimport { useState } from 'react';\n\nexport default function CalendarExample() {\n  const [selectedDate, setSelectedDate] = useState(new Date());\n  const handleDateSelect = (date: Date) => setSelectedDate(date);\n  return (\n    <Calendar selectedDate={selectedDate} onDateSelect={handleDateSelect} />\n  );\n}\n```"
+  ],
+  "design": [
+    "The calendar uses a fixed width (320px) for consistent layout.",
+    "Month/year selectors appear within the calendar container to avoid UI jumps.",
+    "Visual distinction between current month dates and dates from adjacent months.",
+    "Accommodates internationalization by using numeric representations for internally tracked dates.",
+    "Uses design system tokens for colors, borders, and interactive states."
+  ],
+  "accessibility": [
+    "Full keyboard navigation: Tab, arrow keys, Enter, and Escape are supported.",
+    "Focus states are visually indicated.",
+    "Selected and today's dates are visually distinct."
+  ],
+  "props": [
+    {
+      "name": "selectedDate",
+      "type": "Date",
+      "optional": false,
+      "defaultValue": null,
+      "description": "Date that should be selected/highlighted in the calendar."
+    },
+    {
+      "name": "onDateSelect",
+      "type": "(date: Date) => void",
+      "optional": false,
+      "defaultValue": null,
+      "description": "Function called when a date is selected."
+    },
+    {
+      "name": "className",
+      "type": "string",
+      "optional": true,
+      "defaultValue": "''",
+      "description": "Additional CSS classes for the calendar container."
+    }
+  ]
+}

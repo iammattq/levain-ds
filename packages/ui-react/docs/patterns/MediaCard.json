@@ -1,0 +1,113 @@
+{
+  "name": "MediaCard",
+  "description": "An enhanced card layout for displaying media content with various loading states and fallbacks. Supports image media with optimized loading, loading states with spinner, error state fallback, and hover animations.",
+  "category": "patterns",
+  "usage": [
+    "Support for image media with optimized loading",
+    "Loading states with spinner",
+    "Error state fallback",
+    "Particle background fallback option",
+    "Hover animations",
+    "Consistent styling based on the Card component",
+    "Uses Next.js Image component for optimized image loading",
+    "Images have priority loading enabled by default",
+    "Appropriate sizes attribute is set for responsive images",
+    "Hover animations are applied to the image for interactive feel",
+    "Integration with the Card component system for consistency"
+  ],
+  "examples": [
+    "import { MediaCard } from '@/lib/designsystem';\n\nfunction MyComponent() {\n  return (\n    <MediaCard\n      title=\"Article Title\"\n      subtitle=\"Published January 1, 2024\"\n      href=\"/articles/article-slug\"\n      imageSrc=\"/images/article-image.jpg\"\n    />\n  );\n}",
+    "<MediaCard\n  title=\"Coming Soon\"\n  subtitle=\"New content will be added shortly\"\n  href=\"/placeholder\"\n/>",
+    "<MediaCard\n  title=\"Dynamic Content\"\n  subtitle=\"Interactive visualization\"\n  href=\"/visualizations/dynamic\"\n  particleVariant=\"minimal\"\n/>",
+    "<MediaCard\n  title=\"Widescreen Content\"\n  href=\"/videos/intro\"\n  imageSrc=\"/images/video-thumbnail.jpg\"\n  aspectRatio=\"aspect-video\"\n/>",
+    "<MediaCard\n  title=\"Interactive Card\"\n  href=\"#\"\n  imageSrc=\"/images/interactive.jpg\"\n  onCardClick={(e) => {\n    e.preventDefault();\n    // Custom click behavior\n    openModal();\n  }}\n/>"
+  ],
+  "design": [
+    "Loading: Shows a spinner until the image loads",
+    "Error: Shows a placeholder if image fails to load",
+    "No Image: Shows either a particle background (if particleVariant is provided) or a simple placeholder icon"
+  ],
+  "accessibility": [],
+  "props": [
+    {
+      "name": "title",
+      "type": "string",
+      "optional": false,
+      "defaultValue": null,
+      "description": "Card title (required)",
+      "configurable": true
+    },
+    {
+      "name": "href",
+      "type": "string",
+      "optional": false,
+      "defaultValue": null,
+      "description": "Link destination (required)",
+      "configurable": true
+    },
+    {
+      "name": "imageSrc",
+      "type": "string",
+      "optional": true,
+      "defaultValue": "undefined",
+      "description": "URL for the image to display",
+      "configurable": true
+    },
+    {
+      "name": "subtitle",
+      "type": "string",
+      "optional": true,
+      "defaultValue": "undefined",
+      "description": "Optional subtitle text",
+      "configurable": true
+    },
+    {
+      "name": "aspectRatio",
+      "type": "string",
+      "optional": true,
+      "defaultValue": "'aspect-[4/3]'",
+      "description": "CSS class for controlling aspect ratio",
+      "configurable": true
+    },
+    {
+      "name": "className",
+      "type": "string",
+      "optional": true,
+      "defaultValue": "''",
+      "description": "Additional CSS classes for the card",
+      "configurable": true
+    },
+    {
+      "name": "imageClassName",
+      "type": "string",
+      "optional": true,
+      "defaultValue": "''",
+      "description": "Additional CSS classes for the image",
+      "configurable": true
+    },
+    {
+      "name": "onCardClick",
+      "type": "(e: React.MouseEvent) => void",
+      "optional": true,
+      "defaultValue": "undefined",
+      "description": "Optional click handler",
+      "configurable": false
+    },
+    {
+      "name": "isLoading",
+      "type": "boolean",
+      "optional": true,
+      "defaultValue": "undefined",
+      "description": "Manually control loading state",
+      "configurable": true
+    },
+    {
+      "name": "onImageLoad",
+      "type": "() => void",
+      "optional": true,
+      "defaultValue": "undefined",
+      "description": "Callback when image loading completes",
+      "configurable": false
+    }
+  ]
+}

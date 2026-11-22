@@ -1,0 +1,103 @@
+{
+  "name": "NavigationLinks",
+  "description": "The NavigationLinks component provides a sophisticated navigation system with smooth transitions, dropdown submenus, active state tracking, and theme toggle integration.",
+  "category": "patterns",
+  "usage": [
+    "Responsive navigation layout",
+    "Interactive highlight pill that follows the active/hovered link",
+    "Animated dropdown submenus",
+    "Support for icon-only mode",
+    "Integrated theme toggle",
+    "Automatic active state tracking based on current path",
+    "Smooth transitions and animations",
+    "Dynamically calculates submenu positioning based on parent link",
+    "Only activates hover effects on devices that support hover",
+    "Uses CSS variables for submenu dimensions to enable smooth transitions",
+    "Handles navigation between submenus with smooth animations",
+    "Provides visual feedback for active/current sections",
+    "Integrates with the ThemeToggle component",
+    "Features intelligent mouse interaction handling to prevent accidental submenu closing"
+  ],
+  "examples": [
+    "// Basic usage with navigation items\n<NavigationLinks\n  navigationItems={[\n    { label: 'Home', href: '/' },\n    { label: 'About', href: '/about' },\n    { label: 'Work', href: '/work',\n      showSubMenu: true,\n      subMenu: [\n        { label: 'Projects', href: '/work/projects' },\n        { label: 'Clients', href: '/work/clients' }\n      ]\n    },\n    { label: 'Contact', href: '/contact' }\n  ]}\n/>",
+    "// Icons-only mode\n<NavigationLinks\n  navigationItems={navItems}\n  iconsOnly={true}\n  iconSize={24}\n/>",
+    "// Without theme toggle\n<NavigationLinks\n  navigationItems={navItems}\n  showThemeToggle={false}\n/>",
+    "// With custom spacing\n<NavigationLinks\n  navigationItems={navItems}\n  spacing=\"large\"\n/>"
+  ],
+  "design": [],
+  "accessibility": [],
+  "props": [
+    {
+      "name": "navigationItems",
+      "type": "NavigationItem[]",
+      "optional": false,
+      "defaultValue": "[]",
+      "description": "Array of navigation items to display. Each item can include label, href, icon, external link flag, and optional submenus.",
+      "configurable": true
+    },
+    {
+      "name": "showThemeToggle",
+      "type": "boolean",
+      "optional": true,
+      "defaultValue": "true",
+      "description": "Whether to show the theme toggle button",
+      "configurable": true
+    },
+    {
+      "name": "showThemeColorButton",
+      "type": "boolean",
+      "optional": true,
+      "defaultValue": "false",
+      "description": "Whether to show the theme color button",
+      "configurable": true
+    },
+    {
+      "name": "themeComponent",
+      "type": "'toggle' | 'switcher'",
+      "optional": true,
+      "defaultValue": "'toggle'",
+      "description": "Which theme component to display (toggle or switcher)",
+      "configurable": true
+    },
+    {
+      "name": "onLinkClick",
+      "type": "() => void",
+      "optional": true,
+      "defaultValue": "undefined",
+      "description": "Callback when a link is clicked",
+      "configurable": false
+    },
+    {
+      "name": "iconsOnly",
+      "type": "boolean",
+      "optional": true,
+      "defaultValue": "false",
+      "description": "Display only icons without labels",
+      "configurable": true
+    },
+    {
+      "name": "spacing",
+      "type": "'none' | 'small' | 'medium' | 'large'",
+      "optional": true,
+      "defaultValue": "'medium'",
+      "description": "Spacing between navigation items",
+      "configurable": true
+    },
+    {
+      "name": "iconSize",
+      "type": "number",
+      "optional": true,
+      "defaultValue": "20",
+      "description": "Size of icons in pixels",
+      "configurable": true
+    },
+    {
+      "name": "className",
+      "type": "string",
+      "optional": true,
+      "defaultValue": "undefined",
+      "description": "Additional CSS classes for the container",
+      "configurable": false
+    }
+  ]
+}

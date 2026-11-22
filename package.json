@@ -1,0 +1,19 @@
+{
+  "name": "levain-ds",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.27.0",
+  "description": "levain DS: design tokens and React components. TypeScript source, no build; consumers transpile it.",
+  "scripts": {
+    "test": "pnpm -r test",
+    "check:types": "tsc --noEmit -p packages/tokens && tsc --noEmit -p packages/ui-react"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["esbuild"]
+  },
+  "devDependencies": {
+    "@types/node": "^26.4.0",
+    "typescript": "^5.9.3"
+  }
+}

@@ -1,0 +1,138 @@
+{
+  "name": "Card",
+  "description": "A flexible, composable card component system for creating consistent card-style UI elements. The root Card can function as a clickable link or a static container. Includes sub-components for content, media, and titles.",
+  "category": "components",
+  "usage": [
+    "Use the `href` prop to render the Card as a Next.js Link. Omit `href` to render as a static container (previously called CardWrapper).",
+    "Compose with CardContent, CardMedia, and CardTitle for structured content.",
+    "Use `onClick` for custom click handling.",
+    "Use the static variant (no href) for non-clickable card-like containers.",
+    "Control inner padding with the `padding` prop on CardContent ('none', 'sm', 'md', 'lg')."
+  ],
+  "examples": [
+    "```tsx\n// Linking Card\n<Card href=\"/articles/my-article\">\n  <CardMedia>\n    <Image src=\"/images/article.jpg\" alt=\"Article\" fill />\n  </CardMedia>\n  <CardContent>\n    <CardTitle title=\"My Article\" subtitle=\"Published January 1, 2024\" />\n  </CardContent>\n</Card>\n```",
+    "```tsx\n// Static Card (non-link)\n<Card className=\"optional-class\" onClick={handleDivClick}>\n  <CardMedia>...</CardMedia>\n  <CardContent>...</CardContent>\n</Card>\n```",
+    "```tsx\n// Card with custom padding\n<Card>\n  <CardContent padding=\"lg\">\n    <h2>Large Padding Content</h2>\n  </CardContent>\n</Card>\n```"
+  ],
+  "design": [
+    "Uses Tailwind CSS with CSS variables for theming.",
+    "Background: `var(--color-surface-card)` base.",
+    "Hover state (Linking Card Only): Transitions to `var(--color-surface-section)` background and shadow reduces.",
+    "Text color: Uses standard text tokens.",
+    "Shadows: `shadow-2xl` base for both variants.",
+    "Height: Hugs content by default.",
+    "Override shadow or background via `className` if needed."
+  ],
+  "accessibility": [
+    "Linking Card uses Next.js Link for navigation.",
+    "Focus and hover states are visually indicated.",
+    "Static cards do not have hover effects by default.",
+    "Ensure interactive content inside Card is accessible via keyboard if needed."
+  ],
+  "props": [
+    {
+      "name": "children",
+      "type": "ReactNode",
+      "optional": false,
+      "defaultValue": null,
+      "description": "Card content, typically composed of CardContent, CardMedia, and CardTitle."
+    },
+    {
+      "name": "href",
+      "type": "string",
+      "optional": true,
+      "defaultValue": null,
+      "description": "If provided, the Card renders as a Next.js Link with link-specific hover styles. Omit for static card."
+    },
+    {
+      "name": "className",
+      "type": "string",
+      "optional": true,
+      "defaultValue": "''",
+      "description": "Additional CSS classes for the root element (Link or div)."
+    },
+    {
+      "name": "onClick",
+      "type": "(e: React.MouseEvent) => void",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Optional click handler. Applied to the root Link or div."
+    }
+  ],
+  "subcomponents": [
+    {
+      "name": "CardContent",
+      "description": "Container for card text/content with consistent padding and styling.",
+      "props": [
+        {
+          "name": "children",
+          "type": "ReactNode",
+          "optional": false,
+          "description": "Content inside the card."
+        },
+        {
+          "name": "className",
+          "type": "string",
+          "optional": true,
+          "description": "Additional CSS classes."
+        },
+        {
+          "name": "padding",
+          "type": "'none' | 'sm' | 'md' | 'lg'",
+          "optional": true,
+          "defaultValue": "'md'",
+          "description": "Inner padding size."
+        }
+      ]
+    },
+    {
+      "name": "CardMedia",
+      "description": "Container for media content with configurable aspect ratio.",
+      "props": [
+        {
+          "name": "children",
+          "type": "ReactNode",
+          "optional": false,
+          "description": "Media content (images, videos, etc.)."
+        },
+        {
+          "name": "aspectRatio",
+          "type": "string",
+          "optional": true,
+          "defaultValue": "'aspect-[4/3]'",
+          "description": "CSS for controlling aspect ratio."
+        },
+        {
+          "name": "className",
+          "type": "string",
+          "optional": true,
+          "description": "Additional CSS classes."
+        }
+      ]
+    },
+    {
+      "name": "CardTitle",
+      "description": "Standard component for displaying card titles and subtitles.",
+      "props": [
+        {
+          "name": "title",
+          "type": "string",
+          "optional": false,
+          "description": "Card title."
+        },
+        {
+          "name": "subtitle",
+          "type": "string",
+          "optional": true,
+          "description": "Optional subtitle."
+        },
+        {
+          "name": "className",
+          "type": "string",
+          "optional": true,
+          "description": "Additional CSS classes."
+        }
+      ]
+    }
+  ]
+}

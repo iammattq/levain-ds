@@ -1,0 +1,265 @@
+{
+  "colors": {
+    "base": {
+      "base": {
+        "value": "--color-base",
+        "description": "The foundational color that defines the theme's identity. Used for branding elements or accent pieces."
+      },
+      "primary": {
+        "value": "--color-primary",
+        "description": "Main interactive color derived from the base. Used for primary buttons, links, and active states."
+      },
+      "secondary": {
+        "value": "--color-accent",
+        "description": "Complementary color to the primary. Used for secondary actions, highlights, or accents."
+      },
+      "accent": {
+        "value": "--color-accent",
+        "description": "Complementary to the base color, typically with a hue shift. Used for visual interest, highlights, or to direct attention to specific elements."
+      }
+    },
+    "gradients": {
+      "grad-1": {
+        "value": "--color-grad-1",
+        "description": "Linear gradient from base to accent color, flowing from top-left to bottom-right. Useful for decorative backgrounds, cards, or buttons that need visual emphasis."
+      },
+      "grad-2": {
+        "value": "--color-grad-2",
+        "description": "Linear gradient from base to accent color, flowing from left to right. Good for horizontal elements like headers, footers, or horizontal separators."
+      }
+    },
+    "surfaces": {
+      "surface-1": {
+        "value": "--color-surface-canvas",
+        "description": "Primary background color. Used for the main page background."
+      },
+      "surface-2": {
+        "value": "--color-surface-section",
+        "description": "Secondary background color. Used for cards, sidebars, and other container elements."
+      },
+      "surface-3": {
+        "value": "--color-surface-card",
+        "description": "Tertiary background color. Used for nested containers or to create subtle depth."
+      },
+      "surface-4": {
+        "value": "--color-surface-inverted",
+        "description": "Contrast background color. Used for elements that need to stand out from other surfaces."
+      }
+    },
+    "borders": {
+      "border-2": {
+        "value": "--color-border-subtle",
+        "description": "Light border color. Used for subtle separators and dividers."
+      },
+      "border-3": {
+        "value": "--color-border-default",
+        "description": "Medium border color. Used for default borders on containers and form elements."
+      },
+      "border-4": {
+        "value": "--color-border-emphasis",
+        "description": "Heavy border color. Used for emphasis or focus states."
+      }
+    },
+    "text": {
+      "primary": {
+        "value": "--color-text-default",
+        "description": "Main text color. Used for body text and headings. Not tinted with the base color."
+      },
+      "secondary": {
+        "value": "--color-text-muted",
+        "description": "Secondary text color. Used for supporting information like subtitles, descriptions, or secondary content. Can be tinted with the base color."
+      },
+      "inverted": {
+        "value": "--color-text-inverted",
+        "description": "Contrasting text color. Used for text on dark backgrounds or interactive elements. Not tinted with the base color."
+      },
+      "disabled": {
+        "value": "--color-text-disabled",
+        "description": "Text color for disabled elements. Used to indicate that an element is not interactive. Can be tinted with the base color."
+      }
+    },
+    "semantic": {
+      "success": {
+        "base": {
+          "value": "--color-success",
+          "description": "Primary success color. Used for success messages, confirmations, and positive states."
+        },
+        "light": {
+          "value": "--color-success-bg",
+          "description": "Light success color. Used for success backgrounds or subtle indicators."
+        },
+        "dark": {
+          "value": "--color-success-fg",
+          "description": "Dark success color. Used for interactive success elements like buttons."
+        }
+      },
+      "error": {
+        "base": {
+          "value": "--color-error",
+          "description": "Primary error color. Used for error messages, alerts, and negative states."
+        },
+        "light": {
+          "value": "--color-error-bg",
+          "description": "Light error color. Used for error backgrounds or subtle indicators."
+        },
+        "dark": {
+          "value": "--color-error-fg",
+          "description": "Dark error color. Used for interactive error elements like buttons."
+        }
+      },
+      "warning": {
+        "base": {
+          "value": "--color-caution",
+          "description": "Primary warning color. Used for warning messages, alerts, and cautionary states."
+        },
+        "light": {
+          "value": "--color-caution-bg",
+          "description": "Light warning color. Used for warning backgrounds or subtle indicators."
+        },
+        "dark": {
+          "value": "--color-caution-fg",
+          "description": "Dark warning color. Used for interactive warning elements like buttons."
+        }
+      },
+      "info": {
+        "base": {
+          "value": "--color-info",
+          "description": "Primary info color. Used for informational messages and neutral states."
+        },
+        "light": {
+          "value": "--color-info-bg",
+          "description": "Light info color. Used for info backgrounds or subtle indicators."
+        },
+        "dark": {
+          "value": "--color-info-fg",
+          "description": "Dark info color. Used for interactive info elements like buttons."
+        }
+      },
+      "caution": {
+        "base": {
+          "value": "--color-caution",
+          "description": "Primary caution color. Used for less severe warning states."
+        },
+        "light": {
+          "value": "--color-caution-bg",
+          "description": "Light caution color. Used for caution backgrounds or subtle indicators."
+        },
+        "dark": {
+          "value": "--color-caution-fg",
+          "description": "Dark caution color. Used for interactive caution elements like buttons."
+        }
+      }
+    }
+  },
+  "typography": {
+    "sizes": {
+      "2xs": {
+        "value": "--text-2xs",
+        "description": "Extra small text",
+        "size": "0.75rem (12px)"
+      },
+      "xs": {
+        "value": "--text-xs",
+        "description": "Small text",
+        "size": "0.875rem (14px)"
+      },
+      "sm": {
+        "value": "--text-sm",
+        "description": "Base text size, standard small text",
+        "size": "1rem (16px)"
+      },
+      "md": {
+        "value": "--text-md",
+        "description": "Medium text, default text size",
+        "size": "1.25rem (20px)"
+      },
+      "lg": {
+        "value": "--text-lg",
+        "description": "Large text",
+        "size": "1.5rem (24px)"
+      },
+      "xl": {
+        "value": "--text-xl",
+        "description": "Extra large text",
+        "size": "1.75rem (28px)"
+      },
+      "2xl": {
+        "value": "--text-2xl",
+        "description": "2x large text",
+        "size": "2rem (32px)"
+      },
+      "3xl": {
+        "value": "--text-3xl",
+        "description": "3x large text",
+        "size": "2.25rem (36px)"
+      },
+      "4xl": {
+        "value": "--text-4xl",
+        "description": "4x large text",
+        "size": "2.25rem (36px)"
+      },
+      "5xl": {
+        "value": "--text-5xl",
+        "description": "5x large text",
+        "size": "2.5rem (40px)"
+      },
+      "6xl": {
+        "value": "--text-6xl",
+        "description": "6x large text",
+        "size": "2.75rem (44px)"
+      }
+    }
+  },
+  "borderRadius": {
+    "none": {
+      "value": "--radius-none",
+      "description": "No border radius.",
+      "size": "0px"
+    },
+    "xs": {
+      "value": "--radius-xs",
+      "description": "Extra small radius.",
+      "size": "0.125rem (2px)"
+    },
+    "sm": {
+      "value": "--radius-sm",
+      "description": "Small radius",
+      "size": "0.25rem (4px)"
+    },
+    "md": {
+      "value": "--radius-md",
+      "description": "Medium radius",
+      "size": "0.375rem (6px)"
+    },
+    "lg": {
+      "value": "--radius-lg",
+      "description": "Large radius.",
+      "size": "0.5rem (8px)"
+    },
+    "xl": {
+      "value": "--radius-xl",
+      "description": "Extra large radius.",
+      "size": "0.75rem (12px)"
+    },
+    "2xl": {
+      "value": "--radius-2xl",
+      "description": "2x large radius",
+      "size": "1rem (16px)"
+    },
+    "3xl": {
+      "value": "--radius-3xl",
+      "description": "3x large radius.",
+      "size": "1.5rem (24px)"
+    },
+    "4xl": {
+      "value": "--radius-4xl",
+      "description": "4x large radius.",
+      "size": "2rem (32px)"
+    },
+    "full": {
+      "value": "--radius-full",
+      "description": "Full circular radius.",
+      "size": "9999px"
+    }
+  }
+}

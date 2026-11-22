@@ -1,0 +1,131 @@
+{
+  "name": "Accordion",
+  "description": "A vertically stacked set of interactive headings that each reveal a section of content. Can operate in single (only one item open) or multiple (multiple items open) mode.",
+  "category": "components",
+  "usage": [
+    "Wrap `AccordionItem` components within the main `Accordion` component.",
+    "Each `AccordionItem` must contain an `AccordionTrigger` and an `AccordionContent`.",
+    "Set `type=\"multiple\"` on `Accordion` to allow multiple items open simultaneously.",
+    "Control the open state using `value` (controlled) or `defaultValue` (uncontrolled) props on `Accordion`.",
+    "The `value` or `defaultValue` for `type=\"single\"` is a string corresponding to the `value` prop of the `AccordionItem`.",
+    "The `value` or `defaultValue` for `type=\"multiple\"` is an array of strings.",
+    "Use the `textSize` prop on `AccordionTrigger` to adjust the trigger text size ('xs', 'sm', 'md', 'lg').",
+    "Set `disabled={true}` on `AccordionItem` to disable a specific item."
+  ],
+  "examples": [
+    "```tsx\n// Single Type (Default)\nimport { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/lib/designsystem';\n\n<Accordion type=\"single\" defaultValue=\"item-1\" className=\"w-full\">\n  <AccordionItem value=\"item-1\">\n    <AccordionTrigger>Is it accessible?</AccordionTrigger>\n    <AccordionContent>\n      Yes. It adheres to the WAI-ARIA design pattern.\n    </AccordionContent>\n  </AccordionItem>\n  <AccordionItem value=\"item-2\">\n    <AccordionTrigger textSize=\"lg\">Is it styled?</AccordionTrigger>\n    <AccordionContent>\n      Yes. It comes with default styles that matches the design system.\n    </AccordionContent>\n  </AccordionItem>\n</Accordion>\n```",
+    "```tsx\n// Multiple Type\n<Accordion type=\"multiple\" defaultValue={['item-1']} className=\"w-full\">\n  {/* ... AccordionItem components ... */}\n</Accordion>\n```",
+    "```tsx\n// Controlled Example\nconst [value, setValue] = useState(['item-1']);\n\n<Accordion type=\"multiple\" value={value} onValueChange={setValue} className=\"w-full\">\n  {/* ... AccordionItem components ... */}\n</Accordion>\n```"
+  ],
+  "design": [
+    "Use `type=\"single\"` when users only need to see one section of content at a time (e.g., FAQs).",
+    "Use `type=\"multiple\"` when users might need to compare or reference information across different sections.",
+    "Keep trigger text concise and descriptive of the content within.",
+    "Ensure content within `AccordionContent` is clearly related to its trigger.",
+    "Use appropriate `textSize` on the trigger for the context."
+  ],
+  "accessibility": [
+    "Follows the WAI-ARIA Accordion design pattern.",
+    "`AccordionTrigger` renders as a `<button>` inside an `<h3>` by default, providing semantic structure.",
+    "Correct ARIA attributes (`aria-expanded`, `aria-controls`, `aria-disabled`) are automatically applied.",
+    "`AccordionContent` renders with `role=\"region\"` and `aria-labelledby`.",
+    "Focus is managed correctly when interacting with triggers.",
+    "Ensure sufficient contrast for text and focus indicators."
+  ],
+  "props": [
+    {
+      "name": "type",
+      "type": "'single' | 'multiple'",
+      "optional": true,
+      "defaultValue": "'single'",
+      "description": "Determines whether one or multiple items can be opened simultaneously.",
+      "configurable": true
+    },
+    {
+      "name": "value",
+      "type": "string | string[]",
+      "optional": true,
+      "description": "The controlled value (item value or array of item values) of the accordion item(s) to be opened.",
+      "configurable": false
+    },
+    {
+      "name": "defaultValue",
+      "type": "string | string[] | undefined",
+      "optional": true,
+      "description": "The uncontrolled default value (item value or array of item values) of the accordion item(s) to be opened.",
+      "configurable": false
+    },
+    {
+      "name": "onValueChange",
+      "type": "(value: string | string[] | undefined) => void",
+      "optional": true,
+      "description": "Event handler called when the expanded state changes. Receives `string | undefined` for single type, `string[]` for multiple type.",
+      "configurable": false
+    },
+    {
+      "name": "className",
+      "type": "string",
+      "optional": true,
+      "description": "Additional classes for the root accordion div."
+    }
+  ],
+  "subcomponents": [
+    {
+      "name": "AccordionItem",
+      "description": "Container for an individual accordion section.",
+      "props": [
+        {
+          "name": "value",
+          "type": "string",
+          "optional": false,
+          "description": "A unique value for the accordion item, used to control its state.",
+          "configurable": false
+        },
+        {
+          "name": "disabled",
+          "type": "boolean",
+          "optional": true,
+          "defaultValue": "false",
+          "description": "When true, prevents the user from interacting with the item."
+        },
+        {
+          "name": "className",
+          "type": "string",
+          "optional": true,
+          "description": "Additional classes for the accordion item div."
+        }
+      ]
+    },
+    {
+      "name": "AccordionTrigger",
+      "description": "The button element that toggles the accordion item's content.",
+      "props": [
+        {
+          "name": "textSize",
+          "type": "'xs' | 'sm' | 'md' | 'lg'",
+          "optional": true,
+          "defaultValue": "'sm'",
+          "description": "Size of the text within the trigger button."
+        },
+        {
+          "name": "className",
+          "type": "string",
+          "optional": true,
+          "description": "Additional classes for the trigger button."
+        }
+      ]
+    },
+    {
+      "name": "AccordionContent",
+      "description": "The container for the content revealed when the item is open.",
+      "props": [
+        {
+          "name": "className",
+          "type": "string",
+          "optional": true,
+          "description": "Additional classes for the content div."
+        }
+      ]
+    }
+  ]
+}

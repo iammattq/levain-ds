@@ -1,0 +1,87 @@
+{
+  "name": "Modal",
+  "description": "A customizable dialog component that overlays page content with a backdrop blur effect and smooth animations. Supports titles, contextual menus, various sizes, and custom animations.",
+  "category": "components",
+  "usage": [
+    "Control visibility using the `isOpen` prop (controlled component).",
+    "Provide an `onClose` function to handle closing the modal.",
+    "Use the `title` prop for a standard header (string or ReactNode).",
+    "Use `menuOptions` to add a contextual dropdown menu.",
+    "Provide modal content via the `children` render prop, which receives a `handleClose` function.",
+    "Customize the modal's width using the `size` prop.",
+    "Override default animations using the `motionProps` prop (Framer Motion).",
+    "Modal closes on Escape key press or by clicking the backdrop.",
+    "Uses React Portal to render at the document body level."
+  ],
+  "examples": [
+    "```tsx\n// Basic Usage\nimport { Modal, Button } from '@/lib/designsystem';\nimport { useState } from 'react';\n\nfunction MyComponent() {\n  const [isOpen, setIsOpen] = useState(false);\n  \n  return (\n    <>\n      <Button onClick={() => setIsOpen(true)}>Open Modal</Button>\n      \n      <Modal\n        isOpen={isOpen}\n        onClose={() => setIsOpen(false)}\n        title=\"Modal Title\"\n      >\n        {(handleClose) => (\n          <div className=\"space-y-4\">\n            <p>Modal content goes here.</p>\n            <div className=\"flex justify-end space-x-2\">\n              <Button variant=\"outline\" onClick={handleClose}>Cancel</Button>\n              <Button onClick={() => { /* Do something */ handleClose(); }}>Confirm</Button>\n            </div>\n          </div>\n        )}\n      </Modal>\n    </>\n  );\n}\n```",
+    "```tsx\n// Without Title\n<Modal isOpen={isOpen} onClose={() => setIsOpen(false)}>\n  {(handleClose) => (\n    <div>Modal content without a title</div>\n  )}\n</Modal>\n```",
+    "```tsx\n// With Custom Title Component\nimport { Star } from 'lucide-react';\n<Modal \n  isOpen={isOpen} \n  onClose={() => setIsOpen(false)}\n  title={ <div className=\"flex items-center gap-2\"> <Star className=\"text-[var(--color-accent)]\" size={20} /> <span className=\"text-xl font-semibold\">Custom Title</span> </div> }\n>\n  {(handleClose) => ( <div>Modal with custom title</div> )}\n</Modal>\n```",
+    "```tsx\n// With Contextual Menu\n<Modal \n  isOpen={isOpen} \n  onClose={() => setIsOpen(false)}\n  title=\"Modal with Menu\"\n  menuOptions={[\n    { label: \"Edit\", onClick: () => console.log(\"Edit\") },\n    { label: \"Delete\", onClick: () => console.log(\"Delete\"), className: \"text-[var(--color-error)]\" }\n  ]}\n>\n  {(handleClose) => ( <div>Modal content with menu</div> )}\n</Modal>\n```",
+    "```tsx\n// Large Size\n<Modal \n  isOpen={isOpen} \n  onClose={() => setIsOpen(false)}\n  size=\"lg\"\n  title=\"Large Modal\"\n>\n  {(handleClose) => ( <div>Wider modal content</div> )}\n</Modal>\n```",
+    "```tsx\n// Custom Animation\n<Modal \n  isOpen={isOpen} \n  onClose={() => setIsOpen(false)}\n  motionProps={{ \n    initial: { opacity: 0, scale: 0.9 },\n    animate: { opacity: 1, scale: 1 },\n    exit: { opacity: 0, scale: 0.9 },\n    transition: { type: 'spring', stiffness: 500, damping: 30 } \n  }}\n>\n  {(handleClose) => ( <div>Modal with custom animation</div> )}\n</Modal>\n```"
+  ],
+  "design": [
+    "Use Modals for focused tasks or critical information that requires user attention.",
+    "Avoid nesting modals.",
+    "Keep modal content concise and directly related to the triggering action.",
+    "Ensure the primary action is clear (e.g., using a primary button).",
+    "Choose an appropriate `size` based on the content volume.",
+    "The title should clearly indicate the modal's purpose.",
+    "Use the contextual menu for secondary actions related to the modal's content or context."
+  ],
+  "accessibility": [
+    "Focus is trapped within the modal when open.",
+    "Closes on Escape key press.",
+    "Can be closed by clicking the backdrop overlay.",
+    "Uses appropriate ARIA roles (`dialog`, `modal`).",
+    "Includes an accessible close button (visible or via Escape/backdrop).",
+    "The contextual menu is keyboard accessible.",
+    "If providing a custom `title` component, ensure it's accessible."
+  ],
+  "props": [
+    {
+      "name": "isOpen",
+      "type": "boolean",
+      "optional": false,
+      "description": "Controls whether the modal is shown."
+    },
+    {
+      "name": "onClose",
+      "type": "() => void",
+      "optional": false,
+      "description": "Function called when the modal requests to be closed (Escape, backdrop click, close button)."
+    },
+    {
+      "name": "title",
+      "type": "string | React.ReactNode",
+      "optional": true,
+      "description": "Optional title displayed in the modal header."
+    },
+    {
+      "name": "menuOptions",
+      "type": "ModalMenuOption[]",
+      "optional": true,
+      "description": "Optional array of options for the contextual menu. `interface ModalMenuOption { label: string; onClick: () => void; className?: string; }`"
+    },
+    {
+      "name": "children",
+      "type": "(handleClose: () => void) => React.ReactNode",
+      "optional": false,
+      "description": "Render function for the modal's main content. Receives a `handleClose` function argument which is the same as the `onClose` prop."
+    },
+    {
+      "name": "motionProps",
+      "type": "MotionProps (from framer-motion)",
+      "optional": true,
+      "description": "Optional custom props to override the default Framer Motion animation behavior."
+    },
+    {
+      "name": "size",
+      "type": "'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | 'full'",
+      "optional": true,
+      "defaultValue": "'md'",
+      "description": "Controls the maximum width of the modal."
+    }
+  ]
+}

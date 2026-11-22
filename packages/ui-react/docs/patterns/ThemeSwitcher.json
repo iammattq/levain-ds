@@ -1,0 +1,38 @@
+{
+  "name": "ThemeSwitcher",
+  "description": "The ThemeSwitcher component provides a combined UI element that groups together theme mode controls (light/dark/system) and theme color controls in a single, cohesive interface.",
+  "category": "patterns",
+  "usage": [
+    "Combines ThemeToggle and ThemeColorButton components",
+    "Provides complete theme customization in a single UI element",
+    "Maintains consistent styling and spacing",
+    "Improves UI organization for theme controls",
+    "Responsive design works well in different container sizes",
+    "A CSS gap (space-x-2) ensures consistent spacing between elements",
+    "Does not add unnecessary wrapper elements or styles to the individual components"
+  ],
+  "examples": [
+    "// Basic usage\n<ThemeSwitcher />",
+    "// With custom styling\n<ThemeSwitcher className=\"mt-4\" />",
+    "// In a navigation header\n<header className=\"flex justify-between items-center p-4\">\n  <Logo />\n  <nav>\n    {/* Navigation links */}\n  </nav>\n  <ThemeSwitcher />\n</header>"
+  ],
+  "design": [
+    "Combines ThemeToggle (for switching between light, dark, and system color modes) and ThemeColorButton (for cycling through available color themes)",
+    "Components are arranged horizontally with appropriate spacing, creating a unified theme control section"
+  ],
+  "accessibility": [
+    "Container has role=\"group\" and aria-label=\"Theme controls\" for proper screen reader announcement",
+    "Individual buttons maintain their accessibility attributes",
+    "Consistent sizing ensures touch targets are appropriately sized"
+  ],
+  "props": [
+    {
+      "name": "className",
+      "type": "string",
+      "optional": true,
+      "defaultValue": "\"\"",
+      "description": "Additional CSS classes for the container element",
+      "configurable": true
+    }
+  ]
+}

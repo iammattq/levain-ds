@@ -1,0 +1,27 @@
+{
+  "name": "Toaster",
+  "description": "Provides a toast notification system based on the Sonner library, styled to match the design system",
+  "category": "components",
+  "usage": [
+    "Add the Toaster component to your layout or root component only once in your application, typically in the root layout",
+    "Positioned in the bottom-center of the screen by default",
+    "Integrated with Sonner toast notification library",
+    "Themed to match the application's design system via global CSS",
+    "Styling is controlled via CSS classes and semantic theme variables",
+    "Import and use the toast function from Sonner anywhere in your application to display notifications",
+    "For advanced usage, refer to the Sonner documentation at https://sonner.emilkowal.ski/"
+  ],
+  "examples": [
+    "import { Toaster } from '@/lib/designsystem';\n\nfunction RootLayout({ children }) {\n  return (\n    <html lang=\"en\">\n      <body>\n        {children}\n        <Toaster />\n      </body>\n    </html>\n  );\n}",
+    "import { toast } from 'sonner';\nimport { Button } from '@/lib/designsystem';\n\nfunction MyComponent() {\n  return (\n    <Button onClick={() => toast('This is a toast notification')}>\n      Show Toast\n    </Button>\n  );\n}",
+    "// Base/Default toast\ntoast('This is a standard toast.');\n\n// Success toast\ntoast.success('Operation completed successfully');\n\n// Error toast\ntoast.error('An error occurred');\n\n// Warning toast\ntoast.warning('Please check the details.');\n\n// Info toast\ntoast.info('Here is some information.');\n\n// Loading toast\ntoast.loading('Processing your request...');\n\n// Promise toast (shows loading, then success/error)\ntoast.promise(fetchData(), {\n  loading: 'Loading data...',\n  success: (data) => `Loaded ${data.length} items`,\n  error: 'Failed to load data',\n});\n\n// Custom component toast\ntoast(\n  <div className=\"flex items-center\">\n    {/* <Icon className=\"mr-2\" /> */}\n    <span>Custom toast content</span>\n  </div>\n);"
+  ],
+  "design": [
+    "The Toaster component applies the following CSS classes: toast-base (applied to all toasts for base styling like padding, border-radius, shadow, default background/text color), toast-success (applied to success toasts), toast-error (applied to error toasts), toast-warning (applied to warning toasts), toast-info (applied to info toasts)",
+    "Toast styling is controlled globally via CSS classes applied by the Toaster component. You must define these classes in your global stylesheet (e.g., src/app/globals.css) using the appropriate semantic theme variables from your design system",
+    "Example CSS for toast styling:\n.toast-base {\n  padding: 1rem;\n  border-radius: 0.5rem;\n  box-shadow: var(--shadow-lg);\n  border: 1px solid var(--color-border-subtle);\n  background-color: var(--color-surface-section);\n  color: var(--color-text-default);\n}\n\n.toast-success {\n  background-color: var(--color-success-bg);\n  color: var(--color-success-fg);\n  border-color: var(--color-success);\n}\n\n.toast-error {\n  background-color: var(--color-error-bg);\n  color: var(--color-error-fg);\n  border-color: var(--color-error);\n}\n\n/* Define .toast-warning and .toast-info similarly */",
+    "Refer to your theme's variable definitions for the correct semantic color names"
+  ],
+  "accessibility": [],
+  "props": []
+}

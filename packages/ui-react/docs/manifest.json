@@ -1,0 +1,137 @@
+[
+  {
+    "category": "Components",
+    "name": "Button",
+    "description": "Multi-purpose button component with various styles and states"
+  },
+  {
+    "category": "Components",
+    "name": "Card",
+    "description": "Container component for grouping related content"
+  },
+  {
+    "category": "Components",
+    "name": "Heading",
+    "description": "Typography components for section headings"
+  },
+  {
+    "category": "Components",
+    "name": "Tag",
+    "description": "Label component for categorizing or marking content"
+  },
+  {
+    "category": "Components",
+    "name": "Switch",
+    "description": "Toggle control for binary options"
+  },
+  {
+    "category": "Components",
+    "name": "RadioButton",
+    "description": "Selection control for choosing one option from a set"
+  },
+  {
+    "category": "Components",
+    "name": "Modal",
+    "description": "Dialog component for focused interactions"
+  },
+  {
+    "category": "Components",
+    "name": "Toaster",
+    "description": "Notification system for displaying alerts and messages"
+  },
+  {
+    "category": "Components",
+    "name": "Slider",
+    "description": "Input component for selecting a value from a range"
+  },
+  {
+    "category": "Components",
+    "name": "Icons",
+    "description": "Library of consistent icons used throughout the application"
+  },
+  {
+    "category": "Components",
+    "name": "Loader",
+    "description": "Animated loading indicator with customizable size and color"
+  },
+  {
+    "category": "Components",
+    "name": "TextInput",
+    "description": "Accessible text input component with error states and helper text"
+  },
+  {
+    "category": "Components",
+    "name": "TextArea",
+    "description": "Multiline text input for longer form content"
+  },
+  {
+    "category": "Components",
+    "name": "Select",
+    "description": "Dropdown selection component for choosing from predefined options"
+  },
+  {
+    "category": "Components",
+    "name": "TagInput",
+    "description": "Interactive input for selecting and creating multiple tags"
+  },
+  {
+    "category": "Components",
+    "name": "ColorInput",
+    "description": "Input component for selecting colors with a color picker"
+  },
+  {
+    "category": "Components",
+    "name": "DateInput",
+    "description": "Input component for selecting dates with a calendar picker"
+  },
+  {
+    "category": "Components",
+    "name": "Calendar",
+    "description": "Versatile calendar component for displaying and selecting dates"
+  },
+  {
+    "category": "Patterns",
+    "name": "MediaCard",
+    "description": "Enhanced card layout for displaying media content with various states"
+  },
+  {
+    "category": "Patterns",
+    "name": "ContentNavigation",
+    "description": "Navigation component for content sections with automatic scroll detection"
+  },
+  {
+    "category": "Patterns",
+    "name": "ImageUploader",
+    "description": "Interface for uploading images with preview and validation"
+  },
+  {
+    "category": "Patterns",
+    "name": "NavigationLinks",
+    "description": "Advanced navigation bar with dropdowns and active state tracking"
+  },
+  {
+    "category": "Patterns",
+    "name": "ThemeToggle",
+    "description": "Interactive control for switching between light, dark, and system themes"
+  },
+  {
+    "category": "Patterns",
+    "name": "SimpleAnimatedName",
+    "description": "Gradient-animated text with interactive theme color controls"
+  },
+  {
+    "category": "Patterns",
+    "name": "ConfirmationModal",
+    "description": "Reusable confirmation dialog with optional type-to-confirm for destructive actions"
+  },
+  {
+    "category": "Templates",
+    "name": "PageTemplate",
+    "description": "Standard page template for front-end pages"
+  },
+  {
+    "category": "Templates",
+    "name": "AdminPageTemplate",
+    "description": "Condensed page template for admin interfaces with header actions"
+  }
+]

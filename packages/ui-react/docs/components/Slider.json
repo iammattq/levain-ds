@@ -1,0 +1,181 @@
+{
+  "name": "Slider",
+  "description": "A single-handle slider component for selecting a single value with filled track, size variants, and optional tooltip/labels",
+  "category": "components",
+  "usage": [
+    "Use for selecting a single value from a continuous range",
+    "Use size='sm' for compact sidebar controls in goodies",
+    "Use size='md' (default) for standard form inputs",
+    "Enable showInput for precise value entry via editable number field",
+    "Enable showTooltip for precise value feedback during drag",
+    "Enable showMinMax to display range endpoints",
+    "Use valueFormatter for non-numeric representations (e.g., percentages, degrees)",
+    "Use labelTooltip to provide contextual help for technical or domain-specific parameters"
+  ],
+  "examples": [
+    "import { Slider } from '@/lib/designsystem';\nimport { useState } from 'react';\n\nfunction MyComponent() {\n  const [value, setValue] = useState(50);\n\n  return (\n    <Slider\n      label=\"Brightness\"\n      value={value}\n      min={0}\n      max={100}\n      onChange={setValue}\n    />\n  );\n}",
+    "<Slider\n  size=\"sm\"\n  label=\"Angle\"\n  value={config.angle}\n  min={0}\n  max={360}\n  step={15}\n  onChange={(v) => updateConfig({ angle: v })}\n  valueFormatter={(v) => `${v}°`}\n  showTooltip\n/>",
+    "<Slider\n  label=\"Commission (%)\"\n  value={commission}\n  min={0}\n  max={100}\n  onChange={setCommission}\n  showTooltip\n  showMinMax\n  helperText=\"Choose how much commission each affiliate receives\"\n/>",
+    "<Slider\n  size=\"sm\"\n  label=\"Opacity\"\n  value={opacity}\n  min={0}\n  max={1}\n  step={0.01}\n  onChange={setOpacity}\n  valueFormatter={(v) => v.toFixed(2)}\n  className=\"mb-0\"\n/>",
+    "<Slider\n  size=\"sm\"\n  label=\"Chroma Falloff (β)\"\n  value={surfaces.chromaFalloff}\n  min={0.5}\n  max={2}\n  step={0.05}\n  onChange={(v) => onUpdate({ chromaFalloff: v })}\n  labelTooltip=\"Controls how quickly color saturation decreases as surfaces get lighter or darker. Higher values preserve more color in mid-tones.\"\n  showTooltip\n  showMinMax\n/>",
+    "<Slider\n  size=\"sm\"\n  label=\"Angle\"\n  value={angle}\n  min={0}\n  max={360}\n  step={1}\n  onChange={setAngle}\n  showInput\n/>"
+  ],
+  "design": [
+    "Filled track uses var(--color-primary) from min to current value",
+    "Unfilled track uses var(--color-surface-canvas)",
+    "Thumb uses var(--color-surface-inverted) with subtle shadow",
+    "Focus ring uses 2px var(--color-border-focus) with offset",
+    "Size 'sm' has h-1.5 track, 14px thumb, type-caption-compact labels",
+    "Size 'md' has h-2 track, 16px thumb, type-label-sm labels"
+  ],
+  "accessibility": [
+    "Uses native input[type=range] for keyboard navigation",
+    "Proper aria-valuemin, aria-valuemax, aria-valuenow attributes",
+    "aria-valuetext provides formatted value for screen readers",
+    "Label associated via htmlFor/id",
+    "Focus-visible ring for keyboard users",
+    "Label tooltip uses role='tooltip' and appears on hover of the info icon"
+  ],
+  "props": [
+    {
+      "name": "size",
+      "type": "'sm' | 'md'",
+      "optional": true,
+      "defaultValue": "'md'",
+      "description": "Size variant - 'sm' for compact sidebar controls, 'md' for standard forms"
+    },
+    {
+      "name": "label",
+      "type": "string",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Optional label text displayed above the slider"
+    },
+    {
+      "name": "value",
+      "type": "number",
+      "optional": false,
+      "defaultValue": null,
+      "description": "Current slider value (required)"
+    },
+    {
+      "name": "min",
+      "type": "number",
+      "optional": false,
+      "defaultValue": null,
+      "description": "Minimum value (required)"
+    },
+    {
+      "name": "max",
+      "type": "number",
+      "optional": false,
+      "defaultValue": null,
+      "description": "Maximum value (required)"
+    },
+    {
+      "name": "step",
+      "type": "number",
+      "optional": true,
+      "defaultValue": "1",
+      "description": "Step increment for value changes"
+    },
+    {
+      "name": "onChange",
+      "type": "(value: number) => void",
+      "optional": false,
+      "defaultValue": null,
+      "description": "Change handler called when the slider value changes (required)"
+    },
+    {
+      "name": "showValue",
+      "type": "boolean",
+      "optional": true,
+      "defaultValue": "true",
+      "description": "Whether to show the current value next to the label (ignored when showInput is true)"
+    },
+    {
+      "name": "showInput",
+      "type": "boolean",
+      "optional": true,
+      "defaultValue": "false",
+      "description": "Show an editable number input beside the slider for precise value entry. Values are clamped to min/max range."
+    },
+    {
+      "name": "inputWidth",
+      "type": "string",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Custom width for the input field when showInput is true (e.g., '4rem')"
+    },
+    {
+      "name": "valueFormatter",
+      "type": "(value: number) => string",
+      "optional": true,
+      "defaultValue": "(val) => val.toString()",
+      "description": "Function to format the displayed value"
+    },
+    {
+      "name": "showTooltip",
+      "type": "boolean",
+      "optional": true,
+      "defaultValue": "false",
+      "description": "Show a tooltip bubble with current value on hover/drag"
+    },
+    {
+      "name": "showMinMax",
+      "type": "boolean",
+      "optional": true,
+      "defaultValue": "false",
+      "description": "Show min/max labels at track endpoints"
+    },
+    {
+      "name": "helperText",
+      "type": "string",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Helper text displayed below the slider"
+    },
+    {
+      "name": "disabled",
+      "type": "boolean",
+      "optional": true,
+      "defaultValue": "false",
+      "description": "Disabled state"
+    },
+    {
+      "name": "labelTooltip",
+      "type": "string",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Tooltip text shown via info icon next to the label. Use for technical or domain-specific parameters that need explanation."
+    },
+    {
+      "name": "className",
+      "type": "string",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Additional CSS classes for the container element"
+    },
+    {
+      "name": "labelClassName",
+      "type": "string",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Additional CSS classes for the label element"
+    },
+    {
+      "name": "valueClassName",
+      "type": "string",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Additional CSS classes for the value display element"
+    },
+    {
+      "name": "sliderClassName",
+      "type": "string",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Additional CSS classes for the slider input element"
+    }
+  ]
+}

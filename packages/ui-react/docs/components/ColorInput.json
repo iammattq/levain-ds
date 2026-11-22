@@ -1,0 +1,130 @@
+{
+  "name": "ColorInput",
+  "description": "A component combining a visual color chip with a text input for selecting and displaying color values (typically hex codes). Provides both visual (color chip) and text input methods for color selection. Clicking the color chip opens the native browser color picker. Text input allows manual entry/pasting of hex color codes.",
+  "category": "components",
+  "usage": [
+    "Use for selecting or inputting color values, primarily in hex format.",
+    "Click the color chip to use the browser's native color picker.",
+    "Type or paste directly into the text input.",
+    "Supports error states, helper text, and validation similar to TextInput."
+  ],
+  "examples": [
+    "```tsx\nimport { ColorInput } from '@/lib/designsystem';\nimport { useState } from 'react';\n\nexport default function ColorPickerExample() {\n  const [color, setColor] = useState('#5C62D6');\n\n  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {\n    setColor(event.target.value);\n  };\n\n  return (\n    <ColorInput\n      id=\"base-color\"\n      label=\"Base Color\"\n      value={color}\n      onChange={handleChange}\n      helperText=\"Select the primary base color for the theme.\"\n      required\n    />\n  );\n}\n```"
+  ],
+  "design": [
+    "The component wraps a clickable color chip (button) and a text input.",
+    "A hidden `<input type=\"color\">` is used to trigger the browser's color picker.",
+    "The `onChange` handler receives a standard `ChangeEvent` from the text input, even when the color picker initiates the change, for consistency.",
+    "Styling aims to visually merge the chip and text input, resembling the `TextInput` component but with the prepended chip.",
+    "Uses design system tokens for borders, focus rings, text colors, and error states."
+  ],
+  "accessibility": [
+    "The text input is the primary focusable element.",
+    "The color chip button should ideally have an accessible label if its purpose isn't clear from context (though visually paired with the input helps).",
+    "Label and helper/error text are associated with the input using standard techniques.",
+    "Focus states and error states use appropriate visual indicators."
+  ],
+  "props": [
+    {
+      "name": "id",
+      "type": "string",
+      "optional": false,
+      "description": "Unique identifier for the input.",
+      "configurable": false
+    },
+    {
+      "name": "label",
+      "type": "string",
+      "optional": false,
+      "description": "Text label displayed above the input."
+    },
+    {
+      "name": "value",
+      "type": "string",
+      "optional": false,
+      "description": "Current color value (expects hex format)."
+    },
+    {
+      "name": "onChange",
+      "type": "(event: ChangeEvent<HTMLInputElement>) => void",
+      "optional": false,
+      "description": "Function called when value changes (from text input or color picker).",
+      "configurable": false
+    },
+    {
+      "name": "error",
+      "type": "string",
+      "optional": true,
+      "description": "Error message to display (takes precedence over internal validation)."
+    },
+    {
+      "name": "validate",
+      "type": "(value: string) => string | null | undefined",
+      "optional": true,
+      "description": "Custom validation function called on value change.",
+      "configurable": false
+    },
+    {
+      "name": "helperText",
+      "type": "string",
+      "optional": true,
+      "description": "Text displayed below the input when not in an error state."
+    },
+    {
+      "name": "className",
+      "type": "string",
+      "optional": true,
+      "defaultValue": "''",
+      "description": "CSS classes for the **outer container** div."
+    },
+    {
+      "name": "inputClassName",
+      "type": "string",
+      "optional": true,
+      "defaultValue": "''",
+      "description": "CSS classes specifically for the text `<input>` element."
+    },
+    {
+      "name": "chipClassName",
+      "type": "string",
+      "optional": true,
+      "defaultValue": "''",
+      "description": "CSS classes specifically for the color chip `<button>` element."
+    },
+    {
+      "name": "touched",
+      "type": "boolean",
+      "optional": true,
+      "defaultValue": "false",
+      "description": "Set to true to enable validation error display (usually after blur)."
+    },
+    {
+      "name": "onBlur",
+      "type": "(event: React.FocusEvent<HTMLInputElement>) => void",
+      "optional": true,
+      "description": "Function called when the text input loses focus.",
+      "configurable": false
+    },
+    {
+      "name": "required",
+      "type": "boolean",
+      "optional": true,
+      "defaultValue": "false",
+      "description": "Marks the input as required (adds asterisk to label)."
+    },
+    {
+      "name": "disabled",
+      "type": "boolean",
+      "optional": true,
+      "defaultValue": "false",
+      "description": "Disables the input and color chip."
+    },
+    {
+      "name": "compact",
+      "type": "boolean",
+      "optional": true,
+      "defaultValue": "false",
+      "description": "Uses compact sizing with smaller typography (type-label-sm, type-body-sm) and dimensions (h-7 chip and input vs h-10). Matches TextInput compact mode."
+    }
+  ]
+}

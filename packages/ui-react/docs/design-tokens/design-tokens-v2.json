@@ -1,0 +1,636 @@
+{
+  "colors": {
+    "brand": {
+      "primary": {
+        "value": "--color-primary",
+        "description": "Primary brand color. Used for primary buttons, links, active states, and key interactive elements."
+      },
+      "accent": {
+        "value": "--color-accent",
+        "description": "Accent brand color. Used for secondary highlights, decorative elements, and visual interest."
+      },
+      "text-on-primary": {
+        "value": "--color-text-on-primary",
+        "description": "Auto-calculated contrasting text color for use on primary backgrounds. Ensures WCAG compliance."
+      },
+      "text-on-accent": {
+        "value": "--color-text-on-accent",
+        "description": "Auto-calculated contrasting text color for use on accent backgrounds. Ensures WCAG compliance."
+      }
+    },
+    "gradients": {
+      "grad-1": {
+        "value": "--color-grad-1",
+        "description": "Linear gradient from primary to accent, flowing top-left to bottom-right. For decorative backgrounds and emphasis."
+      },
+      "grad-2": {
+        "value": "--color-grad-2",
+        "description": "Linear gradient from primary to accent, flowing left to right. For horizontal elements like headers."
+      }
+    },
+    "surfaces": {
+      "_description": "26-stop OKLCH-based surface ramp (0-25). Lower indices are darker, higher are lighter. Use semantic tokens for most cases.",
+      "ramp": {
+        "surface-0": {
+          "value": "--color-surface-0",
+          "description": "Darkest surface (index 0)"
+        },
+        "surface-1": {
+          "value": "--color-surface-1",
+          "description": "Surface ramp index 1"
+        },
+        "surface-2": {
+          "value": "--color-surface-2",
+          "description": "Surface ramp index 2"
+        },
+        "surface-3": {
+          "value": "--color-surface-3",
+          "description": "Surface ramp index 3"
+        },
+        "surface-4": {
+          "value": "--color-surface-4",
+          "description": "Surface ramp index 4"
+        },
+        "surface-5": {
+          "value": "--color-surface-5",
+          "description": "Surface ramp index 5"
+        },
+        "surface-6": {
+          "value": "--color-surface-6",
+          "description": "Surface ramp index 6"
+        },
+        "surface-7": {
+          "value": "--color-surface-7",
+          "description": "Surface ramp index 7"
+        },
+        "surface-8": {
+          "value": "--color-surface-8",
+          "description": "Surface ramp index 8"
+        },
+        "surface-9": {
+          "value": "--color-surface-9",
+          "description": "Surface ramp index 9"
+        },
+        "surface-10": {
+          "value": "--color-surface-10",
+          "description": "Surface ramp index 10"
+        },
+        "surface-11": {
+          "value": "--color-surface-11",
+          "description": "Surface ramp index 11"
+        },
+        "surface-12": {
+          "value": "--color-surface-12",
+          "description": "Surface ramp index 12 (midpoint)"
+        },
+        "surface-13": {
+          "value": "--color-surface-13",
+          "description": "Surface ramp index 13"
+        },
+        "surface-14": {
+          "value": "--color-surface-14",
+          "description": "Surface ramp index 14"
+        },
+        "surface-15": {
+          "value": "--color-surface-15",
+          "description": "Surface ramp index 15"
+        },
+        "surface-16": {
+          "value": "--color-surface-16",
+          "description": "Surface ramp index 16"
+        },
+        "surface-17": {
+          "value": "--color-surface-17",
+          "description": "Surface ramp index 17"
+        },
+        "surface-18": {
+          "value": "--color-surface-18",
+          "description": "Surface ramp index 18"
+        },
+        "surface-19": {
+          "value": "--color-surface-19",
+          "description": "Surface ramp index 19"
+        },
+        "surface-20": {
+          "value": "--color-surface-20",
+          "description": "Surface ramp index 20"
+        },
+        "surface-21": {
+          "value": "--color-surface-21",
+          "description": "Surface ramp index 21"
+        },
+        "surface-22": {
+          "value": "--color-surface-22",
+          "description": "Surface ramp index 22"
+        },
+        "surface-23": {
+          "value": "--color-surface-23",
+          "description": "Surface ramp index 23"
+        },
+        "surface-24": {
+          "value": "--color-surface-24",
+          "description": "Surface ramp index 24"
+        },
+        "surface-25": {
+          "value": "--color-surface-25",
+          "description": "Lightest surface (index 25)"
+        }
+      },
+      "semantic": {
+        "surface-canvas": {
+          "value": "--color-surface-canvas",
+          "description": "Page/app background. The base canvas layer."
+        },
+        "surface-section": {
+          "value": "--color-surface-section",
+          "description": "Section backgrounds. Subtle separation from canvas."
+        },
+        "surface-card": {
+          "value": "--color-surface-card",
+          "description": "Card and panel backgrounds. Primary content containers."
+        },
+        "surface-component": {
+          "value": "--color-surface-component",
+          "description": "Component backgrounds (inputs, buttons). Interactive element base."
+        },
+        "surface-subtle": {
+          "value": "--color-surface-subtle",
+          "description": "Subtle background for hover states or slight emphasis."
+        },
+        "surface-interactive": {
+          "value": "--color-surface-interactive",
+          "description": "Interactive element backgrounds (buttons, inputs)."
+        },
+        "surface-elevated": {
+          "value": "--color-surface-elevated",
+          "description": "Elevated surfaces (modals, dropdowns, popovers)."
+        },
+        "surface-inverted": {
+          "value": "--color-surface-inverted",
+          "description": "Inverted surface for high contrast elements (tooltips, badges)."
+        }
+      }
+    },
+    "text": {
+      "text-emphasis": {
+        "value": "--color-text-emphasis",
+        "description": "Highest contrast text. Headings and critical content."
+      },
+      "text-default": {
+        "value": "--color-text-default",
+        "description": "Default body text color. Primary readable content."
+      },
+      "text-muted": {
+        "value": "--color-text-muted",
+        "description": "Muted text for secondary information. Captions, hints."
+      },
+      "text-faint": {
+        "value": "--color-text-faint",
+        "description": "Faint text for tertiary information. Timestamps, metadata."
+      },
+      "text-disabled": {
+        "value": "--color-text-disabled",
+        "description": "Disabled text. Non-interactive or unavailable content."
+      },
+      "text-inverted": {
+        "value": "--color-text-inverted",
+        "description": "Text on inverted/dark surfaces."
+      },
+      "text-link": {
+        "value": "--color-text-link",
+        "description": "Link text color. Maps to primary brand color."
+      }
+    },
+    "borders": {
+      "border-subtle": {
+        "value": "--color-border-subtle",
+        "description": "Subtle borders. Soft separators, dividers."
+      },
+      "border-default": {
+        "value": "--color-border-default",
+        "description": "Default border color. Standard container outlines."
+      },
+      "border-emphasis": {
+        "value": "--color-border-emphasis",
+        "description": "Emphasized borders. Stronger visual separation."
+      },
+      "border-focus": {
+        "value": "--color-border-focus",
+        "description": "Focus ring color. Maps to primary brand color."
+      },
+      "border-decorative": {
+        "value": "--color-border-decorative",
+        "description": "Decorative borders using brand color."
+      }
+    },
+    "actions": {
+      "_description": "Action colors with base, foreground (-fg), and background (-bg) variants. The -fg variant is for text on neutral backgrounds, -bg is for subtle background fills.",
+      "success": {
+        "base": {
+          "value": "--color-success",
+          "description": "Success indicator. Confirmations, completed states."
+        },
+        "fg": {
+          "value": "--color-success-fg",
+          "description": "Success text on neutral backgrounds."
+        },
+        "bg": {
+          "value": "--color-success-bg",
+          "description": "Success background fill. Subtle success containers."
+        }
+      },
+      "error": {
+        "base": {
+          "value": "--color-error",
+          "description": "Error indicator. Validation errors, destructive actions."
+        },
+        "fg": {
+          "value": "--color-error-fg",
+          "description": "Error text on neutral backgrounds."
+        },
+        "bg": {
+          "value": "--color-error-bg",
+          "description": "Error background fill. Alert containers."
+        }
+      },
+      "caution": {
+        "base": {
+          "value": "--color-caution",
+          "description": "Caution/warning indicator. Attention-needed states."
+        },
+        "fg": {
+          "value": "--color-caution-fg",
+          "description": "Caution text on neutral backgrounds."
+        },
+        "bg": {
+          "value": "--color-caution-bg",
+          "description": "Caution background fill. Warning containers."
+        }
+      },
+      "info": {
+        "base": {
+          "value": "--color-info",
+          "description": "Info indicator. Informational messages, tips."
+        },
+        "fg": {
+          "value": "--color-info-fg",
+          "description": "Info text on neutral backgrounds."
+        },
+        "bg": {
+          "value": "--color-info-bg",
+          "description": "Info background fill. Notice containers."
+        }
+      }
+    },
+    "states": {
+      "_description": "Interactive state overlays using native OKLCH. Apply as background-color with mix-blend-mode or as overlay.",
+      "hover": {
+        "value": "--color-state-hover",
+        "description": "Hover state overlay. Subtle darkening/lightening on hover."
+      },
+      "focus": {
+        "value": "--color-state-focus",
+        "description": "Focus state overlay. Slightly stronger than hover."
+      },
+      "active": {
+        "value": "--color-state-active",
+        "description": "Active/pressed state overlay. Strongest interaction state."
+      }
+    }
+  },
+  "typography": {
+    "_description": "Typography system with primitives and semantic styles. Use semantic utilities (.text-body, .text-heading-1, etc.) in components. Primitives (--type-*) are building blocks.",
+    "primitives": {
+      "families": {
+        "sans": {
+          "value": "--type-family-sans",
+          "description": "Default sans-serif font stack for body text and UI",
+          "computed": "var(--font-nunito), 'Nunito', ui-sans-serif, system-ui, -apple-system, sans-serif"
+        },
+        "heading": {
+          "value": "--type-family-heading",
+          "description": "Heading font stack. Defaults to --type-family-sans unless a typography preset sets a heading font override.",
+          "computed": "var(--type-family-sans)"
+        },
+        "mono": {
+          "value": "--type-family-mono",
+          "description": "Monospace font stack for code",
+          "computed": "ui-monospace, 'SF Mono', 'Cascadia Code', 'Consolas', monospace"
+        }
+      },
+      "sizes": {
+        "3xs": {
+          "value": "--type-size-3xs",
+          "description": "Smallest text size",
+          "size": "0.625rem (10px)"
+        },
+        "2xs": {
+          "value": "--type-size-2xs",
+          "description": "Extra small text",
+          "size": "0.75rem (12px)"
+        },
+        "xs": {
+          "value": "--type-size-xs",
+          "description": "Small text",
+          "size": "0.875rem (14px)"
+        },
+        "sm": {
+          "value": "--type-size-sm",
+          "description": "Base text size",
+          "size": "1rem (16px)"
+        },
+        "md": {
+          "value": "--type-size-md",
+          "description": "Medium text",
+          "size": "1.25rem (20px)"
+        },
+        "lg": {
+          "value": "--type-size-lg",
+          "description": "Large text",
+          "size": "1.5rem (24px)"
+        },
+        "xl": {
+          "value": "--type-size-xl",
+          "description": "Extra large text",
+          "size": "1.75rem (28px)"
+        },
+        "2xl": {
+          "value": "--type-size-2xl",
+          "description": "2x large text",
+          "size": "2rem (32px)"
+        },
+        "3xl": {
+          "value": "--type-size-3xl",
+          "description": "3x large text",
+          "size": "2.25rem (36px)"
+        },
+        "4xl": {
+          "value": "--type-size-4xl",
+          "description": "4x large text",
+          "size": "2.5rem (40px)"
+        },
+        "5xl": {
+          "value": "--type-size-5xl",
+          "description": "5x large text",
+          "size": "2.75rem (44px)"
+        },
+        "6xl": {
+          "value": "--type-size-6xl",
+          "description": "6x large text",
+          "size": "3rem (48px)"
+        }
+      },
+      "weights": {
+        "regular": {
+          "value": "--type-weight-regular",
+          "description": "Normal weight",
+          "computed": "400"
+        },
+        "medium": {
+          "value": "--type-weight-medium",
+          "description": "Medium weight",
+          "computed": "500"
+        },
+        "bold": {
+          "value": "--type-weight-bold",
+          "description": "Bold weight",
+          "computed": "700"
+        }
+      },
+      "lineHeights": {
+        "none": {
+          "value": "--type-leading-none",
+          "description": "No extra line height",
+          "computed": "1"
+        },
+        "tight": {
+          "value": "--type-leading-tight",
+          "description": "Tight line height for headings",
+          "computed": "1.2"
+        },
+        "snug": {
+          "value": "--type-leading-snug",
+          "description": "Slightly tighter than normal",
+          "computed": "1.375"
+        },
+        "normal": {
+          "value": "--type-leading-normal",
+          "description": "Default readable line height",
+          "computed": "1.5"
+        },
+        "relaxed": {
+          "value": "--type-leading-relaxed",
+          "description": "Relaxed line height for long-form",
+          "computed": "1.75"
+        }
+      },
+      "letterSpacing": {
+        "tight": {
+          "value": "--type-tracking-tight",
+          "description": "Tighter letter spacing for headings",
+          "computed": "-0.025em"
+        },
+        "normal": {
+          "value": "--type-tracking-normal",
+          "description": "Default letter spacing",
+          "computed": "0"
+        },
+        "wide": {
+          "value": "--type-tracking-wide",
+          "description": "Wider letter spacing for emphasis",
+          "computed": "0.025em"
+        }
+      }
+    },
+    "semantic": {
+      "_description": "Semantic typography styles. Use .type-* CSS utility classes in components (not .text-* to avoid tailwind-merge conflicts).",
+      "body": {
+        "class": ".type-body",
+        "description": "Default body text for paragraphs and general content",
+        "properties": {
+          "size": "sm (16px)",
+          "weight": "regular (400)",
+          "leading": "normal (1.5)"
+        }
+      },
+      "bodySm": {
+        "class": ".type-body-sm",
+        "description": "Smaller body text for dense content",
+        "properties": {
+          "size": "xs (14px)",
+          "weight": "regular (400)",
+          "leading": "normal (1.5)"
+        }
+      },
+      "label": {
+        "class": ".type-label",
+        "description": "Form labels, buttons, navigation items",
+        "properties": {
+          "size": "xs (14px)",
+          "weight": "medium (500)",
+          "leading": "tight (1.2)"
+        }
+      },
+      "labelSm": {
+        "class": ".type-label-sm",
+        "description": "Smaller labels, badge text",
+        "properties": {
+          "size": "2xs (12px)",
+          "weight": "medium (500)",
+          "leading": "tight (1.2)"
+        }
+      },
+      "labelCompact": {
+        "class": ".type-label-compact",
+        "description": "Compact labels for tight spaces",
+        "properties": {
+          "size": "3xs (10px)",
+          "weight": "medium (500)",
+          "leading": "tight (1.2)"
+        }
+      },
+      "heading1": {
+        "class": ".type-heading-1",
+        "description": "Page titles, primary headings (responsive)",
+        "properties": {
+          "family": "--type-family-heading",
+          "size": "xl (28px) → 6xl (48px) at md",
+          "weight": "bold (700)",
+          "leading": "tight (1.2)",
+          "tracking": "tight (-0.025em)"
+        }
+      },
+      "heading2": {
+        "class": ".type-heading-2",
+        "description": "Section headings (responsive)",
+        "properties": {
+          "family": "--type-family-heading",
+          "size": "lg (24px) → 3xl (36px) at md",
+          "weight": "bold (700)",
+          "leading": "tight (1.2)",
+          "tracking": "tight (-0.025em)"
+        }
+      },
+      "heading3": {
+        "class": ".type-heading-3",
+        "description": "Subsection headings (responsive)",
+        "properties": {
+          "family": "--type-family-heading",
+          "size": "lg (24px) → 2xl (32px) at md",
+          "weight": "bold (700)",
+          "leading": "tight (1.2)",
+          "tracking": "tight (-0.025em)"
+        }
+      },
+      "heading4": {
+        "class": ".type-heading-4",
+        "description": "Small headings, card titles (fixed)",
+        "properties": {
+          "family": "--type-family-heading",
+          "size": "md (20px)",
+          "weight": "bold (700)",
+          "leading": "tight (1.2)",
+          "tracking": "tight (-0.025em)"
+        }
+      },
+      "caption": {
+        "class": ".type-caption",
+        "description": "Helper text, timestamps, metadata (includes muted color)",
+        "properties": {
+          "size": "2xs (12px)",
+          "weight": "regular (400)",
+          "leading": "normal (1.5)",
+          "color": "--color-text-muted"
+        }
+      },
+      "captionCompact": {
+        "class": ".type-caption-compact",
+        "description": "Compact captions for tight spaces (includes muted color)",
+        "properties": {
+          "size": "3xs (10px)",
+          "weight": "regular (400)",
+          "leading": "tight (1.2)",
+          "color": "--color-text-muted"
+        }
+      },
+      "code": {
+        "class": ".type-code",
+        "description": "Inline code and code blocks",
+        "properties": {
+          "size": "xs (14px)",
+          "weight": "regular (400)",
+          "leading": "normal (1.5)",
+          "family": "--type-family-mono"
+        }
+      }
+    },
+    "legacy": {
+      "_description": "DEPRECATED: Use --type-size-* primitives instead. These will be removed in a future version.",
+      "sizes": {
+        "2xs": { "value": "--text-2xs", "size": "0.75rem (12px)" },
+        "xs": { "value": "--text-xs", "size": "0.875rem (14px)" },
+        "sm": { "value": "--text-sm", "size": "1rem (16px)" },
+        "md": { "value": "--text-md", "size": "1.25rem (20px)" },
+        "lg": { "value": "--text-lg", "size": "1.5rem (24px)" },
+        "xl": { "value": "--text-xl", "size": "1.75rem (28px)" },
+        "2xl": { "value": "--text-2xl", "size": "2rem (32px)" },
+        "3xl": { "value": "--text-3xl", "size": "2.25rem (36px)" },
+        "4xl": { "value": "--text-4xl", "size": "2.5rem (40px)" },
+        "5xl": { "value": "--text-5xl", "size": "2.75rem (44px)" },
+        "6xl": { "value": "--text-6xl", "size": "3rem (48px)" }
+      }
+    }
+  },
+  "borderRadius": {
+    "none": {
+      "value": "--radius-none",
+      "description": "No border radius",
+      "size": "0px"
+    },
+    "xs": {
+      "value": "--radius-xs",
+      "description": "Extra small radius",
+      "size": "0.125rem (2px)"
+    },
+    "sm": {
+      "value": "--radius-sm",
+      "description": "Small radius",
+      "size": "0.25rem (4px)"
+    },
+    "md": {
+      "value": "--radius-md",
+      "description": "Medium radius",
+      "size": "0.375rem (6px)"
+    },
+    "lg": {
+      "value": "--radius-lg",
+      "description": "Large radius",
+      "size": "0.5rem (8px)"
+    },
+    "xl": {
+      "value": "--radius-xl",
+      "description": "Extra large radius",
+      "size": "0.75rem (12px)"
+    },
+    "2xl": {
+      "value": "--radius-2xl",
+      "description": "2x large radius",
+      "size": "1rem (16px)"
+    },
+    "3xl": {
+      "value": "--radius-3xl",
+      "description": "3x large radius",
+      "size": "1.5rem (24px)"
+    },
+    "4xl": {
+      "value": "--radius-4xl",
+      "description": "4x large radius",
+      "size": "2rem (32px)"
+    },
+    "full": {
+      "value": "--radius-full",
+      "description": "Full circular radius",
+      "size": "9999px"
+    }
+  }
+}

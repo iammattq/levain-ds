@@ -1,0 +1,106 @@
+{
+  "name": "SegmentedControl",
+  "description": "The SegmentedControl component provides a set of two or more mutually exclusive options presented as connected segments, offering a more compact and visually intuitive alternative to radio buttons or select inputs.",
+  "category": "components",
+  "usage": [
+    "Use SegmentedControl when you need users to choose one option from a small set of related choices.",
+    "Perfect for toggling between views, filtering options, or setting basic preferences.",
+    "Best suited for 2-5 options with short, clear labels.",
+    "Consider using radio buttons or a dropdown for more than 5 options.",
+    "Use instead of tabs when the options don't represent content panels but rather control a single setting."
+  ],
+  "examples": [
+    "```tsx\nimport { SegmentedControl } from '@/lib/designsystem';\n\nfunction MyComponent() {\n  const [view, setView] = useState('day');\n  \n  return (\n    <SegmentedControl\n      id=\"calendar-view\"\n      options={[\n        { value: 'day', label: 'Day' },\n        { value: 'week', label: 'Week' },\n        { value: 'month', label: 'Month' }\n      ]}\n      value={view}\n      onChange={setView}\n      label=\"Calendar View\"\n    />\n  );\n}\n```",
+    "```tsx\n// With size variants\n<SegmentedControl\n  id=\"size-sm\"\n  size=\"sm\"\n  options={[\n    { value: 'draft', label: 'Draft' },\n    { value: 'published', label: 'Published' }\n  ]}\n  value={status}\n  onChange={setStatus}\n/>\n\n<SegmentedControl\n  id=\"size-md\"\n  size=\"md\"\n  options={[\n    { value: 'draft', label: 'Draft' },\n    { value: 'published', label: 'Published' }\n  ]}\n  value={status}\n  onChange={setStatus}\n/>\n\n<SegmentedControl\n  id=\"size-lg\"\n  size=\"lg\"\n  options={[\n    { value: 'draft', label: 'Draft' },\n    { value: 'published', label: 'Published' }\n  ]}\n  value={status}\n  onChange={setStatus}\n/>\n```",
+    "```tsx\n// With disabled options\n<SegmentedControl\n  id=\"themes\"\n  options={[\n    { value: 'light', label: 'Light' },\n    { value: 'dark', label: 'Dark' },\n    { value: 'system', label: 'System', disabled: true }\n  ]}\n  value={theme}\n  onChange={setTheme}\n  label=\"Theme\"\n/>\n```",
+    "```tsx\n// Full width\n<SegmentedControl\n  id=\"layout\"\n  options={[\n    { value: 'grid', label: 'Grid' },\n    { value: 'list', label: 'List' }\n  ]}\n  value={layout}\n  onChange={setLayout}\n  fullWidth\n/>\n```",
+    "```tsx\n// Subtle variant\n<SegmentedControl\n  id=\"alignment\"\n  options={[\n    { value: 'left', label: 'Left' },\n    { value: 'center', label: 'Center' },\n    { value: 'right', label: 'Right' }\n  ]}\n  value={alignment}\n  onChange={setAlignment}\n  variant=\"subtle\"\n/>\n```"
+  ],
+  "design": [
+    "The active segment is indicated visually with a colored underline and bolder text.",
+    "Segments maintain a consistent width unless the `fullWidth` prop is used, which distributes space evenly.",
+    "Sizes align with Button component: xs=h-7, sm=h-8, md=h-9, lg=h-12 for consistent form layouts. Use xs for compact UIs alongside Select compact.",
+    "The default variant includes subtle depth cues (shadow) while the subtle variant is flatter for less visual weight.",
+    "When disabling individual options, ensure there's a clear visual indication that they're unavailable while maintaining readability."
+  ],
+  "accessibility": [
+    "Uses native `button` elements for proper semantic structure and keyboard accessibility.",
+    "Each option includes the `aria-pressed` attribute to indicate the currently selected state.",
+    "The active indicator is marked with `aria-hidden=\"true\"` since it's decorative.",
+    "When provided, the `label` prop is properly associated with the control via matching HTML `for`/`id` attributes.",
+    "The component maintains sufficient color contrast between text and background in all states.",
+    "Disabled options are clearly indicated visually and prevented from receiving focus or interaction."
+  ],
+  "props": [
+    {
+      "name": "id",
+      "type": "string",
+      "optional": false,
+      "defaultValue": "",
+      "description": "Unique identifier for the control (required for accessibility)"
+    },
+    {
+      "name": "options",
+      "type": "SegmentOption[]",
+      "optional": false,
+      "defaultValue": "",
+      "description": "Array of options to display as segments"
+    },
+    {
+      "name": "value",
+      "type": "string",
+      "optional": false,
+      "defaultValue": "",
+      "description": "Currently selected option value"
+    },
+    {
+      "name": "onChange",
+      "type": "(value: string) => void",
+      "optional": false,
+      "defaultValue": "",
+      "description": "Callback when selection changes"
+    },
+    {
+      "name": "label",
+      "type": "string",
+      "optional": true,
+      "defaultValue": "undefined",
+      "description": "Accessible label for the control"
+    },
+    {
+      "name": "className",
+      "type": "string",
+      "optional": true,
+      "defaultValue": "undefined",
+      "description": "Additional CSS classes for the container"
+    },
+    {
+      "name": "disabled",
+      "type": "boolean",
+      "optional": true,
+      "defaultValue": "false",
+      "description": "Whether the entire control is disabled"
+    },
+    {
+      "name": "size",
+      "type": "'xs' | 'sm' | 'md' | 'lg'",
+      "optional": true,
+      "defaultValue": "'md'",
+      "description": "Size variant for the control. Use 'xs' for compact UIs to match Select compact height."
+    },
+    {
+      "name": "fullWidth",
+      "type": "boolean",
+      "optional": true,
+      "defaultValue": "false",
+      "description": "Whether the control should take up the full width of its container"
+    },
+    {
+      "name": "variant",
+      "type": "'default' | 'subtle'",
+      "optional": true,
+      "defaultValue": "'default'",
+      "description": "Visual style variant"
+    }
+  ]
+}

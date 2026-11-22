@@ -1,0 +1,159 @@
+{
+  "name": "TokenSelect",
+  "description": "A custom dropdown for selecting design tokens with color swatch previews. Supports all token categories from the design system (surface ramp, semantic surfaces, text, borders, brand, and action colors). Features keyboard navigation, type-ahead search, and portal-based dropdown rendering.",
+  "category": "patterns",
+  "usage": [
+    "Import `TokenSelect` and optionally `getTokensForCategory` from the design system.",
+    "Provide a unique `id` and descriptive `label`.",
+    "Set `tokenCategory` to one of the predefined categories, or provide custom `options`.",
+    "Use `value` and `onChange` for controlled behavior.",
+    "Use `error` and `touched` props to display validation errors.",
+    "Provide `helperText` for additional context.",
+    "Mark as `required` or `disabled` as needed."
+  ],
+  "examples": [
+    "```tsx\n// Surface ramp selection (0-25)\nimport { TokenSelect } from '@/lib/designsystem';\nimport { useState } from 'react';\n\nfunction SurfaceRampSelect() {\n  const [surfaceIndex, setSurfaceIndex] = useState('20');\n\n  return (\n    <TokenSelect\n      id=\"surface-color\"\n      label=\"Surface Color\"\n      tokenCategory=\"surface-ramp\"\n      value={surfaceIndex}\n      onChange={setSurfaceIndex}\n      helperText=\"Select a surface ramp index (0-25)\"\n    />\n  );\n}\n```",
+    "```tsx\n// Semantic surface selection\nimport { TokenSelect } from '@/lib/designsystem';\nimport { useState } from 'react';\n\nfunction SemanticSurfaceSelect() {\n  const [surface, setSurface] = useState('card');\n\n  return (\n    <TokenSelect\n      id=\"bg-surface\"\n      label=\"Background Surface\"\n      tokenCategory=\"surface-semantic\"\n      value={surface}\n      onChange={setSurface}\n    />\n  );\n}\n```",
+    "```tsx\n// Text color selection with validation\nimport { TokenSelect } from '@/lib/designsystem';\nimport { useState } from 'react';\n\nfunction TextColorSelect() {\n  const [textColor, setTextColor] = useState('');\n  const [touched, setTouched] = useState(false);\n\n  return (\n    <TokenSelect\n      id=\"text-color\"\n      label=\"Text Color\"\n      tokenCategory=\"text\"\n      value={textColor}\n      onChange={setTextColor}\n      onBlur={() => setTouched(true)}\n      error={!textColor ? 'Text color is required' : undefined}\n      touched={touched}\n      required\n    />\n  );\n}\n```",
+    "```tsx\n// Custom token options\nimport { TokenSelect } from '@/lib/designsystem';\nimport { useState } from 'react';\n\nfunction CustomTokenSelect() {\n  const [theme, setTheme] = useState('light');\n\n  const customOptions = [\n    { value: 'light', label: 'Light Theme', cssVar: 'var(--color-surface-25)' },\n    { value: 'dark', label: 'Dark Theme', cssVar: 'var(--color-surface-0)' },\n    { value: 'brand', label: 'Brand Theme', cssVar: 'var(--color-primary)' },\n  ];\n\n  return (\n    <TokenSelect\n      id=\"theme\"\n      label=\"Theme\"\n      tokenCategory=\"surface-ramp\" // Ignored when options provided\n      options={customOptions}\n      value={theme}\n      onChange={setTheme}\n    />\n  );\n}\n```"
+  ],
+  "design": [
+    "Use for selecting design system color tokens, not arbitrary colors.",
+    "Color swatches provide immediate visual feedback for token values.",
+    "Dropdown renders via portal to escape overflow containers.",
+    "Label should clearly describe what the token controls.",
+    "Type-ahead works for numeric surface ramp values (0-25)."
+  ],
+  "accessibility": [
+    "Implements WAI-ARIA combobox/listbox pattern.",
+    "Full keyboard navigation: Arrow keys, Home/End, Enter/Space, Escape, Tab.",
+    "Type-ahead search for surface ramp indices.",
+    "Labels correctly associated using `htmlFor` and `id`.",
+    "Error states conveyed using `aria-invalid` and `aria-describedby`.",
+    "Helper text associated using `aria-describedby`.",
+    "Color swatches marked `aria-hidden` (label provides meaning).",
+    "Disabled state prevents interaction and is visually distinct."
+  ],
+  "props": [
+    {
+      "name": "id",
+      "type": "string",
+      "optional": false,
+      "description": "Unique identifier for the select element.",
+      "configurable": false
+    },
+    {
+      "name": "label",
+      "type": "string",
+      "optional": false,
+      "description": "Text label displayed above the select.",
+      "configurable": false
+    },
+    {
+      "name": "value",
+      "type": "string",
+      "optional": false,
+      "description": "The currently selected value.",
+      "configurable": false
+    },
+    {
+      "name": "onChange",
+      "type": "(value: string) => void",
+      "optional": false,
+      "description": "Callback fired when the value changes.",
+      "configurable": false
+    },
+    {
+      "name": "tokenCategory",
+      "type": "TokenCategory",
+      "optional": false,
+      "description": "Token category: 'surface-ramp' | 'surface-semantic' | 'text' | 'border' | 'brand' | 'action-success' | 'action-error' | 'action-caution' | 'action-info'",
+      "configurable": true
+    },
+    {
+      "name": "options",
+      "type": "TokenOption[]",
+      "optional": true,
+      "description": "Custom token options. Overrides tokenCategory when provided. Each option has value, label, and cssVar.",
+      "configurable": true
+    },
+    {
+      "name": "error",
+      "type": "string",
+      "optional": true,
+      "description": "Error message to display (enables error state).",
+      "configurable": false
+    },
+    {
+      "name": "helperText",
+      "type": "string",
+      "optional": true,
+      "description": "Optional helper text shown below the select.",
+      "configurable": true
+    },
+    {
+      "name": "className",
+      "type": "string",
+      "optional": true,
+      "defaultValue": "''",
+      "description": "Additional class name for the container.",
+      "configurable": false
+    },
+    {
+      "name": "touched",
+      "type": "boolean",
+      "optional": true,
+      "defaultValue": "false",
+      "description": "Whether the field has been touched (used for error display).",
+      "configurable": false
+    },
+    {
+      "name": "required",
+      "type": "boolean",
+      "optional": true,
+      "defaultValue": "false",
+      "description": "Whether the field is required.",
+      "configurable": true
+    },
+    {
+      "name": "disabled",
+      "type": "boolean",
+      "optional": true,
+      "defaultValue": "false",
+      "description": "Whether the field is disabled.",
+      "configurable": true
+    },
+    {
+      "name": "onBlur",
+      "type": "() => void",
+      "optional": true,
+      "description": "Callback fired when the select loses focus.",
+      "configurable": false
+    },
+    {
+      "name": "compact",
+      "type": "boolean",
+      "optional": true,
+      "defaultValue": "false",
+      "description": "Use compact sizing (smaller chip, reduced padding, smaller typography) for dense layouts like goodies sidebars.",
+      "configurable": true
+    }
+  ],
+  "types": [
+    {
+      "name": "TokenCategory",
+      "definition": "'surface-ramp' | 'surface-semantic' | 'text' | 'border' | 'brand' | 'action-success' | 'action-error' | 'action-caution' | 'action-info'"
+    },
+    {
+      "name": "TokenOption",
+      "definition": "{ value: string; label: string; cssVar: string; }"
+    }
+  ],
+  "utilities": [
+    {
+      "name": "getTokensForCategory",
+      "signature": "(category: TokenCategory) => TokenOption[]",
+      "description": "Returns the token options for a given category. Useful for programmatic access to design tokens."
+    }
+  ]
+}

@@ -1,0 +1,302 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Prop Naming Conventions",
+  "description": "Governance rules for consistent prop naming across design system components and patterns",
+  "version": "1.0.0",
+  "rules": {
+    "booleanProps": {
+      "description": "Boolean prop naming conventions",
+      "rules": [
+        "Never use 'is' prefix (use 'loading', not 'isLoading')",
+        "Never use 'has' prefix (use 'error', not 'hasError')",
+        "Default to false unless semantically required otherwise"
+      ],
+      "examples": {
+        "correct": [
+          "disabled",
+          "loading",
+          "required",
+          "checked",
+          "touched",
+          "external"
+        ],
+        "incorrect": [
+          "isDisabled",
+          "isLoading",
+          "isRequired",
+          "isChecked",
+          "isTouched",
+          "isExternal"
+        ]
+      }
+    },
+    "idProps": {
+      "description": "ID prop conventions for accessibility",
+      "rules": [
+        "Always optional - use useId() internally with props.id ?? internalId pattern",
+        "Never require users to pass IDs manually",
+        "Used for label association and testing, not as a required prop"
+      ],
+      "implementation": "const internalId = useId();\nconst id = props.id ?? internalId;"
+    },
+    "classNameProps": {
+      "description": "Styling prop conventions",
+      "rules": [
+        "className always targets the root/wrapper element",
+        "Use semantic slot names for inner elements (not element types)",
+        "Optional on all components, but always respected when provided"
+      ],
+      "patterns": {
+        "root": {
+          "prop": "className",
+          "description": "Root/wrapper element styling"
+        },
+        "slots": {
+          "description": "Inner element styling using semantic names",
+          "examples": [
+            { "prop": "labelClassName", "use": "Label element in form inputs" },
+            { "prop": "valueClassName", "use": "Value display element" },
+            {
+              "prop": "inputClassName",
+              "use": "Text input element (when semantic name = element)"
+            },
+            { "prop": "imageClassName", "use": "Image element in cards" },
+            { "prop": "trackClassName", "use": "Slider track element" }
+          ],
+          "avoid": [
+            {
+              "prop": "controlClassName",
+              "reason": "Too abstract - doesn't fit non-interactive or multi-element components"
+            }
+          ]
+        }
+      }
+    },
+    "onChangeSignatures": {
+      "description": "Event handler signature conventions",
+      "rules": [
+        "Text-based inputs use (event: ChangeEvent) => void for access to event object",
+        "Selection controls use (value: T) => void for cleaner API",
+        "Document which pattern each component uses in its JSON spec"
+      ],
+      "patterns": {
+        "eventBased": {
+          "signature": "(event: React.ChangeEvent<HTMLInputElement>) => void",
+          "components": [
+            "TextInput",
+            "TextArea",
+            "DateInput",
+            "Select",
+            "ColorInput"
+          ],
+          "rationale": "Preserves access to event object for cursor position, validation, key handling"
+        },
+        "valueBased": {
+          "signature": "(value: T) => void",
+          "components": [
+            "Slider",
+            "DualSlider",
+            "Switch",
+            "Checkbox",
+            "SegmentedControl",
+            "RadioButton",
+            "TagInput",
+            "TokenSelect"
+          ],
+          "rationale": "Cleaner API for selection controls where only the value matters"
+        }
+      }
+    },
+    "sizeProps": {
+      "description": "Size prop conventions",
+      "rules": [
+        "Base set is 'sm' | 'md' | 'lg' with 'md' as default",
+        "Component-specific extensions allowed ('xs', 'xl', 'icon', 'custom')",
+        "Sizes are relative to component type, not absolute measurements",
+        "Document size meanings in component JSON spec"
+      ],
+      "patterns": {
+        "base": "'sm' | 'md' | 'lg'",
+        "extensions": {
+          "Button": "'xs' | 'sm' | 'md' | 'lg' | 'icon'",
+          "Avatar": "'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'custom'",
+          "Modal": "'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | 'full'"
+        }
+      },
+      "controlHeights": {
+        "description": "Standard heights for form controls (buttons, inputs, selects). Ensures visual alignment when controls are placed side-by-side. All values on 4px/8px grid for consistency.",
+        "standard": {
+          "2xs": {
+            "height": "24px",
+            "tailwind": "h-6",
+            "use": "Ultra-dense UIs, property panels, mini controls"
+          },
+          "xs": {
+            "height": "28px",
+            "tailwind": "h-7",
+            "use": "Dense UIs, compact data tables"
+          },
+          "sm": {
+            "height": "32px",
+            "tailwind": "h-8",
+            "use": "Tight layouts, secondary controls"
+          },
+          "md": {
+            "height": "40px",
+            "tailwind": "h-10",
+            "use": "Default - meets WCAG touch target guidelines"
+          },
+          "lg": {
+            "height": "48px",
+            "tailwind": "h-12",
+            "use": "Prominent inputs, touch-optimized, hero CTAs"
+          }
+        },
+        "appliesTo": [
+          "Button",
+          "TextInput",
+          "Select",
+          "DateInput",
+          "ColorInput",
+          "TagInput",
+          "TokenSelect"
+        ],
+        "exceptions": {
+          "Avatar": "Uses content-based sizing (24, 32, 48, 64, 84px) - not control heights",
+          "Modal": "Uses width-based sizing - height is content-driven",
+          "TextArea": "Height is content-driven with min-height"
+        },
+        "compactProp": {
+          "description": "Components using 'compact' boolean prop map to xs height (28px/h-7)",
+          "components": [
+            "TextInput",
+            "Select",
+            "ColorInput",
+            "TagInput",
+            "TokenSelect"
+          ]
+        },
+        "migrationNotes": {
+          "description": "Current inconsistencies to address",
+          "issues": [
+            "Button md is h-9 (36px), should be h-10 (40px)",
+            "TextInput/Select use py-2 without explicit height",
+            "DateInput/ColorInput/TokenSelect use h-10 (40px) - already correct",
+            "TagInput uses min-h-[42px], should be min-h-10 (40px)"
+          ]
+        }
+      }
+    },
+    "formInputProps": {
+      "description": "Standard props for form inputs",
+      "standardProps": [
+        {
+          "name": "label",
+          "type": "string",
+          "optional": true,
+          "description": "Label text above input"
+        },
+        {
+          "name": "helperText",
+          "type": "string",
+          "optional": true,
+          "description": "Guidance text below input"
+        },
+        {
+          "name": "error",
+          "type": "string",
+          "optional": true,
+          "description": "Error message (overrides helperText)"
+        },
+        {
+          "name": "touched",
+          "type": "boolean",
+          "optional": true,
+          "description": "Controls when errors display"
+        },
+        {
+          "name": "required",
+          "type": "boolean",
+          "optional": true,
+          "description": "Visual marker + native attribute"
+        },
+        {
+          "name": "disabled",
+          "type": "boolean",
+          "optional": true,
+          "description": "Disables interaction"
+        },
+        {
+          "name": "validate",
+          "type": "(value) => string | null",
+          "optional": true,
+          "description": "Validation function"
+        },
+        {
+          "name": "onBlur",
+          "type": "(event) => void",
+          "optional": true,
+          "description": "For setting touched state"
+        }
+      ],
+      "rules": [
+        "All form inputs should support these props where applicable",
+        "error takes precedence over helperText",
+        "touched controls error visibility (don't show errors until touched)"
+      ]
+    },
+    "interactiveProps": {
+      "description": "Standard props for interactive components",
+      "standardProps": [
+        {
+          "name": "disabled",
+          "type": "boolean",
+          "optional": true,
+          "default": false
+        },
+        {
+          "name": "loading",
+          "type": "boolean",
+          "optional": true,
+          "default": false
+        },
+        { "name": "className", "type": "string", "optional": true }
+      ],
+      "rules": [
+        "All interactive components should support disabled",
+        "Components with async actions should support loading"
+      ]
+    },
+    "linkProps": {
+      "description": "Props for components that can render as links",
+      "standardProps": [
+        {
+          "name": "href",
+          "type": "string",
+          "optional": true,
+          "description": "When provided, renders as link"
+        },
+        {
+          "name": "external",
+          "type": "boolean",
+          "optional": true,
+          "description": "Opens in new tab when true"
+        }
+      ],
+      "implementation": "Use Next.js Link for internal, <a> with target='_blank' for external"
+    }
+  },
+  "checklist": {
+    "description": "Quick checklist when creating new components",
+    "items": [
+      "Boolean props: no 'is' or 'has' prefix",
+      "id prop: optional with useId() fallback",
+      "className: targets root element",
+      "Slot classNames: use semantic names",
+      "onChange: document signature in JSON spec",
+      "size: use base set, extend only if needed",
+      "Form inputs: include standard validation props",
+      "Interactive: include disabled, consider loading"
+    ]
+  }
+}

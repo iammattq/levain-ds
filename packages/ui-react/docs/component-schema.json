@@ -1,0 +1,104 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "component-schema.json",
+  "title": "Design System Component Documentation",
+  "description": "Schema for documenting design system components, patterns, and templates",
+  "type": "object",
+  "required": ["name", "description", "category"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "The component name (e.g., 'Button', 'Card')"
+    },
+    "description": {
+      "type": "string",
+      "description": "A brief description of the component's purpose and capabilities"
+    },
+    "category": {
+      "type": "string",
+      "enum": ["components", "patterns", "templates"],
+      "description": "The category this component belongs to"
+    },
+    "usage": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Usage guidelines and best practices"
+    },
+    "examples": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Code examples demonstrating component usage"
+    },
+    "design": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Design considerations and guidelines"
+    },
+    "accessibility": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Accessibility notes and requirements"
+    },
+    "props": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/prop" },
+      "description": "Component props/properties"
+    },
+    "subcomponents": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/subcomponent" },
+      "description": "Sub-components for compound components (e.g., Card.Content, Accordion.Item)"
+    }
+  },
+  "$defs": {
+    "prop": {
+      "type": "object",
+      "required": ["name", "type"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The prop name"
+        },
+        "type": {
+          "type": "string",
+          "description": "The TypeScript type of the prop"
+        },
+        "optional": {
+          "type": "boolean",
+          "description": "Whether the prop is optional"
+        },
+        "defaultValue": {
+          "type": ["string", "null"],
+          "description": "The default value of the prop, if any"
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of what the prop does"
+        },
+        "configurable": {
+          "type": "boolean",
+          "description": "Whether this prop can be configured in the component playground"
+        }
+      }
+    },
+    "subcomponent": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The subcomponent name"
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the subcomponent"
+        },
+        "props": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/prop" },
+          "description": "Subcomponent props"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,136 @@
+{
+  "name": "DateInput",
+  "description": "A component combining a calendar button with a text input for selecting and displaying date values in YYYY-MM-DD format.",
+  "category": "components",
+  "usage": [
+    "Import: `import { DateInput } from \\'@/lib/designsystem\\';`",
+    "Provides both calendar picker and manual text input methods.",
+    "Text input includes automatic formatting to enforce YYYY-MM-DD pattern as user types.",
+    "Includes built-in validation for date format (YYYY-MM-DD) and validity (e.g., rejects Feb 30).",
+    "Supports external validation, error display, helper text, and required/disabled states.",
+    "Forwards refs to the underlying text input element."
+  ],
+  "examples": [
+    "```tsx\nimport { DateInput } from '@/lib/designsystem';\nimport { useState } from 'react';\n\nexport default function DatePickerExample() {\n  const [date, setDate] = useState('');\n  const [touched, setTouched] = useState(false);\n\n  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {\n    setDate(event.target.value);\n  };\n\n  const handleBlur = () => {\n    setTouched(true);\n  };\n\n  return (\n    <DateInput\n      id=\"appointment-date\"\n      label=\"Appointment Date\"\n      value={date}\n      onChange={handleChange}\n      onBlur={handleBlur}\n      touched={touched}\n      helperText=\"Select or enter a date in YYYY-MM-DD format.\"\n      required\n    />\n  );\n}\n```"
+  ],
+  "design": [
+    "The component wraps a clickable calendar button and a text input.",
+    "The calendar dropdown uses a Portal and is positioned relative to the viewport to avoid clipping.",
+    "The `onChange` handler receives a standard `ChangeEvent` from the text input, even when the calendar initiates the change, for consistency.",
+    "Styling aims to visually merge the button and text input, resembling the `TextInput` component but with the prepended button.",
+    "Uses design system tokens for borders, focus rings, text colors, and error states."
+  ],
+  "accessibility": [
+    "The calendar button has an `aria-label` for screen readers.",
+    "The text input includes `aria-invalid` and `aria-describedby` for error/helper text association.",
+    "Full keyboard accessibility is provided for the dropdown calendar.",
+    "Focus states are managed correctly."
+  ],
+  "props": [
+    {
+      "name": "id",
+      "type": "string",
+      "optional": false,
+      "description": "Unique identifier for the input.",
+      "configurable": false
+    },
+    {
+      "name": "label",
+      "type": "string",
+      "optional": false,
+      "description": "Text label displayed above the input.",
+      "configurable": false
+    },
+    {
+      "name": "value",
+      "type": "string",
+      "optional": false,
+      "description": "Current date value (in YYYY-MM-DD format).",
+      "configurable": true
+    },
+    {
+      "name": "onChange",
+      "type": "(event: ChangeEvent<HTMLInputElement>) => void",
+      "optional": false,
+      "description": "Function called when value changes (from text input or calendar picker).",
+      "configurable": false
+    },
+    {
+      "name": "error",
+      "type": "string",
+      "optional": true,
+      "description": "Error message to display (takes precedence over internal validation).",
+      "configurable": false
+    },
+    {
+      "name": "validate",
+      "type": "(value: string) => string | null | undefined",
+      "optional": true,
+      "description": "Custom validation function called on value change.",
+      "configurable": false
+    },
+    {
+      "name": "helperText",
+      "type": "string",
+      "optional": true,
+      "description": "Text displayed below the input when not in an error state.",
+      "configurable": false
+    },
+    {
+      "name": "className",
+      "type": "string",
+      "optional": true,
+      "defaultValue": "''",
+      "description": "CSS classes for the outer container div.",
+      "configurable": false
+    },
+    {
+      "name": "inputClassName",
+      "type": "string",
+      "optional": true,
+      "defaultValue": "''",
+      "description": "CSS classes specifically for the text <input> element.",
+      "configurable": false
+    },
+    {
+      "name": "buttonClassName",
+      "type": "string",
+      "optional": true,
+      "defaultValue": "''",
+      "description": "CSS classes specifically for the calendar <button> element.",
+      "configurable": false
+    },
+    {
+      "name": "touched",
+      "type": "boolean",
+      "optional": true,
+      "defaultValue": "false",
+      "description": "Set to true to enable validation error display (usually after blur).",
+      "configurable": false
+    },
+    {
+      "name": "onBlur",
+      "type": "(event: React.FocusEvent<HTMLInputElement>) => void",
+      "optional": true,
+      "description": "Function called when the text input loses focus.",
+      "configurable": false
+    },
+    {
+      "name": "required",
+      "type": "boolean",
+      "optional": true,
+      "defaultValue": "false",
+      "description": "Marks the input as required (adds asterisk to label).",
+      "configurable": true
+    },
+    {
+      "name": "disabled",
+      "type": "boolean",
+      "optional": true,
+      "defaultValue": "false",
+      "description": "Disables the input and calendar button.",
+      "configurable": true
+    }
+  ],
+  "subcomponents": []
+}

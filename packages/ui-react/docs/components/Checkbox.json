@@ -1,0 +1,77 @@
+{
+  "name": "Checkbox",
+  "description": "A standard checkbox component allowing users to select one or more options. Supports checked, unchecked, and indeterminate states.",
+  "category": "components",
+  "usage": [
+    "Use for boolean selections or when multiple items can be chosen from a list.",
+    "Bind the `checked` prop to a state variable (boolean or 'indeterminate').",
+    "Use the `onChange` callback to update the state.",
+    "Provide a `label` for clarity.",
+    "The `indeterminate` state visually indicates that a sub-selection is partially checked (e.g., in a tree structure). You must manage the transition out of the indeterminate state logically (e.g., clicking it might turn it fully checked)."
+  ],
+  "examples": [
+    "```tsx\nimport { useState } from 'react';\nimport { Checkbox } from '@/lib/designsystem';\n\nfunction MyComponent() {\n  const [isChecked, setIsChecked] = useState(false);\n\n  return (\n    <Checkbox\n      id=\"terms\"\n      checked={isChecked}\n      onChange={setIsChecked}\n      label=\"I agree to the terms\"\n    />\n  );\n}\n```",
+    "```tsx\n// Disabled Checkbox\n<Checkbox id=\"disabled-check\" checked={true} onChange={() => {}} label=\"Cannot change\" disabled />\n```",
+    "```tsx\n// Indeterminate Checkbox\n<Checkbox id=\"select-all\" checked={'indeterminate'} onChange={handleSelectAllChange} label=\"Select some items\" />\n```",
+    "```tsx\n// Different Sizes\n<Checkbox id=\"small-check\" checked={val} onChange={setVal} label=\"Small\" size=\"sm\" />\n<Checkbox id=\"medium-check\" checked={val} onChange={setVal} label=\"Medium\" size=\"md\" />\n<Checkbox id=\"large-check\" checked={val} onChange={setVal} label=\"Large\" size=\"lg\" />\n```"
+  ],
+  "design": [
+    "Use checkboxes for lists where users can select zero, one, or multiple items.",
+    "Clearly label each checkbox.",
+    "Group related checkboxes together visually.",
+    "Use the indeterminate state primarily for parent checkboxes that reflect the state of child checkboxes."
+  ],
+  "accessibility": [
+    "Uses a visually hidden native `<input type=\"checkbox\">` for semantics and keyboard navigation.",
+    "Focus states are handled with `peer-focus-visible` styles on the custom visual element.",
+    "Disabled states use `opacity-50` and `cursor-not-allowed`.",
+    "The `label` prop is associated with the input via the `htmlFor` attribute.",
+    "The custom visual element uses `aria-hidden=\"true\"` as the native input provides the semantics."
+  ],
+  "props": [
+    {
+      "name": "id",
+      "type": "string",
+      "optional": false,
+      "description": "Unique identifier for the input element."
+    },
+    {
+      "name": "checked",
+      "type": "boolean | 'indeterminate'",
+      "optional": false,
+      "description": "The state of the checkbox: true (checked), false (unchecked), or 'indeterminate'."
+    },
+    {
+      "name": "onChange",
+      "type": "(checked: boolean) => void",
+      "optional": false,
+      "description": "Callback function invoked when the checkbox state changes. Receives the new boolean state (true/false). Note: indeterminate state change triggers with 'false' if clicked."
+    },
+    {
+      "name": "label",
+      "type": "ReactNode",
+      "optional": true,
+      "description": "The content to display next to the checkbox, typically a string or JSX."
+    },
+    {
+      "name": "disabled",
+      "type": "boolean",
+      "optional": true,
+      "defaultValue": "false",
+      "description": "If true, the checkbox will be visually disabled and non-interactive."
+    },
+    {
+      "name": "size",
+      "type": "'sm' | 'md' | 'lg'",
+      "optional": true,
+      "defaultValue": "'md'",
+      "description": "Specifies the size of the checkbox visual element."
+    },
+    {
+      "name": "className",
+      "type": "string",
+      "optional": true,
+      "description": "Additional CSS classes to apply to the root label element."
+    }
+  ]
+}
