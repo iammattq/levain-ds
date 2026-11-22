@@ -682,16 +682,16 @@ object BuiltInThemes {
             light = lightColorScheme(
                 primary = Color(0xFF2451C9),
                 onPrimary = Color(0xFFFFFFFF),
-                tertiary = Color(0xFF3D6BF0),
+                tertiary = Color(0xFF3563E6),
                 onTertiary = Color(0xFFFFFFFF),
-                secondary = Color(0xFF3D6BF0),
+                secondary = Color(0xFF3563E6),
                 onSecondary = Color(0xFFFFFFFF),
                 secondaryContainer = Color(0xFFFCFCFD),
                 onSecondaryContainer = Color(0xFF202225),
                 primaryContainer = Color(0xFFFCFCFD),
                 onPrimaryContainer = Color(0xFF2451C9),
                 tertiaryContainer = Color(0xFFFCFCFD),
-                onTertiaryContainer = Color(0xFF3D6BF0),
+                onTertiaryContainer = Color(0xFF3563E6),
                 surfaceContainerLowest = Color(0xFFF1F2F4),
                 surfaceContainerLow = Color(0xFFF5F6F7),
                 surfaceContainer = Color(0xFFF8F9FA),
@@ -715,16 +715,16 @@ object BuiltInThemes {
             dark = darkColorScheme(
                 primary = Color(0xFF2451C9),
                 onPrimary = Color(0xFFFFFFFF),
-                tertiary = Color(0xFF3D6BF0),
+                tertiary = Color(0xFF3563E6),
                 onTertiary = Color(0xFFFFFFFF),
-                secondary = Color(0xFF3D6BF0),
+                secondary = Color(0xFF3563E6),
                 onSecondary = Color(0xFFFFFFFF),
                 secondaryContainer = Color(0xFF292B2F),
                 onSecondaryContainer = Color(0xFFF8F9FA),
                 primaryContainer = Color(0xFF292B2F),
                 onPrimaryContainer = Color(0xFF2451C9),
                 tertiaryContainer = Color(0xFF292B2F),
-                onTertiaryContainer = Color(0xFF3D6BF0),
+                onTertiaryContainer = Color(0xFF3563E6),
                 surfaceContainerLowest = Color(0xFF0C0D10),
                 surfaceContainerLow = Color(0xFF17181B),
                 surfaceContainer = Color(0xFF202225),
@@ -745,8 +745,8 @@ object BuiltInThemes {
                 errorContainer = Color(0xFF170000),
                 onErrorContainer = Color(0xFFD5766F)
             ),
-            lightElevation = Color(0x243D6BF0),
-            darkElevation = Color(0x663D6BF0)
+            lightElevation = Color(0x243563E6),
+            darkElevation = Color(0x663563E6)
         )
     )
 

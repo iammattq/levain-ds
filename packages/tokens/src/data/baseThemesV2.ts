@@ -9,8 +9,10 @@ const COBALT = '#2451C9';
 /** The Cobalt themes' text and border stops (a squeezed light half: see the themes below). */
 const COBALT_MAPPING = {
   light: { 'text-emphasis': 1, 'text-default': 3, 'text-muted': 8, 'text-faint': 11, 'border-subtle': 18, 'border-default': 16, 'border-emphasis': 14 },
-  // (the link and focus ring a lighter cobalt on the dark canvas; the primary button stays the cobalt, white on it)
-  dark: { 'text-emphasis': 25, 'text-default': 23, 'text-muted': 15, 'text-faint': 14, 'text-link': 'primary-300', 'border-focus': 'primary-400' },
+  // (on the dark canvas the link, the focus ring and the accent, which the board's status markers use as text, take a
+  // lighter cobalt; the primary button stays the cobalt, white on it. An accent fill with text-on-accent on it, as
+  // Button's accent variant and the accent Tag draw, is then light: a theme picks text-on-accent once for both modes.)
+  dark: { 'text-emphasis': 25, 'text-default': 23, 'text-muted': 15, 'text-faint': 14, 'text-link': 'primary-300', 'border-focus': 'primary-400', accent: 'accent-300' },
 } as const;
 interface CobaltOption {
   /** How much cobalt the greys carry (0 pure greys) and how far it reaches toward black and white. */
@@ -30,7 +32,7 @@ interface CobaltOption {
 const COBALT_OPTIONS: CobaltOption[] = [
   { tint: 0, chromaFalloff: 1, accent: COBALT, shadowChroma: 0, lightOpacity: 7, darkOpacity: 30, states: [4, 5] },
   { tint: 10, chromaFalloff: 0.5, accent: COBALT, shadowChroma: 25, lightOpacity: 8, darkOpacity: 30, states: [4, 5] },
-  { tint: 10, chromaFalloff: 0.5, accent: '#3D6BF0', shadowChroma: 100, lightOpacity: 14, darkOpacity: 40, states: [6, 7] },
+  { tint: 10, chromaFalloff: 0.5, accent: '#3563E6', shadowChroma: 100, lightOpacity: 14, darkOpacity: 40, states: [6, 7] },
 ];
 function cobalt(name: string, o: CobaltOption): ThemeInputV2 {
   return {

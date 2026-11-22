@@ -38,15 +38,20 @@ describe('Cobalt themes (TH1)', () => {
     it.each(['light', 'dark'] as const)('keeps its text at AA on every surface in %s mode', (mode) => {
       const t = theme[mode].tokens as Record<string, string>;
       for (const s of surfaces) {
-        for (const text of ['text-emphasis', 'text-default', 'text-muted', 'text-faint', 'text-link']) {
+        // (the accent too: status markers draw it as text)
+        for (const text of ['text-emphasis', 'text-default', 'text-muted', 'text-faint', 'text-link', 'accent']) {
           expect(contrast(t[text], t[s])).toBeGreaterThanOrEqual(4.5);
         }
       }
     });
-    it.each(['light', 'dark'] as const)('puts readable text on its primary and accent in %s mode', (mode) => {
+    it.each(['light', 'dark'] as const)('puts readable text on its primary button in %s mode', (mode) => {
       const m = theme[mode], t = m.tokens as Record<string, string>;
       expect(contrast(m.textOnPrimary, t.primary)).toBeGreaterThanOrEqual(4.5);
-      expect(contrast(m.textOnAccent, t.accent)).toBeGreaterThanOrEqual(4.5);
+    });
+    it('puts readable text on its accent where the accent is a fill: light mode, and the picked accent', () => {
+      const t = theme.light.tokens as Record<string, string>;
+      expect(contrast(theme.light.textOnAccent, t.accent)).toBeGreaterThanOrEqual(4.5);
+      expect(contrast(theme.dark.textOnAccent, theme.dark.accentRamp[4])).toBeGreaterThanOrEqual(4.5);
     });
     it('keeps the text tiers in order: muted between default and faint, in both modes', () => {
       for (const mode of ['light', 'dark'] as const) {

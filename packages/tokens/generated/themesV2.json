@@ -1837,7 +1837,7 @@
         "border-focus": "#719bf9",
         "border-decorative": "#2451C9",
         "primary": "#2451C9",
-        "accent": "#2451C9",
+        "accent": "#9abafd",
         "gradient-start": "#2451C9",
         "gradient-end": "#072276"
       },
@@ -2072,7 +2072,7 @@
         "border-focus": "#719bf9",
         "border-decorative": "#2451C9",
         "primary": "#2451C9",
-        "accent": "#2451C9",
+        "accent": "#9abafd",
         "gradient-start": "#2451C9",
         "gradient-end": "#072276"
       },
@@ -2118,7 +2118,7 @@
     "name": "Cobalt Bold",
     "light": {
       "primary": "#2451C9",
-      "accent": "#3D6BF0",
+      "accent": "#3563E6",
       "surfaces": [
         "#010101",
         "#0c0d10",
@@ -2160,13 +2160,13 @@
       ],
       "accentRamp": [
         "#dce5f8",
-        "#c1d5ff",
-        "#a2c2ff",
-        "#7da8ff",
-        "#3D6BF0",
-        "#122d89",
-        "#091b56",
-        "#050e2e",
+        "#c0d4ff",
+        "#9fc0ff",
+        "#79a4ff",
+        "#3563E6",
+        "#0e2984",
+        "#071953",
+        "#040e2d",
         "#030510"
       ],
       "tokens": {
@@ -2191,7 +2191,7 @@
         "border-focus": "#2451C9",
         "border-decorative": "#2451C9",
         "primary": "#2451C9",
-        "accent": "#3D6BF0",
+        "accent": "#3563E6",
         "gradient-start": "#2451C9",
         "gradient-end": "#072276"
       },
@@ -2222,19 +2222,19 @@
       "textOnPrimary": "#ffffff",
       "textOnAccent": "#ffffff",
       "elevationColors": {
-        "low": "rgba(61, 107, 240, 0.070)",
-        "default": "rgba(61, 107, 240, 0.140)",
-        "high": "rgba(61, 107, 240, 0.210)"
+        "low": "rgba(53, 99, 230, 0.070)",
+        "default": "rgba(53, 99, 230, 0.140)",
+        "high": "rgba(53, 99, 230, 0.210)"
       },
       "elevationStyles": {
-        "level1": "0px 2px 8px rgba(61, 107, 240, 0.070)",
-        "level2": "0px 6px 16px rgba(61, 107, 240, 0.140)",
-        "level3": "0px 10px 30px rgba(61, 107, 240, 0.210)"
+        "level1": "0px 2px 8px rgba(53, 99, 230, 0.070)",
+        "level2": "0px 6px 16px rgba(53, 99, 230, 0.140)",
+        "level3": "0px 10px 30px rgba(53, 99, 230, 0.210)"
       }
     },
     "dark": {
       "primary": "#2451C9",
-      "accent": "#3D6BF0",
+      "accent": "#3563E6",
       "surfaces": [
         "#010101",
         "#0c0d10",
@@ -2276,13 +2276,13 @@
       ],
       "accentRamp": [
         "#dce5f8",
-        "#c1d5ff",
-        "#a2c2ff",
-        "#7da8ff",
-        "#3D6BF0",
-        "#122d89",
-        "#091b56",
-        "#050e2e",
+        "#c0d4ff",
+        "#9fc0ff",
+        "#79a4ff",
+        "#3563E6",
+        "#0e2984",
+        "#071953",
+        "#040e2d",
         "#030510"
       ],
       "tokens": {
@@ -2307,7 +2307,7 @@
         "border-focus": "#719bf9",
         "border-decorative": "#2451C9",
         "primary": "#2451C9",
-        "accent": "#3D6BF0",
+        "accent": "#9fc0ff",
         "gradient-start": "#2451C9",
         "gradient-end": "#072276"
       },
@@ -2338,14 +2338,14 @@
       "textOnPrimary": "#ffffff",
       "textOnAccent": "#ffffff",
       "elevationColors": {
-        "low": "rgba(61, 107, 240, 0.200)",
-        "default": "rgba(61, 107, 240, 0.400)",
-        "high": "rgba(61, 107, 240, 0.600)"
+        "low": "rgba(53, 99, 230, 0.200)",
+        "default": "rgba(53, 99, 230, 0.400)",
+        "high": "rgba(53, 99, 230, 0.600)"
       },
       "elevationStyles": {
-        "level1": "0px 0px 14px rgba(61, 107, 240, 0.200)",
-        "level2": "0px 0px 22px rgba(61, 107, 240, 0.400)",
-        "level3": "0px 0px 36px rgba(61, 107, 240, 0.600)"
+        "level1": "0px 0px 14px rgba(53, 99, 230, 0.200)",
+        "level2": "0px 0px 22px rgba(53, 99, 230, 0.400)",
+        "level3": "0px 0px 36px rgba(53, 99, 230, 0.600)"
       }
     }
   }
