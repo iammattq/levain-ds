@@ -20,11 +20,11 @@ The first consumer outside the portfolio was a web board for running a team of c
 - **Safe-area padding** for the notch and home indicator, as a token or utility.
 
 ### Foundations
-- **Text on accent per mode.** A theme chooses its text-on-accent colour once for both light and dark. A theme whose dark accent is lighter (so it reads as text on dark surfaces) then puts white text on it in the accent Button and Tag, which fails contrast. Wants text-on-accent chosen per mode by the generator, and the contrast test covering accent Button and Tag text in both modes.
 - **Dark mode needs a set-up order.** Dark mode is a class on `<html>`; a non-Next app must call `initTheme()` before `themeManager.applyTheme()`, or cards keep their light styling. Documented in the README; levain could do it for the app.
 - **Node types in a browser package.** ui-react uses the `NodeJS` namespace (DateInput, NavigationLinks), so browser-only consumers need `@types/node`.
 
 ## Closed
+- **Text on accent per mode.** A theme chose its text-on-accent colour once for both modes, so a lighter dark-mode accent got unreadable white text. Closed in v0.3.0 by the theme field `textOn` (text on primary and accent fills, per mode), with contrast tests for both modes.
 - **Next.js lock-in.** Components imported `next/link`, `next/image`, `next/navigation` and `next-auth`. Closed in v0.1.0 by `LevainProvider` (link, image, path and theme supplied by the app).
 - **No motion system.** No duration, easing or spring tokens; components set their own timings. Closed in v0.2.0: motion tokens taken from the portfolio's OS shell, ten motion rules in `assembly.json` led by "shapes morph into each other rather than swap", and reduced motion everywhere.
 - **No density mode.** Closed in v0.2.0 by `data-density="condensed"`.
