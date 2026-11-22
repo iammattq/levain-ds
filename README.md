@@ -21,7 +21,7 @@ A *levain* is a baker's starter: the living culture every loaf is grown from, fe
 - a small spectrum for charts and accents;
 - all of it for light mode and for dark.
 
-Text colours are chosen against their backgrounds by WCAG contrast. The seven built-in themes (Sage, Harbor, Mulberry, Slate, Linen, Atrium, Heather) are all outputs of that one function, and the theme builder on mattquinn.ca lets anyone make more.
+Text colours are chosen against their backgrounds by WCAG contrast. The eight built-in themes (Sage, Harbor, Mulberry, Slate, Linen, Atrium, Heather, and Cobalt Mono, black and white with cobalt only on links and focus) are all outputs of that one function, and the theme builder on mattquinn.ca lets anyone make more. A theme whose primary or accent is neutral (a near-black button on light, a near-white one on dark) names the text on it per mode with `textOn`.
 
 **Tokens are the single source.** Components never name a colour. They use semantic tokens (`--color-surface-card`, `--color-text-muted`, `--space-md`, `--radius-lg`), and each theme maps those tokens to stops on its ramps. The mapping holds two rules, in both modes, and tests enforce them: each layer that sits on another (canvas, section, card, component, elevated) is higher on the ramp, never on the same rung, so every boundary has a tonal step; and borders stay off the ladder, so a border never matches a surface it can sit on. The same theme data is also emitted as Kotlin (a Material 3 `ColorScheme`) for Android. Typography works the same way: ten presets, each a font pairing mapped onto one semantic type scale.
 
