@@ -194,6 +194,19 @@
   --elevation-2: 0px 6px 16px 0px rgba(0, 0, 0, 0.08);
   --elevation-3: 0px 10px 30px 0px rgba(0, 0, 0, 0.1);
 
+  /*
+   * Motion (src/motion.ts holds the same values for framer-motion; a test keeps them equal).
+   * No transition outlasts --duration-slow; enter, leave and default use --ease-out; moving from one place to
+   * another uses --ease-in-out. See the motion rules in ui-react/docs/assembly.json.
+   */
+  --duration-instant: 0ms;
+  --duration-quick: 150ms;
+  --duration-base: 220ms;
+  --duration-slow: 300ms;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-standard: cubic-bezier(0.25, 0.1, 0.25, 1);
+
   /* Overrides Tailwind's shadow-2xl utility so it participates in theming.
    * TODO: migrate `shadow-2xl` call sites to --elevation-3 and drop this. */
   --shadow-2xl: 0 10px 30px 0 rgba(0, 0, 0, 0.1);
@@ -439,7 +452,16 @@
 }
 
 .animate-fade-in {
-  animation: fade-in 0.2s ease-in-out;
+  animation: fade-in var(--duration-base) var(--ease-out);
+}
+
+/* Reduced motion: every duration becomes instant, so anything timed by the tokens changes at once. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-quick: 0ms;
+    --duration-base: 0ms;
+    --duration-slow: 0ms;
+  }
 }
 
 /* Gradient border utility for pill buttons (used by ui-react Button outline variant) */
