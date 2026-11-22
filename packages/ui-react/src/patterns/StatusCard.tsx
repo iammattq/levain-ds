@@ -176,7 +176,8 @@ export function StatusCardDialog({ id, open, onClose, number, kind, title, marke
             aria-label={typeof title === 'string' ? title : undefined}
             tabIndex={-1}
             onClick={e => e.stopPropagation()}
-            className="relative w-full overflow-hidden bg-[var(--color-surface-card)] shadow-[var(--elevation-3)] outline-none"
+            // floating, so the elevated surface (one step above the cards it grew out of) with the floating shadow
+            className="relative w-full overflow-hidden bg-[var(--color-surface-elevated)] shadow-[var(--elevation-3)] outline-none"
           >
             <motion.div
               initial={{ opacity: 0 }}

@@ -273,4 +273,10 @@ describe('TextInput Component', () => {
     expect(ref.current?.tagName.toLowerCase()).toBe('input');
     expect(ref.current?.id).toBe('test-input');
   });
+
+  test('hideLabel hides the label visually but keeps it as the field\'s name for screen readers', () => {
+    render(<TextInput {...defaultProps} hideLabel />);
+    expect(screen.getByText('Test Label')).toHaveClass('sr-only');
+    expect(screen.getByRole('textbox', { name: 'Test Label' })).toBeInTheDocument();
+  });
 });
