@@ -4,6 +4,28 @@
  */
 import type { ThemeInputV2 } from '../generator/types';
 
+/** Cobalt Mono (TH1): black and white, as the AI chat apps draw themselves, with cobalt only on links and focus.
+ *  Pure greys; the primary button and the accent (the selected tab, status labels) are the text colour itself:
+ *  near-black on light, near-white on dark, the text on them flipped per mode (textOn). The light canvas sits near
+ *  white (#f2f2f2, cards whiter still), so the light half of the ramp is squeezed toward 100 (lightCurve 0.2), and
+ *  dark mode's text takes the stops that stay distinct. */
+const COBALT = '#2451C9';
+const cobaltMono: ThemeInputV2 = {
+  name: 'Cobalt Mono',
+  primary: COBALT,
+  accent: COBALT,
+  surfaces: { tint: 0, tintColor: COBALT, chromaFalloff: 1, floor: 6, ceiling: 100, darkCurve: 0.6, lightCurve: 0.2 },
+  states: { light: { intensity: 4 }, dark: { intensity: 5 } },
+  actionColors: { chroma: 0.12, baseLightness: 52 },
+  elevation: { source: 'accent', chroma: 0, lightOpacity: 8, darkOpacity: 30 },
+  tokenMapping: {
+    light: { 'text-emphasis': 1, 'text-default': 3, 'text-muted': 8, 'text-faint': 11, 'border-subtle': 18, 'border-default': 16, 'border-emphasis': 14, primary: 1, accent: 3 },
+    // the link and the focus ring take a lighter cobalt on the dark canvas
+    dark: { 'text-emphasis': 25, 'text-default': 23, 'text-muted': 15, 'text-faint': 14, 'text-link': 'primary-300', 'border-focus': 'primary-400', primary: 25, accent: 23 },
+  },
+  textOn: { light: { primary: 25, accent: 25 }, dark: { primary: 1, accent: 1 } },
+};
+
 /**
  * Array of built-in V2 theme definitions.
  * Each theme only needs name, primary, and accent colors.
@@ -287,4 +309,6 @@ export const baseThemesV2: ThemeInputV2[] = [
       bgLightnessOffset: 32,
     },
   },
+  // after the seven, so no existing theme changes index
+  cobaltMono,
 ];
