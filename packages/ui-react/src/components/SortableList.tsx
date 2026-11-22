@@ -73,10 +73,14 @@ export interface SortableGroupProps {
   onMove: (move: SortableMove) => void;
   /** Called with true when a card is lifted by pointer or touch, and false once it has settled (or the drag is off). */
   onDragChange?: (dragging: boolean) => void;
+  /** Where the finger or pointer is while a card is in the hand, on every move (a lifted touch's events reach only
+   *  the group, so a layout learns of them here: to page between columns, say). Targets are re-aimed every frame,
+   *  so a layout that scrolls the lists under a still finger needs nothing more. */
+  onDragMove?: (x: number, y: number) => void;
   children: ReactNode;
 }
 
-export function SortableGroup({ onMove, onDragChange, children }: SortableGroupProps) {
+export function SortableGroup({ onMove, onDragChange, onDragMove, children }: SortableGroupProps) {
   const reduce = !!useReducedMotion();
   const lists = useRef(new Map<string, Registered>());
   const [drag, setDrag] = useState<DragState | null>(null);
@@ -92,6 +96,8 @@ export function SortableGroup({ onMove, onDragChange, children }: SortableGroupP
   const [landing, setLanding] = useState(false);
   const onDrag = useRef(onDragChange);
   onDrag.current = onDragChange;
+  const onDragAt = useRef(onDragMove);
+  onDragAt.current = onDragMove;
   // iOS honours preventDefault on a touch only when a non-passive touchmove listener was there before the gesture
   // began, so a no-op one stays for the group's life (as dnd-kit's)
   useEffect(() => {
@@ -165,8 +171,10 @@ export function SortableGroup({ onMove, onDragChange, children }: SortableGroupP
         requestAnimationFrame(tick);
       },
       move(px: number, py: number) {
+        const moved = px !== s.last.x || py !== s.last.y;
         s.last = { x: px, y: py };
         if (!s.started) return;
+        if (moved) onDragAt.current?.(px, py);
         x.set(px - grab.current.dx);
         y.set(py - grab.current.dy);
         const t = target(px, py, key);
