@@ -76,6 +76,8 @@ Two packages, released together under the same version:
 
 Tests: 496 for tokens (the generator, contrast, ramps, the token mapping's rules, motion and density), 794 for the components, including the motion rules checked over every component (Jest and Testing Library). Run them with `pnpm install && pnpm test`; `pnpm check:types` type-checks both packages, and `pnpm build` builds `smoke/` (a small Vite app that imports every export through Tailwind 4, as a consumer would) and `demo/`. CI runs all three on every push to main and every pull request. `pnpm --filter @levain/demo dev` serves the demo: every motion recipe, the density modes, and drag and drop.
 
+What's missing so far, from real use, is kept in [docs/GAPS.md](docs/GAPS.md).
+
 ## Using it
 
 **Install** from a tag. List both packages, pinned to the **same** tag (ui-react takes tokens as a peer dependency at its exact version, so pnpm warns if they drift):
