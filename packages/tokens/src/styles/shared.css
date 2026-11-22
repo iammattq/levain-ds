@@ -455,6 +455,48 @@
   animation: fade-in var(--duration-base) var(--ease-out);
 }
 
+/*
+ * Density: data-density="condensed" on <html> or on any element tightens everything inside it through the same
+ * tokens. Each spacing and radius step takes roughly the value of the step below, so the order of the scale (and with
+ * it every spacing invariant in assembly.json) is unchanged; body, small body and label text drop one size, never
+ * below 12px. Components never pick density-specific tokens: they use the scale, and the mode moves the scale.
+ * The default (comfortable) needs no attribute. html[...] outranks the theme's injected :root values.
+ */
+html[data-density='condensed'],
+[data-density='condensed'] {
+  --spacing-3xs: 0.1875rem; /* 3px  */
+  --spacing-2xs: 0.375rem; /* 6px  */
+  --spacing-xs: 0.5rem; /* 8px  */
+  --spacing-sm: 0.75rem; /* 12px */
+  --spacing-md: 1rem; /* 16px */
+  --spacing-lg: 1.5rem; /* 24px */
+  --spacing-xl: 2rem; /* 32px */
+  --spacing-2xl: 3rem; /* 48px */
+  --spacing-3xl: 4rem; /* 64px */
+  --spacing-4xl: 6rem; /* 96px */
+  --space-3xs: 0.1875rem;
+  --space-2xs: 0.375rem;
+  --space-xs: 0.5rem;
+  --space-sm: 0.75rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  --space-2xl: 3rem;
+  --space-3xl: 4rem;
+  --space-4xl: 6rem;
+  --radius-sm: 0.1875rem;
+  --radius-md: 0.25rem;
+  --radius-lg: 0.375rem;
+  --radius-xl: 0.5rem;
+  --radius-2xl: 0.75rem;
+  --radius-3xl: 1rem;
+  --radius-4xl: 1.5rem;
+  --type-body-size: 0.875rem; /* 14px */
+  --type-body-sm-size: 0.8125rem; /* 13px */
+  --type-label-size: 0.8125rem; /* 13px */
+  --type-label-sm-size: 0.75rem; /* 12px */
+}
+
 /* Reduced motion: every duration becomes instant, so anything timed by the tokens changes at once. */
 @media (prefers-reduced-motion: reduce) {
   :root {
