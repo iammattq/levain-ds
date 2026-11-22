@@ -116,8 +116,10 @@ export const drag = {
   tiltAtSpeed: 1600,
   /** Pixels a mouse moves before a press becomes a drag (so a click stays a click). */
   mouseSlop: 4,
-  /** Milliseconds a finger holds still before a touch becomes a drag (so a swipe still scrolls). */
-  touchHold: 180,
+  /** Milliseconds a finger holds a card before the touch becomes a drag (so a swipe still scrolls). */
+  touchHold: 250,
+  /** Pixels a finger may wander during the hold; past this it's a scroll and the hold is off. */
+  touchSlop: 8,
 } as const;
 
 /** What `prefers-reduced-motion: reduce` turns every transition into: an instant change. */

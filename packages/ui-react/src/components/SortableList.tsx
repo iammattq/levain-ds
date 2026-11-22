@@ -7,10 +7,11 @@
  *   elevation step) and leans with its velocity;
  * - its neighbours part on recipe.shift to show where it will land;
  * - on release it settles into its slot on recipe.settle (the spring, a small overshoot).
- * A mouse drag starts after drag.mouseSlop px, anywhere on the item. On a touch screen each item gets a grip beside it:
- * a drag starts from the grip at once (it claims the gesture, touch-action: none), and a swipe anywhere else scrolls as
- * usual. (A long-press on the item itself can't work on a real phone: the browser decides on the first move of the
- * finger whether it scrolls, before any hold is over, and cancels the pointer.) From the keyboard: Space lifts the focused item, the arrows move it (left and right to the
+ * A mouse drag starts after drag.mouseSlop px, anywhere on the item. A touch drag starts when a finger holds the item
+ * for drag.touchHold ms without wandering past drag.touchSlop px (touch events, a non-passive touchmove: while the finger
+ * holds still the page is kept from scrolling; any larger move is a scroll and the hold is off), or at once from the grip
+ * each item gets on a touch screen (touch-action: none). Items take no text selection or callout on touch. From the
+ * keyboard: Space lifts the focused item, the arrows move it (left and right to the
  * neighbouring list), Space drops it, Escape puts it back. Under reduced motion everything moves at once.
  *
  * Wrap the lists in one <SortableGroup onMove>. Each <SortableList id> renders its items through `renderItem`.
@@ -28,6 +29,7 @@ import {
   useState,
   type KeyboardEvent as ReactKeyboardEvent,
   type PointerEvent as ReactPointerEvent,
+  type TouchEvent as ReactTouchEvent,
   type ReactNode,
 } from 'react';
 import { createPortal } from 'react-dom';
@@ -58,6 +60,7 @@ interface GroupContext {
   register: (r: Registered) => () => void;
   drag: DragState | null;
   begin: (e: ReactPointerEvent<HTMLElement>, list: string, key: string, node: ReactNode) => void;
+  beginTouch: (e: ReactTouchEvent<HTMLElement>, list: string, key: string, node: ReactNode) => void;
   keyboard: (e: ReactKeyboardEvent<HTMLElement>, list: string, key: string, node: ReactNode) => void;
   reduce: boolean;
 }
@@ -115,77 +118,117 @@ export function SortableGroup({ onMove, children }: SortableGroupProps) {
     onMove({ key: d.key, from: d.from, to: d.to, index: d.index });
   }, [onMove]);
 
-  const begin = useCallback((e: ReactPointerEvent<HTMLElement>, list: string, key: string, node: ReactNode) => {
-    if (e.button !== 0 || dragRef.current) return;
-    const el = e.currentTarget;
-    const start = { x: e.clientX, y: e.clientY };
-    const touch = e.pointerType === 'touch';
-    // touch: only from the grip; elsewhere the finger scrolls
-    if (touch && !(e.target as Element).closest('[data-sortable-handle]')) return;
-    let started = false, last = start;
+  /** One drag from a press at `start` on `el`: lift, follow, drop (settling into the slot) or cancel. */
+  const session = useCallback((el: HTMLElement, list: string, key: string, node: ReactNode, start: { x: number; y: number }) => {
     const rect = el.getBoundingClientRect();
+    const s = {
+      started: false,
+      last: start,
+      lift() {
+        s.started = true;
+        // no text selection while something is in the hand
+        document.body.style.userSelect = 'none';
+        window.getSelection()?.removeAllRanges();
+        grab.current = { dx: start.x - rect.left, dy: start.y - rect.top };
+        x.jump(rect.left);
+        y.jump(rect.top);
+        const d: DragState = { key, from: list, to: list, index: lists.current.get(list)!.keys.indexOf(key), mode: 'pointer', width: rect.width, height: rect.height, node };
+        dragRef.current = d;
+        setDrag(d);
+        s.move(s.last.x, s.last.y);
+      },
+      move(px: number, py: number) {
+        s.last = { x: px, y: py };
+        if (!s.started) return;
+        x.set(px - grab.current.dx);
+        y.set(py - grab.current.dy);
+        const t = target(px, py, key);
+        const d = dragRef.current;
+        if (t && d && (t.id !== d.to || t.index !== d.index)) setDrag((dragRef.current = { ...d, to: t.id, index: t.index }));
+      },
+      drop() {
+        document.body.style.userSelect = '';
+        const d = dragRef.current;
+        // settle: the card flies to its slot on the spring, then the move is committed in that same place
+        const slot = d && lists.current.get(d.to);
+        const placeholder = slot?.el?.querySelector<HTMLElement>('[data-sortable-placeholder]');
+        const r = placeholder?.getBoundingClientRect();
+        if (!r || reduce) { finish(d, false); return; }
+        setLanding(true);
+        const tr = motionFor('settle', reduce);
+        Promise.all([animate(x, r.left, tr).finished, animate(y, r.top, tr).finished]).then(() => finish(dragRef.current, false));
+      },
+      cancel() {
+        document.body.style.userSelect = '';
+        if (s.started) finish(dragRef.current, true);
+      },
+    };
+    return s;
+  }, [finish, reduce, target, x, y]);
 
-    const lift = () => {
-      started = true;
-      // no text selection while something is in the hand
-      document.body.style.userSelect = 'none';
-      window.getSelection()?.removeAllRanges();
-      grab.current = { dx: start.x - rect.left, dy: start.y - rect.top };
-      x.jump(rect.left);
-      y.jump(rect.top);
-      const d: DragState = { key, from: list, to: list, index: lists.current.get(list)!.keys.indexOf(key), mode: 'pointer', width: rect.width, height: rect.height, node };
-      dragRef.current = d;
-      setDrag(d);
-      move(last.x, last.y);
-    };
-    const move = (px: number, py: number) => {
-      last = { x: px, y: py };
-      if (!started) return;
-      x.set(px - grab.current.dx);
-      y.set(py - grab.current.dy);
-      const t = target(px, py, key);
-      const d = dragRef.current;
-      if (t && d && (t.id !== d.to || t.index !== d.index)) setDrag((dragRef.current = { ...d, to: t.id, index: t.index }));
-    };
+  // mouse and pen (a touch is handled from its touch events, below)
+  const begin = useCallback((e: ReactPointerEvent<HTMLElement>, list: string, key: string, node: ReactNode) => {
+    if (e.pointerType === 'touch' || e.button !== 0 || dragRef.current) return;
+    const start = { x: e.clientX, y: e.clientY };
+    const s = session(e.currentTarget, list, key, node, start);
     const onMove = (ev: PointerEvent) => {
       if (ev.pointerId !== e.pointerId) return;
-      if (!started) {
-        const far = Math.hypot(ev.clientX - start.x, ev.clientY - start.y);
-        if (touch) return; // a touch from the grip lifted at once
-        if (far >= DRAG.mouseSlop) { last = { x: ev.clientX, y: ev.clientY }; lift(); }
-        return;
-      }
-      move(ev.clientX, ev.clientY);
+      if (!s.started && Math.hypot(ev.clientX - start.x, ev.clientY - start.y) >= DRAG.mouseSlop) { s.last = { x: ev.clientX, y: ev.clientY }; s.lift(); return; }
+      s.move(ev.clientX, ev.clientY);
     };
-    const onUp = (ev: PointerEvent) => {
-      if (ev.pointerId !== e.pointerId) return;
-      cleanup();
-      if (!started) return;
-      const d = dragRef.current;
-      // settle: the card flies to its slot on the spring, then the move is committed in that same place
-      const slot = d && lists.current.get(d.to);
-      const placeholder = slot?.el?.querySelector<HTMLElement>('[data-sortable-placeholder]');
-      const r = placeholder?.getBoundingClientRect();
-      if (!r || reduce) { finish(d, false); return; }
-      setLanding(true);
-      const tr = motionFor('settle', reduce);
-      Promise.all([animate(x, r.left, tr).finished, animate(y, r.top, tr).finished]).then(() => finish(dragRef.current, false));
-    };
-    const onCancel = (ev: PointerEvent) => { if (ev.pointerId === e.pointerId) { cleanup(); if (started) finish(dragRef.current, true); } };
-    const noScroll = (ev: TouchEvent) => { if (started) ev.preventDefault(); };
+    const onUp = (ev: PointerEvent) => { if (ev.pointerId !== e.pointerId) return; cleanup(); if (s.started) s.drop(); };
+    const onCancel = (ev: PointerEvent) => { if (ev.pointerId === e.pointerId) { cleanup(); s.cancel(); } };
     const cleanup = () => {
-      document.body.style.userSelect = '';
       window.removeEventListener('pointermove', onMove);
       window.removeEventListener('pointerup', onUp);
       window.removeEventListener('pointercancel', onCancel);
-      window.removeEventListener('touchmove', noScroll);
     };
     window.addEventListener('pointermove', onMove);
     window.addEventListener('pointerup', onUp);
     window.addEventListener('pointercancel', onCancel);
-    window.addEventListener('touchmove', noScroll, { passive: false });
-    if (touch) lift();
-  }, [finish, reduce, target, x, y]);
+  }, [session]);
+
+  // touch, the way it works on a real phone (as dnd-kit's TouchSensor does): touch events with a non-passive touchmove.
+  // During the hold, a still finger's moves are cancelled so the browser never starts a scroll from it; a move past
+  // touchSlop is a scroll, left alone, and ends the hold. Once lifted, every move is the drag's.
+  const beginTouch = useCallback((e: ReactTouchEvent<HTMLElement>, list: string, key: string, node: ReactNode) => {
+    if (e.touches.length !== 1 || dragRef.current) return;
+    const tgt = e.target as Element;
+    if (tgt.closest('button, a, input, textarea, select, [contenteditable="true"]')) return;
+    const t0 = e.touches[0]!, id = t0.identifier, start = { x: t0.clientX, y: t0.clientY };
+    const s = session(e.currentTarget, list, key, node, start);
+    const mine = (ev: TouchEvent) => [...ev.changedTouches].find(t => t.identifier === id);
+    const onMove = (ev: TouchEvent) => {
+      const t = mine(ev);
+      if (!t) return;
+      if (!s.started) {
+        if (Math.hypot(t.clientX - start.x, t.clientY - start.y) > DRAG.touchSlop) { cleanup(); return; } // a scroll
+        if (ev.cancelable) ev.preventDefault();
+        return;
+      }
+      if (ev.cancelable) ev.preventDefault();
+      s.move(t.clientX, t.clientY);
+    };
+    const onEnd = (ev: TouchEvent) => {
+      if (!mine(ev)) return;
+      cleanup();
+      if (!s.started) return;
+      if (ev.cancelable) ev.preventDefault(); // no click after a drag
+      s.drop();
+    };
+    const onCancel = (ev: TouchEvent) => { if (mine(ev)) { cleanup(); s.cancel(); } };
+    const timer = setTimeout(() => s.lift(), DRAG.touchHold);
+    const cleanup = () => {
+      clearTimeout(timer);
+      window.removeEventListener('touchmove', onMove);
+      window.removeEventListener('touchend', onEnd);
+      window.removeEventListener('touchcancel', onCancel);
+    };
+    window.addEventListener('touchmove', onMove, { passive: false });
+    window.addEventListener('touchend', onEnd, { passive: false });
+    window.addEventListener('touchcancel', onCancel);
+    if (tgt.closest('[data-sortable-handle]')) { clearTimeout(timer); s.lift(); } // the grip lifts at once
+  }, [session]);
 
   const keyboard = useCallback((e: ReactKeyboardEvent<HTMLElement>, list: string, key: string, node: ReactNode) => {
     const d = dragRef.current;
@@ -224,7 +267,7 @@ export function SortableGroup({ onMove, children }: SortableGroupProps) {
     setAnnounce(`${lists.current.get(next.to)?.label ?? next.to}, position ${next.index + 1}.`);
   }, [finish]);
 
-  const value = useMemo(() => ({ register, drag, begin, keyboard, reduce }), [register, drag, begin, keyboard, reduce]);
+  const value = useMemo(() => ({ register, drag, begin, beginTouch, keyboard, reduce }), [register, drag, begin, beginTouch, keyboard, reduce]);
   const lifted = drag?.mode === 'pointer';
   return (
     <Group.Provider value={value}>
@@ -245,6 +288,8 @@ export function SortableGroup({ onMove, children }: SortableGroupProps) {
     </Group.Provider>
   );
 }
+
+const noSelect = { userSelect: 'none', WebkitUserSelect: 'none', WebkitTouchCallout: 'none' } as const;
 
 /** True on a touch-first screen (pointer: coarse), where items get a grip to drag by. */
 const coarseQuery = () => (typeof window !== 'undefined' && typeof window.matchMedia === 'function' ? window.matchMedia('(pointer: coarse)') : null);
@@ -365,6 +410,10 @@ export function SortableList<T>({ id, label, items, getKey, renderItem, empty, c
             aria-roledescription="sortable item"
             ref={(el: HTMLDivElement | null) => { if (el) itemEls.current.set(r.key, el); else itemEls.current.delete(r.key); }}
             onPointerDown={e => g.begin(e, id, r.key, renderItem(r.item, { dragging: true, lifted: true }))}
+            onTouchStart={e => g.beginTouch(e, id, r.key, renderItem(r.item, { dragging: true, lifted: true }))}
+            // a hold is a drag, not the phone's text selection, callout or context menu
+            onContextMenu={coarse ? e => e.preventDefault() : undefined}
+            style={coarse ? noSelect : undefined}
             onKeyDown={e => g.keyboard(e, id, r.key, renderItem(r.item, { dragging: true, lifted: true }))}
             className={'select-none rounded-[var(--radius-lg)] outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)] ' + (coarse ? 'flex items-stretch' : 'cursor-grab active:cursor-grabbing')}
           >
@@ -372,8 +421,8 @@ export function SortableList<T>({ id, label, items, getKey, renderItem, empty, c
             {coarse && (
               // the touch grip: claims the gesture so the page doesn't pan; the keyboard path covers assistive tech
               <span data-sortable-handle aria-hidden style={{ touchAction: 'none' }}
-                className="flex w-8 shrink-0 cursor-grab items-center justify-center text-[var(--color-text-faint,var(--color-text-muted))]">
-                <GripVertical size={16} />
+                className="flex w-11 min-h-11 shrink-0 cursor-grab items-center justify-center text-[var(--color-text-muted)]">
+                <GripVertical size={20} />
               </span>
             )}
           </motion.div>

@@ -831,7 +831,8 @@
       "maxTilt": "4°",
       "tiltAtSpeed": "1600 px/s",
       "mouseSlop": "4 px",
-      "touchHold": "180 ms",
+      "touchHold": "250 ms",
+      "touchSlop": "8 px",
       "follow": "exact, no transition"
     }
   }

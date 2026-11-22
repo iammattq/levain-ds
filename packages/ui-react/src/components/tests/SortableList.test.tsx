@@ -75,12 +75,11 @@ describe('SortableList on a touch screen', () => {
     window.matchMedia = ((q: string) => ({ matches: q === '(pointer: coarse)', media: q, addEventListener: () => {}, removeEventListener: () => {} })) as never;
   });
   afterEach(() => { window.matchMedia = realMatchMedia; });
-  const touch = (el: Element) => {
-    const e = new MouseEvent('pointerdown', { bubbles: true, button: 0, clientX: 10, clientY: 10 });
-    Object.defineProperty(e, 'pointerType', { value: 'touch' });
-    Object.defineProperty(e, 'pointerId', { value: 7 });
-    act(() => { el.dispatchEvent(e); });
-  };
+  const pt = (x: number, y: number) => [{ identifier: 3, clientX: x, clientY: y }];
+  const down = (el: Element) => act(() => { fireEvent.touchStart(el, { touches: pt(10, 10), changedTouches: pt(10, 10) }); });
+  /** true when the move was left to the browser (not prevented) */
+  const moveTo = (x: number, y: number) => { let free = true; act(() => { free = fireEvent.touchMove(window, { touches: pt(x, y), changedTouches: pt(x, y) }); }); return free; };
+  const lifted = () => document.body.style.userSelect === 'none';
   const board = () => render(
     <SortableGroup onMove={jest.fn()}>
       <SortableList id="todo" label="To do" items={['Alpha']} getKey={t => t} renderItem={t => <span>{t}</span>} />
@@ -94,15 +93,43 @@ describe('SortableList on a touch screen', () => {
     expect(grip.style.touchAction).toBe('none');
   });
 
-  it('a touch on the item itself scrolls; a touch on the grip lifts the item at once', () => {
+  it('a hold on the item lifts it after touchHold; a still finger is kept from scrolling meanwhile', () => {
+    jest.useFakeTimers();
+    board();
+    down(screen.getByText('Alpha'));
+    expect(moveTo(12, 13)).toBe(false); // jitter inside touchSlop: prevented, so no scroll starts
+    expect(lifted()).toBe(false);
+    act(() => { jest.advanceTimersByTime(260); });
+    expect(lifted()).toBe(true);
+    expect(moveTo(40, 80)).toBe(false); // the drag's own
+    act(() => { fireEvent.touchCancel(window, { changedTouches: pt(40, 80) }); });
+    expect(lifted()).toBe(false);
+    jest.useRealTimers();
+  });
+
+  it('a finger that moves past touchSlop during the hold scrolls, and the hold is off', () => {
+    jest.useFakeTimers();
+    board();
+    down(screen.getByText('Alpha'));
+    expect(moveTo(10, 40)).toBe(true);
+    expect(moveTo(10, 80)).toBe(true);
+    act(() => { jest.advanceTimersByTime(400); });
+    expect(lifted()).toBe(false);
+    jest.useRealTimers();
+  });
+
+  it('a touch on the grip lifts the item at once', () => {
     const { container } = board();
-    touch(screen.getByText('Alpha'));
-    expect(document.body.style.userSelect).toBe('');
-    touch(container.querySelector('[data-sortable-handle]')!);
-    expect(document.body.style.userSelect).toBe('none');
-    const up = new MouseEvent('pointercancel', { bubbles: true });
-    Object.defineProperty(up, 'pointerId', { value: 7 });
-    act(() => { window.dispatchEvent(up); });
-    expect(document.body.style.userSelect).toBe('');
+    down(container.querySelector('[data-sortable-handle]')!);
+    expect(lifted()).toBe(true);
+    act(() => { fireEvent.touchCancel(window, { changedTouches: pt(10, 10) }); });
+    expect(lifted()).toBe(false);
+  });
+
+  it('items take no text selection, callout or context menu on touch', () => {
+    board();
+    const li = item('Alpha');
+    expect(li.style.userSelect).toBe('none');
+    expect(fireEvent.contextMenu(li)).toBe(false);
   });
 });
