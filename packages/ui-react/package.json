@@ -53,5 +53,6 @@
     "react-dom": "~19.2.8",
     "sonner": "^2.0.1",
     "typescript": "^5.9.3"
-  }
+  },
+  "license": "MIT AND LGPL-3.0-only AND WTFPL"
 }

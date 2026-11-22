@@ -10,10 +10,13 @@
     "check:types": "tsc --noEmit -p packages/tokens && tsc --noEmit -p packages/ui-react"
   },
   "pnpm": {
-    "onlyBuiltDependencies": ["esbuild"]
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
   },
   "devDependencies": {
     "@types/node": "^26.4.0",
     "typescript": "^5.9.3"
-  }
+  },
+  "license": "MIT"
 }

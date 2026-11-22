@@ -2,7 +2,9 @@
  * Pagga ASCII Art Font Utility
  *
  * Generates ASCII art text using the Pagga font (from figlet/toilet).
- * Reference: https://2github.com/xero/figlet-fonts/blob/master/pagga.tlf
+ *
+ * The glyphs are from "Pagga" by Sam Hocevar, a toilet font, WTFPL-2 (see LICENSES/WTFPL.txt at the
+ * repository root). Copy: https://github.com/xero/figlet-fonts/blob/master/pagga.tlf
  *
  * Each character is 4 columns wide and 3 rows tall.
  * Characters are stored as [line1, line2, line3] tuples.
