@@ -81,11 +81,11 @@ describe('SortableList on a touch screen', () => {
   const down = (el: Element) => { touched = el; act(() => { fireEvent.touchStart(el, { touches: pt(10, 10), changedTouches: pt(10, 10) }); }); };
   /** true when the move was left to the browser (not prevented) */
   const moveTo = (x: number, y: number) => { let free = true; act(() => { free = fireEvent.touchMove(touched, { touches: pt(x, y), changedTouches: pt(x, y) }); }); return free; };
-  let dragging: boolean[] = [];
+  let dragging: boolean[] = [], at: [number, number][] = [];
   const lifted = () => dragging[dragging.length - 1] === true;
-  beforeEach(() => { dragging = []; });
+  beforeEach(() => { dragging = []; at = []; });
   const board = () => render(
-    <SortableGroup onMove={jest.fn()} onDragChange={d => dragging.push(d)}>
+    <SortableGroup onMove={jest.fn()} onDragChange={d => dragging.push(d)} onDragMove={(x, y) => at.push([x, y])}>
       <SortableList id="todo" label="To do" items={['Alpha']} getKey={t => t} renderItem={t => <span>{t}</span>} />
     </SortableGroup>,
   );
@@ -119,6 +119,7 @@ describe('SortableList on a touch screen', () => {
     expect(lifted()).toBe(true);
     expect(touched.isConnected).toBe(false); // the lifted card is drawn in a portal; the original is gone
     expect(moveTo(40, 80)).toBe(false);
+    expect(at.at(-1)).toEqual([40, 80]); // the layout hears where the finger is
     act(() => { fireEvent.touchEnd(touched, { changedTouches: pt(40, 80) }); });
     act(() => { jest.runOnlyPendingTimers(); });
     expect(document.body.style.userSelect).toBe('');
