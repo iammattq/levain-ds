@@ -92,11 +92,10 @@ export function SortableGroup({ onMove, onDragChange, children }: SortableGroupP
   const [landing, setLanding] = useState(false);
   const onDrag = useRef(onDragChange);
   onDrag.current = onDragChange;
-  // iOS honours preventDefault only from a non-passive touchmove listener that was there before the gesture began,
-  // so one stays for the group's life (as dnd-kit's) and hands each move to the touch in progress, if any
-  const touchMove = useRef<((ev: TouchEvent) => void) | null>(null);
+  // iOS honours preventDefault on a touch only when a non-passive touchmove listener was there before the gesture
+  // began, so a no-op one stays for the group's life (as dnd-kit's)
   useEffect(() => {
-    const on = (ev: TouchEvent) => touchMove.current?.(ev);
+    const on = () => {};
     window.addEventListener('touchmove', on, { passive: false });
     return () => window.removeEventListener('touchmove', on);
   }, []);
@@ -223,7 +222,7 @@ export function SortableGroup({ onMove, onDragChange, children }: SortableGroupP
   // touchSlop is a scroll, left alone, and ends the hold. Once lifted, every move is the drag's.
   const beginTouch = useCallback((e: ReactTouchEvent<HTMLElement>, list: string, key: string, node: ReactNode) => {
     if (e.touches.length !== 1 || dragRef.current) return;
-    const tgt = e.target as Element;
+    const tgt = e.target as Element, at = e.target as HTMLElement;
     if (tgt.closest('button, a, input, textarea, select, [contenteditable="true"]')) return;
     const t0 = e.touches[0]!, id = t0.identifier, start = { x: t0.clientX, y: t0.clientY };
     const s = session(e.currentTarget, list, key, node, start);
@@ -250,13 +249,15 @@ export function SortableGroup({ onMove, onDragChange, children }: SortableGroupP
     const timer = setTimeout(() => s.lift(), DRAG.touchHold);
     const cleanup = () => {
       clearTimeout(timer);
-      if (touchMove.current === onMove) touchMove.current = null;
-      window.removeEventListener('touchend', onEnd);
-      window.removeEventListener('touchcancel', onCancel);
+      at.removeEventListener('touchmove', onMove);
+      at.removeEventListener('touchend', onEnd);
+      at.removeEventListener('touchcancel', onCancel);
     };
-    touchMove.current = onMove;
-    window.addEventListener('touchend', onEnd, { passive: false });
-    window.addEventListener('touchcancel', onCancel);
+    // on the touched element, not the window: a touch's events stay aimed at the element it began on, and once the card
+    // lifts that element leaves the page, so they no longer bubble up
+    at.addEventListener('touchmove', onMove, { passive: false });
+    at.addEventListener('touchend', onEnd, { passive: false });
+    at.addEventListener('touchcancel', onCancel);
     if (tgt.closest('[data-sortable-handle]')) { clearTimeout(timer); s.lift(); } // the grip lifts at once
   }, [session]);
 
