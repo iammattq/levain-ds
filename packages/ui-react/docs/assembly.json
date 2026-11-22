@@ -188,7 +188,7 @@
       "id": "drag-physics",
       "rule": "A drag tracks the pointer exactly, with transitions off. The dragged item stays the same element: it lifts (scale up to drag.liftScale, one step up the elevation ladder, on recipe.quick), leans with its velocity up to drag.maxTilt (tiltSpring), its neighbours part on recipe.shift, and on release it settles into its slot on recipe.settle.",
       "why": "A card that lags the finger feels like a picture of a card; one that tracks it exactly feels held. The lift, lean and landing are the cues a physical object gives, kept small enough to stay out of the way.",
-      "check": "Position during a drag is set directly, never through a transition; the drag code uses the drag, tiltSpring and recipe tokens and no literal numbers; mouse drags start after drag.mouseSlop px, touch after drag.touchHold ms; every drag can also be done from the keyboard.",
+      "check": "Position during a drag is set directly, never through a transition; the drag code uses the drag, tiltSpring and recipe tokens and no literal numbers; mouse drags start after drag.mouseSlop px; on a touch screen a drag starts from a grip that claims the gesture (touch-action: none), because a long-press can't stop a phone's browser from taking the pan on the finger's first move; every drag can also be done from the keyboard.",
       "checkable": true
     },
     {

@@ -7,8 +7,10 @@
  *   elevation step) and leans with its velocity;
  * - its neighbours part on recipe.shift to show where it will land;
  * - on release it settles into its slot on recipe.settle (the spring, a small overshoot).
- * A mouse drag starts after drag.mouseSlop px, a touch drag after the finger holds still for drag.touchHold ms (so a
- * swipe still scrolls). From the keyboard: Space lifts the focused item, the arrows move it (left and right to the
+ * A mouse drag starts after drag.mouseSlop px, anywhere on the item. On a touch screen each item gets a grip beside it:
+ * a drag starts from the grip at once (it claims the gesture, touch-action: none), and a swipe anywhere else scrolls as
+ * usual. (A long-press on the item itself can't work on a real phone: the browser decides on the first move of the
+ * finger whether it scrolls, before any hold is over, and cancels the pointer.) From the keyboard: Space lifts the focused item, the arrows move it (left and right to the
  * neighbouring list), Space drops it, Escape puts it back. Under reduced motion everything moves at once.
  *
  * Wrap the lists in one <SortableGroup onMove>. Each <SortableList id> renders its items through `renderItem`.
@@ -29,6 +31,7 @@ import {
   type ReactNode,
 } from 'react';
 import { createPortal } from 'react-dom';
+import { GripVertical } from 'lucide-react';
 
 export interface SortableMove {
   /** The moved item's key. */
@@ -117,7 +120,9 @@ export function SortableGroup({ onMove, children }: SortableGroupProps) {
     const el = e.currentTarget;
     const start = { x: e.clientX, y: e.clientY };
     const touch = e.pointerType === 'touch';
-    let started = false, holdTimer = 0, last = start;
+    // touch: only from the grip; elsewhere the finger scrolls
+    if (touch && !(e.target as Element).closest('[data-sortable-handle]')) return;
+    let started = false, last = start;
     const rect = el.getBoundingClientRect();
 
     const lift = () => {
@@ -146,7 +151,7 @@ export function SortableGroup({ onMove, children }: SortableGroupProps) {
       if (ev.pointerId !== e.pointerId) return;
       if (!started) {
         const far = Math.hypot(ev.clientX - start.x, ev.clientY - start.y);
-        if (touch) { if (far > 8) cleanup(); return; } // moved before the hold: it's a scroll
+        if (touch) return; // a touch from the grip lifted at once
         if (far >= DRAG.mouseSlop) { last = { x: ev.clientX, y: ev.clientY }; lift(); }
         return;
       }
@@ -169,7 +174,6 @@ export function SortableGroup({ onMove, children }: SortableGroupProps) {
     const onCancel = (ev: PointerEvent) => { if (ev.pointerId === e.pointerId) { cleanup(); if (started) finish(dragRef.current, true); } };
     const noScroll = (ev: TouchEvent) => { if (started) ev.preventDefault(); };
     const cleanup = () => {
-      clearTimeout(holdTimer);
       document.body.style.userSelect = '';
       window.removeEventListener('pointermove', onMove);
       window.removeEventListener('pointerup', onUp);
@@ -180,7 +184,7 @@ export function SortableGroup({ onMove, children }: SortableGroupProps) {
     window.addEventListener('pointerup', onUp);
     window.addEventListener('pointercancel', onCancel);
     window.addEventListener('touchmove', noScroll, { passive: false });
-    if (touch) holdTimer = window.setTimeout(lift, DRAG.touchHold);
+    if (touch) lift();
   }, [finish, reduce, target, x, y]);
 
   const keyboard = useCallback((e: ReactKeyboardEvent<HTMLElement>, list: string, key: string, node: ReactNode) => {
@@ -242,6 +246,20 @@ export function SortableGroup({ onMove, children }: SortableGroupProps) {
   );
 }
 
+/** True on a touch-first screen (pointer: coarse), where items get a grip to drag by. */
+const coarseQuery = () => (typeof window !== 'undefined' && typeof window.matchMedia === 'function' ? window.matchMedia('(pointer: coarse)') : null);
+function useCoarsePointer() {
+  const [coarse, setCoarse] = useState(() => !!coarseQuery()?.matches);
+  useEffect(() => {
+    const q = coarseQuery();
+    if (!q) return;
+    const on = () => setCoarse(q.matches);
+    q.addEventListener?.('change', on);
+    return () => q.removeEventListener?.('change', on);
+  }, []);
+  return coarse;
+}
+
 export interface SortableListProps<T> {
   /** The list's id, as SortableMove names it. */
   id: string;
@@ -271,6 +289,7 @@ export function SortableList<T>({ id, label, items, getKey, renderItem, empty, c
 
   const d = g.drag;
   const shift = motionFor('shift', g.reduce);
+  const coarse = useCoarsePointer();
   // what the list shows: its items, minus the one lifted out of it, plus a gap where it would land
   type Row = { kind: 'item'; item: T; key: string } | { kind: 'carried'; key: string } | { kind: 'gap' } | { kind: 'leaving'; item: T; key: string };
   const rows: Row[] = items.filter(it => !(d?.mode === 'pointer' && getKey(it) === d.key)).map(it => ({ kind: 'item', item: it, key: getKey(it) }));
@@ -347,9 +366,16 @@ export function SortableList<T>({ id, label, items, getKey, renderItem, empty, c
             ref={(el: HTMLDivElement | null) => { if (el) itemEls.current.set(r.key, el); else itemEls.current.delete(r.key); }}
             onPointerDown={e => g.begin(e, id, r.key, renderItem(r.item, { dragging: true, lifted: true }))}
             onKeyDown={e => g.keyboard(e, id, r.key, renderItem(r.item, { dragging: true, lifted: true }))}
-            className="cursor-grab touch-pan-y select-none rounded-[var(--radius-lg)] outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)] active:cursor-grabbing"
+            className={'select-none rounded-[var(--radius-lg)] outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)] ' + (coarse ? 'flex items-stretch' : 'cursor-grab active:cursor-grabbing')}
           >
-            {renderItem(r.item, { dragging: false, lifted: false })}
+            {coarse ? <div className="min-w-0 flex-1">{renderItem(r.item, { dragging: false, lifted: false })}</div> : renderItem(r.item, { dragging: false, lifted: false })}
+            {coarse && (
+              // the touch grip: claims the gesture so the page doesn't pan; the keyboard path covers assistive tech
+              <span data-sortable-handle aria-hidden style={{ touchAction: 'none' }}
+                className="flex w-8 shrink-0 cursor-grab items-center justify-center text-[var(--color-text-faint,var(--color-text-muted))]">
+                <GripVertical size={16} />
+              </span>
+            )}
           </motion.div>
         ),
       )}

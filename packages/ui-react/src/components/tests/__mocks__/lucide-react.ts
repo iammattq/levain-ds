@@ -70,3 +70,4 @@ const LucideIcons = {
 
 export default LucideIcons;
 export const X = createIconComponent('X');
+export const GripVertical = createIconComponent('GripVertical');
