@@ -93,3 +93,7 @@ export {
   getContrastingText,
   generateContrastTextColors,
 } from './src/generator/oklch';
+
+// Motion: durations, easings, recipes and the reduced-motion helper (src/motion.ts; the same values as shared.css's)
+export { duration, stagger, springStops, springEase, ease, recipe, tiltSpring, drag, instant, motion, css as motionCss } from './src/motion';
+export type { DurationName, EaseName, RecipeName } from './src/motion';

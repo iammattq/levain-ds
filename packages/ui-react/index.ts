@@ -229,3 +229,12 @@ export type {
   PositionConfig,
 } from './src/utils/popupPosition';
 export { generatePaggaText } from './src/utils/pagga';
+
+// ============================================================================
+// MOTION PIECES - drag and drop, and the compact card that morphs into its dialog (assembly.json: motion rules)
+// ============================================================================
+
+export { SortableGroup, SortableList } from './src/components/SortableList';
+export type { SortableGroupProps, SortableListProps, SortableMove } from './src/components/SortableList';
+export { StatusCard, StatusCardDialog, StatusMarkers, morphId } from './src/patterns/StatusCard';
+export type { StatusCardProps, StatusCardDialogProps, StatusMarker, StatusTone } from './src/patterns/StatusCard';

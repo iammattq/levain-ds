@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { AnimatePresence, motion, MotionProps } from 'framer-motion';
+import { AnimatePresence, motion, MotionProps, useReducedMotion } from 'framer-motion';
+import { motion as motionFor } from '@levain/tokens';
 import Heading from './Heading';
 import { Button } from './Button';
 import { X, MoreVertical } from 'lucide-react';
@@ -36,12 +37,13 @@ export function Modal({
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  // Default motion props for fade and slide
+  // Default motion props for fade and slide, timed by the motion tokens (instant under reduced motion)
+  const reduce = useReducedMotion();
   const defaultMotionProps: MotionProps = {
-    initial: { opacity: 0, y: 20 },
+    initial: { opacity: 0, y: reduce ? 0 : 20 },
     animate: { opacity: 1, y: 0 },
-    exit: { opacity: 0, y: 20 },
-    transition: { duration: 0.3 },
+    exit: { opacity: 0, y: reduce ? 0 : 20 },
+    transition: motionFor('fadeIn', reduce),
   };
 
   // Use provided motion props or defaults
@@ -125,7 +127,7 @@ export function Modal({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={motionFor('contentIn', reduce)}
           />
 
           <div

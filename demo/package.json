@@ -1,0 +1,29 @@
+{
+  "name": "@levain/demo",
+  "private": true,
+  "type": "module",
+  "description": "levain DS's motion, density and drag, on one page: pnpm --filter @levain/demo dev",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit -p . && vite build --base ./"
+  },
+  "dependencies": {
+    "@fontsource/open-sans": "^5.2.6",
+    "@fontsource/oswald": "^5.2.6",
+    "@levain/tokens": "workspace:*",
+    "@levain/ui-react": "workspace:*",
+    "framer-motion": "^12.4.1",
+    "lucide-react": "^0.475.0",
+    "react": "~19.2.8",
+    "react-dom": "~19.2.8"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.1.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^5.0.0",
+    "tailwindcss": "^4.1.0",
+    "typescript": "^5.9.3",
+    "vite": "^7.0.0"
+  }
+}

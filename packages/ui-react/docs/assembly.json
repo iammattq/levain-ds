@@ -126,6 +126,77 @@
       "why": "Visual weight sometimes genuinely demands an off-scale value. The difference between a considered exception and a lapse is whether anyone wrote down which it was.",
       "check": "An off-scale value with no comment explaining the optical reason is a lapse.",
       "checkable": true
+    },
+    {
+      "id": "morph-not-swap",
+      "rule": "When one thing becomes another, it is one element changing its geometry, never a second surface fading in over the first. A button grows into its menu, a card into its dialog and back, a window into its dock pill; the content inside cross-fades once there is room for it.",
+      "why": "Two shapes trading places ask the reader to work out that they are the same thing; one shape changing says so. It is the core of this system's motion: things are continuous, so the interface reads as one material rather than a stack of screens. Taken from mattquinn.ca's OS shell (the menu, the windows and the dock), whose code comments state these rules.",
+      "check": "An element that opens into a larger one shares its layoutId (framer-motion) or is the same measured container animating width, height and radius. No modal or panel fades in over a dimmed page in place of the thing that opened it. Content inside the morphing shape fades in with recipe.contentIn after the shape has room, and leaves first with recipe.contentOut.",
+      "checkable": true
+    },
+    {
+      "id": "motion-from-tokens",
+      "rule": "Every state change transitions, with a duration, easing or recipe from the motion tokens. Duration scales with the size and travel of the thing: feedback 150 ms, a small morph 460 ms, a large arrival 620 ms.",
+      "why": "A change that snaps leaves the eye to work out what moved. And a large object moving at the speed of a small button reads as hyper: bigger things should take longer to cross the same arc. Taking every value from one set is what makes many motions read as one system.",
+      "check": "framer-motion transitions use recipe.* from @levain/tokens, never literal numbers; CSS uses var(--duration-*) and var(--ease-*). Tested in ui-react's motionRules test.",
+      "checkable": true,
+      "note": "Continuous indicators (a loader's spin) are exempt from the size scale: they show time passing rather than a change. Existing Tailwind duration-* classes are listed under knownDeviations."
+    },
+    {
+      "id": "arrive-on-the-spring",
+      "rule": "Arrivals ride the spring (--ease-spring, recipe.morph / recipe.arrive / recipe.settle) and may overshoot slightly and settle. Departures and making room don't overshoot, and leaving is quicker than arriving.",
+      "why": "A cubic-b\u00e9zier can't overshoot and settle, and that overshoot is what makes an arrival feel like a real thing landing. On the way out the content is already known, so there is nothing left to explain: it goes quickly and plainly. A box pinned to an edge never overshoots (a sheet would lift clear of the edge).",
+      "check": "Arrival recipes use springEase or --ease-spring; departure, collapse, shift, sheet and travel recipes use the non-overshooting eases. Each pair's out duration is shorter than its in. Tested in the tokens' motion test.",
+      "checkable": true
+    },
+    {
+      "id": "arrive-from-somewhere",
+      "rule": "Things arrive from somewhere and leave the same way: from the element that opened them, or from the edge they belong to, with the transform origin there.",
+      "why": "Something that materialises at the viewport's edge has no history. Coming out of its trigger (a window from the menu button, a dialog from its card), it continues the gesture that started it.",
+      "check": "An entering element's transform-origin and starting position are its source's; its exit reverses its entrance.",
+      "checkable": false
+    },
+    {
+      "id": "content-follows-container",
+      "rule": "Content follows its container: the container changes shape first, its contents fade in once there is room (recipe.contentIn) and leave ahead of it (recipe.contentOut). Rows that arrive together stagger by --stagger (28 ms).",
+      "why": "Content riding a shape as it grows or shrinks shows as a picture squashing; contents that wait for room appear in place, already readable. A small stagger lets a list read as a list arriving, not a block.",
+      "check": "No content scales with its container; inner content uses opacity only, on contentIn and contentOut; row delays are index \u00d7 stagger.",
+      "checkable": true
+    },
+    {
+      "id": "lists-close-gaps",
+      "rule": "In a list, an item entering or leaving fades and changes size in place while its neighbours make room or close the gap on recipe.shift. An item that is answered or finished collapses out; it doesn't vanish.",
+      "why": "Items that pop in or out make their neighbours jump, and the eye loses its place. The neighbours' glide says the rest is unchanged.",
+      "check": "List items are keyed, wrapped in AnimatePresence, and carry layout with recipe.shift; exit collapses the item (height to 0 is allowed here, as for an accordion) with its content leaving first.",
+      "checkable": true
+    },
+    {
+      "id": "motion-never-blocks",
+      "rule": "Motion never delays input and is honest: every transition can be interrupted and retargeted, nothing waits for an animation to end before accepting the next action, and timers rather than transitionend decide when something is done.",
+      "why": "An interface that makes you wait for its own animation turns a flourish into latency; transitionend never fires for a transition that was interrupted or never ran.",
+      "check": "No disabled state, pointer-events: none or ignored input tied to an animation in progress; completion is scheduled from the token's duration.",
+      "checkable": false
+    },
+    {
+      "id": "live-updates-ease-in",
+      "rule": "Data that arrives on its own (a push from the server, a timer) eases in; it never pops, and it never moves the element under the reader's pointer or in their hand.",
+      "why": "An update the reader didn't cause should be noticed without being startling. Moving what someone is about to click or is dragging is how misclicks happen.",
+      "check": "New content arriving without a user action fades in on recipe.contentIn. While a drag or press is in progress, layout changes from outside wait until it ends.",
+      "checkable": false
+    },
+    {
+      "id": "drag-physics",
+      "rule": "A drag tracks the pointer exactly, with transitions off. The dragged item stays the same element: it lifts (scale up to drag.liftScale, one step up the elevation ladder, on recipe.quick), leans with its velocity up to drag.maxTilt (tiltSpring), its neighbours part on recipe.shift, and on release it settles into its slot on recipe.settle.",
+      "why": "A card that lags the finger feels like a picture of a card; one that tracks it exactly feels held. The lift, lean and landing are the cues a physical object gives, kept small enough to stay out of the way.",
+      "check": "Position during a drag is set directly, never through a transition; the drag code uses the drag, tiltSpring and recipe tokens and no literal numbers; mouse drags start after drag.mouseSlop px, touch after drag.touchHold ms; every drag can also be done from the keyboard.",
+      "checkable": true
+    },
+    {
+      "id": "reduced-motion",
+      "rule": "prefers-reduced-motion turns motion into plain changes, always: shapes and positions change at once.",
+      "why": "For some readers motion causes nausea or distraction. The preference is theirs to set, and honouring it is not optional.",
+      "check": "Every framer-motion transition goes through motion(name, reduce) or reads useReducedMotion(); CSS timing comes from the --duration-* tokens and --stagger, which the reduced-motion media query sets to 0ms.",
+      "checkable": true
     }
   ],
   "howToUse": [
@@ -401,6 +472,66 @@
         "token": "--space-2xs",
         "utility": "space-y-2xs"
       }
+    ],
+    "motion": [
+      {
+        "situation": "Press, hover, a toggle; a dragged card lifting",
+        "token": "--duration-quick, --ease-out",
+        "utility": "recipe.quick"
+      },
+      {
+        "situation": "A small shape becoming another (button to menu, card to dialog, and back)",
+        "token": "--duration-morph, --ease-spring",
+        "utility": "recipe.morph; recipe.collapse on the way back",
+        "note": "One element, shared layoutId or a measured container. Radius rides --ease-spring-out, never the spring: a corner has no business bouncing."
+      },
+      {
+        "situation": "A large object arriving (a window)",
+        "token": "--duration-arrival, --ease-spring; opacity --duration-travel, --ease-out",
+        "utility": "recipe.arrive with recipe.fadeIn",
+        "note": "Origin at its source; leaves on recipe.depart."
+      },
+      {
+        "situation": "A bottom sheet",
+        "token": "--duration-morph, --ease-spring-out in; --duration-sheet-out, --ease-away out",
+        "utility": "recipe.sheetIn / recipe.sheetOut",
+        "note": "No scale, no fade, no overshoot."
+      },
+      {
+        "situation": "Contents of a shape that is changing",
+        "token": "--duration-content-in / --duration-content-out, --ease-out",
+        "utility": "recipe.contentIn / recipe.contentOut",
+        "note": "Rows stagger by --stagger."
+      },
+      {
+        "situation": "Neighbours making room or closing a gap",
+        "token": "--duration-shift, --ease-spring-out",
+        "utility": "layout with recipe.shift"
+      },
+      {
+        "situation": "A box travelling to a new home",
+        "token": "--duration-travel, --ease-away",
+        "utility": "recipe.travel"
+      },
+      {
+        "situation": "Switching tabs",
+        "token": "recipe.shift for the indicator; recipe.contentIn for the content",
+        "note": "The indicator slides (one element); the content cross-fades."
+      },
+      {
+        "situation": "Content arriving by itself",
+        "token": "--duration-content-in, --ease-out",
+        "utility": "recipe.contentIn"
+      },
+      {
+        "situation": "Drag: during, and release",
+        "token": "none during (track exactly); tiltSpring for the lean; recipe.settle on release"
+      },
+      {
+        "situation": "Reduced motion",
+        "token": "instant",
+        "utility": "motion(name, reduce)"
+      }
     ]
   },
   "textStack": {
@@ -435,6 +566,9 @@
     "commonFailure": "Reaching for a bigger or bolder heading when the real problem is that the space above and below it are the same."
   },
   "knownDeviations": [
-    "Section.tsx ships gap == inset (p-lg with gap-lg) where the recipe says one step below. Changing it restyles every Section in every app, so it is documented rather than changed in passing."
+    "Section.tsx ships gap == inset (p-lg with gap-lg) where the recipe says one step below. Changing it restyles every Section in every app, so it is documented rather than changed in passing.",
+    "Components still carry Tailwind transition timing as fixed classes (duration-100/150/200/300/500, transition-all). They predate the motion tokens; duration-500 (3 places) exceeds the 300 ms limit. Moving them onto var(--duration-*) changes timing in every app, so it is listed here rather than changed in passing. framer-motion transitions are on the tokens.",
+    "Modal fades its panel in over a dimmed page, which morph-not-swap rules out for anything opened from an element on the page. It predates the rule and every app's dialogs use it, so it keeps its look (now timed by the tokens); a dialog opened from a card should grow out of the card instead (StatusCard does).",
+    "ToolInfo's panel rose on a 220 ms expo-out; on the tokens it uses recipe.contentIn (220 ms, ease-out), a slightly softer start."
   ]
 }

@@ -69,3 +69,4 @@ const LucideIcons = {
 };
 
 export default LucideIcons;
+export const X = createIconComponent('X');

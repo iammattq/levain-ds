@@ -805,5 +805,34 @@
     "Adherence: remove styles that do not follow these standards. An arbitrary value that survives review becomes precedent.",
     "Consistency beats local optimisation. A component that is slightly wrong but consistent is easier to fix than one that is locally perfect and unique.",
     "Communication: say so before applying a change that will visibly alter existing layout, explaining the deviation and the proposed correction. Deviating silently and deviating by mistake look identical afterwards."
-  ]
+  ],
+  "motionTokens": {
+    "source": "@levain/tokens src/motion.ts, mirrored as CSS custom properties in shared.css; taken from mattquinn.ca's OS shell",
+    "durations": {
+      "contentOut": "90ms",
+      "quick": "150ms",
+      "contentIn": "220ms",
+      "shift": "260ms",
+      "sheetOut": "280ms",
+      "travel": "300ms",
+      "morph": "460ms",
+      "arrival": "620ms",
+      "stagger": "28ms"
+    },
+    "easings": {
+      "--ease-spring": "sampled spring, overshoots to 1.024 and settles: arrivals",
+      "--ease-spring-out": "cubic-bezier(0.4, 0, 0.2, 1): collapsing, sheets rising, making room",
+      "--ease-away": "cubic-bezier(0.5, 0, 0.2, 1): travelling away",
+      "--ease-out": "cubic-bezier(0, 0, 0.58, 1): fades"
+    },
+    "recipes": "morph, arrive, depart, collapse, shift, sheetIn, sheetOut, travel, fadeIn, contentIn, contentOut, quick, settle",
+    "drag": {
+      "liftScale": 1.03,
+      "maxTilt": "4°",
+      "tiltAtSpeed": "1600 px/s",
+      "mouseSlop": "4 px",
+      "touchHold": "180 ms",
+      "follow": "exact, no transition"
+    }
+  }
 }

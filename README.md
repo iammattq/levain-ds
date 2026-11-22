@@ -39,6 +39,16 @@ Text colours are chosen against their backgrounds by WCAG contrast. The seven bu
 
 Each layer owns its own spacing, so a page that composes them reads as designed rather than assembled.
 
+**Motion is part of the system, not decoration.** It comes from the OS shell on mattquinn.ca (its menu, windows and dock), and its first rule is that shapes morph into each other rather than swap:
+- a button grows into its menu, a card into its dialog and back; one element changes geometry, and its content fades in once there is room;
+- bigger things take longer: feedback 150 ms, a small morph 460 ms, a window arriving 620 ms;
+- arrivals ride a sampled spring that overshoots a little and settles (a cubic-bézier can't); departures are quicker and plain;
+- a drag tracks the pointer exactly; the card lifts one elevation step, leans with its speed, and settles into its slot on the spring.
+
+The durations, curves and stagger are tokens, in CSS (`--duration-morph`, `--ease-spring`, `--stagger`) and as framer-motion recipes (`recipe.morph`), and `prefers-reduced-motion` turns every one into an instant change. `assembly.json` states ten motion rules the same way as the spacing ones, and tests check the mechanical ones over every component.
+
+**Density is a mode.** `data-density="condensed"`, on the page or any part of it, moves the spacing, radius and body type scales one step tighter, in order, so every spacing rule still holds and nothing needs a second set of tokens.
+
 **No framework lock-in.** The components don't import Next.js or any router. An app hands levain what only it knows through one provider, `LevainProvider`:
 - its link component;
 - its image component;
@@ -59,12 +69,12 @@ Two packages, released together under the same version:
 | Layer | |
 |---|---|
 | Components (forms) | TextInput, TextArea, ChatInput, Select, Checkbox, RadioButton, Switch, Slider, DualSlider, ColorInput, ColorPickerPanel, GradientInput, DateInput, Calendar, TagInput, EditableText |
-| Components (actions and navigation) | Button, TextLink, MenuItem, SegmentedControl, Tabs, SectionTabs, Pagination, Accordion |
+| Components (actions and navigation) | Button, TextLink, MenuItem, SegmentedControl, Tabs, SectionTabs, Pagination, Accordion, SortableList (drag and drop within and across lists: mouse, touch, keyboard) |
 | Components (display) | Card (with CardContent, CardMedia, CardTitle), Section, Heading, Tag, Avatar, ImageWithLoadState, DataTable, Loader, Modal, Toaster |
-| Patterns | SurfaceCard, GradientCard, MediaCard, ImageUploader, ConfirmationModal, NavigationLinks, EditorialNavigation, ContentNavigation, PillNavigation, Footer, Timeline, ThemeToggle, ThemeSwitcher, ThemeColorButton, TokenSelect, GradientEditor, ToolSidebar, ToolInfo, AsciiHeader, SimpleAnimatedName, DotMatrixReveal |
+| Patterns | StatusCard and StatusCardDialog (a compact card with status markers that grows into its own dialog), SurfaceCard, GradientCard, MediaCard, ImageUploader, ConfirmationModal, NavigationLinks, EditorialNavigation, ContentNavigation, PillNavigation, Footer, Timeline, ThemeToggle, ThemeSwitcher, ThemeColorButton, TokenSelect, GradientEditor, ToolSidebar, ToolInfo, AsciiHeader, SimpleAnimatedName, DotMatrixReveal |
 | Templates | PageTemplate, AdminPageTemplate |
 
-Tests: 484 for tokens (the generator, contrast, ramps, the token mapping's rules), 785 for the components (Jest and Testing Library). Run them with `pnpm install && pnpm test`; `pnpm check:types` type-checks both packages, and `pnpm build` builds `smoke/`, a small Vite app that imports every export through Tailwind 4, as a consumer would. CI runs all three on every push to main and every pull request.
+Tests: 496 for tokens (the generator, contrast, ramps, the token mapping's rules, motion and density), 794 for the components, including the motion rules checked over every component (Jest and Testing Library). Run them with `pnpm install && pnpm test`; `pnpm check:types` type-checks both packages, and `pnpm build` builds `smoke/` (a small Vite app that imports every export through Tailwind 4, as a consumer would) and `demo/`. CI runs all three on every push to main and every pull request. `pnpm --filter @levain/demo dev` serves the demo: every motion recipe, the density modes, and drag and drop.
 
 ## Using it
 
@@ -119,6 +129,25 @@ themeManager.applyTheme(0); // writes theme 0's tokens for that mode
 ```
 
 Done the other way round, the colours come out dark while cards keep their light styling. In a server-rendered app, also set the class in an inline script before paint, as mattquinn.ca does, so the first frame is already in the right mode.
+
+**Motion.** In CSS, time transitions with the tokens: `transition: width var(--duration-morph) var(--ease-spring)`. In framer-motion, pass a recipe through `motion()`, which reads reduced motion for you:
+
+```tsx
+import { motion as motionFor } from '@levain/tokens';
+import { motion, useReducedMotion } from 'framer-motion';
+
+const reduce = useReducedMotion();
+<motion.div layout transition={motionFor('shift', reduce)} />;
+```
+
+**Drag and drop.** Wrap the lists in one `SortableGroup` and apply each move yourself:
+
+```tsx
+<SortableGroup onMove={({ key, from, to, index }) => move(key, from, to, index)}>
+  <SortableList id="todo" label="To do" items={todo} getKey={t => t.id} renderItem={t => <StatusCard id={t.id} title={t.text} />} />
+  <SortableList id="queued" label="Queued" items={queued} getKey={t => t.id} renderItem={t => <StatusCard id={t.id} title={t.text} />} />
+</SortableGroup>
+```
 
 **Making themes.** Add an entry to `packages/tokens/src/data/baseThemesV2.ts` and run `pnpm --filter @levain/tokens generate-themes`. That rewrites `generated/` (the theme JSON and the Kotlin output).
 

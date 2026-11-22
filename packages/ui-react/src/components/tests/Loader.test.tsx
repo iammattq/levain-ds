@@ -4,6 +4,7 @@ import { Loader } from '../Loader';
 
 // Mock framer-motion to avoid animation issues in tests
 jest.mock('framer-motion', () => ({
+  useReducedMotion: () => false,
   motion: {
     div: jest
       .fn()
