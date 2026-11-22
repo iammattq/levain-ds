@@ -807,31 +807,32 @@
     "Communication: say so before applying a change that will visibly alter existing layout, explaining the deviation and the proposed correction. Deviating silently and deviating by mistake look identical afterwards."
   ],
   "motionTokens": {
-    "source": "@levain/tokens src/motion.ts, mirrored as CSS custom properties in shared.css",
+    "source": "@levain/tokens src/motion.ts, mirrored as CSS custom properties in shared.css; taken from mattquinn.ca's OS shell",
     "durations": {
-      "instant": "0ms",
-      "quick": "150ms: feedback",
-      "base": "220ms: most UI",
-      "slow": "300ms: the largest moves, and the limit"
+      "contentOut": "90ms",
+      "quick": "150ms",
+      "contentIn": "220ms",
+      "shift": "260ms",
+      "sheetOut": "280ms",
+      "travel": "300ms",
+      "morph": "460ms",
+      "arrival": "620ms",
+      "stagger": "28ms"
     },
     "easings": {
-      "--ease-out": "enter, leave, default",
-      "--ease-in-out": "moving from one place to another",
-      "--ease-standard": "colour and opacity on hover"
+      "--ease-spring": "sampled spring, overshoots to 1.024 and settles: arrivals",
+      "--ease-spring-out": "cubic-bezier(0.4, 0, 0.2, 1): collapsing, sheets rising, making room",
+      "--ease-away": "cubic-bezier(0.5, 0, 0.2, 1): travelling away",
+      "--ease-out": "cubic-bezier(0, 0, 0.58, 1): fades"
     },
-    "springs": {
-      "layout": "duration 0.28, no bounce",
-      "lift": "duration 0.18, no bounce",
-      "settle": "duration 0.3, bounce 0.12 (the only bounce)",
-      "follow": "stiffness 900, damping 60, mass 0.6",
-      "tilt": "stiffness 380, damping 32, mass 0.8"
-    },
+    "recipes": "morph, arrive, depart, collapse, shift, sheetIn, sheetOut, travel, fadeIn, contentIn, contentOut, quick, settle",
     "drag": {
       "liftScale": 1.03,
-      "maxTilt": "5°",
+      "maxTilt": "4°",
       "tiltAtSpeed": "1600 px/s",
       "mouseSlop": "4 px",
-      "touchHold": "180 ms"
+      "touchHold": "180 ms",
+      "follow": "exact, no transition"
     }
   }
 }

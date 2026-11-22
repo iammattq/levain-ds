@@ -196,16 +196,39 @@
 
   /*
    * Motion (src/motion.ts holds the same values for framer-motion; a test keeps them equal).
-   * No transition outlasts --duration-slow; enter, leave and default use --ease-out; moving from one place to
-   * another uses --ease-in-out. See the motion rules in ui-react/docs/assembly.json.
+   * From mattquinn.ca's OS shell: arrivals ride the sampled spring (--ease-spring overshoots and settles);
+   * departures and making room don't overshoot; bigger things take longer. See the motion rules in
+   * ui-react/docs/assembly.json.
    */
   --duration-instant: 0ms;
+  --duration-content-out: 90ms;
   --duration-quick: 150ms;
-  --duration-base: 220ms;
-  --duration-slow: 300ms;
-  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
-  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
-  --ease-standard: cubic-bezier(0.25, 0.1, 0.25, 1);
+  --duration-content-in: 220ms;
+  --duration-shift: 260ms;
+  --duration-sheet-out: 280ms;
+  --duration-travel: 300ms;
+  --duration-morph: 460ms;
+  --duration-arrival: 620ms;
+  --stagger: 28ms;
+  --ease-spring: linear(
+    0,
+    0.008 1.1%,
+    0.034 2.3%,
+    0.263 6.6%,
+    0.552 11.1%,
+    0.777 15.6%,
+    0.914 20.3%,
+    0.984 25.2%,
+    1.016 30.4%,
+    1.024 36%,
+    1.017 42.3%,
+    1.004 55.4%,
+    0.999 76%,
+    1
+  );
+  --ease-spring-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-away: cubic-bezier(0.5, 0, 0.2, 1);
+  --ease-out: cubic-bezier(0, 0, 0.58, 1);
 
   /* Overrides Tailwind's shadow-2xl utility so it participates in theming.
    * TODO: migrate `shadow-2xl` call sites to --elevation-3 and drop this. */
@@ -452,7 +475,7 @@
 }
 
 .animate-fade-in {
-  animation: fade-in var(--duration-base) var(--ease-out);
+  animation: fade-in var(--duration-content-in) var(--ease-out);
 }
 
 /*
@@ -500,9 +523,15 @@ html[data-density='condensed'],
 /* Reduced motion: every duration becomes instant, so anything timed by the tokens changes at once. */
 @media (prefers-reduced-motion: reduce) {
   :root {
+    --duration-content-out: 0ms;
     --duration-quick: 0ms;
-    --duration-base: 0ms;
-    --duration-slow: 0ms;
+    --duration-content-in: 0ms;
+    --duration-shift: 0ms;
+    --duration-sheet-out: 0ms;
+    --duration-travel: 0ms;
+    --duration-morph: 0ms;
+    --duration-arrival: 0ms;
+    --stagger: 0ms;
   }
 }
 
