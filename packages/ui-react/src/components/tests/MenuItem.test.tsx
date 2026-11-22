@@ -5,10 +5,9 @@ import '@testing-library/jest-dom';
 
 import { MenuItem } from '../MenuItem';
 
-// React 19 hands `ref` to function components as a plain prop, so the mock can
-// spread it without forwardRef — which a jest.mock factory could not reference
-// anyway, being unable to close over imports.
-jest.mock('next/link', () => ({
+jest.mock('../../provider/LevainProvider', () => {
+  const actual = jest.requireActual('../../provider/LevainProvider');
+  const link = (() => ({
   __esModule: true,
   default: ({
     children,
@@ -22,7 +21,13 @@ jest.mock('next/link', () => ({
       {children}
     </a>
   ),
-}));
+}))();
+  return { ...actual, Link: link.default ?? link };
+});
+
+// React 19 hands `ref` to function components as a plain prop, so the mock can
+// spread it without forwardRef — which a jest.mock factory could not reference
+// anyway, being unable to close over imports.
 
 describe('MenuItem', () => {
   describe('rendered element follows behaviour', () => {

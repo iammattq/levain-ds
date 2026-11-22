@@ -1,6 +1,6 @@
+import { Link } from '../provider/LevainProvider';
 import React from 'react';
 import { cn } from '../utils/cn';
-import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { EditableText } from './EditableText';
 

@@ -5,9 +5,6 @@
     "paths": {
       "@levain/tokens": [
         "../tokens"
-      ],
-      "@/lib/hooks/*": [
-        "./src/components/tests/__mocks__/hooks.ts"
       ]
     }
   },

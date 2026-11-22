@@ -1,5 +1,6 @@
 'use client';
 
+import { Link } from '../provider/LevainProvider';
 import {
   ReactNode,
   MouseEvent,
@@ -9,7 +10,6 @@ import {
   HTMLAttributes,
   useCallback,
 } from 'react';
-import Link from 'next/link';
 import { cn } from '../utils/cn';
 
 /**

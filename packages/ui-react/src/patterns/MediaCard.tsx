@@ -1,7 +1,7 @@
 'use client';
 
+import { Image } from '../provider/LevainProvider';
 import { useState } from 'react';
-import Image from 'next/image';
 import { Card } from '../components/Card';
 import CardMedia from '../components/CardMedia';
 import CardContent from '../components/CardContent';

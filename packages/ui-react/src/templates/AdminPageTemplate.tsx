@@ -1,9 +1,9 @@
 'use client';
 
+import { Link } from '../provider/LevainProvider';
 import React from 'react';
 import { cn } from '../utils/cn';
 import { ArrowLeft, Loader2, XCircle } from 'lucide-react';
-import Link from 'next/link';
 import AsciiHeader from '../patterns/AsciiHeader';
 import { Button } from '../components/Button';
 

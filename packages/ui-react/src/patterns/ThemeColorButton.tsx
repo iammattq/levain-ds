@@ -1,8 +1,8 @@
 'use client';
 
+import { useEnhancedTheme } from '../provider/LevainProvider';
 import { forwardRef } from 'react';
 import { SwatchBook } from 'lucide-react';
-import { useEnhancedTheme } from '@/lib/hooks/useEnhancedTheme';
 import { themeManager } from '@levain/tokens';
 import { Button, type ButtonProps } from '../components/Button';
 

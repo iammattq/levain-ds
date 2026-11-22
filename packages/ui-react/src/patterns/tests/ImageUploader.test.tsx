@@ -10,11 +10,9 @@ import '@testing-library/jest-dom';
 import ImageUploader from '../ImageUploader';
 import { useDropzone } from 'react-dropzone';
 
-// Store for dropzone state and callbacks
-let dropzoneCallback: ((files: File[]) => void) | null = null;
-
-// Mock the components and APIs
-jest.mock('next/image', () => {
+jest.mock('../../provider/LevainProvider', () => {
+  const actual = jest.requireActual('../../provider/LevainProvider');
+  const image = (() => {
   // eslint-disable-next-line @next/next/no-img-element
   return function NextImage({
     src,
@@ -31,7 +29,14 @@ jest.mock('next/image', () => {
       <img src={src} alt={alt} className={className} data-testid="next-image" />
     );
   };
+})();
+  return { ...actual, Image: image.default ?? image };
 });
+
+// Store for dropzone state and callbacks
+let dropzoneCallback: ((files: File[]) => void) | null = null;
+
+// Mock the components and APIs
 
 jest.mock('lucide-react', () => ({
   Upload: () => <div data-testid="upload-icon">Upload Icon</div>,

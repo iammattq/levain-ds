@@ -1,8 +1,8 @@
 'use client';
 
+import { useEnhancedTheme } from '../provider/LevainProvider';
 import React, { forwardRef } from 'react';
 import { Sun, Moon, Monitor } from 'lucide-react';
-import { useEnhancedTheme } from '@/lib/hooks/useEnhancedTheme';
 import type { ThemeMode } from '@levain/tokens';
 import { Button, type ButtonProps } from '../components/Button';
 

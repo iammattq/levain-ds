@@ -3,17 +3,9 @@ import { render, screen, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import ContentNavigation from '../ContentNavigation';
 
-// Define an interface for the Link props
-interface MockLinkProps extends React.AnchorHTMLAttributes<HTMLAnchorElement> {
-  children: React.ReactNode;
-  href: string;
-  className?: string;
-  'aria-label'?: string;
-  // Add other potential props used by Link if necessary
-}
-
-// Mock next/link
-jest.mock('next/link', () => {
+jest.mock('../../provider/LevainProvider', () => {
+  const actual = jest.requireActual('../../provider/LevainProvider');
+  const link = (() => {
   // Use function instead of arrow function to avoid closure issues
   function MockNextLink(props: MockLinkProps) {
     // Use the defined interface
@@ -41,7 +33,20 @@ jest.mock('next/link', () => {
   MockNextLink.displayName = 'MockNextLink';
 
   return MockNextLink;
+})();
+  return { ...actual, Link: link.default ?? link };
 });
+
+// Define an interface for the Link props
+interface MockLinkProps extends React.AnchorHTMLAttributes<HTMLAnchorElement> {
+  children: React.ReactNode;
+  href: string;
+  className?: string;
+  'aria-label'?: string;
+  // Add other potential props used by Link if necessary
+}
+
+// Mock next/link
 
 // Mock lucide-react icons
 jest.mock('lucide-react', () => ({

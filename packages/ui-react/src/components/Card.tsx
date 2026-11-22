@@ -1,8 +1,8 @@
 'use client';
 
+import { Link } from '../provider/LevainProvider';
 import { useState } from 'react';
 import type { ReactNode, MouseEvent, CSSProperties } from 'react';
-import Link from 'next/link';
 import { cn } from '../utils/cn';
 
 export interface CardProps {

@@ -1,7 +1,7 @@
 'use client';
 
+import { usePathname } from '../provider/LevainProvider';
 import React from 'react';
-import { usePathname } from 'next/navigation';
 import { Linkedin } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
 import ThemeColorButton from './ThemeColorButton';

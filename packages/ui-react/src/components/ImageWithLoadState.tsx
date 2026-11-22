@@ -1,7 +1,7 @@
 'use client';
 
+import { Image } from '../provider/LevainProvider';
 import { useState, useEffect, useRef } from 'react';
-import Image from 'next/image';
 import { Loader } from './Loader';
 import { cn } from '../utils/cn';
 

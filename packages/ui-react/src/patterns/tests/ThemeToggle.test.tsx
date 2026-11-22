@@ -3,18 +3,23 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import ThemeToggle from '../ThemeToggle';
 
-// Mock for useEnhancedTheme hook
-const mockSetTheme = jest.fn();
-let mockTheme = 'light';
-let mockThemeIndex = 0;
-
-jest.mock('@/lib/hooks/useEnhancedTheme', () => ({
+jest.mock('../../provider/LevainProvider', () => {
+  const actual = jest.requireActual('../../provider/LevainProvider');
+  const theme = (() => ({
   useEnhancedTheme: () => ({
     theme: mockTheme,
     setTheme: mockSetTheme,
     themeIndex: mockThemeIndex,
   }),
-}));
+}))();
+  return { ...actual, ...theme };
+});
+
+// Mock for useEnhancedTheme hook
+const mockSetTheme = jest.fn();
+let mockTheme = 'light';
+let mockThemeIndex = 0;
+
 
 // Mock Lucide icons
 jest.mock('lucide-react', () => ({

@@ -2,11 +2,15 @@ import React from 'react';
 import { render, fireEvent, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import SimpleAnimatedName from '../SimpleAnimatedName';
-import { useEnhancedTheme } from '@/lib/hooks/useEnhancedTheme';
+import { useEnhancedTheme } from '../../provider/LevainProvider';
 import { themeManager } from '@levain/tokens';
 
+jest.mock('../../provider/LevainProvider', () => {
+  const actual = jest.requireActual('../../provider/LevainProvider');
+  return { ...actual, useEnhancedTheme: jest.fn() };
+});
+
 // Mock the hooks and theme manager
-jest.mock('@/lib/hooks/useEnhancedTheme');
 jest.mock('@levain/tokens', () => ({
   themeManager: {
     getAvailableThemeIndices: jest.fn(),

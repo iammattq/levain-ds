@@ -3,8 +3,9 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { SurfaceCard, GradientCard } from '../SurfaceCard';
 
-// Mock Next/Link
-jest.mock('next/link', () => {
+jest.mock('../../provider/LevainProvider', () => {
+  const actual = jest.requireActual('../../provider/LevainProvider');
+  const link = (() => {
   return function NextLink({
     children,
     href,
@@ -22,7 +23,11 @@ jest.mock('next/link', () => {
       </a>
     );
   };
+})();
+  return { ...actual, Link: link.default ?? link };
 });
+
+// Mock Next/Link
 
 describe('SurfaceCard', () => {
   describe('Basic Rendering', () => {

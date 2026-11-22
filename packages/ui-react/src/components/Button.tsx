@@ -1,7 +1,7 @@
 'use client';
 
+import { Link } from '../provider/LevainProvider';
 import React, { ButtonHTMLAttributes, forwardRef, useState } from 'react';
-import Link from 'next/link';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { Loader2, LucideProps } from 'lucide-react';
 import { cn } from '../utils/cn';

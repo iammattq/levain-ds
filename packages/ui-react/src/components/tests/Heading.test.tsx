@@ -2,8 +2,9 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import Heading from '../Heading';
 
-// Mock the next/link component
-jest.mock('next/link', () => {
+jest.mock('../../provider/LevainProvider', () => {
+  const actual = jest.requireActual('../../provider/LevainProvider');
+  const link = (() => {
   const MockLink = ({
     children,
     href,
@@ -19,7 +20,11 @@ jest.mock('next/link', () => {
   );
   MockLink.displayName = 'MockLink';
   return MockLink;
+})();
+  return { ...actual, Link: link.default ?? link };
 });
+
+// Mock the next/link component
 
 // Mock lucide-react icons
 jest.mock('lucide-react', () => ({

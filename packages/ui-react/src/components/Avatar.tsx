@@ -1,5 +1,5 @@
+import { Image } from '../provider/LevainProvider';
 import React from 'react';
-import Image from 'next/image';
 import { cn } from '../utils/cn';
 
 // Define size mapping
@@ -38,7 +38,7 @@ export interface AvatarProps {
    */
   className?: string;
   /**
-   * Optional className to apply directly to the next/image component.
+   * Optional className to apply directly to the image component (LevainProvider's imageComponent).
    */
   imageClassName?: string;
   /**

@@ -1,10 +1,10 @@
 'use client';
 
+import { Image } from '../provider/LevainProvider';
 import { useCallback, useState, useEffect, useRef } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Upload, X, Image as ImageIcon } from 'lucide-react';
 import { Button } from '../components/Button';
-import Image from 'next/image';
 
 // Helper function to extract image ID from URL (can be overridden by consumer)
 const extractImageId = (url: string): string | null => {

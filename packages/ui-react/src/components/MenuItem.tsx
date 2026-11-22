@@ -1,7 +1,7 @@
 'use client';
 
+import { Link } from '../provider/LevainProvider';
 import React, { forwardRef } from 'react';
-import Link from 'next/link';
 import { LucideProps } from 'lucide-react';
 import { cn } from '../utils/cn';
 
@@ -90,7 +90,7 @@ export interface MenuItemProps extends Omit<
  * and assistive-technology behaviour comes from the platform rather than from
  * added ARIA:
  *
- * - `href` renders an anchor via next/link
+ * - `href` renders an anchor via the app's link component (LevainProvider)
  * - `onClick` renders a real `<button>`
  * - neither (or `rightContent`, which usually contains its own buttons)
  *   renders a plain `<div>`

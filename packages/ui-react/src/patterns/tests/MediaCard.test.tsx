@@ -3,8 +3,9 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { MediaCard } from '../MediaCard';
 
-// Mock Next/Image
-jest.mock('next/image', () => {
+jest.mock('../../provider/LevainProvider', () => {
+  const actual = jest.requireActual('../../provider/LevainProvider');
+  const image = (() => {
   return function NextImage({
     src,
     alt,
@@ -47,7 +48,11 @@ jest.mock('next/image', () => {
       />
     );
   };
+})();
+  return { ...actual, Image: image.default ?? image };
 });
+
+// Mock Next/Image
 
 // Mock design system components
 jest.mock('../../components/Card', () => ({

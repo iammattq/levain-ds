@@ -3,14 +3,12 @@ import { render, screen, fireEvent, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import NavigationLinks, { type NavigationItem } from '../NavigationLinks';
 
-// Mock next/navigation
-const mockUsePathname = jest.fn().mockReturnValue('/work');
-jest.mock('next/navigation', () => ({
+jest.mock('../../provider/LevainProvider', () => {
+  const actual = jest.requireActual('../../provider/LevainProvider');
+  const nav = (() => ({
   usePathname: () => mockUsePathname(),
-}));
-
-// Mock next/link
-jest.mock('next/link', () => {
+}))();
+  const link = (() => {
   return function NextLink(props: {
     href: string;
     children: React.ReactNode;
@@ -23,7 +21,14 @@ jest.mock('next/link', () => {
       </a>
     );
   };
+})();
+  return { ...actual, ...nav, Link: link.default ?? link };
 });
+
+// Mock next/navigation
+const mockUsePathname = jest.fn().mockReturnValue('/work');
+
+// Mock next/link
 
 // Mock lucide-react
 jest.mock('lucide-react', () => ({

@@ -1,7 +1,6 @@
 'use client';
 
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { Link, usePathname } from '../provider/LevainProvider';
 import { cn } from '../utils/cn';
 import type { NavigationItem } from './NavigationLinks';
 

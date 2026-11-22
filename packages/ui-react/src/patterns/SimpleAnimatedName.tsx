@@ -1,7 +1,7 @@
 'use client';
 
+import { useEnhancedTheme } from '../provider/LevainProvider';
 import React, { useState, useEffect } from 'react';
-import { useEnhancedTheme } from '@/lib/hooks/useEnhancedTheme';
 import { themeManager } from '@levain/tokens';
 
 interface SimpleAnimatedNameProps {

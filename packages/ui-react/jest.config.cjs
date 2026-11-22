@@ -18,10 +18,8 @@ const config = {
     ],
   },
   moduleNameMapper: {
-    // Map @levain/tokens to the local tokens package
+    // Map @levain/tokens to the local tokens package (source, transpiled here)
     '^@levain/tokens$': '<rootDir>/../tokens/index.ts',
-    // Map @/lib/hooks to a mock for app-specific hooks
-    '^@/lib/hooks/(.*)$': '<rootDir>/src/components/tests/__mocks__/hooks.ts',
     // Map @/lib/themes to tokens package
     '^@/lib/themes(.*)$': '<rootDir>/../tokens/index.ts',
     // Map @/lib/utils to local utils

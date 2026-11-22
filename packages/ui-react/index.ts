@@ -1,6 +1,13 @@
 // @levain/ui-react - Design System Components, Patterns, and Templates
 
 // ============================================================================
+// PROVIDER - what the app supplies: its link and image components, the current path, the theme state
+// ============================================================================
+
+export { LevainProvider, Link, Image, usePathname, useEnhancedTheme } from './src/provider/LevainProvider';
+export type { LevainProviderProps, LevainLinkProps, LevainImageProps, LevainTheme } from './src/provider/LevainProvider';
+
+// ============================================================================
 // COMPONENTS - Atomic UI building blocks (L4 in hierarchy)
 // ============================================================================
 
@@ -129,15 +136,11 @@ export type {
   TimelineGroupData,
   TimelineItemData,
 } from './src/patterns/Timeline';
-export { AppNav } from './src/patterns/AppNav';
-export type { AppNavProps } from './src/patterns/AppNav';
 export { ConfirmationModal } from './src/patterns/ConfirmationModal';
 export type { ConfirmationModalProps } from './src/patterns/ConfirmationModal';
 export { SurfaceCard, GradientCard } from './src/patterns/SurfaceCard';
 export { Footer } from './src/patterns/Footer';
 export type { FooterProps } from './src/patterns/Footer';
-export { ToolAppShell } from './src/patterns/ToolAppShell';
-export type { ToolAppShellProps } from './src/patterns/ToolAppShell';
 export { ToolInfo } from './src/patterns/ToolInfo';
 export type { ToolInfoProps } from './src/patterns/ToolInfo';
 export { ToolSidebar } from './src/patterns/ToolSidebar';
