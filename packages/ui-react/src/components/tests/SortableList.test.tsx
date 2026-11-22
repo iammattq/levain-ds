@@ -1,5 +1,5 @@
 import React from 'react';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { SortableGroup, SortableList, type SortableMove } from '../SortableList';
 
@@ -46,5 +46,25 @@ describe('SortableList from the keyboard', () => {
     render(<Board onMove={jest.fn()} />);
     expect(item('Gamma')).toHaveAttribute('tabindex', '0');
     expect(item('Gamma')).toHaveAttribute('aria-roledescription', 'sortable item');
+  });
+});
+
+describe('SortableList: an item leaving the list', () => {
+  it('collapses in place, out of reach, and is gone after the shift duration (lists-close-gaps)', () => {
+    jest.useFakeTimers();
+    const card = (t: string) => <span>{t}</span>;
+    const list = (items: string[]) => (
+      <SortableGroup onMove={jest.fn()}>
+        <SortableList id="todo" label="To do" items={items} getKey={t => t} renderItem={card} />
+      </SortableGroup>
+    );
+    const { rerender } = render(list(['Alpha', 'Beta', 'Gamma']));
+    rerender(list(['Alpha', 'Gamma']));
+    const leaving = screen.getByText('Beta').parentElement!;
+    expect(leaving).toHaveAttribute('aria-hidden');
+    expect(screen.getAllByRole('listitem').map(e => e.textContent)).toEqual(['Alpha', 'Gamma']);
+    act(() => { jest.advanceTimersByTime(300); });
+    expect(screen.queryByText('Beta')).toBeNull();
+    jest.useRealTimers();
   });
 });
