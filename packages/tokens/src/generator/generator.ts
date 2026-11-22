@@ -87,6 +87,7 @@ interface ResolvedThemeConfig {
     dark: Record<SemanticToken, TokenMappingValue>;
   };
   elevation: ElevationColors;
+  textOn: NonNullable<ThemeInputV2['textOn']>;
 }
 
 /**
@@ -223,6 +224,7 @@ function mergeWithDefaults(input: ThemeInputV2): ResolvedThemeConfig {
       darkOpacity:
         input.elevation?.darkOpacity ?? DEFAULT_ELEVATION_COLORS.darkOpacity,
     },
+    textOn: input.textOn ?? {},
   };
 }
 
@@ -330,11 +332,24 @@ export class ThemeGeneratorV2 {
       actions: this.generateActions(config, mode),
       spectrum: this.generateSpectrum(config, mode),
       states: generateStateOverlays(stateIntensity, mode),
-      textOnPrimary,
-      textOnAccent,
+      // the theme's own text on its fills, for this mode, where it names one
+      ...this.resolveTextOn(config.textOn[mode], ramp, config, primaryRamp, accentRamp, textOnPrimary, textOnAccent),
       elevationColors,
       elevationStyles,
     };
+  }
+
+  private resolveTextOn(
+    textOn: { primary?: TokenMappingValue; accent?: TokenMappingValue } | undefined,
+    ramp: string[],
+    config: ResolvedThemeConfig,
+    primaryRamp: string[],
+    accentRamp: string[],
+    textOnPrimary: string,
+    textOnAccent: string
+  ): { textOnPrimary: string; textOnAccent: string } {
+    const named = applyTokenMapping(ramp, (textOn ?? {}) as Record<string, TokenMappingValue>, config.primary, config.accent, primaryRamp, accentRamp);
+    return { textOnPrimary: named.primary ?? textOnPrimary, textOnAccent: named.accent ?? textOnAccent };
   }
 
   /**

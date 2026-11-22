@@ -269,6 +269,16 @@ export interface ThemeInputV2 {
     /** Dark mode token mappings */
     dark?: Partial<Record<SemanticToken, TokenMappingValue>>;
   };
+
+  /**
+   * The text on the primary and accent fills, per mode, when the theme maps those fills itself (a neutral primary:
+   * near-black on light, near-white on dark, needs its text flipped per mode). Left out, the text is picked once
+   * for both modes by contrast with the picked colours.
+   */
+  textOn?: {
+    light?: { primary?: TokenMappingValue; accent?: TokenMappingValue };
+    dark?: { primary?: TokenMappingValue; accent?: TokenMappingValue };
+  };
 }
 
 /**

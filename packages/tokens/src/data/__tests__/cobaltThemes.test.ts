@@ -7,10 +7,10 @@ import { themeGeneratorV2 } from '../../generator';
 import { hexToOklch } from '../../generator/oklch/convert';
 
 /**
- * The Cobalt themes (TH1): black and white with a cobalt tint, three options of one theme. Their text is read
- * against every surface it sits on at WCAG AA (4.5:1 for body text), the cobalt the board uses for links and the
- * primary button passes too, and the options differ only in how much cobalt shows: the greys of Cobalt Hairline
- * carry none.
+ * The Cobalt themes (TH1): three looks a phone user tells apart at a glance (Mono, Night, Accent). Their text is
+ * read against every surface it sits on at WCAG AA (4.5:1 for body text), the accent too (status labels draw it as
+ * text), and the text on the primary and accent fills passes in each mode. Mono and Night have black-and-white
+ * buttons; Night's greys are cobalt; Accent's button is the cobalt.
  */
 const luminance = (hex: string) => {
   const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255).map((v) => (v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
@@ -21,7 +21,7 @@ const contrast = (a: string, b: string) => {
   return (hi + 0.05) / (lo + 0.05);
 };
 
-const NAMES = ['Cobalt Hairline', 'Cobalt Tint', 'Cobalt Bold'];
+const NAMES = ['Cobalt Mono', 'Cobalt Night', 'Cobalt Accent'];
 const cobalt = NAMES.map((name) => {
   const input = baseThemesV2.find((t) => t.name === name);
   if (!input) throw new Error('missing theme ' + name);
@@ -48,10 +48,9 @@ describe('Cobalt themes (TH1)', () => {
       const m = theme[mode], t = m.tokens as Record<string, string>;
       expect(contrast(m.textOnPrimary, t.primary)).toBeGreaterThanOrEqual(4.5);
     });
-    it('puts readable text on its accent where the accent is a fill: light mode, and the picked accent', () => {
-      const t = theme.light.tokens as Record<string, string>;
-      expect(contrast(theme.light.textOnAccent, t.accent)).toBeGreaterThanOrEqual(4.5);
-      expect(contrast(theme.dark.textOnAccent, theme.dark.accentRamp[4])).toBeGreaterThanOrEqual(4.5);
+    it.each(['light', 'dark'] as const)('puts readable text on its accent fill (the selected tab) in %s mode', (mode) => {
+      const m = theme[mode], t = m.tokens as Record<string, string>;
+      expect(contrast(m.textOnAccent, t.accent)).toBeGreaterThanOrEqual(4.5);
     });
     it('keeps the text tiers in order: muted between default and faint, in both modes', () => {
       for (const mode of ['light', 'dark'] as const) {
@@ -61,16 +60,34 @@ describe('Cobalt themes (TH1)', () => {
         expect(m).toBeGreaterThan(f);
       }
     });
-    it('is cobalt where it is coloured', () => {
-      expect(Math.round(hexToOklch(theme.light.tokens.primary as string).h)).toBeGreaterThanOrEqual(255);
-      expect(Math.round(hexToOklch(theme.light.tokens.primary as string).h)).toBeLessThanOrEqual(275);
+    it('links in cobalt, in both modes', () => {
+      for (const mode of ['light', 'dark'] as const) {
+        const h = Math.round(hexToOklch((theme[mode].tokens as Record<string, string>)['text-link']).h);
+        expect(h).toBeGreaterThanOrEqual(255);
+        expect(h).toBeLessThanOrEqual(275);
+      }
     });
   });
 
-  it('differ in how much cobalt the greys carry: none in Hairline, some in Tint and Bold', () => {
-    const chroma = (i: number) => hexToOklch((cobalt[i].theme.dark.tokens as Record<string, string>)['surface-card']).c;
-    expect(chroma(0)).toBeLessThan(0.001);
-    expect(chroma(1)).toBeGreaterThan(0.003);
-    expect(chroma(2)).toBeGreaterThan(0.003);
+  // the three tell apart at a glance: by the greys' cast and by the button's colour
+  const tok = (i: number, mode: 'light' | 'dark') => cobalt[i].theme[mode].tokens as Record<string, string>;
+  const chroma = (hex: string) => hexToOklch(hex).c;
+  it('Night alone has cobalt greys, visibly so: a navy ladder on dark, a blue-white canvas on light', () => {
+    for (const k of ['surface-canvas', 'surface-section', 'surface-card']) {
+      expect(chroma(tok(0, 'dark')[k])).toBeLessThan(0.001);
+      expect(chroma(tok(2, 'dark')[k])).toBeLessThan(0.001);
+      expect(chroma(tok(1, 'dark')[k])).toBeGreaterThan(0.03);
+    }
+    expect(chroma(tok(1, 'light')['surface-canvas'])).toBeGreaterThan(0.015);
+  });
+  it('Mono and Night have black-and-white buttons and accent; Accent has cobalt ones', () => {
+    for (const i of [0, 1]) for (const mode of ['light', 'dark'] as const) {
+      // (Night's near-black carries its navy cast; still far from the cobalt's 0.17)
+      expect(chroma(tok(i, mode).primary)).toBeLessThan(0.05);
+      expect(chroma(tok(i, mode).accent)).toBeLessThan(0.05);
+    }
+    expect(hexToOklch(tok(0, 'light').primary).l).toBeLessThan(30); // black on light (lightness 0-100)
+    expect(hexToOklch(tok(0, 'dark').primary).l).toBeGreaterThan(90); // white on dark
+    for (const mode of ['light', 'dark'] as const) expect(chroma(tok(2, mode).primary)).toBeGreaterThan(0.1);
   });
 });

@@ -6,44 +6,56 @@ import type { ThemeInputV2 } from '../generator/types';
 
 /** TH1's cobalt: the one colour in the Cobalt themes. */
 const COBALT = '#2451C9';
-/** The Cobalt themes' text and border stops (a squeezed light half: see the themes below). */
-const COBALT_MAPPING = {
+/** The Cobalt themes' text and border stops (a squeezed light half: see the themes below). On the dark canvas the
+ *  link and the focus ring take a lighter cobalt. */
+const TEXT = {
   light: { 'text-emphasis': 1, 'text-default': 3, 'text-muted': 8, 'text-faint': 11, 'border-subtle': 18, 'border-default': 16, 'border-emphasis': 14 },
-  // (on the dark canvas the link, the focus ring and the accent, which the board's status markers use as text, take a
-  // lighter cobalt; the primary button stays the cobalt, white on it. An accent fill with text-on-accent on it, as
-  // Button's accent variant and the accent Tag draw, is then light: a theme picks text-on-accent once for both modes.)
-  dark: { 'text-emphasis': 25, 'text-default': 23, 'text-muted': 15, 'text-faint': 14, 'text-link': 'primary-300', 'border-focus': 'primary-400', accent: 'accent-300' },
+  dark: { 'text-emphasis': 25, 'text-default': 23, 'text-muted': 15, 'text-faint': 14, 'text-link': 'primary-300', 'border-focus': 'primary-400' },
 } as const;
+/** Black-and-white fills, as the AI chat apps draw their buttons: near-black on light, near-white on dark, the text on
+ *  them flipped. The accent (the selected tab, status labels) is the text colour itself, so nothing else is coloured. */
+const MONO = {
+  fills: { light: { primary: 1, accent: 3 }, dark: { primary: 25, accent: 23 } },
+  textOn: { light: { primary: 25, accent: 25 }, dark: { primary: 1, accent: 1 } },
+} as const;
+
 interface CobaltOption {
-  /** How much cobalt the greys carry (0 pure greys) and how far it reaches toward black and white. */
+  /** How much cobalt the greys carry (0 pure greys; base chroma tint/1000) and how far it reaches toward black and
+   *  white (lower keeps more of it at the ends). */
   tint: number;
   chromaFalloff: number;
-  /** The accent: the active segment, status markers. */
-  accent: string;
+  /** Black-and-white buttons and accent (MONO), or cobalt ones. */
+  mono: boolean;
   /** The shadows' cobalt (0 grey) and strength: what lifted cards and dialogs cast. */
   shadowChroma: number;
   lightOpacity: number;
   darkOpacity: number;
-  /** Hover, focus and active overlays. */
-  states: [light: number, dark: number];
 }
-/** A: pure greys, cobalt only on the primary button, links, focus and the accent. B: greys with a faint cobalt cast,
- *  faintly cobalt shadows. C: as B, a brighter accent and cobalt shadows (lifted cards and dialogs glow cobalt). */
-const COBALT_OPTIONS: CobaltOption[] = [
-  { tint: 0, chromaFalloff: 1, accent: COBALT, shadowChroma: 0, lightOpacity: 7, darkOpacity: 30, states: [4, 5] },
-  { tint: 10, chromaFalloff: 0.5, accent: COBALT, shadowChroma: 25, lightOpacity: 8, darkOpacity: 30, states: [4, 5] },
-  { tint: 10, chromaFalloff: 0.5, accent: '#3563E6', shadowChroma: 100, lightOpacity: 14, darkOpacity: 40, states: [6, 7] },
-];
-function cobalt(name: string, o: CobaltOption): ThemeInputV2 {
+/** Three looks a phone user tells apart at a glance, in dark mode and light (the designer, TH1):
+ *  Mono: pure black and white; cobalt only on links and focus rings.
+ *  Night: black-and-white buttons on cobalt surfaces: a navy ladder on dark, a cool blue-white on light.
+ *  Accent: Mono's greys, cobalt carrying meaning: the primary button, the accent (status labels, the selected tab,
+ *  the rule on cards) and the lifted cards' shadows. */
+const COBALT_OPTIONS: Record<string, CobaltOption> = {
+  'Cobalt Mono': { tint: 0, chromaFalloff: 1, mono: true, shadowChroma: 0, lightOpacity: 8, darkOpacity: 30 },
+  'Cobalt Night': { tint: 60, chromaFalloff: 0.3, mono: true, shadowChroma: 40, lightOpacity: 10, darkOpacity: 40 },
+  'Cobalt Accent': { tint: 0, chromaFalloff: 1, mono: false, shadowChroma: 100, lightOpacity: 16, darkOpacity: 45 },
+};
+function cobalt(name: string): ThemeInputV2 {
+  const o = COBALT_OPTIONS[name]!;
   return {
     name,
     primary: COBALT,
-    accent: o.accent,
+    accent: COBALT,
     surfaces: { tint: o.tint, tintColor: COBALT, chromaFalloff: o.chromaFalloff, floor: 6, ceiling: 100, darkCurve: 0.6, lightCurve: 0.2 },
-    states: { light: { intensity: o.states[0] }, dark: { intensity: o.states[1] } },
+    states: { light: { intensity: 4 }, dark: { intensity: 5 } },
     actionColors: { chroma: 0.12, baseLightness: 52 },
     elevation: { source: 'accent', chroma: o.shadowChroma, lightOpacity: o.lightOpacity, darkOpacity: o.darkOpacity },
-    tokenMapping: { light: { ...COBALT_MAPPING.light }, dark: { ...COBALT_MAPPING.dark } },
+    tokenMapping: o.mono
+      ? { light: { ...TEXT.light, ...MONO.fills.light }, dark: { ...TEXT.dark, ...MONO.fills.dark } }
+      // the accent as text on the dark canvas takes a lighter cobalt; on it, dark text
+      : { light: { ...TEXT.light }, dark: { ...TEXT.dark, accent: 'accent-300' } },
+    textOn: o.mono ? MONO.textOn : { light: { primary: 25, accent: 25 }, dark: { primary: 25, accent: 1 } },
   };
 }
 
@@ -330,9 +342,8 @@ export const baseThemesV2: ThemeInputV2[] = [
       bgLightnessOffset: 32,
     },
   },
-  // ── Cobalt (TH1): black and white with a cobalt tint, the restraint of the AI chat apps. Three options of one theme,
-  // for the designer to pick; they share the greys' shape and the text and border mapping, and differ only in how
-  // much cobalt shows. The light canvas sits near white (#f2f2f2, cards and dialogs whiter still), so the light half
-  // of the ramp is squeezed toward 100 (lightCurve 0.2); dark mode's text then takes the stops that stay distinct.
-  ...(['Cobalt Hairline', 'Cobalt Tint', 'Cobalt Bold'] as const).map((name, i) => cobalt(name, COBALT_OPTIONS[i])),
+  // ── Cobalt (TH1): black and white with cobalt, the restraint of the AI chat apps. Three looks for the designer to
+  // pick (see COBALT_OPTIONS); they share the greys' shape and the text and border mapping. The light canvas sits
+  // near white (#f2f2f2, cards and dialogs whiter still), so the light half of the ramp is squeezed toward 100 (lightCurve 0.2); dark mode's text then takes the stops that stay distinct.
+  ...Object.keys(COBALT_OPTIONS).map(cobalt),
 ];
