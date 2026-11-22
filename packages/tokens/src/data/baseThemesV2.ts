@@ -4,6 +4,47 @@
  */
 import type { ThemeInputV2 } from '../generator/types';
 
+/** TH1's cobalt: the one colour in the Cobalt themes. */
+const COBALT = '#2451C9';
+/** The Cobalt themes' text and border stops (a squeezed light half: see the themes below). */
+const COBALT_MAPPING = {
+  light: { 'text-emphasis': 1, 'text-default': 3, 'text-muted': 8, 'text-faint': 11, 'border-subtle': 18, 'border-default': 16, 'border-emphasis': 14 },
+  // (the link and focus ring a lighter cobalt on the dark canvas; the primary button stays the cobalt, white on it)
+  dark: { 'text-emphasis': 25, 'text-default': 23, 'text-muted': 15, 'text-faint': 14, 'text-link': 'primary-300', 'border-focus': 'primary-400' },
+} as const;
+interface CobaltOption {
+  /** How much cobalt the greys carry (0 pure greys) and how far it reaches toward black and white. */
+  tint: number;
+  chromaFalloff: number;
+  /** The accent: the active segment, status markers. */
+  accent: string;
+  /** The shadows' cobalt (0 grey) and strength: what lifted cards and dialogs cast. */
+  shadowChroma: number;
+  lightOpacity: number;
+  darkOpacity: number;
+  /** Hover, focus and active overlays. */
+  states: [light: number, dark: number];
+}
+/** A: pure greys, cobalt only on the primary button, links, focus and the accent. B: greys with a faint cobalt cast,
+ *  faintly cobalt shadows. C: as B, a brighter accent and cobalt shadows (lifted cards and dialogs glow cobalt). */
+const COBALT_OPTIONS: CobaltOption[] = [
+  { tint: 0, chromaFalloff: 1, accent: COBALT, shadowChroma: 0, lightOpacity: 7, darkOpacity: 30, states: [4, 5] },
+  { tint: 10, chromaFalloff: 0.5, accent: COBALT, shadowChroma: 25, lightOpacity: 8, darkOpacity: 30, states: [4, 5] },
+  { tint: 10, chromaFalloff: 0.5, accent: '#3D6BF0', shadowChroma: 100, lightOpacity: 14, darkOpacity: 40, states: [6, 7] },
+];
+function cobalt(name: string, o: CobaltOption): ThemeInputV2 {
+  return {
+    name,
+    primary: COBALT,
+    accent: o.accent,
+    surfaces: { tint: o.tint, tintColor: COBALT, chromaFalloff: o.chromaFalloff, floor: 6, ceiling: 100, darkCurve: 0.6, lightCurve: 0.2 },
+    states: { light: { intensity: o.states[0] }, dark: { intensity: o.states[1] } },
+    actionColors: { chroma: 0.12, baseLightness: 52 },
+    elevation: { source: 'accent', chroma: o.shadowChroma, lightOpacity: o.lightOpacity, darkOpacity: o.darkOpacity },
+    tokenMapping: { light: { ...COBALT_MAPPING.light }, dark: { ...COBALT_MAPPING.dark } },
+  };
+}
+
 /**
  * Array of built-in V2 theme definitions.
  * Each theme only needs name, primary, and accent colors.
@@ -287,4 +328,9 @@ export const baseThemesV2: ThemeInputV2[] = [
       bgLightnessOffset: 32,
     },
   },
+  // ── Cobalt (TH1): black and white with a cobalt tint, the restraint of the AI chat apps. Three options of one theme,
+  // for the designer to pick; they share the greys' shape and the text and border mapping, and differ only in how
+  // much cobalt shows. The light canvas sits near white (#f2f2f2, cards and dialogs whiter still), so the light half
+  // of the ramp is squeezed toward 100 (lightCurve 0.2); dark mode's text then takes the stops that stay distinct.
+  ...(['Cobalt Hairline', 'Cobalt Tint', 'Cobalt Bold'] as const).map((name, i) => cobalt(name, COBALT_OPTIONS[i])),
 ];
