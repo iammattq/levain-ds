@@ -120,6 +120,9 @@ export const drag = {
   touchHold: 250,
   /** Pixels a finger may wander during the hold; past this it's a scroll and the hold is off. */
   touchSlop: 8,
+  /** Pixels from the top or bottom of the window where a held card scrolls the page, and the most it scrolls a frame. */
+  edgeZone: 56,
+  edgeSpeed: 14,
 } as const;
 
 /** What `prefers-reduced-motion: reduce` turns every transition into: an instant change. */

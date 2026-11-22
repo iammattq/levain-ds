@@ -79,9 +79,11 @@ describe('SortableList on a touch screen', () => {
   const down = (el: Element) => act(() => { fireEvent.touchStart(el, { touches: pt(10, 10), changedTouches: pt(10, 10) }); });
   /** true when the move was left to the browser (not prevented) */
   const moveTo = (x: number, y: number) => { let free = true; act(() => { free = fireEvent.touchMove(window, { touches: pt(x, y), changedTouches: pt(x, y) }); }); return free; };
-  const lifted = () => document.body.style.userSelect === 'none';
+  let dragging: boolean[] = [];
+  const lifted = () => dragging[dragging.length - 1] === true;
+  beforeEach(() => { dragging = []; });
   const board = () => render(
-    <SortableGroup onMove={jest.fn()}>
+    <SortableGroup onMove={jest.fn()} onDragChange={d => dragging.push(d)}>
       <SortableList id="todo" label="To do" items={['Alpha']} getKey={t => t} renderItem={t => <span>{t}</span>} />
     </SortableGroup>,
   );
@@ -129,7 +131,21 @@ describe('SortableList on a touch screen', () => {
   it('items take no text selection, callout or context menu on touch', () => {
     board();
     const li = item('Alpha');
-    expect(li.style.userSelect).toBe('none');
+    expect(li).toHaveClass('select-none');
     expect(fireEvent.contextMenu(li)).toBe(false);
+  });
+
+  it('a held card near the bottom of the window scrolls the page', () => {
+    jest.useFakeTimers();
+    const scrollBy = jest.spyOn(window, 'scrollBy').mockImplementation(() => {});
+    const { container } = board();
+    const at = (y: number) => [{ identifier: 3, clientX: 10, clientY: y }];
+    act(() => { fireEvent.touchStart(container.querySelector('[data-sortable-handle]')!, { touches: at(window.innerHeight - 5), changedTouches: at(window.innerHeight - 5) }); });
+    act(() => { jest.advanceTimersByTime(100); });
+    expect(scrollBy.mock.calls.some(([, y]) => (y as number) > 0)).toBe(true);
+    act(() => { fireEvent.touchCancel(window, { changedTouches: at(window.innerHeight - 5) }); });
+    expect(lifted()).toBe(false);
+    scrollBy.mockRestore();
+    jest.useRealTimers();
   });
 });

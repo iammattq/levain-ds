@@ -833,6 +833,8 @@
       "mouseSlop": "4 px",
       "touchHold": "250 ms",
       "touchSlop": "8 px",
+      "edgeZone": "56 px",
+      "edgeSpeed": "14 px a frame",
       "follow": "exact, no transition"
     }
   }
