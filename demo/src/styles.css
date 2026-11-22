@@ -1,0 +1,13 @@
+@import 'tailwindcss';
+
+@source '../../packages/ui-react/src/**/*.{ts,tsx}';
+@source './**/*.{ts,tsx}';
+
+@import '@levain/tokens/src/styles/shared.css';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+body {
+  @apply bg-[var(--color-surface-canvas)] text-[var(--color-text-default)];
+  font-family: var(--type-family-sans);
+}

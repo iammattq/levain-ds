@@ -123,6 +123,9 @@ export function SortableGroup({ onMove, children }: SortableGroupProps) {
 
     const lift = () => {
       started = true;
+      // no text selection while something is in the hand
+      document.body.style.userSelect = 'none';
+      window.getSelection()?.removeAllRanges();
       grab.current = { dx: start.x - rect.left, dy: start.y - rect.top };
       x.jump(rect.left);
       y.jump(rect.top);
@@ -168,6 +171,7 @@ export function SortableGroup({ onMove, children }: SortableGroupProps) {
     const noScroll = (ev: TouchEvent) => { if (started) ev.preventDefault(); };
     const cleanup = () => {
       clearTimeout(holdTimer);
+      document.body.style.userSelect = '';
       window.removeEventListener('pointermove', onMove);
       window.removeEventListener('pointerup', onUp);
       window.removeEventListener('pointercancel', onCancel);
@@ -319,7 +323,7 @@ export function SortableList<T>({ id, label, items, getKey, renderItem, empty, c
             ref={(el: HTMLDivElement | null) => { if (el) itemEls.current.set(r.key, el); else itemEls.current.delete(r.key); }}
             onPointerDown={e => g.begin(e, id, r.key, renderItem(r.item, { dragging: true, lifted: true }))}
             onKeyDown={e => g.keyboard(e, id, r.key, renderItem(r.item, { dragging: true, lifted: true }))}
-            className="cursor-grab touch-pan-y rounded-[var(--radius-lg)] outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)] active:cursor-grabbing"
+            className="cursor-grab touch-pan-y select-none rounded-[var(--radius-lg)] outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)] active:cursor-grabbing"
           >
             {renderItem(r.item, { dragging: false, lifted: false })}
           </motion.div>
