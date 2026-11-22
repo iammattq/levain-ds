@@ -1,7 +1,8 @@
 'use client';
 
 import { ReactNode, useEffect, useRef, useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import { motion as motionFor } from '@levain/tokens';
 import { Info, X } from 'lucide-react';
 
 import { Button } from '../components/Button';
@@ -32,6 +33,7 @@ export function ToolInfo({
   label = 'About this tool',
 }: ToolInfoProps) {
   const [open, setOpen] = useState(false);
+  const reduce = useReducedMotion();
   const panelRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
 
@@ -93,7 +95,7 @@ export function ToolInfo({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.16 }}
+              transition={motionFor('quick', reduce)}
               className="fixed inset-0 z-40 cursor-default bg-[var(--color-surface-inverted)]/30 md:hidden"
             />
             <motion.div
@@ -102,10 +104,10 @@ export function ToolInfo({
               aria-label={label}
               // Rising from the bottom, which is where it comes from on a
               // phone and reads as a drop from the trigger on a wide screen.
-              initial={{ opacity: 0, y: 40 }}
+              initial={{ opacity: 0, y: reduce ? 0 : 40 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 40 }}
-              transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+              exit={{ opacity: 0, y: reduce ? 0 : 40 }}
+              transition={motionFor('contentIn', reduce)}
               className={cn(
                 'z-50 border border-[var(--color-border-default)] bg-[var(--color-surface-card)] shadow-lg',
                 // Phone: a sheet across the bottom, capped so a long note

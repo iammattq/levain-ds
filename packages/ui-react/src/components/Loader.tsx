@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 
 interface LoaderProps {
   /**
@@ -27,6 +27,8 @@ export function Loader({
   size = 'md',
   className = '',
 }: LoaderProps) {
+  // Under reduced motion the dots pulse in place instead of bouncing.
+  const reduce = useReducedMotion();
   const getDotSize = () => {
     switch (size) {
       case 'xs':
@@ -51,9 +53,8 @@ export function Loader({
           key={i}
           className={`${getDotSize()} rounded-full`}
           style={{ backgroundColor: color }}
-          animate={{
-            y: ['0%', '-50%', '0%'],
-          }}
+          animate={reduce ? { opacity: [0.4, 1, 0.4] } : { y: ['0%', '-50%', '0%'] }}
+          // motion: continuous indicator, exempt from the size scale (assembly.json, motion-from-tokens)
           transition={{
             duration: 0.8,
             repeat: Infinity,

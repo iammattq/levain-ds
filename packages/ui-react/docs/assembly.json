@@ -567,6 +567,8 @@
   },
   "knownDeviations": [
     "Section.tsx ships gap == inset (p-lg with gap-lg) where the recipe says one step below. Changing it restyles every Section in every app, so it is documented rather than changed in passing.",
-    "Components still carry Tailwind transition timing as fixed classes (duration-100/150/200/300/500, transition-all). They predate the motion tokens; duration-500 (3 places) exceeds the 300 ms limit. Moving them onto var(--duration-*) changes timing in every app, so it is listed here rather than changed in passing. framer-motion transitions are on the tokens."
+    "Components still carry Tailwind transition timing as fixed classes (duration-100/150/200/300/500, transition-all). They predate the motion tokens; duration-500 (3 places) exceeds the 300 ms limit. Moving them onto var(--duration-*) changes timing in every app, so it is listed here rather than changed in passing. framer-motion transitions are on the tokens.",
+    "Modal fades its panel in over a dimmed page, which morph-not-swap rules out for anything opened from an element on the page. It predates the rule and every app's dialogs use it, so it keeps its look (now timed by the tokens); a dialog opened from a card should grow out of the card instead (StatusCard does).",
+    "ToolInfo's panel rose on a 220 ms expo-out; on the tokens it uses recipe.contentIn (220 ms, ease-out), a slightly softer start."
   ]
 }
