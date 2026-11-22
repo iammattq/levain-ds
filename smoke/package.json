@@ -1,0 +1,29 @@
+{
+  "name": "@levain/smoke",
+  "private": true,
+  "type": "module",
+  "description": "Builds both packages the way a consumer does (Vite, React, Tailwind 4), importing every export: the CI build check.",
+  "scripts": {
+    "build": "tsc --noEmit -p . && vite build"
+  },
+  "dependencies": {
+    "@levain/tokens": "workspace:*",
+    "@levain/ui-react": "workspace:*",
+    "@tanstack/react-table": "^8.21.2",
+    "framer-motion": "^12.4.1",
+    "lucide-react": "^0.475.0",
+    "react": "~19.2.8",
+    "react-dom": "~19.2.8",
+    "react-dropzone": "^14.3.5",
+    "sonner": "^2.0.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.1.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^5.0.0",
+    "tailwindcss": "^4.1.0",
+    "typescript": "^5.9.3",
+    "vite": "^7.0.0"
+  }
+}

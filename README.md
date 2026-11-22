@@ -1,5 +1,7 @@
 # levain DS
 
+[![CI](https://github.com/iammattq/levain-ds/actions/workflows/ci.yml/badge.svg)](https://github.com/iammattq/levain-ds/actions/workflows/ci.yml)
+
 levain DS is the design system behind [mattquinn.ca](https://mattquinn.ca): a set of design tokens generated from a few colour choices, and the React components and patterns built on them. It began inside that portfolio and now stands on its own, so other projects can grow from the same base.
 
 A *levain* is a baker's starter: the living culture every loaf is grown from, fed and kept going rather than rebuilt each time. That is the job of this repository.
@@ -62,7 +64,7 @@ Two packages, released together under the same version:
 | Patterns | SurfaceCard, GradientCard, MediaCard, ImageUploader, ConfirmationModal, NavigationLinks, EditorialNavigation, ContentNavigation, PillNavigation, Footer, Timeline, ThemeToggle, ThemeSwitcher, ThemeColorButton, TokenSelect, GradientEditor, ToolSidebar, ToolInfo, AsciiHeader, SimpleAnimatedName, DotMatrixReveal |
 | Templates | PageTemplate, AdminPageTemplate |
 
-Tests: 484 for tokens (the generator, contrast, ramps, the token mapping's rules), 785 for the components (Jest and Testing Library). Run them with `pnpm install && pnpm test`; `pnpm check:types` type-checks both packages.
+Tests: 484 for tokens (the generator, contrast, ramps, the token mapping's rules), 785 for the components (Jest and Testing Library). Run them with `pnpm install && pnpm test`; `pnpm check:types` type-checks both packages, and `pnpm build` builds `smoke/`, a small Vite app that imports every export through Tailwind 4, as a consumer would. CI runs all three on every push to main and every pull request.
 
 ## Using it
 
