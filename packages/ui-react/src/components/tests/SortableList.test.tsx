@@ -76,9 +76,11 @@ describe('SortableList on a touch screen', () => {
   });
   afterEach(() => { window.matchMedia = realMatchMedia; });
   const pt = (x: number, y: number) => [{ identifier: 3, clientX: x, clientY: y }];
-  const down = (el: Element) => act(() => { fireEvent.touchStart(el, { touches: pt(10, 10), changedTouches: pt(10, 10) }); });
+  // a touch's events go to the element it began on, even after that element has left the page
+  let touched: Element;
+  const down = (el: Element) => { touched = el; act(() => { fireEvent.touchStart(el, { touches: pt(10, 10), changedTouches: pt(10, 10) }); }); };
   /** true when the move was left to the browser (not prevented) */
-  const moveTo = (x: number, y: number) => { let free = true; act(() => { free = fireEvent.touchMove(window, { touches: pt(x, y), changedTouches: pt(x, y) }); }); return free; };
+  const moveTo = (x: number, y: number) => { let free = true; act(() => { free = fireEvent.touchMove(touched, { touches: pt(x, y), changedTouches: pt(x, y) }); }); return free; };
   let dragging: boolean[] = [];
   const lifted = () => dragging[dragging.length - 1] === true;
   beforeEach(() => { dragging = []; });
@@ -104,8 +106,22 @@ describe('SortableList on a touch screen', () => {
     act(() => { jest.advanceTimersByTime(260); });
     expect(lifted()).toBe(true);
     expect(moveTo(40, 80)).toBe(false); // the drag's own
-    act(() => { fireEvent.touchCancel(window, { changedTouches: pt(40, 80) }); });
+    act(() => { fireEvent.touchCancel(touched, { changedTouches: pt(40, 80) }); });
     expect(lifted()).toBe(false);
+    jest.useRealTimers();
+  });
+
+  it('moves still drive the drag after the touched card has left the page, and lifting the finger drops it', () => {
+    jest.useFakeTimers();
+    board();
+    down(screen.getByText('Alpha'));
+    act(() => { jest.advanceTimersByTime(260); });
+    expect(lifted()).toBe(true);
+    expect(touched.isConnected).toBe(false); // the lifted card is drawn in a portal; the original is gone
+    expect(moveTo(40, 80)).toBe(false);
+    act(() => { fireEvent.touchEnd(touched, { changedTouches: pt(40, 80) }); });
+    act(() => { jest.runOnlyPendingTimers(); });
+    expect(document.body.style.userSelect).toBe('');
     jest.useRealTimers();
   });
 
@@ -124,7 +140,7 @@ describe('SortableList on a touch screen', () => {
     const { container } = board();
     down(container.querySelector('[data-sortable-handle]')!);
     expect(lifted()).toBe(true);
-    act(() => { fireEvent.touchCancel(window, { changedTouches: pt(10, 10) }); });
+    act(() => { fireEvent.touchCancel(touched, { changedTouches: pt(10, 10) }); });
     expect(lifted()).toBe(false);
   });
 
@@ -140,10 +156,11 @@ describe('SortableList on a touch screen', () => {
     const scrollBy = jest.spyOn(window, 'scrollBy').mockImplementation(() => {});
     const { container } = board();
     const at = (y: number) => [{ identifier: 3, clientX: 10, clientY: y }];
-    act(() => { fireEvent.touchStart(container.querySelector('[data-sortable-handle]')!, { touches: at(window.innerHeight - 5), changedTouches: at(window.innerHeight - 5) }); });
+    touched = container.querySelector('[data-sortable-handle]')!;
+    act(() => { fireEvent.touchStart(touched, { touches: at(window.innerHeight - 5), changedTouches: at(window.innerHeight - 5) }); });
     act(() => { jest.advanceTimersByTime(100); });
     expect(scrollBy.mock.calls.some(([, y]) => (y as number) > 0)).toBe(true);
-    act(() => { fireEvent.touchCancel(window, { changedTouches: at(window.innerHeight - 5) }); });
+    act(() => { fireEvent.touchCancel(touched, { changedTouches: at(window.innerHeight - 5) }); });
     expect(lifted()).toBe(false);
     scrollBy.mockRestore();
     jest.useRealTimers();
