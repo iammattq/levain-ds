@@ -1,6 +1,6 @@
 {
   "name": "levain-ds",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@10.27.0",
@@ -8,7 +8,7 @@
   "scripts": {
     "test": "pnpm --filter './packages/*' test",
     "check:types": "tsc --noEmit -p packages/tokens && tsc --noEmit -p packages/ui-react",
-    "build": "pnpm --filter @levain/smoke build"
+    "build": "pnpm --filter @levain/smoke --filter @levain/demo build"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

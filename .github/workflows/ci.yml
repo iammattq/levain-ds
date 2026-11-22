@@ -33,5 +33,5 @@ jobs:
       - name: Tests (both packages)
         run: pnpm test
 
-      - name: "Build (smoke/: every export, through Vite and Tailwind 4, as a consumer builds it)"
+      - name: "Build (smoke/ imports every export through Vite and Tailwind 4, as a consumer builds it; and demo/)"
         run: pnpm build

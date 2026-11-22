@@ -5,7 +5,7 @@
   "description": "levain DS's motion, density and drag, on one page: pnpm --filter @levain/demo dev",
   "scripts": {
     "dev": "vite",
-    "build": "vite build --base ./"
+    "build": "tsc --noEmit -p . && vite build --base ./"
   },
   "dependencies": {
     "@fontsource/open-sans": "^5.2.6",
