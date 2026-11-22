@@ -22,6 +22,8 @@ export interface TextInputProps extends Omit<
   id: string;
   /** Text label for the input field */
   label: string;
+  /** Hides the label visually; screen readers still read it. For a field whose purpose the layout already shows. */
+  hideLabel?: boolean;
   /** Current value of the input */
   value: string;
   /** Function called when the input value changes */
@@ -59,6 +61,7 @@ const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
     {
       id,
       label,
+      hideLabel = false,
       type = 'text',
       value,
       onChange,
@@ -143,7 +146,7 @@ const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
       <div className={`${className}`}>
         <label
           htmlFor={id}
-          className={`${config.labelClass} mb-1 block ${disabled ? 'text-[var(--color-text-disabled)]' : 'text-[var(--color-text-default)]'}`}
+          className={`${hideLabel ? 'sr-only' : `${config.labelClass} mb-1 block`} ${disabled ? 'text-[var(--color-text-disabled)]' : 'text-[var(--color-text-default)]'}`}
         >
           {label}{' '}
           {required && <span className="text-[var(--color-error)]">*</span>}

@@ -48,6 +48,13 @@
       "configurable": true
     },
     {
+      "name": "hideLabel",
+      "type": "boolean",
+      "required": false,
+      "defaultValue": "false",
+      "description": "Hides the label visually; screen readers still read it as the field's name. For a field whose purpose the layout already shows."
+    },
+    {
       "name": "value",
       "type": "string",
       "optional": false,

@@ -31,4 +31,10 @@ describe('StatusCard', () => {
     expect(screen.getAllByText('Strip or arc')).toHaveLength(1);
     fireEvent.keyDown(window, { key: 'Escape' });
   });
+
+  it('the dialog floats on the elevated surface, a step above the cards it grows out of', () => {
+    render(<Card />);
+    fireEvent.click(screen.getByRole('button'));
+    expect(screen.getByRole('dialog').className).toContain('bg-[var(--color-surface-elevated)]');
+  });
 });

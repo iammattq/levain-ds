@@ -59,7 +59,6 @@ interface GroupContext {
   reduce: boolean;
 }
 const Group = createContext<GroupContext | null>(null);
-const DRAG_LIFT = DRAG.liftScale;
 
 export interface SortableGroupProps {
   /** Called once, when an item is dropped somewhere new. */
@@ -307,7 +306,7 @@ export function SortableList<T>({ id, label, items, getKey, renderItem, empty, c
             ref={(el: HTMLDivElement | null) => { if (el) itemEls.current.set(r.key, el); else itemEls.current.delete(r.key); }}
             onKeyDown={e => g.keyboard(e, id, r.key, null)}
             className="rounded-[var(--radius-lg)] outline-none ring-2 ring-[var(--color-border-focus)]"
-            animate={g.reduce ? { scale: 1 } : { scale: DRAG_LIFT, boxShadow: 'var(--elevation-3)' }}
+            animate={g.reduce ? { scale: 1 } : { scale: DRAG.liftScale, boxShadow: 'var(--elevation-3)' }}
           >
             {d!.node}
           </motion.div>
