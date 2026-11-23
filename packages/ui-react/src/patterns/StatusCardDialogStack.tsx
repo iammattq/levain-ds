@@ -38,6 +38,13 @@ export interface StatusCardDialogStackProps {
  */
 export const PILE = { y: 10, scale: 0.05, depth: 3, origin: '50% 100%' } as const;
 /**
+ * PILE.origin as framer's own origin values (0 to 1). Framer's layout projection writes transform-origin itself from
+ * originX/originY, centre by default, so a CSS transformOrigin is lost once a panel has had a layout animation (a
+ * morph, a step forward and back, a resize) and the step lands behind the front (T23). Given as motion style values,
+ * the origin survives projection.
+ */
+export const PILE_ORIGIN = { originX: 0.5, originY: 1 } as const;
+/**
  * A panel behind the front, in light mode, keeps the board's hairline (its light cards' `--rm-edge`: an inset 1 px of
  * --color-border-subtle) under the elevation shadow: white on near-white, the shadow alone barely shows the step. Dark,
  * as on the board, the shadow alone. The front keeps StatusCardDialog's surface exactly.
@@ -157,7 +164,7 @@ const Panel = forwardRef<HTMLDivElement, PanelProps>(function Panel({ dialog, de
       variants={{ leave: (closing: boolean) => (closing ? {} : front ? away(reduce) : { opacity: 0, transition: recipe.contentOut }) }}
       exit="leave"
       transition={motionFor('morph', reduce)}
-      style={{ borderRadius: radius, transformOrigin: PILE.origin, zIndex: count - depth }}
+      style={{ borderRadius: radius, ...PILE_ORIGIN, zIndex: count - depth }}
       role={front ? 'dialog' : undefined}
       aria-modal={front ? 'true' : undefined}
       aria-hidden={front ? undefined : true}
