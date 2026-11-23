@@ -69,7 +69,7 @@ export default function NavigationLinks({
   const submenuRef = useRef<HTMLDivElement>(null);
   const linkRefs = useRef<Map<string, HTMLElement>>(new Map());
   const themeToggleRef = useRef<HTMLButtonElement>(null);
-  const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const [isHoverDevice, setIsHoverDevice] = useState(false);
   const themeColorButtonRef = useRef<HTMLButtonElement>(null);
 
