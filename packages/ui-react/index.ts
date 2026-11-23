@@ -238,3 +238,5 @@ export { SortableGroup, SortableList } from './src/components/SortableList';
 export type { SortableGroupProps, SortableListProps, SortableMove } from './src/components/SortableList';
 export { StatusCard, StatusCardDialog, StatusMarkers, morphId } from './src/patterns/StatusCard';
 export type { StatusCardProps, StatusCardDialogProps, StatusMarker, StatusTone } from './src/patterns/StatusCard';
+export { StatusCardDialogStack } from './src/patterns/StatusCardDialogStack';
+export type { StatusCardDialogStackProps, StatusCardStackDialog } from './src/patterns/StatusCardDialogStack';

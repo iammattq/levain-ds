@@ -1,11 +1,11 @@
 // levain DS's motion, density and drag, on one page. Every timing here comes from @levain/tokens.
-// ?density=condensed starts condensed; ?mode=light starts light.
+// ?density=condensed starts condensed; ?mode=light starts light; ?theme=7 starts on Cobalt Mono.
 import '@fontsource/open-sans/400.css';
 import '@fontsource/open-sans/600.css';
 import '@fontsource/oswald/400.css';
 import './styles.css';
 import { initTheme, motion as motionFor, recipe, setTheme, stagger, themeManager } from '@levain/tokens';
-import { LevainProvider, SegmentedControl, SortableGroup, SortableList, StatusCard, StatusCardDialog, type SortableMove, type StatusMarker } from '@levain/ui-react';
+import { Button, LevainProvider, SegmentedControl, SortableGroup, SortableList, StatusCard, StatusCardDialog, StatusCardDialogStack, type SortableMove, type StatusMarker } from '@levain/ui-react';
 import { AnimatePresence, LayoutGroup, motion, useReducedMotion } from 'framer-motion';
 import { Clock, Image as ImageIcon, Link2, Menu as MenuIcon, Plus, User, X } from 'lucide-react';
 import { StrictMode, useState } from 'react';
@@ -72,6 +72,36 @@ function DragDemo() {
       <StatusCardDialog id={open?.id ?? ''} open={!!open} onClose={() => setOpen(null)} number={open?.id} title={open?.title ?? ''} markers={open ? markers(open) : []}>
         <p className="type-body text-[var(--color-text-muted)]">The card grew into this dialog: one element, its corners and size moving on the spring, its content fading in once there was room. Close it and it collapses back into its place.</p>
       </StatusCardDialog>
+    </Section>
+  );
+}
+
+/** Two dialogs as a pile (StatusCardDialogStack): a look in front of the decide it's for. Next sends the look away and
+ *  brings the decide forward; Back brings the look back from away. */
+function StackDemo() {
+  const [open, setOpen] = useState(false);
+  const [step, setStep] = useState(0);
+  const look = { id: 'L8', number: 'L8 · 1 of 2', kind: { label: 'Look', tone: 'accent' as const }, title: 'The strip, second pass', markers: [{ icon: User, label: 'Matt' }, { icon: ImageIcon, label: '2', title: '2 images' }],
+    children: (
+      <div className="space-y-sm" data-demo="stack-look">
+        <div className="aspect-[16/7] rounded-[var(--radius-lg)] bg-[var(--color-surface-section)]" />
+        <p className="type-body-sm text-[var(--color-text-muted)]">The look comes first; the decision it's for waits behind it, one step back, as the board's pile does.</p>
+        <div><Button size="sm" variant="primary" data-demo="stack-next" onClick={() => setStep(1)}>Next</Button></div>
+      </div>
+    ) };
+  const decide = { id: 'D14', number: 'D14 · 2 of 2', kind: { label: 'Decide' }, title: 'Strip or arc for the progress mark', markers: [{ icon: Clock, label: '2h', title: 'waiting 2 hours' }],
+    children: (
+      <div className="space-y-sm" data-demo="stack-decide">
+        <p className="type-body-sm text-[var(--color-text-muted)]">The look went away; this one came forward on recipe.morph. Under Reduce Motion both are cross-fades.</p>
+        <div className="flex gap-xs"><Button size="sm" variant="ghost" data-demo="stack-back" onClick={() => setStep(0)}>Back</Button><Button size="sm" variant="primary" onClick={() => setOpen(false)}>Send</Button></div>
+      </div>
+    ) };
+  return (
+    <Section title="A dialog stack: a look over its decide" note="Open the card: the look grows out of it with the decide behind, 10 px lower and 5 % smaller. Next, Back; Escape or a click outside closes the front only.">
+      <div className="max-w-sm">
+        <StatusCard id="L8" number="L8" kind={{ label: 'Look', tone: 'accent' }} title="The strip, second pass" markers={look.markers} open={open} onOpen={() => { setStep(0); setOpen(true); }} />
+      </div>
+      <StatusCardDialogStack dialogs={open ? [look, decide].slice(step) : []} onClose={() => setOpen(false)} />
     </Section>
   );
 }
@@ -210,6 +240,7 @@ function App() {
         <SegmentedControl id="density" size="sm" value={density} onChange={setDensity} options={[{ label: 'Comfortable', value: 'comfortable' }, { label: 'Condensed', value: 'condensed' }]} />
       </header>
       <DragDemo />
+      <StackDemo />
       <div className="grid grid-cols-1 gap-xl md:grid-cols-2">
         <MenuDemo />
         <WindowDemo />
@@ -222,5 +253,6 @@ function App() {
 
 const asked = new URLSearchParams(location.search).get('mode');
 if (asked === 'light' || asked === 'dark') setTheme(asked); else initTheme();
-void themeManager.applyTheme(0);
+// ?theme=<n> starts on that built-in theme (7: Cobalt Mono)
+void themeManager.applyTheme(Number(new URLSearchParams(location.search).get('theme') ?? 0) || 0);
 createRoot(document.getElementById('root')!).render(<StrictMode><LevainProvider><App /></LevainProvider></StrictMode>);
