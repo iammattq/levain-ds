@@ -94,8 +94,9 @@ export function StatusCardDialogStack({ dialogs, onClose, cardId }: StatusCardDi
   const [wasOpen, setWasOpen] = useState(open);
   // With a cardId: the dialog whose surface holds the card's layoutId. The front when the stack opens (set in this
   // render, so its surface mounts with it); later always the front, handed over in two steps (below).
-  const [holder, setHolder] = useState<string | undefined>(open ? frontId : undefined);
-  if (open !== wasOpen) { setWasOpen(open); if (!open) setLeaving(true); else setHolder(frontId); }
+  // Without a cardId none of this runs: a state change in the stack while the last one leaves changes when it goes.
+  const [holder, setHolder] = useState<string | undefined>(open && cardId !== undefined ? frontId : undefined);
+  if (open !== wasOpen) { setWasOpen(open); if (!open) setLeaving(true); else if (cardId !== undefined) setHolder(frontId); }
   const holderPresent = holder !== undefined && dialogs.some(d => d.id === holder);
   // The handover, one layer holding the layoutId at a time, so framer never morphs one surface from another: a holder
   // still in the stack (now behind) gives the layoutId up, and the front takes it in the next commit; a holder that
@@ -146,7 +147,7 @@ export function StatusCardDialogStack({ dialogs, onClose, cardId }: StatusCardDi
       {/* One grid cell holds every panel, and the cell isn't positioned: a front leaving is popped out of flow against the
           overlay, which doesn't move, so it lifts from where it was while the cell shrinks and re-centres on the next */}
       <div className="grid w-full" style={{ maxWidth: width, marginBottom: behind * PILE.y }}>
-        <AnimatePresence mode="popLayout" custom={!open} onExitComplete={() => { setLeaving(false); if (open && !holderPresent) setHolder(undefined); }}>
+        <AnimatePresence mode="popLayout" custom={!open} onExitComplete={() => { setLeaving(false); if (cardId !== undefined && open && !holderPresent) setHolder(undefined); }}>
           {dialogs.map((dialog, d) => (
             <Panel key={dialog.id} dialog={dialog} depth={d} count={dialogs.length} arriving={settled.current} reduce={reduce} onClose={closeFront}
               cardId={cardId} holds={cardId !== undefined && holder === dialog.id}
