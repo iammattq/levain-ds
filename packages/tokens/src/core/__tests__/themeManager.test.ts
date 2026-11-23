@@ -9,6 +9,8 @@ import { GeneratedThemeMode, ThemeInputV2 } from '../../generator/types';
 // Mock the themeMode module
 jest.mock('../themeMode', () => ({
   isDarkMode: jest.fn(() => false),
+  getTheme: jest.fn(() => 'light'),
+  applyModeClass: jest.fn(),
 }));
 
 // Mock the V2 generator
