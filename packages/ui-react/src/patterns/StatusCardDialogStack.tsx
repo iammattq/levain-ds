@@ -90,7 +90,7 @@ export function StatusCardDialogStack({ dialogs, onClose }: StatusCardDialogStac
 
   if (typeof document === 'undefined' || (!open && !leaving)) return null;
   const width = dialogs[0]?.width ?? '40rem';
-  const behind = Math.min(dialogs.length - 1, PILE.depth);
+  const behind = Math.max(0, Math.min(dialogs.length - 1, PILE.depth));
   return createPortal(
     // No dimmed page: the front grows out of its card, and a click outside it closes it. While the last one leaves,
     // the overlay lets clicks through.
@@ -100,7 +100,7 @@ export function StatusCardDialogStack({ dialogs, onClose }: StatusCardDialogStac
       data-dialog-stack
     >
       <div className="relative w-full" style={{ maxWidth: width, marginBottom: behind * PILE.y }}>
-        <AnimatePresence mode="popLayout" custom={!open} onExitComplete={() => { if (!open) setLeaving(false); }}>
+        <AnimatePresence mode="popLayout" custom={!open} onExitComplete={() => setLeaving(false)}>
           {dialogs.map((dialog, d) => (
             <Panel key={dialog.id} dialog={dialog} depth={d} count={dialogs.length} arriving={settled.current} reduce={reduce} onClose={closeFront}
               panelRef={el => { if (el) panels.current.set(dialog.id, el); else panels.current.delete(dialog.id); }} />
@@ -122,11 +122,11 @@ function Panel({ dialog, depth, count, arriving, reduce, onClose, panelRef }: {
   // how it first appears: the front of a stack just opened grows out of its card (its layoutId, no initial pose); one
   // put in front of an open stack comes back from away; one put behind fades in at its place in the pile
   const [initial] = useState(() => (!arriving && front ? false : front ? { y: reduce ? 0 : -AWAY_LIFT, opacity: 0 } : { ...pose(depth), opacity: 0 }));
-  const ref = (el: HTMLDivElement | null) => {
-    panelRef(el);
-    // behind: inert, so nothing in it takes focus or a click (set here: React 18 has no boolean `inert` prop)
-    el?.toggleAttribute('inert', !front);
-  };
+  const el = useRef<HTMLDivElement | null>(null);
+  const ref = (node: HTMLDivElement | null) => { el.current = node; panelRef(node); };
+  // behind: inert, so nothing in it takes focus or a click (set on the node: React 18 has no boolean `inert` prop).
+  // A layout effect, so it's lifted before the stack's effect focuses a new front.
+  useLayoutEffect(() => { el.current?.toggleAttribute('inert', !front); }, [front]);
   return (
     <motion.div
       ref={ref}
