@@ -51,7 +51,8 @@ export function ProgressBar({
         />
       </span>
       {valueLabel != null && (
-        <span data-part="value" aria-hidden className={cn('flex-none tabular-nums', s.text)}>
+        // type-caption brings its own colour: the value text keeps the tone's (inline, as .type-* sit outside the layers)
+        <span data-part="value" aria-hidden className={cn('flex-none tabular-nums', s.text)} style={{ color: 'currentColor' }}>
           {valueLabel}
         </span>
       )}

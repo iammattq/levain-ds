@@ -69,6 +69,8 @@ describe('ProgressBar', () => {
     const { container } = render(<ProgressBar value={50} tone={tone} valueLabel="50%" />);
     expect(container.firstChild).toHaveClass(cls);
     expect(part(container, 'fill')).toHaveClass('bg-current');
+    // in the tone, not the type style's own colour (type-caption sets one)
+    expect(part(container, 'value')!.style.color).toMatch(/^currentcolor$/i);
     expect(part(container, 'track')).toHaveClass('bg-[var(--color-border-default)]');
   });
 
