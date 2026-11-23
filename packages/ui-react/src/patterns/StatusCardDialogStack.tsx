@@ -66,7 +66,8 @@ const BEHIND_PANEL = DIALOG_PANEL.replace('shadow-[var(--elevation-3)]', BEHIND_
  * CONTENT_AFTER_SURFACE the content fades in once the surface is full size (CONTENT_DELAY) and leaves at once on the last close;
  * false keeps the single dialog's timing (content in 90 ms into the morph, out over the collapse).
  */
-export const CONTENT_AFTER_SURFACE = true;
+// Q28 (the designer, 2026-11-23): today's timing, the words fading in while the box grows, as the single dialog does.
+export const CONTENT_AFTER_SURFACE = false;
 /**
  * With CONTENT_AFTER_SURFACE, when the content starts: so it is fully in as the morph ends. The morph's spring ease has
  * the surface at full size (overshooting) by then, so the fading content never sits outside it; waiting for the whole

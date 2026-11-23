@@ -4,7 +4,7 @@ import '@testing-library/jest-dom';
 import { useReducedMotion } from 'framer-motion';
 import { duration, recipe } from '@levain/tokens';
 import { DIALOG_PANEL } from '../StatusCard';
-import { AWAY_LIFT, away, BEHIND_EDGE, CONTENT_DELAY, PILE, PILE_ORIGIN, pose, StatusCardDialogStack, type StatusCardStackDialog } from '../StatusCardDialogStack';
+import { AWAY_LIFT, away, BEHIND_EDGE, CONTENT_AFTER_SURFACE, CONTENT_DELAY, PILE, PILE_ORIGIN, pose, StatusCardDialogStack, type StatusCardStackDialog } from '../StatusCardDialogStack';
 
 jest.mock('framer-motion', () => ({ ...jest.requireActual('framer-motion'), useReducedMotion: jest.fn(() => false) }));
 const reduced = useReducedMotion as jest.Mock;
@@ -196,7 +196,11 @@ describe('StatusCardDialogStack', () => {
     });
     afterEach(() => watch.disconnect());
 
-    it('the content, waiting for the surface, is fully in as the morph ends', () => {
+    it("keeps today's content timing, as the single dialog (Q28): the words fade in while the box grows", () => {
+      expect(CONTENT_AFTER_SURFACE).toBe(false);
+    });
+
+    it('with CONTENT_AFTER_SURFACE on, the content waiting for the surface would be fully in as the morph ends', () => {
       // starting at the end of the morph put the words in at ~690 ms, against ~310 ms for a single dialog
       expect(CONTENT_DELAY * 1000 + duration.contentIn).toBe(duration.morph);
       expect(CONTENT_DELAY).toBeGreaterThan(0);
