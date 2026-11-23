@@ -15,7 +15,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { duration, motion as motionFor } from '@levain/tokens';
 import type { LucideIcon } from 'lucide-react';
 import { X } from 'lucide-react';
-import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode, type SyntheticEvent } from 'react';
 import { createPortal } from 'react-dom';
 
 export type StatusTone = 'default' | 'accent' | 'info' | 'caution' | 'success' | 'error' | 'muted';
@@ -44,8 +44,14 @@ export interface StatusCardProps {
   /** True while its dialog is open: the card's place is held, and the card itself is in the dialog. */
   open?: boolean;
   onOpen?: () => void;
-  /** Actions or extra content under the markers. */
+  /** Extra content under the markers, inside the card's open target (a press on it opens the card). */
   children?: ReactNode;
+  /**
+   * Buttons on the card's face (a decision's answers), in a row under the markers and `children`, outside the open
+   * target: a press, a key or a pointerdown in the row never opens the card nor starts a drag from a SortableGroup.
+   * The consumer passes its own Buttons; the row only places them. Gone while open, with the rest of the card.
+   */
+  actions?: ReactNode;
   className?: string;
 }
 
@@ -81,6 +87,11 @@ export function useRadius(token = '--radius-lg') {
 
 export const morphId = (id: string) => 'status-card-' + id;
 
+const stop = (e: SyntheticEvent) => e.stopPropagation();
+/** Only the keys the open target and SortableGroup act on (Enter, Space): every other key, Escape included, still
+ *  reaches the page's own shortcuts. */
+const stopPress = (e: ReactKeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') e.stopPropagation(); };
+
 export function StatusMarkers({ markers }: { markers: StatusMarker[] }) {
   return (
     <ul className="type-caption flex flex-wrap items-center gap-x-xs gap-y-3xs">
@@ -110,7 +121,7 @@ export function Face({ number, kind, title, markers }: Pick<StatusCardProps, 'nu
   );
 }
 
-export function StatusCard({ id, number, kind, title, markers, accent, open = false, onOpen, children, className = '' }: StatusCardProps) {
+export function StatusCard({ id, number, kind, title, markers, accent, open = false, onOpen, children, actions, className = '' }: StatusCardProps) {
   const reduce = useReducedMotion();
   const radius = useRadius();
   const slot = useRef<HTMLDivElement>(null);
@@ -135,6 +146,14 @@ export function StatusCard({ id, number, kind, title, markers, accent, open = fa
         <Face number={number} kind={kind} title={title} markers={markers} />
         {children}
       </div>
+      {actions != null && actions !== false && (
+        // the row's own presses: never the card's open, never a drag's start (SortableGroup listens on the item for
+        // pointerdown, touchstart and Space), never a click on a consumer's wrapper; other keys pass
+        <div data-status-card-actions onClick={stop} onKeyDown={stopPress} onPointerDown={stop} onTouchStart={stop}
+          className="flex flex-wrap items-center gap-2xs px-xs pb-2xs">
+          {actions}
+        </div>
+      )}
     </motion.div>
   );
 }

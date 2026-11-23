@@ -16,7 +16,6 @@ The first consumer outside the portfolio was a web board for running a team of c
 
 - **Card stack.** Loose notes shown as a horizontal row whose trailing cards pile into a stack, peeled off right to left as you scroll (desktop), and as a pile that fans open into the full list or steps one card at a time (phone). Prototyped in the consumer.
 - **StatusCard's kind label is forced to capitals.** The face sets `uppercase tracking-wide` on the kind ("QUEUED", "ALARM"), on the card and in `StatusCardDialog`, with no way to turn it off; the Ringmaster board's type rules say no all caps. Wants the casing left to the label (or a prop). The board lives with it for now.
-- **Actions slot on StatusCard.** A decision card with its answer buttons on the face (the recommended one filled); today the buttons are passed as children.
 - **Popover / Menu.** A small anchored panel that opens from a button (the board's project switcher, and again for another panel). Built by hand in the consumer, twice.
 - **StatusCardDialog cuts off tall dialogs.** No max-height or scrolling, so a long dialog runs off the screen.
 - **Drag overlay width misses the grip.** The overlay is sized without the grip, so the card jumps in width when picked up.
@@ -39,6 +38,7 @@ The first consumer outside the portfolio was a web board for running a team of c
 - **No caution (amber) status hue.** The consumer hand-picks its own amber (light #975d04), which misses 4.5:1 on darker light surfaces (4.25:1 on #e4e4e4); it falls back to the text colour for words there and keeps amber only for small pips.
 
 ## Closed
+- **Actions slot on StatusCard.** A decision card with its answer buttons on the face (the recommended one filled); the buttons went in as children, inside the card's open target, so each needed a hand-wired stopPropagation on click and pointerdown. Closed by StatusCard's `actions` (T17): a row under the markers and children, outside the open target, where a click, a key or a pointerdown never opens the card nor starts a SortableGroup drag; the buttons stay in the Tab order.
 - **Dark mode needs a set-up order.** Dark mode is a class on `<html>`, and a non-Next app had to call `initTheme()` before `themeManager.applyTheme()`, or cards kept their light styling. Closed in v0.3.3: `applyTheme` puts `<html>` in the mode it writes (one helper shared with `setTheme`), so one call is enough and the order doesn't matter.
 - **Progress ring and progress bar / meter.** Closed by `ProgressRing` and `ProgressBar` (T18): xs to lg, default/caution/danger on the existing action tokens, `role="meter"`. xs matches the board's hand-drawn ring and bar.
 - **Text on accent per mode.** A theme chose its text-on-accent colour once for both modes, so a lighter dark-mode accent got unreadable white text. Closed in v0.3.0 by the theme field `textOn` (text on primary and accent fills, per mode), with contrast tests for both modes.
