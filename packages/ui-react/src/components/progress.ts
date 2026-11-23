@@ -19,15 +19,24 @@ export interface ProgressProps {
   className?: string;
 }
 
-/** The -fg action tokens: they flip per mode, so they read on both light and dark surfaces. */
-export const toneColor: Record<ProgressTone, string> = {
-  default: 'var(--color-text-muted)',
-  caution: 'var(--color-caution-fg)',
-  danger: 'var(--color-error-fg)',
+/**
+ * Each tone's colour token (the fill and the bar's value text). The -fg action tokens flip per mode, so they read on
+ * both light and dark surfaces.
+ */
+export const toneToken: Record<ProgressTone, string> = {
+  default: 'text-muted',
+  caution: 'caution-fg',
+  danger: 'error-fg',
+};
+/** The same, as the text colour the fill draws in (currentColor). Literal so Tailwind sees each class. */
+export const toneClass: Record<ProgressTone, string> = {
+  default: 'text-[var(--color-text-muted)]',
+  caution: 'text-[var(--color-caution-fg)]',
+  danger: 'text-[var(--color-error-fg)]',
 };
 
 /** The track: faint, the same in every tone. */
-export const trackColor = 'var(--color-border-default)';
+export const trackToken = 'border-default';
 
 /** value clamped to 0..max (max below 0 counts as 0; NaN as 0) and the filled fraction as a percentage. */
 export function progress(value: number, max = 100) {
