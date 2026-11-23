@@ -1,0 +1,7 @@
+{
+  "//": "Typechecks ui-react as a browser app sees it: no ambient @types (no Node, no Jest). Keeps NodeJS.* and process out of the shipped source.",
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": []
+  }
+}

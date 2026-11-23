@@ -362,7 +362,7 @@ const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
       };
 
       // Use setTimeout to allow portal to render before attaching listener
-      let timeoutId: NodeJS.Timeout | null = null;
+      let timeoutId: ReturnType<typeof setTimeout> | null = null;
       if (showCalendar) {
         timeoutId = setTimeout(() => {
           document.addEventListener('mousedown', handleClickOutside);
