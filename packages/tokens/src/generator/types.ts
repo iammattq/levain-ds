@@ -245,13 +245,13 @@ export interface ThemeInputV2 {
   /** Action color generation parameters */
   actionColors?: {
     /** Success color parameters (default hue: 145) */
-    success?: { hue?: number; hueAdjust?: number };
+    success?: ActionStatusInput;
     /** Error color parameters (default hue: 25) */
-    error?: { hue?: number; hueAdjust?: number };
+    error?: ActionStatusInput;
     /** Caution color parameters (default hue: 45) */
-    caution?: { hue?: number; hueAdjust?: number };
+    caution?: ActionStatusInput;
     /** Info color parameters (default hue: 220) */
-    info?: { hue?: number; hueAdjust?: number };
+    info?: ActionStatusInput;
     /** Chroma for all action colors (0-0.25, default 0.15) */
     chroma?: number;
     /** Base lightness for action colors (30-70, default 50) */
@@ -388,6 +388,20 @@ export interface RampParams {
 }
 
 /**
+ * One status colour's input (success, error, caution or info).
+ */
+export interface ActionStatusInput {
+  hue?: number;
+  hueAdjust?: number;
+  /**
+   * This status's own lightness offset for its light-mode -fg (-30 to 0): light fg sits at baseLightness plus it.
+   * Left out, the status uses the shared fgLightnessOffset. For a hue that clips out of sRGB at the shared lightness
+   * (an amber at L37 turns brown), so it can sit lighter while keeping its contrast. Dark mode is unaffected.
+   */
+  lightFgLightnessOffset?: number;
+}
+
+/**
  * Parameters for action color generation
  */
 export interface ActionColorParams {
@@ -403,6 +417,8 @@ export interface ActionColorParams {
   fgLightnessOffset: number;
   /** Lightness offset for the foreground variant in dark mode (defaults to fgLightnessOffset) */
   darkFgLightnessOffset?: number;
+  /** This status's own lightness offset for the light-mode foreground (defaults to fgLightnessOffset) */
+  lightFgLightnessOffset?: number;
   /** Lightness offset for background variant */
   bgLightnessOffset: number;
 }

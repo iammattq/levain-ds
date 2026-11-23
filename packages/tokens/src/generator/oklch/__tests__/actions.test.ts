@@ -27,6 +27,13 @@ describe('generateActionColor', () => {
       bgLightnessOffset: 40,
     };
 
+    it('takes lightFgLightnessOffset for the light fg when given', () => {
+      generateActionColor({ ...baseParams, lightFgLightnessOffset: -2 }, 'light');
+
+      // 50 + (-2) = 48, not 50 + (-15)
+      expect(oklchToHex).toHaveBeenNthCalledWith(2, { l: 48, c: 0.15, h: 145 });
+    });
+
     it('generates base color with baseLightness', () => {
       generateActionColor(baseParams, 'light');
 
@@ -142,6 +149,12 @@ describe('generateActionColor', () => {
 
       // 50 - (-22) = 72
       expect(oklchToHex).toHaveBeenNthCalledWith(2, { l: 72, c: 0.15, h: 145 });
+    });
+
+    it('leaves the dark fg alone when lightFgLightnessOffset is given', () => {
+      generateActionColor({ ...baseParams, lightFgLightnessOffset: -2 }, 'dark');
+
+      expect(oklchToHex).toHaveBeenNthCalledWith(2, { l: 65, c: 0.15, h: 145 });
     });
 
     it('leaves the light fg on fgLightnessOffset when darkFgLightnessOffset is given', () => {
