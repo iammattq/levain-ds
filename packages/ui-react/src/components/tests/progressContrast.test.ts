@@ -3,8 +3,7 @@
  */
 // T18: each progress tone read against its track and the surfaces it sits on, in the default theme (Sage) and Cobalt
 // Mono, light and dark. The fill is non-text (WCAG 1.4.11: 3:1 against the track); the bar's value text is text (4.5:1
-// on every surface). The misses are a theme gap (the caution/error -fg tokens in dark), recorded here, not retuned: a
-// new miss fails, and so does a fixed one, so the list stays true.
+// on every surface). Cobalt Mono dark missed both until T20 raised its -fg tokens.
 import { baseThemesV2, themeGeneratorV2 } from '@levain/tokens';
 import { toneToken, trackToken, type ProgressTone } from '../progress';
 
@@ -44,20 +43,8 @@ describe('progress tone contrast (T18)', () => {
     expect(rows).toHaveLength(THEMES.length * 2 * TONES.length * (SURFACES.length + 1));
   });
 
-  it('misses only the known theme gap: Cobalt Mono dark caution and danger (fill on track; text on the raised surfaces)', () => {
-    const misses = rows.filter((r) => r.ratio < r.need).map((r) => `${key(r)} ${r.ratio.toFixed(2)}`);
-    expect(misses).toEqual([
-      'Cobalt Mono dark caution on track 2.88',
-      'Cobalt Mono dark caution on surface-elevated 4.04',
-      'Cobalt Mono dark danger on track 2.85',
-      'Cobalt Mono dark danger on surface-component 4.48',
-      'Cobalt Mono dark danger on surface-interactive 4.48',
-      'Cobalt Mono dark danger on surface-elevated 4.00',
-    ]);
-  });
-
-  it('the default tone passes everywhere', () => {
-    expect(rows.filter((r) => r.tone === 'default' && r.ratio < r.need).map(key)).toEqual([]);
+  it('every tone passes on the track (3:1) and on every surface (4.5:1)', () => {
+    expect(rows.filter((r) => r.ratio < r.need).map((r) => `${key(r)} ${r.ratio.toFixed(2)}`)).toEqual([]);
   });
 
   // The full table, for the report: `PRINT_CONTRAST=1 jest progressContrast`.
