@@ -37,6 +37,14 @@ export interface StatusCardDialogStackProps {
  * showing below the front at any height.
  */
 export const PILE = { y: 10, scale: 0.05, depth: 3, origin: '50% 100%' } as const;
+/**
+ * A panel behind the front, in light mode, keeps the board's hairline (its light cards' `--rm-edge`: an inset 1 px of
+ * --color-border-subtle) under the elevation shadow: white on near-white, the shadow alone barely shows the step. Dark,
+ * as on the board, the shadow alone. The front keeps StatusCardDialog's surface exactly.
+ */
+export const BEHIND_EDGE = 'shadow-[inset_0_0_0_1px_var(--color-border-subtle),var(--elevation-3)] dark:shadow-[var(--elevation-3)]';
+const BEHIND_PANEL = DIALOG_PANEL.replace('shadow-[var(--elevation-3)]', BEHIND_EDGE);
+
 /** How far a dialog going away lifts as it fades, in px. */
 export const AWAY_LIFT = 24;
 
@@ -159,7 +167,7 @@ const Panel = forwardRef<HTMLDivElement, PanelProps>(function Panel({ dialog, de
       onClick={front ? (e: MouseEvent) => e.stopPropagation() : undefined}
       // the front sizes the cell; the ones behind fill it without sizing it (contain: size), so they take the front's box,
       // their words hidden, as the board's pile does
-      className={'[grid-area:1/1] ' + (front ? '' : '[contain:size] ') + DIALOG_PANEL}
+      className={'[grid-area:1/1] ' + (front ? DIALOG_PANEL : '[contain:size] ' + BEHIND_PANEL)}
     >
       <motion.div
         initial={{ opacity: 0 }}

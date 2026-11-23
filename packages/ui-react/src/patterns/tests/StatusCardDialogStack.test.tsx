@@ -3,7 +3,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { useReducedMotion } from 'framer-motion';
 import { recipe } from '@levain/tokens';
-import { AWAY_LIFT, away, PILE, pose, StatusCardDialogStack, type StatusCardStackDialog } from '../StatusCardDialogStack';
+import { AWAY_LIFT, away, BEHIND_EDGE, PILE, pose, StatusCardDialogStack, type StatusCardStackDialog } from '../StatusCardDialogStack';
 
 jest.mock('framer-motion', () => ({ ...jest.requireActual('framer-motion'), useReducedMotion: jest.fn(() => false) }));
 const reduced = useReducedMotion as jest.Mock;
@@ -65,6 +65,17 @@ describe('StatusCardDialogStack', () => {
     // in the front's grid cell, filling it without sizing it
     expect(panel(1).className).toContain('[contain:size]');
     expect(panel(0).className).not.toContain('[contain:size]');
+  });
+
+  it('the ones behind carry the board light cards\' hairline under the shadow (dark: shadow only); the front keeps the dialog\'s surface', () => {
+    render(stack([LOOK, DECIDE]));
+    const behind = panel(1).className, front = panel(0).className;
+    expect(behind).toContain('shadow-[inset_0_0_0_1px_var(--color-border-subtle),var(--elevation-3)]');
+    expect(behind).toContain('dark:shadow-[var(--elevation-3)]');
+    expect(behind).not.toMatch(/(^| )shadow-\[var\(--elevation-3\)\]/);
+    expect(front).toContain('shadow-[var(--elevation-3)]');
+    expect(front).not.toContain('border-subtle');
+    expect(BEHIND_EDGE).toContain('--color-border-subtle');
   });
 
   it('focuses the front on opening and the next one when the front leaves', async () => {
