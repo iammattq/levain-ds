@@ -69,7 +69,7 @@ const BAR: Record<StatusTone, string> = {
 };
 
 /** The card's corner radius in px, read from the token, so layout animations can keep corners round as it morphs. */
-function useRadius(token = '--radius-lg') {
+export function useRadius(token = '--radius-lg') {
   const [px, setPx] = useState(8);
   useLayoutEffect(() => {
     const v = getComputedStyle(document.documentElement).getPropertyValue(token).trim();
@@ -95,7 +95,7 @@ export function StatusMarkers({ markers }: { markers: StatusMarker[] }) {
   );
 }
 
-function Face({ number, kind, title, markers }: Pick<StatusCardProps, 'number' | 'kind' | 'title' | 'markers'>) {
+export function Face({ number, kind, title, markers }: Pick<StatusCardProps, 'number' | 'kind' | 'title' | 'markers'>) {
   return (
     <>
       {(number !== undefined || kind) && (
@@ -136,6 +136,24 @@ export function StatusCard({ id, number, kind, title, markers, accent, open = fa
         {children}
       </div>
     </motion.div>
+  );
+}
+
+// Shared with StatusCardDialogStack: the panel's surface, its body, the content's entrance and the head.
+/** Floating, so the elevated surface (one step above the cards it grew out of) with the floating shadow. */
+export const DIALOG_PANEL = 'w-full overflow-hidden bg-[var(--color-surface-elevated)] shadow-[var(--elevation-3)] outline-none';
+export const DIALOG_BODY = 'flex flex-col gap-sm p-md';
+/** The content fading in once the shape has room: after the old content's exit. */
+export const contentIn = (reduce: boolean | null | undefined) => ({ ...motionFor('contentIn', reduce), delay: reduce ? 0 : duration.contentOut / 1000 });
+
+export function DialogHead({ number, kind, title, markers, onClose }: Pick<StatusCardProps, 'number' | 'kind' | 'title' | 'markers'> & { onClose: () => void }) {
+  return (
+    <div className="flex items-start gap-sm">
+      <div className="flex min-w-0 flex-1 flex-col gap-3xs"><Face number={number} kind={kind} title={title} markers={markers} /></div>
+      <button type="button" onClick={onClose} aria-label="Close" className="rounded-full p-3xs text-[var(--color-text-muted)] hover:bg-[var(--color-surface-section)]">
+        <X size={16} />
+      </button>
+    </div>
   );
 }
 
@@ -180,21 +198,15 @@ export function StatusCardDialog({ id, open, onClose, number, kind, title, marke
             aria-label={typeof title === 'string' ? title : undefined}
             tabIndex={-1}
             onClick={e => e.stopPropagation()}
-            // floating, so the elevated surface (one step above the cards it grew out of) with the floating shadow
-            className="relative w-full overflow-hidden bg-[var(--color-surface-elevated)] shadow-[var(--elevation-3)] outline-none"
+            className={'relative ' + DIALOG_PANEL}
           >
             <motion.div
               initial={{ opacity: 0 }}
-              animate={{ opacity: 1, transition: { ...motionFor('contentIn', reduce), delay: reduce ? 0 : duration.contentOut / 1000 } }}
+              animate={{ opacity: 1, transition: contentIn(reduce) }}
               exit={{ opacity: 0, transition: motionFor('contentOut', reduce) }}
-              className="flex flex-col gap-sm p-md"
+              className={DIALOG_BODY}
             >
-              <div className="flex items-start gap-sm">
-                <div className="flex min-w-0 flex-1 flex-col gap-3xs"><Face number={number} kind={kind} title={title} markers={markers} /></div>
-                <button type="button" onClick={onClose} aria-label="Close" className="rounded-full p-3xs text-[var(--color-text-muted)] hover:bg-[var(--color-surface-section)]">
-                  <X size={16} />
-                </button>
-              </div>
+              <DialogHead number={number} kind={kind} title={title} markers={markers} onClose={onClose} />
               {children}
             </motion.div>
           </motion.div>
