@@ -34,6 +34,7 @@ The first consumer outside the portfolio was a web board for running a team of c
 - **Portals render unstyled without the theme on `<body>`.** Dialogs portal to `<body>`, so the theme's look classes have to be on `<body>` too, or they render unstyled. The consumer adds them by hand.
 - **No dashed-border token.** An empty state needed a dashed border; the consumer used a raw Tailwind dashed border.
 - **Status colours fail contrast on the dark dialog surface.** In dark mode on StatusCardDialog's surface (about #323232), `--color-info-fg` measures 4.40:1 and `--color-error-fg` about 4.0:1, under 4.5:1; on the card surface they pass (info-fg 6.18:1). The consumer held the dialog to red's level instead.
+- **No sunken surface token.** Nothing is darker than the page: in Cobalt Mono light every surface token is lighter than the canvas (#f2f2f2; section #f6f6f6, card #f9f9f9, component #fcfcfc). The consumer's light-mode columns use `--color-border-subtle` (#e4e4e4) as a background instead.
 
 ## Closed
 - **Text on accent per mode.** A theme chose its text-on-accent colour once for both modes, so a lighter dark-mode accent got unreadable white text. Closed in v0.3.0 by the theme field `textOn` (text on primary and accent fills, per mode), with contrast tests for both modes.
