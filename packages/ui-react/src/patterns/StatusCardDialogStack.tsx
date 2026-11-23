@@ -99,7 +99,9 @@ export function StatusCardDialogStack({ dialogs, onClose }: StatusCardDialogStac
       onClick={open ? closeFront : undefined}
       data-dialog-stack
     >
-      <div className="relative w-full" style={{ maxWidth: width, marginBottom: behind * PILE.y }}>
+      {/* One grid cell holds every panel, and the cell isn't positioned: a front leaving is popped out of flow against the
+          overlay, which doesn't move, so it lifts from where it was while the cell shrinks and re-centres on the next */}
+      <div className="grid w-full" style={{ maxWidth: width, marginBottom: behind * PILE.y }}>
         <AnimatePresence mode="popLayout" custom={!open} onExitComplete={() => setLeaving(false)}>
           {dialogs.map((dialog, d) => (
             <Panel key={dialog.id} dialog={dialog} depth={d} count={dialogs.length} arriving={settled.current} reduce={reduce} onClose={closeFront}
@@ -155,8 +157,9 @@ const Panel = forwardRef<HTMLDivElement, PanelProps>(function Panel({ dialog, de
       tabIndex={front ? -1 : undefined}
       data-stack-depth={depth}
       onClick={front ? (e: MouseEvent) => e.stopPropagation() : undefined}
-      // the front in flow, sizing the stack; the ones behind take its box, their words hidden, as the board's pile does
-      className={(front ? 'relative ' : 'absolute inset-0 ') + DIALOG_PANEL}
+      // the front sizes the cell; the ones behind fill it without sizing it (contain: size), so they take the front's box,
+      // their words hidden, as the board's pile does
+      className={'[grid-area:1/1] ' + (front ? '' : '[contain:size] ') + DIALOG_PANEL}
     >
       <motion.div
         initial={{ opacity: 0 }}

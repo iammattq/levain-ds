@@ -62,7 +62,9 @@ describe('StatusCardDialogStack', () => {
     expect(PILE).toMatchObject({ y: 10, scale: 0.05, depth: 3, origin: '50% 100%' });
     render(stack([LOOK, DECIDE]));
     expect(panel(1).style.transformOrigin).toBe('50% 100%');
-    expect(panel(1).className).toContain('absolute inset-0');
+    // in the front's grid cell, filling it without sizing it
+    expect(panel(1).className).toContain('[contain:size]');
+    expect(panel(0).className).not.toContain('[contain:size]');
   });
 
   it('focuses the front on opening and the next one when the front leaves', async () => {
