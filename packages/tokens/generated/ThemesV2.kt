@@ -599,9 +599,9 @@ object BuiltInThemes {
                 surfaceTint = Color(0xFF2451C9),
                 scrim = Color(0xFF000000),
                 error = Color(0xFFA34945),
-                onError = Color(0xFFD5766F),
+                onError = Color(0xFFE6857E),
                 errorContainer = Color(0xFF170000),
-                onErrorContainer = Color(0xFFD5766F)
+                onErrorContainer = Color(0xFFE6857E)
             ),
             lightElevation = Color(0x145E5E5E),
             darkElevation = Color(0x4D5E5E5E)

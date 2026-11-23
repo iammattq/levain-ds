@@ -80,6 +80,7 @@ interface ResolvedThemeConfig {
     chroma: number;
     baseLightness: number;
     fgLightnessOffset: number;
+    darkFgLightnessOffset?: number;
     bgLightnessOffset: number;
   };
   tokenMapping: {
@@ -202,6 +203,7 @@ function mergeWithDefaults(input: ThemeInputV2): ResolvedThemeConfig {
       fgLightnessOffset:
         input.actionColors?.fgLightnessOffset ??
         DEFAULT_ACTION_PARAMS.fgLightnessOffset,
+      darkFgLightnessOffset: input.actionColors?.darkFgLightnessOffset,
       bgLightnessOffset:
         input.actionColors?.bgLightnessOffset ??
         DEFAULT_ACTION_PARAMS.bgLightnessOffset,
@@ -369,6 +371,7 @@ export class ThemeGeneratorV2 {
         chroma: actionConfig.chroma,
         baseLightness: actionConfig.baseLightness,
         fgLightnessOffset: actionConfig.fgLightnessOffset,
+        darkFgLightnessOffset: actionConfig.darkFgLightnessOffset,
         bgLightnessOffset: actionConfig.bgLightnessOffset,
       };
 

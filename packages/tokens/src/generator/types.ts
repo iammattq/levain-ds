@@ -258,6 +258,12 @@ export interface ThemeInputV2 {
     baseLightness?: number;
     /** Lightness offset for -fg variants (-30 to 0, default -15) */
     fgLightnessOffset?: number;
+    /**
+     * Lightness offset for -fg variants in dark mode only (-30 to 0), mirrored like fgLightnessOffset (dark fg sits at
+     * baseLightness minus it). Left out, dark mode uses fgLightnessOffset. For a theme whose dark surfaces need a
+     * lighter status text than its light mode's mirror gives.
+     */
+    darkFgLightnessOffset?: number;
     /** Lightness offset for -bg variants (0 to +50, default +40) */
     bgLightnessOffset?: number;
   };
@@ -395,6 +401,8 @@ export interface ActionColorParams {
   baseLightness: number;
   /** Lightness offset for foreground variant */
   fgLightnessOffset: number;
+  /** Lightness offset for the foreground variant in dark mode (defaults to fgLightnessOffset) */
+  darkFgLightnessOffset?: number;
   /** Lightness offset for background variant */
   bgLightnessOffset: number;
 }

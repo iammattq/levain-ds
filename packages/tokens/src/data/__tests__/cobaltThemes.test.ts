@@ -43,6 +43,15 @@ describe('Cobalt Mono (TH1)', () => {
         }
       }
     });
+    // (T20) a status colour is read as text on every surface and drawn as a shape (a progress bar) on border-default
+    it.each(['light', 'dark'] as const)('keeps every status -fg at AA as text and 3:1 against border-default in %s mode', (mode) => {
+      const t = theme[mode].tokens as Record<string, string>, a = theme[mode].actions;
+      for (const status of ['success', 'caution', 'error', 'info']) {
+        const fg = a[`${status}-fg`];
+        for (const s of [...surfaces, 'surface-interactive']) expect({ status, s, ratio: contrast(fg, t[s]) >= 4.5 }).toEqual({ status, s, ratio: true });
+        expect({ status, ratio: contrast(fg, t['border-default']) >= 3 }).toEqual({ status, ratio: true });
+      }
+    });
     it.each(['light', 'dark'] as const)('puts readable text on its primary button in %s mode', (mode) => {
       const m = theme[mode], t = m.tokens as Record<string, string>;
       expect(contrast(m.textOnPrimary, t.primary)).toBeGreaterThanOrEqual(4.5);

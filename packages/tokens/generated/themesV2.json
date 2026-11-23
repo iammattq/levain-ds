@@ -1843,16 +1843,16 @@
       },
       "actions": {
         "success": "#357a3a",
-        "success-fg": "#63a966",
+        "success-fg": "#72b875",
         "success-bg": "#000a00",
         "error": "#a34945",
-        "error-fg": "#d5766f",
+        "error-fg": "#e6857e",
         "error-bg": "#170000",
         "caution": "#a04f27",
-        "caution-fg": "#d17c54",
+        "caution-fg": "#e28b63",
         "caution-bg": "#160000",
         "info": "#007798",
-        "info-fg": "#0ea6c8",
+        "info-fg": "#2fb5d8",
         "info-bg": "#000815"
       },
       "spectrum": {
