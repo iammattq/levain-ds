@@ -152,14 +152,18 @@ export function StatusCardDialog({ id, open, onClose, number, kind, title, marke
   const reduce = useReducedMotion();
   const radius = useRadius('--radius-2xl');
   const panel = useRef<HTMLDivElement>(null);
+  // The latest onClose, read through a ref: a consumer passing a fresh inline onClose on every render must not re-run
+  // the open effect below, or focus would jump back to the panel mid-typing.
+  const onCloseRef = useRef(onClose);
+  useLayoutEffect(() => { onCloseRef.current = onClose; });
   useEffect(() => {
     if (!open) return;
     const prev = document.activeElement as HTMLElement | null;
     panel.current?.focus();
-    const key = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    const key = (e: KeyboardEvent) => { if (e.key === 'Escape') onCloseRef.current(); };
     window.addEventListener('keydown', key);
     return () => { window.removeEventListener('keydown', key); prev?.focus?.(); };
-  }, [open, onClose]);
+  }, [open]);
   if (typeof document === 'undefined') return null;
   return createPortal(
     <AnimatePresence>
