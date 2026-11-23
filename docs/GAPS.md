@@ -24,7 +24,6 @@ The first consumer outside the portfolio was a web board for running a team of c
 - **Plain Dialog without a card face.** The only dialog is StatusCardDialog, which needs a kind and title; a simple form dialog (Add to-do) had to borrow it.
 - **StatusCardDialog can't stack.** Two open dialogs render as two identical overlays, one over the other. Missing: placement for a dialog behind (offset up and scaled like a pile), a behind state (inert, aria-hidden, no focus, no Escape, no overlay of its own), and an "away" exit for the front one while the one behind animates forward on the morph recipe (cross-fade under Reduce Motion). Wanted for a look and its decision opened as a pile. The consumer is building the non-visual parts and waiting on levain.
 - **Tooltip / Toggletip.** Hover delay, focus, tap, Escape, collision placement, portal. The consumer built one by hand on its switcher's surface recipe, on `--color-surface-component`, because dark info and success miss 4.5:1 on the elevated surface.
-- **Progress ring and progress bar / meter.** Both drawn by hand in the consumer.
 
 ### Phone patterns
 - **Bottom sheet.** A panel that rises from the bottom with a drag handle and snap heights.
@@ -41,6 +40,7 @@ The first consumer outside the portfolio was a web board for running a team of c
 - **No caution (amber) status hue.** The consumer hand-picks its own amber (light #975d04), which misses 4.5:1 on darker light surfaces (4.25:1 on #e4e4e4); it falls back to the text colour for words there and keeps amber only for small pips.
 
 ## Closed
+- **Progress ring and progress bar / meter.** Closed by `ProgressRing` and `ProgressBar` (T18): xs to lg, default/caution/danger on the existing action tokens, `role="meter"`. xs matches the board's hand-drawn ring and bar.
 - **Text on accent per mode.** A theme chose its text-on-accent colour once for both modes, so a lighter dark-mode accent got unreadable white text. Closed in v0.3.0 by the theme field `textOn` (text on primary and accent fills, per mode), with contrast tests for both modes.
 - **Next.js lock-in.** Components imported `next/link`, `next/image`, `next/navigation` and `next-auth`. Closed in v0.1.0 by `LevainProvider` (link, image, path and theme supplied by the app).
 - **No motion system.** No duration, easing or spring tokens; components set their own timings. Closed in v0.2.0: motion tokens taken from the portfolio's OS shell, ten motion rules in `assembly.json` led by "shapes morph into each other rather than swap", and reduced motion everywhere.

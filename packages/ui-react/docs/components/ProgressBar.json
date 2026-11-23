@@ -1,0 +1,82 @@
+{
+  "name": "ProgressBar",
+  "description": "A horizontal fill over a faint track, with optional value text beside it in tabular numerals.",
+  "category": "components",
+  "usage": [
+    "Use for a bounded amount, not for loading: no indeterminate state",
+    "Grows to fill its row; the value text keeps its width",
+    "xs is a 4px bar; sm 6px, md 8px, lg 12px"
+  ],
+  "examples": [
+    "<ProgressBar value={372} max={500} size=\"xs\" tone=\"caution\" label=\"PM context\" valueLabel=\"372k of 500k\" />"
+  ],
+  "design": [
+    "Track border-default; fill and value text in the tone colour",
+    "Width transitions over --duration-travel, instant under reduced motion"
+  ],
+  "accessibility": [
+    "The track is role=meter with aria-valuemin/max/now and aria-valuetext",
+    "A string valueLabel becomes the valuetext; the visible copy is aria-hidden"
+  ],
+  "props": [
+    {
+      "name": "value",
+      "type": "number",
+      "optional": false,
+      "description": "The current amount; clamped to 0..max",
+      "configurable": true
+    },
+    {
+      "name": "max",
+      "type": "number",
+      "optional": true,
+      "defaultValue": "100",
+      "description": "The full amount",
+      "configurable": true
+    },
+    {
+      "name": "size",
+      "type": "'xs' | 'sm' | 'md' | 'lg'",
+      "optional": true,
+      "defaultValue": "md",
+      "description": "xs matches a status glyph",
+      "configurable": true
+    },
+    {
+      "name": "tone",
+      "type": "'default' | 'caution' | 'danger'",
+      "optional": true,
+      "defaultValue": "default",
+      "description": "default draws in text-muted; caution and danger in the caution-fg and error-fg action tokens",
+      "configurable": true
+    },
+    {
+      "name": "label",
+      "type": "string",
+      "optional": true,
+      "description": "Accessible name of the meter",
+      "configurable": true
+    },
+    {
+      "name": "aria-valuetext",
+      "type": "string",
+      "optional": true,
+      "description": "How a screen reader reads the value, e.g. \"372k of 500k\"; defaults to the percentage",
+      "configurable": true
+    },
+    {
+      "name": "className",
+      "type": "string",
+      "optional": true,
+      "description": "Additional classes on the root",
+      "configurable": false
+    },
+    {
+      "name": "valueLabel",
+      "type": "ReactNode",
+      "optional": true,
+      "description": "Shown beside the bar, e.g. \"372k of 500k\"",
+      "configurable": true
+    }
+  ]
+}

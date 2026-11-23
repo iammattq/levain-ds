@@ -56,6 +56,16 @@
   },
   {
     "category": "Components",
+    "name": "ProgressRing",
+    "description": "Ring that fills clockwise to show how full something is, xs to lg, three tones"
+  },
+  {
+    "category": "Components",
+    "name": "ProgressBar",
+    "description": "Horizontal fill with optional value text beside it, xs to lg, three tones"
+  },
+  {
+    "category": "Components",
     "name": "TextInput",
     "description": "Accessible text input component with error states and helper text"
   },
