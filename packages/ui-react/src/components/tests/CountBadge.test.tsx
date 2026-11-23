@@ -52,6 +52,12 @@ describe('CountBadge', () => {
     expect(screen.getByText('3 waiting on you')).toHaveClass('sr-only');
   });
 
+  it('className text-inherit takes the parent colour instead of faint (the board\'s phone tab, current and not)', () => {
+    const { container } = render(<CountBadge count={5} className="text-inherit" />);
+    expect(badge(container)).toHaveClass('text-inherit');
+    expect(badge(container)).not.toHaveClass('text-[var(--color-text-faint)]');
+  });
+
   it('className is added', () => {
     const { container } = render(<CountBadge count={5} className="ml-2" />);
     expect(badge(container)).toHaveClass('ml-2');

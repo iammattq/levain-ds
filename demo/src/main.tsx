@@ -1,6 +1,6 @@
 // levain DS's motion, density and drag, on one page. Every timing here comes from @levain/tokens.
 // ?density=condensed starts condensed; ?mode=light starts light; ?theme=7 starts on Cobalt Mono.
-// ?only=progress or ?only=decide shows only that section (for captures).
+// ?only=progress, ?only=decide or ?only=count shows only that section (for captures).
 import '@fontsource/open-sans/400.css';
 import '@fontsource/open-sans/600.css';
 import '@fontsource/oswald/400.css';
@@ -11,6 +11,7 @@ import { AnimatePresence, LayoutGroup, motion, useReducedMotion } from 'framer-m
 import { Clock, Image as ImageIcon, Link2, Menu as MenuIcon, Plus, User, X } from 'lucide-react';
 import { StrictMode, useState } from 'react';
 import { createRoot } from 'react-dom/client';
+import { CountDemo } from './count';
 import { DecideDemo } from './decide';
 import { ProgressDemo } from './progress';
 
@@ -242,11 +243,12 @@ function App() {
         </div>
         <SegmentedControl id="density" size="sm" value={density} onChange={setDensity} options={[{ label: 'Comfortable', value: 'comfortable' }, { label: 'Condensed', value: 'condensed' }]} />
       </header>
-      {q.get('only') === 'progress' ? <ProgressDemo Section={Section} /> : q.get('only') === 'decide' ? <DecideDemo Section={Section} /> : <>
+      {q.get('only') === 'progress' ? <ProgressDemo Section={Section} /> : q.get('only') === 'decide' ? <DecideDemo Section={Section} /> : q.get('only') === 'count' ? <CountDemo Section={Section} /> : <>
       <DragDemo />
       <DecideDemo Section={Section} />
       <StackDemo />
       <ProgressDemo Section={Section} />
+      <CountDemo Section={Section} />
       <div className="grid grid-cols-1 gap-xl md:grid-cols-2">
         <MenuDemo />
         <WindowDemo />
