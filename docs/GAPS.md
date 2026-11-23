@@ -22,6 +22,7 @@ The first consumer outside the portfolio was a web board for running a team of c
 - **Drag overlay width misses the grip.** The overlay is sized without the grip, so the card jumps in width when picked up.
 - **Image attachment by paste or pick, with thumbnails.** ImageUploader is drag-and-drop only (react-dropzone, multipart uploads, no paste). The consumer built its own from Button, TextArea and tokens.
 - **Plain Dialog without a card face.** The only dialog is StatusCardDialog, which needs a kind and title; a simple form dialog (Add to-do) had to borrow it.
+- **StatusCardDialog can't stack.** Two open dialogs render as two identical overlays, one over the other. Missing: placement for a dialog behind (offset up and scaled like a pile), a behind state (inert, aria-hidden, no focus, no Escape, no overlay of its own), and an "away" exit for the front one while the one behind animates forward on the morph recipe (cross-fade under Reduce Motion). Wanted for a look and its decision opened as a pile. The consumer is building the non-visual parts and waiting on levain.
 
 ### Phone patterns
 - **Bottom sheet.** A panel that rises from the bottom with a drag handle and snap heights.
