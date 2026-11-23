@@ -44,8 +44,9 @@ function BoardStandIn({ d, onOpen, onPick }: { d: Decision; onOpen: () => void; 
 export function DecideDemo({ Section }: { Section: (p: { title: string; note: string; children: ReactNode }) => ReactNode }) {
   const [open, setOpen] = useState<Decision | null>(null);
   const [picked, setPicked] = useState('Nothing answered yet.');
-  const [cols, setCols] = useState({ levain: DECISIONS.map(d => d.id), board: DECISIONS.map(d => d.id) });
-  const of = (id: string) => DECISIONS.find(d => d.id === id)!;
+  // keys are unique across the group (SortableList's layoutId is group-wide): 'levain:D14', 'board:D14'
+  const [cols, setCols] = useState({ levain: DECISIONS.map(d => 'levain:' + d.id), board: DECISIONS.map(d => 'board:' + d.id) });
+  const of = (key: string) => DECISIONS.find(d => d.id === key.split(':')[1])!;
   const pick = (d: Decision, o: string) => setPicked(`${d.id}: ${o}${o === d.rec ? ' (recommended)' : ''}`);
   const onMove = (m: SortableMove) => setCols(c => {
     const from = m.from as 'levain', to = m.to as 'levain';
@@ -76,7 +77,7 @@ export function DecideDemo({ Section }: { Section: (p: { title: string; note: st
               }} />,
             )}
             {column('Board stand-in, wired by hand',
-              <SortableList id="board" label="board" items={cols.board} getKey={k => k} renderItem={k => <BoardStandIn d={of(k)} onOpen={() => setPicked(`${k} opened (the stand-in has no dialog)`)} onPick={pick} />} />,
+              <SortableList id="board" label="board" items={cols.board} getKey={k => k} renderItem={k => <BoardStandIn d={of(k)} onOpen={() => setPicked(`${of(k).id} opened (the stand-in has no dialog)`)} onPick={pick} />} />,
             )}
           </div>
         </SortableGroup>

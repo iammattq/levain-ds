@@ -20,12 +20,16 @@ trap 'kill $vite 2>/dev/null || true' EXIT
 i=0
 until curl -sf "http://localhost:$port/" >/dev/null; do i=$((i + 1)); [ $i -lt 60 ] || { cat /tmp/levain-t17-vite.log; exit 1; }; sleep 0.5; done
 PW_DIR="$pw" node e2e/decide-capture.mjs "http://localhost:$port/" "$out"
-# the strip: one frame every 60 ms from each recording, in rows of 8
+# the strips: from each press (open, close), from 0.4 s before it, a frame every 60 ms for 1.44 s, cropped to the cards and the dialog, in
+# rows of 4, read left to right
 if command -v ffmpeg >/dev/null; then
-  for v in "$out"/video-*/*.webm; do
-    name=$(basename "$(dirname "$v")")
-    ffmpeg -loglevel error -y -i "$v" -vf "fps=1000/60,scale=500:-1,tile=8x6:padding=4:color=gray" -frames:v 1 "$out/strip-$name.png"
+  for motion in no-preference reduce; do
+    v=$(ls "$out/video-$motion"/*.webm | head -1)
+    for step in open close; do
+      at=$(node -e "const r=require(process.argv[1]).result; console.log(Math.max(0, r[process.argv[2]+'-'+process.argv[3]+'AtSec'] - 0.4))" "$out/geometry.json" "$motion" "$step")
+      ffmpeg -loglevel error -y -ss "$at" -i "$v" -vf "fps=1000/60,crop=1000:420:0:200,scale=600:-1,tile=4x6:padding=6:color=gray" -frames:v 1 "$out/strip-$step-$motion.png"
+    done
   done
 else
-  echo "no ffmpeg on this machine: no strip, the webm and geometry.json only"
+  echo "no ffmpeg on this machine: no strips, the webm and geometry.json only"
 fi
