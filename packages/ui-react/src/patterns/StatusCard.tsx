@@ -15,7 +15,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { duration, motion as motionFor } from '@levain/tokens';
 import type { LucideIcon } from 'lucide-react';
 import { X } from 'lucide-react';
-import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode, type SyntheticEvent } from 'react';
 import { createPortal } from 'react-dom';
 
 export type StatusTone = 'default' | 'accent' | 'info' | 'caution' | 'success' | 'error' | 'muted';
@@ -87,6 +87,8 @@ export function useRadius(token = '--radius-lg') {
 
 export const morphId = (id: string) => 'status-card-' + id;
 
+const stop = (e: SyntheticEvent) => e.stopPropagation();
+
 export function StatusMarkers({ markers }: { markers: StatusMarker[] }) {
   return (
     <ul className="type-caption flex flex-wrap items-center gap-x-xs gap-y-3xs">
@@ -142,7 +144,10 @@ export function StatusCard({ id, number, kind, title, markers, accent, open = fa
         {children}
       </div>
       {actions != null && actions !== false && (
-        <div data-status-card-actions className="flex flex-wrap items-center gap-2xs px-xs pb-2xs">
+        // the row's own presses: never the card's open, never a drag's start (SortableGroup listens on the item for
+        // pointerdown, touchstart and Space), never a click on a consumer's wrapper
+        <div data-status-card-actions onClick={stop} onKeyDown={stop} onPointerDown={stop} onTouchStart={stop}
+          className="flex flex-wrap items-center gap-2xs px-xs pb-2xs">
           {actions}
         </div>
       )}
