@@ -1,0 +1,15 @@
+{
+  "name": "levain",
+  "dataDir": "private",
+  "pmName": "pm-levain",
+  "teamDir": "../levain-team",
+  "install": "pnpm install --frozen-lockfile --silent",
+  "allowedTools": [
+    "Bash(pnpm:*)"
+  ],
+  "wholeSuite": {
+    "scripts": [
+      "test"
+    ]
+  }
+}
