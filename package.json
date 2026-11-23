@@ -7,7 +7,7 @@
   "description": "levain DS: design tokens and React components. TypeScript source; consumers transpile it (smoke/ builds it as one would).",
   "scripts": {
     "test": "pnpm --filter './packages/*' test",
-    "check:types": "tsc --noEmit -p packages/tokens && tsc --noEmit -p packages/ui-react",
+    "check:types": "tsc --noEmit -p packages/tokens && tsc --noEmit -p packages/ui-react && tsc --noEmit -p packages/ui-react/tsconfig.browser.json",
     "build": "pnpm --filter @levain/smoke --filter @levain/demo build"
   },
   "pnpm": {
