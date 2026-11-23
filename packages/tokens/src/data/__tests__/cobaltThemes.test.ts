@@ -52,6 +52,16 @@ describe('Cobalt Mono (TH1)', () => {
         expect({ status, ratio: contrast(fg, t['border-default']) >= 3 }).toEqual({ status, ratio: true });
       }
     });
+    // (T21) caution is an amber (OKLCH hue 65-85), not the orange-salmon next to error it was at hue 45. 40 degrees apart
+    // at the least: at 15-20 (the old light 40 vs 25, dark 45 vs 25) the two read as one colour on the T20 swatch, and 40
+    // keeps the measured caution hue (70-75) clear of error (25) with room for gamut clipping to pull it back a little.
+    it.each(['light', 'dark'] as const)('draws caution as an amber, at least 40 degrees of hue from error, in %s mode', (mode) => {
+      const a = theme[mode].actions;
+      const [caution, error] = [a['caution-fg'], a['error-fg']].map((hex) => hexToOklch(hex).h);
+      expect(caution).toBeGreaterThanOrEqual(65);
+      expect(caution).toBeLessThanOrEqual(85);
+      expect(Math.abs(caution - error)).toBeGreaterThanOrEqual(40);
+    });
     it.each(['light', 'dark'] as const)('puts readable text on its primary button in %s mode', (mode) => {
       const m = theme[mode], t = m.tokens as Record<string, string>;
       expect(contrast(m.textOnPrimary, t.primary)).toBeGreaterThanOrEqual(4.5);

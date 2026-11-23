@@ -18,7 +18,10 @@ const cobaltMono: ThemeInputV2 = {
   states: { light: { intensity: 4 }, dark: { intensity: 5 } },
   // (T20) dark status text sits at L72, not the mirrored L67: at 67 caution and error missed 4.5:1 on surface-elevated
   // and 3:1 against border-default (a progress track). Light mode keeps the default offset.
-  actionColors: { chroma: 0.12, baseLightness: 52, darkFgLightnessOffset: -20 },
+  // (T21) caution is an amber at hue 75, not the default 45 (orange, next to error). At the shared light fg L37 an amber
+  // clips out of sRGB into brown, so light caution text sits at L50 (#8a5700, an ochre: 5.45:1 on white); any lighter
+  // and it drops under 4.5. Dark caution keeps the shared L72 (#d09945).
+  actionColors: { chroma: 0.12, baseLightness: 52, darkFgLightnessOffset: -20, caution: { hue: 75, lightFgLightnessOffset: -2 } },
   elevation: { source: 'accent', chroma: 0, lightOpacity: 8, darkOpacity: 30 },
   tokenMapping: {
     light: { 'text-emphasis': 1, 'text-default': 3, 'text-muted': 8, 'text-faint': 11, 'border-subtle': 18, 'border-default': 16, 'border-emphasis': 14, primary: 1, accent: 3 },
