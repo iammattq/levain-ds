@@ -1,0 +1,85 @@
+{
+  "name": "ProgressRing",
+  "description": "A small ring that fills clockwise from 12 o'clock over a faint track: how full something is, at a glance.",
+  "category": "components",
+  "usage": [
+    "Use for a bounded amount (context used, quota, storage), not for loading: no indeterminate state",
+    "xs (14px) sits inline with status glyphs; sm 20px, md 32px, lg 48px",
+    "Switch tone to caution or danger at your own thresholds"
+  ],
+  "examples": [
+    "<ProgressRing value={137} max={500} size=\"xs\" label=\"PM context\" aria-valuetext=\"137k of 500k\" />",
+    "<ProgressRing value={80} tone=\"caution\" decorative />"
+  ],
+  "design": [
+    "16-unit viewBox, r=6, stroke never scales (1.5px at xs, 2/3/4px above)",
+    "Track border-default; arc in the tone colour with a round cap; no arc at 0",
+    "Arc length transitions over --duration-travel, instant under reduced motion"
+  ],
+  "accessibility": [
+    "role=meter with aria-valuemin/max/now and aria-valuetext",
+    "decorative hides it (aria-hidden) when the value is said elsewhere"
+  ],
+  "props": [
+    {
+      "name": "value",
+      "type": "number",
+      "optional": false,
+      "description": "The current amount; clamped to 0..max",
+      "configurable": true
+    },
+    {
+      "name": "max",
+      "type": "number",
+      "optional": true,
+      "defaultValue": "100",
+      "description": "The full amount",
+      "configurable": true
+    },
+    {
+      "name": "size",
+      "type": "'xs' | 'sm' | 'md' | 'lg'",
+      "optional": true,
+      "defaultValue": "md",
+      "description": "xs matches a status glyph",
+      "configurable": true
+    },
+    {
+      "name": "tone",
+      "type": "'default' | 'caution' | 'danger'",
+      "optional": true,
+      "defaultValue": "default",
+      "description": "default draws in text-muted; caution and danger in the caution-fg and error-fg action tokens",
+      "configurable": true
+    },
+    {
+      "name": "label",
+      "type": "string",
+      "optional": true,
+      "description": "Accessible name of the meter",
+      "configurable": true
+    },
+    {
+      "name": "aria-valuetext",
+      "type": "string",
+      "optional": true,
+      "description": "How a screen reader reads the value, e.g. \"372k of 500k\"; defaults to the percentage",
+      "configurable": true
+    },
+    {
+      "name": "className",
+      "type": "string",
+      "optional": true,
+      "description": "Additional classes on the root",
+      "configurable": false
+    },
+    {
+      "name": "decorative",
+      "type": "boolean",
+      "optional": true,
+      "defaultValue": "false",
+      "description": "Hide from assistive tech",
+      "configurable": true
+    }
+  ]
+}
