@@ -11,3 +11,9 @@ body {
   @apply bg-[var(--color-surface-canvas)] text-[var(--color-text-default)];
   font-family: var(--type-family-sans);
 }
+
+/* T6: the Ringmaster board's hand-picked late amber (board.css --rm-amber), for the relative-time comparison */
+[data-compare] { --rm-amber: #f2af48; }
+html:not(.dark) [data-compare] { --rm-amber: #975d04; }
+/* A consumer colouring the whole phrase like the board's late flag, keyed off RelativeTime's data-state */
+.late-phrase:has(> time[data-state='late']) { color: var(--color-caution-fg); white-space: nowrap; }
