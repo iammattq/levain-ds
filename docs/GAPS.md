@@ -17,6 +17,9 @@ The first consumer outside the portfolio was a web board for running a team of c
 - **Card stack.** Loose notes shown as a horizontal row whose trailing cards pile into a stack, peeled off right to left as you scroll (desktop), and as a pile that fans open into the full list or steps one card at a time (phone). Prototyped in the consumer.
 - **StatusCard's kind label is forced to capitals.** The face sets `uppercase tracking-wide` on the kind ("QUEUED", "ALARM"), on the card and in `StatusCardDialog`, with no way to turn it off; the Ringmaster board's type rules say no all caps. Wants the casing left to the label (or a prop). The board lives with it for now.
 - **Actions slot on StatusCard.** A decision card with its answer buttons on the face (the recommended one filled); today the buttons are passed as children.
+- **Popover / Menu.** A small anchored panel that opens from a button (the board's project switcher). Built by hand in the consumer.
+- **StatusCardDialog cuts off tall dialogs.** No max-height or scrolling, so a long dialog runs off the screen.
+- **Drag overlay width misses the grip.** The overlay is sized without the grip, so the card jumps in width when picked up.
 
 ### Phone patterns
 - **Bottom sheet.** A panel that rises from the bottom with a drag handle and snap heights.
@@ -26,6 +29,8 @@ The first consumer outside the portfolio was a web board for running a team of c
 ### Foundations
 - **Dark mode needs a set-up order.** Dark mode is a class on `<html>`; a non-Next app must call `initTheme()` before `themeManager.applyTheme()`, or cards keep their light styling. Documented in the README; levain could do it for the app.
 - **Node types in a browser package.** ui-react uses the `NodeJS` namespace (DateInput, NavigationLinks), so browser-only consumers need `@types/node`.
+- **Portals render unstyled without the theme on `<body>`.** Dialogs portal to `<body>`, so the theme's look classes have to be on `<body>` too, or they render unstyled. The consumer adds them by hand.
+- **No dashed-border token.** An empty state needed a dashed border; the consumer used a raw Tailwind dashed border.
 
 ## Closed
 - **Text on accent per mode.** A theme chose its text-on-accent colour once for both modes, so a lighter dark-mode accent got unreadable white text. Closed in v0.3.0 by the theme field `textOn` (text on primary and accent fills, per mode), with contrast tests for both modes.

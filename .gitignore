@@ -3,3 +3,7 @@ dist/
 *.tsbuildinfo
 coverage/
 .env*
+
+# Ringmaster PM notes and member inboxes (private, never committed)
+private/
+.ringmaster/inbox/
