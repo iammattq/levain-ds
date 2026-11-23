@@ -37,4 +37,30 @@ describe('StatusCard', () => {
     fireEvent.click(screen.getByRole('button'));
     expect(screen.getByRole('dialog').className).toContain('bg-[var(--color-surface-elevated)]');
   });
+
+  it('keeps focus where it was put while open, even when re-rendered with a new onClose; Escape calls the latest onClose; closing returns focus', () => {
+    const opener = document.createElement('button');
+    document.body.appendChild(opener);
+    opener.focus();
+    const dialog = (open: boolean, onClose: () => void) => (
+      <StatusCardDialog id="T5" number="T5" title="Notes" open={open} onClose={onClose}>
+        <textarea aria-label="answer" />
+      </StatusCardDialog>
+    );
+    const first = jest.fn();
+    const { rerender } = render(dialog(true, first));
+    const box = screen.getByLabelText('answer');
+    box.focus();
+    expect(box).toHaveFocus();
+    // a live update hands the dialog a fresh inline onClose
+    const latest = jest.fn();
+    rerender(dialog(true, latest));
+    expect(box).toHaveFocus();
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(latest).toHaveBeenCalledTimes(1);
+    expect(first).not.toHaveBeenCalled();
+    rerender(dialog(false, latest));
+    expect(opener).toHaveFocus();
+    opener.remove();
+  });
 });
