@@ -2,9 +2,9 @@ import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { useReducedMotion } from 'framer-motion';
-import { recipe } from '@levain/tokens';
+import { duration, recipe } from '@levain/tokens';
 import { DIALOG_PANEL } from '../StatusCard';
-import { AWAY_LIFT, away, BEHIND_EDGE, PILE, PILE_ORIGIN, pose, StatusCardDialogStack, type StatusCardStackDialog } from '../StatusCardDialogStack';
+import { AWAY_LIFT, away, BEHIND_EDGE, CONTENT_DELAY, PILE, PILE_ORIGIN, pose, StatusCardDialogStack, type StatusCardStackDialog } from '../StatusCardDialogStack';
 
 jest.mock('framer-motion', () => ({ ...jest.requireActual('framer-motion'), useReducedMotion: jest.fn(() => false) }));
 const reduced = useReducedMotion as jest.Mock;
@@ -195,6 +195,12 @@ describe('StatusCardDialogStack', () => {
       watch.observe(document.body, { subtree: true, childList: true, attributes: true });
     });
     afterEach(() => watch.disconnect());
+
+    it('the content, waiting for the surface, is fully in as the morph ends', () => {
+      // starting at the end of the morph put the words in at ~690 ms, against ~310 ms for a single dialog
+      expect(CONTENT_DELAY * 1000 + duration.contentIn).toBe(duration.morph);
+      expect(CONTENT_DELAY).toBeGreaterThan(0);
+    });
 
     it('the front when it opens holds the card (grows out of it), the ones behind keep their own', () => {
       render(cardStack([LOOK, DECIDE]));
