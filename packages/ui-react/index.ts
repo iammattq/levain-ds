@@ -24,6 +24,8 @@ export type { SectionProps } from './src/components/Section';
 export { default as Heading } from './src/components/Heading';
 export type { HeadingProps } from './src/components/Heading';
 export { default as Tag } from './src/components/Tag';
+export { CountBadge } from './src/components/CountBadge';
+export type { CountBadgeProps, CountBadgeVariant, CountBadgeTone } from './src/components/CountBadge';
 export { default as Switch } from './src/components/Switch';
 export { default as RadioButton } from './src/components/RadioButton';
 export { default as SegmentedControl } from './src/components/SegmentedControl';

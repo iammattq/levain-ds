@@ -9,7 +9,6 @@ The first consumer outside the portfolio was a web board for running a team of c
 ### Components and patterns
 - **Copyable command block.** A block of one or more shell commands, each with a copy button and a "copy all". Built by hand from the `type-code` class plus an icon-only Button. Wanted anywhere developer-facing.
 - **Side-by-side image compare.** Two images labelled (for example "This build" and "Target"), side by side on wide screens and stacked on narrow ones, each opening full size. Built by hand.
-- **Count badge.** The small number beside a column heading or on a tab. Built by hand.
 - **Board column and layout primitives.** A column with a header, count and scrolling body; stack and cluster layouts. Composed from Card and Tailwind each time.
 - **Timeline is career-specific.** Its props are `company` and `roles`, and it hard-codes a "History" heading, so a release history couldn't reuse it. Wants a general timeline (date, title, body) with the career version built on top.
 
@@ -37,6 +36,7 @@ The first consumer outside the portfolio was a web board for running a team of c
 - **No caution (amber) status hue.** The consumer hand-picks its own amber (light #975d04), which misses 4.5:1 on darker light surfaces (4.25:1 on #e4e4e4); it falls back to the text colour for words there and keeps amber only for small pips.
 
 ## Closed
+- **Count badge.** The small number beside a column heading or on a tab. Closed by `CountBadge` (T7): plain (a faint number on the heading's baseline) or filled (the small solid pill), each with a caution tone on `--color-caution-fg` that passes 4.5:1 in Sage and Cobalt Mono, light and dark; an optional `label` for the accessible name.
 - **Relative time.** "35m ago", "2h 40m", with a warning colour past a threshold and a live update. Built by hand in several places. Closed by `RelativeTime` and `formatSpan` (T6): the board's format exactly ("45s", "12m", "3h 20m", "2d"), a `<time>` with the full date as its title, one shared clock for the page (every second under 90 s, every minute after, stopped when none is mounted), and past `warnAfter` the caution colour with `data-state="late"`. The words around it stay the consumer's ("Asked {time} ago").
 - **Actions slot on StatusCard.** A decision card with its answer buttons on the face (the recommended one filled); the buttons went in as children, inside the card's open target, so each needed a hand-wired stopPropagation on click and pointerdown. Closed by StatusCard's `actions` (T17): a row under the markers and children, outside the open target, where a click, a key or a pointerdown never opens the card nor starts a SortableGroup drag; the buttons stay in the Tab order.
 - **Dark mode needs a set-up order.** Dark mode is a class on `<html>`, and a non-Next app had to call `initTheme()` before `themeManager.applyTheme()`, or cards kept their light styling. Closed in v0.3.3: `applyTheme` puts `<html>` in the mode it writes (one helper shared with `setTheme`), so one call is enough and the order doesn't matter.
