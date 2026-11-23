@@ -15,7 +15,7 @@
  * from away. Under Reduce Motion each of those is a cross-fade: nothing moves, the opacity still changes.
  */
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
-import { duration, motion as motionFor, recipe } from '@levain/tokens';
+import { duration, instant, motion as motionFor, recipe } from '@levain/tokens';
 import { forwardRef, useEffect, useLayoutEffect, useRef, useState, type MouseEvent } from 'react';
 import { createPortal } from 'react-dom';
 import { contentIn, DIALOG_BODY, DIALOG_PANEL, DialogHead, morphId, useRadius, type StatusCardDialogProps } from './StatusCard';
@@ -226,7 +226,7 @@ const Panel = forwardRef<HTMLDivElement, PanelProps>(function Panel({ dialog, de
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: front ? 1 : 0, transition: front ? (after ? { ...motionFor('contentIn', reduce), delay: duration.morph / 1000 } : contentIn(reduce)) : recipe.contentOut }}
-          variants={{ leave: (closing: boolean) => ({ opacity: 0, transition: closing && CONTENT_AFTER_SURFACE && holds ? { duration: 0 } : recipe.contentOut }) }}
+          variants={{ leave: (closing: boolean) => ({ opacity: 0, transition: closing && CONTENT_AFTER_SURFACE && holds ? instant : recipe.contentOut }) }}
           exit="leave"
           className={'relative ' + DIALOG_BODY}
         >
