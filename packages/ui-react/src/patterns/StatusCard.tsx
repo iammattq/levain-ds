@@ -44,8 +44,14 @@ export interface StatusCardProps {
   /** True while its dialog is open: the card's place is held, and the card itself is in the dialog. */
   open?: boolean;
   onOpen?: () => void;
-  /** Actions or extra content under the markers. */
+  /** Extra content under the markers, inside the card's open target (a press on it opens the card). */
   children?: ReactNode;
+  /**
+   * Buttons on the card's face (a decision's answers), in a row under the markers and `children`, outside the open
+   * target: a press, a key or a pointerdown in the row never opens the card nor starts a drag from a SortableGroup.
+   * The consumer passes its own Buttons; the row only places them. Gone while open, with the rest of the card.
+   */
+  actions?: ReactNode;
   className?: string;
 }
 
@@ -110,7 +116,7 @@ export function Face({ number, kind, title, markers }: Pick<StatusCardProps, 'nu
   );
 }
 
-export function StatusCard({ id, number, kind, title, markers, accent, open = false, onOpen, children, className = '' }: StatusCardProps) {
+export function StatusCard({ id, number, kind, title, markers, accent, open = false, onOpen, children, actions, className = '' }: StatusCardProps) {
   const reduce = useReducedMotion();
   const radius = useRadius();
   const slot = useRef<HTMLDivElement>(null);
@@ -135,6 +141,11 @@ export function StatusCard({ id, number, kind, title, markers, accent, open = fa
         <Face number={number} kind={kind} title={title} markers={markers} />
         {children}
       </div>
+      {actions != null && actions !== false && (
+        <div data-status-card-actions className="flex flex-wrap items-center gap-2xs px-xs pb-2xs">
+          {actions}
+        </div>
+      )}
     </motion.div>
   );
 }
