@@ -210,6 +210,8 @@ export class ThemeManager {
 
       // Apply to DOM
       const mode = this.isDarkMode() ? 'dark' : 'light';
+      // Same as applyTheme: <html> in the mode whose tokens we write.
+      applyModeClass(getTheme());
       const themeMode = generated[mode];
 
       // Load typography for consistent styling

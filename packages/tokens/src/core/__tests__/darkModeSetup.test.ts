@@ -201,6 +201,20 @@ describe('dark mode set-up through applyTheme', () => {
     });
   });
 
+  describe('applyUserTheme alone, no initTheme()', () => {
+    it('saved dark: .dark on <html>, dark tokens written', async () => {
+      const env = installFakeDom(false);
+      env.storage.theme = 'dark';
+      const { manager } = await loadModules();
+      const input = { name: 'Mine', primary: '#5860fe', accent: '#d946ef' };
+
+      await manager.applyUserTheme(input, 'mine');
+
+      expect(env.classes.has('dark')).toBe(true);
+      expect(env.styleEl.textContent).toContain(darkSurface);
+    });
+  });
+
   describe('order does not matter', () => {
     it.each(['dark', 'light', 'system', null])(
       'saved %s: initTheme() after applyTheme leaves the same result as applyTheme alone',
