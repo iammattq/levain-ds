@@ -63,4 +63,11 @@ describe('motion tokens (baseline: the OS shell on mattquinn.ca)', () => {
     expect(drag.liftScale).toBeLessThanOrEqual(1.05);
     expect(drag.maxTilt).toBeLessThanOrEqual(6);
   });
+
+  it('an ordinary drag leans visibly: about 6° by 600 px/s, a slow one gently', () => {
+    const lean = (speed: number) => Math.min(speed / drag.tiltAtSpeed, 1) * drag.maxTilt;
+    expect(lean(600)).toBeCloseTo(6, 5);
+    expect(lean(150)).toBeGreaterThanOrEqual(1);
+    expect(lean(150)).toBeLessThanOrEqual(2);
+  });
 });

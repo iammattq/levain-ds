@@ -18,7 +18,7 @@
  *
  * Wrap the lists in one <SortableGroup onMove>. Each <SortableList id> renders its items through `renderItem`.
  */
-import { animate, motion, useMotionValue, useReducedMotion, useSpring, useTransform, useVelocity } from 'framer-motion';
+import { animate, motion, useMotionValue, useReducedMotion, useSpring, type MotionValue } from 'framer-motion';
 import { drag as DRAG, duration, motion as motionFor, recipe, tiltSpring } from '@levain/tokens';
 import {
   createContext,
@@ -80,6 +80,32 @@ export interface SortableGroupProps {
   children: ReactNode;
 }
 
+/** The lean, in degrees, for a sideways pointer speed in px/s: proportional, reaching drag.maxTilt at drag.tiltAtSpeed. */
+export function leanFor(speed: number): number {
+  return Math.max(-1, Math.min(1, speed / DRAG.tiltAtSpeed)) * DRAG.maxTilt;
+}
+
+/** While a card is lifted, sets `lean` every frame from how fast x moved since the last frame (lightly smoothed, so a
+ *  frame without a pointer event doesn't flicker it), so it falls to 0 once the pointer stops; then back to 0.
+ *  Measured here rather than with useVelocity or x.getVelocity(): in framer-motion 12.43 under React 19 both read 0 in
+ *  the lean's frame however fast the card moved, so the card never leaned. */
+function useLean(x: MotionValue<number>, lean: MotionValue<number>, on: boolean) {
+  useEffect(() => {
+    if (!on) return;
+    let last = { t: performance.now(), x: x.get() }, speed = 0;
+    let id = requestAnimationFrame(function tick(t) {
+      const dt = t - last.t;
+      if (dt > 0) {
+        speed = speed * 0.5 + ((x.get() - last.x) / dt) * 1000 * 0.5;
+        last = { t, x: x.get() };
+        lean.set(leanFor(speed));
+      }
+      id = requestAnimationFrame(tick);
+    });
+    return () => { cancelAnimationFrame(id); lean.set(0); };
+  }, [x, lean, on]);
+}
+
 export function SortableGroup({ onMove, onDragChange, onDragMove, children }: SortableGroupProps) {
   const reduce = !!useReducedMotion();
   const lists = useRef(new Map<string, Registered>());
@@ -89,8 +115,7 @@ export function SortableGroup({ onMove, onDragChange, onDragMove, children }: So
   const [announce, setAnnounce] = useState('');
   // the lifted card's position (set directly: it tracks the pointer exactly) and lean
   const x = useMotionValue(0), y = useMotionValue(0);
-  const vx = useVelocity(x);
-  const lean = useTransform(vx, [-DRAG.tiltAtSpeed, 0, DRAG.tiltAtSpeed], [-DRAG.maxTilt, 0, DRAG.maxTilt], { clamp: true });
+  const lean = useMotionValue(0);
   const rotate = useSpring(lean, tiltSpring);
   const grab = useRef({ dx: 0, dy: 0 });
   const [landing, setLanding] = useState(false);
@@ -308,6 +333,7 @@ export function SortableGroup({ onMove, onDragChange, onDragMove, children }: So
 
   const value = useMemo(() => ({ register, drag, begin, beginTouch, keyboard, reduce }), [register, drag, begin, beginTouch, keyboard, reduce]);
   const lifted = drag?.mode === 'pointer';
+  useLean(x, lean, lifted && !reduce);
   return (
     <Group.Provider value={value}>
       {children}

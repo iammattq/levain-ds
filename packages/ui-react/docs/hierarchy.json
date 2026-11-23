@@ -828,8 +828,8 @@
     "recipes": "morph, arrive, depart, collapse, shift, sheetIn, sheetOut, travel, fadeIn, contentIn, contentOut, quick, settle",
     "drag": {
       "liftScale": 1.03,
-      "maxTilt": "4°",
-      "tiltAtSpeed": "1600 px/s",
+      "maxTilt": "6°",
+      "tiltAtSpeed": "600 px/s",
       "mouseSlop": "4 px",
       "touchHold": "250 ms",
       "touchSlop": "8 px",

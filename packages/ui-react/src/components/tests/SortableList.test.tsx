@@ -1,7 +1,7 @@
 import React from 'react';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { SortableGroup, SortableList, type SortableMove } from '../SortableList';
+import { leanFor, SortableGroup, SortableList, type SortableMove } from '../SortableList';
 
 function Board({ onMove }: { onMove: (m: SortableMove) => void }) {
   const card = (t: string) => <span>{t}</span>;
@@ -165,5 +165,16 @@ describe('SortableList on a touch screen', () => {
     expect(lifted()).toBe(false);
     scrollBy.mockRestore();
     jest.useRealTimers();
+  });
+});
+
+describe('the lean', () => {
+  it('follows sideways speed: about 6° at 600 px/s, gentle when slow, upright at rest, capped either way', () => {
+    expect(leanFor(600)).toBeCloseTo(6);
+    expect(leanFor(-600)).toBeCloseTo(-6);
+    expect(leanFor(150)).toBeCloseTo(1.5);
+    expect(leanFor(0)).toBe(0);
+    expect(leanFor(5000)).toBe(6);
+    expect(leanFor(-5000)).toBe(-6);
   });
 });

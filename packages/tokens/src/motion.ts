@@ -112,8 +112,8 @@ export const drag = {
   /** Scale of a lifted card. */
   liftScale: 1.03,
   /** The most a moving card leans, in degrees, and the pointer speed (px/s) that reaches it. */
-  maxTilt: 4,
-  tiltAtSpeed: 1600,
+  maxTilt: 6,
+  tiltAtSpeed: 600,
   /** Pixels a mouse moves before a press becomes a drag (so a click stays a click). */
   mouseSlop: 4,
   /** Milliseconds a finger holds a card before the touch becomes a drag (so a swipe still scrolls). */
