@@ -15,6 +15,7 @@ The first consumer outside the portfolio was a web board for running a team of c
 - **Timeline is career-specific.** Its props are `company` and `roles`, and it hard-codes a "History" heading, so a release history couldn't reuse it. Wants a general timeline (date, title, body) with the career version built on top.
 
 - **Card stack.** Loose notes shown as a horizontal row whose trailing cards pile into a stack, peeled off right to left as you scroll (desktop), and as a pile that fans open into the full list or steps one card at a time (phone). Prototyped in the consumer.
+- **StatusCard's kind label is forced to capitals.** The face sets `uppercase tracking-wide` on the kind ("QUEUED", "ALARM"), on the card and in `StatusCardDialog`, with no way to turn it off; the Ringmaster board's type rules say no all caps. Wants the casing left to the label (or a prop). The board lives with it for now.
 - **Actions slot on StatusCard.** A decision card with its answer buttons on the face (the recommended one filled); today the buttons are passed as children.
 
 ### Phone patterns
