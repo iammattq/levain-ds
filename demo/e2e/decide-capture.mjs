@@ -60,9 +60,15 @@ try {
     await pause(1200);
     const title = page.getByText('Strip or arc for the progress mark').first();
     // open
+    // a real mouse press at the title (Playwright's actionability check reports the sortable list over it), then proof
+    // that it opened: the dialog is there
+    const b = await title.boundingBox();
+    const hitAt = await page.evaluate(([x, y]) => { const e = document.elementFromPoint(x, y); return e ? e.tagName + (e.getAttribute('role') ? '[role=' + e.getAttribute('role') + ']' : '') + ' ' + (e.textContent ?? '').slice(0, 40) : null; }, [b.x + b.width / 2, b.y + b.height / 2]);
     await page.evaluate(sampler);
-    await title.click();
+    await page.mouse.click(b.x + b.width / 2, b.y + b.height / 2);
+    await page.getByRole('dialog').waitFor({ timeout: 3000 });
     await pause(1400);
+    result[`${reducedMotion}-hitAtTitle`] = hitAt;
     result[`${reducedMotion}-open`] = analyse(await page.evaluate(() => window.__stop()));
     await page.screenshot({ path: `${out}/open-${reducedMotion}.png` });
     // close
