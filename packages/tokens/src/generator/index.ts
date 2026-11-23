@@ -17,6 +17,7 @@ export type {
   StateColors,
   RampParams,
   ActionColorParams,
+  ActionStatusInput,
 } from './types';
 
 // Defaults

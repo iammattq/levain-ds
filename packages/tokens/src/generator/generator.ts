@@ -73,10 +73,10 @@ interface ResolvedThemeConfig {
     themeAffinity: number;
   };
   actionColors: {
-    success: { hue: number; hueAdjust: number };
-    error: { hue: number; hueAdjust: number };
-    caution: { hue: number; hueAdjust: number };
-    info: { hue: number; hueAdjust: number };
+    success: { hue: number; hueAdjust: number; lightFgLightnessOffset?: number };
+    error: { hue: number; hueAdjust: number; lightFgLightnessOffset?: number };
+    caution: { hue: number; hueAdjust: number; lightFgLightnessOffset?: number };
+    info: { hue: number; hueAdjust: number; lightFgLightnessOffset?: number };
     chroma: number;
     baseLightness: number;
     fgLightnessOffset: number;
@@ -176,12 +176,14 @@ function mergeWithDefaults(input: ThemeInputV2): ResolvedThemeConfig {
         hueAdjust:
           input.actionColors?.success?.hueAdjust ??
           DEFAULT_ACTION_PARAMS.success.hueAdjust,
+        lightFgLightnessOffset: input.actionColors?.success?.lightFgLightnessOffset,
       },
       error: {
         hue: input.actionColors?.error?.hue ?? DEFAULT_ACTION_PARAMS.error.hue,
         hueAdjust:
           input.actionColors?.error?.hueAdjust ??
           DEFAULT_ACTION_PARAMS.error.hueAdjust,
+        lightFgLightnessOffset: input.actionColors?.error?.lightFgLightnessOffset,
       },
       caution: {
         hue:
@@ -189,12 +191,14 @@ function mergeWithDefaults(input: ThemeInputV2): ResolvedThemeConfig {
         hueAdjust:
           input.actionColors?.caution?.hueAdjust ??
           DEFAULT_ACTION_PARAMS.caution.hueAdjust,
+        lightFgLightnessOffset: input.actionColors?.caution?.lightFgLightnessOffset,
       },
       info: {
         hue: input.actionColors?.info?.hue ?? DEFAULT_ACTION_PARAMS.info.hue,
         hueAdjust:
           input.actionColors?.info?.hueAdjust ??
           DEFAULT_ACTION_PARAMS.info.hueAdjust,
+        lightFgLightnessOffset: input.actionColors?.info?.lightFgLightnessOffset,
       },
       chroma: input.actionColors?.chroma ?? DEFAULT_ACTION_PARAMS.chroma,
       baseLightness:
@@ -372,6 +376,7 @@ export class ThemeGeneratorV2 {
         baseLightness: actionConfig.baseLightness,
         fgLightnessOffset: actionConfig.fgLightnessOffset,
         darkFgLightnessOffset: actionConfig.darkFgLightnessOffset,
+        lightFgLightnessOffset: actionConfig[type].lightFgLightnessOffset,
         bgLightnessOffset: actionConfig.bgLightnessOffset,
       };
 
