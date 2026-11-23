@@ -20,6 +20,7 @@ The first consumer outside the portfolio was a web board for running a team of c
 - **Image attachment by paste or pick, with thumbnails.** ImageUploader is drag-and-drop only (react-dropzone, multipart uploads, no paste). The consumer built its own from Button, TextArea and tokens.
 - **Plain Dialog without a card face.** The only dialog is StatusCardDialog, which needs a kind and title; a simple form dialog (Add to-do) had to borrow it.
 - **StatusCardDialog can't stack.** Two open dialogs render as two identical overlays, one over the other. Missing: placement for a dialog behind (offset up and scaled like a pile), a behind state (inert, aria-hidden, no focus, no Escape, no overlay of its own), and an "away" exit for the front one while the one behind animates forward on the morph recipe (cross-fade under Reduce Motion). Wanted for a look and its decision opened as a pile. The consumer is building the non-visual parts and waiting on levain.
+- **SortableGroup keys must be unique across the whole group.** SortableList's layoutId is group-wide, so two lists with an item key in common (D14 in both) share a layoutId and a click doesn't open the card. Not documented; the consumer prefixes keys per list (`levain:D14`, `board:D14`).
 - **Tooltip / Toggletip.** Hover delay, focus, tap, Escape, collision placement, portal. The consumer built one by hand on its switcher's surface recipe, on `--color-surface-component`, because dark info and success miss 4.5:1 on the elevated surface.
 
 ### Phone patterns
