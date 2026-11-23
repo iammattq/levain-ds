@@ -15,21 +15,7 @@ export function initTheme(): void {
   // Get stored theme preference, or default to dark for a first-time visitor.
   // Must stay in sync with the pre-paint script in the app shell, or the page
   // resolves one mode before paint and another after hydration.
-  const storedTheme = (localStorage.getItem('theme') as ThemeMode) || 'dark';
-  setTheme(storedTheme);
-
-  // Listen for system preference changes
-  window
-    .matchMedia('(prefers-color-scheme: dark)')
-    .addEventListener('change', (e) => {
-      if (storedTheme === 'system') {
-        if (e.matches) {
-          document.documentElement.classList.add('dark');
-        } else {
-          document.documentElement.classList.remove('dark');
-        }
-      }
-    });
+  setTheme(getTheme());
 }
 
 /**
@@ -41,14 +27,33 @@ export function setTheme(theme: ThemeMode): void {
   // Store the preference
   localStorage.setItem('theme', theme);
 
-  // Apply theme
-  if (theme === 'system') {
-    const prefersDark = window.matchMedia(
-      '(prefers-color-scheme: dark)'
-    ).matches;
-    document.documentElement.classList.toggle('dark', prefersDark);
-  } else {
-    document.documentElement.classList.toggle('dark', theme === 'dark');
+  applyModeClass(theme);
+}
+
+let systemListenerAdded = false;
+
+/**
+ * Put <html> in the given mode: the `.dark` class on for dark, off for light,
+ * following prefers-color-scheme for system. Also starts (once per page) the
+ * listener that keeps the class following the system while the saved mode is
+ * `system`. Shared by setTheme and themeManager.applyTheme, so whichever runs
+ * first sets the page up. Internal: not exported from the package.
+ */
+export function applyModeClass(theme: ThemeMode): void {
+  if (typeof window === 'undefined') return;
+
+  const media = window.matchMedia('(prefers-color-scheme: dark)');
+  const dark = theme === 'system' ? media.matches : theme === 'dark';
+  document.documentElement.classList.toggle('dark', dark);
+
+  if (!systemListenerAdded) {
+    systemListenerAdded = true;
+    media.addEventListener('change', (e) => {
+      // Read the saved mode at change time: it may have been set since.
+      if (getTheme() === 'system') {
+        document.documentElement.classList.toggle('dark', e.matches);
+      }
+    });
   }
 }
 

@@ -12,7 +12,7 @@ import {
   ThemeInputV2,
 } from '../generator/types';
 import { themeGeneratorV2 } from '../generator/generator';
-import { isDarkMode } from './themeMode';
+import { applyModeClass, getTheme, isDarkMode } from './themeMode';
 
 /**
  * Typography presets collection type
@@ -210,6 +210,8 @@ export class ThemeManager {
 
       // Apply to DOM
       const mode = this.isDarkMode() ? 'dark' : 'light';
+      // Same as applyTheme: <html> in the mode whose tokens we write.
+      applyModeClass(getTheme());
       const themeMode = generated[mode];
 
       // Load typography for consistent styling
@@ -477,6 +479,9 @@ export class ThemeManager {
       }
 
       const mode = this.isDarkMode() ? 'dark' : 'light';
+      // Put <html> in the mode whose tokens we write, so the `dark:` variants
+      // agree with the colours whether or not initTheme() ran first.
+      applyModeClass(getTheme());
 
       let styleEl = document.getElementById('theme-styles');
       if (!styleEl) {

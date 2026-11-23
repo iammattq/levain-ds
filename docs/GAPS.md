@@ -31,7 +31,6 @@ The first consumer outside the portfolio was a web board for running a team of c
 - **Safe-area padding** for the notch and home indicator, as a token or utility.
 
 ### Foundations
-- **Dark mode needs a set-up order.** Dark mode is a class on `<html>`; a non-Next app must call `initTheme()` before `themeManager.applyTheme()`, or cards keep their light styling. Documented in the README; levain could do it for the app.
 - **Node types in a browser package.** ui-react uses the `NodeJS` namespace (DateInput, NavigationLinks), so browser-only consumers need `@types/node`.
 - **Portals render unstyled without the theme on `<body>`.** Dialogs portal to `<body>`, so the theme's look classes have to be on `<body>` too, or they render unstyled. The consumer adds them by hand.
 - **No dashed-border token.** An empty state needed a dashed border; the consumer used a raw Tailwind dashed border.
@@ -40,6 +39,7 @@ The first consumer outside the portfolio was a web board for running a team of c
 - **No caution (amber) status hue.** The consumer hand-picks its own amber (light #975d04), which misses 4.5:1 on darker light surfaces (4.25:1 on #e4e4e4); it falls back to the text colour for words there and keeps amber only for small pips.
 
 ## Closed
+- **Dark mode needs a set-up order.** Dark mode is a class on `<html>`, and a non-Next app had to call `initTheme()` before `themeManager.applyTheme()`, or cards kept their light styling. Closed in v0.3.3: `applyTheme` puts `<html>` in the mode it writes (one helper shared with `setTheme`), so one call is enough and the order doesn't matter.
 - **Progress ring and progress bar / meter.** Closed by `ProgressRing` and `ProgressBar` (T18): xs to lg, default/caution/danger on the existing action tokens, `role="meter"`. xs matches the board's hand-drawn ring and bar.
 - **Text on accent per mode.** A theme chose its text-on-accent colour once for both modes, so a lighter dark-mode accent got unreadable white text. Closed in v0.3.0 by the theme field `textOn` (text on primary and accent fills, per mode), with contrast tests for both modes.
 - **Next.js lock-in.** Components imported `next/link`, `next/image`, `next/navigation` and `next-auth`. Closed in v0.1.0 by `LevainProvider` (link, image, path and theme supplied by the app).
