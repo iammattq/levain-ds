@@ -96,6 +96,17 @@ describe('StatusCard', () => {
       expect(onOpen).toHaveBeenCalledTimes(1);
     });
 
+    it('only Enter and Space stop at the row: Escape and other keys still reach window-level shortcuts', () => {
+      const keys: string[] = [];
+      const onKey = (e: KeyboardEvent) => keys.push(e.key);
+      window.addEventListener('keydown', onKey);
+      render(<StatusCard id="T4" title="Strip or arc" onOpen={() => {}} actions={answers(() => {})} />);
+      const strip = screen.getByRole('button', { name: 'Strip' });
+      for (const key of ['Escape', 'ArrowDown', 'k', 'Enter', ' ']) fireEvent.keyDown(strip, { key });
+      window.removeEventListener('keydown', onKey);
+      expect(keys).toEqual(['Escape', 'ArrowDown', 'k']);
+    });
+
     it('sits outside the open target, under the markers and children', () => {
       render(<StatusCard id="T4" title="Strip or arc" markers={[{ label: 'eng1' }]} onOpen={() => {}} actions={answers(() => {})}><p>More</p></StatusCard>);
       const target = screen.getByText('Strip or arc').closest('[role="button"]')!;

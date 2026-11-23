@@ -15,7 +15,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { duration, motion as motionFor } from '@levain/tokens';
 import type { LucideIcon } from 'lucide-react';
 import { X } from 'lucide-react';
-import { useEffect, useLayoutEffect, useRef, useState, type ReactNode, type SyntheticEvent } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode, type SyntheticEvent } from 'react';
 import { createPortal } from 'react-dom';
 
 export type StatusTone = 'default' | 'accent' | 'info' | 'caution' | 'success' | 'error' | 'muted';
@@ -88,6 +88,9 @@ export function useRadius(token = '--radius-lg') {
 export const morphId = (id: string) => 'status-card-' + id;
 
 const stop = (e: SyntheticEvent) => e.stopPropagation();
+/** Only the keys the open target and SortableGroup act on (Enter, Space): every other key, Escape included, still
+ *  reaches the page's own shortcuts. */
+const stopPress = (e: ReactKeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') e.stopPropagation(); };
 
 export function StatusMarkers({ markers }: { markers: StatusMarker[] }) {
   return (
@@ -145,8 +148,8 @@ export function StatusCard({ id, number, kind, title, markers, accent, open = fa
       </div>
       {actions != null && actions !== false && (
         // the row's own presses: never the card's open, never a drag's start (SortableGroup listens on the item for
-        // pointerdown, touchstart and Space), never a click on a consumer's wrapper
-        <div data-status-card-actions onClick={stop} onKeyDown={stop} onPointerDown={stop} onTouchStart={stop}
+        // pointerdown, touchstart and Space), never a click on a consumer's wrapper; other keys pass
+        <div data-status-card-actions onClick={stop} onKeyDown={stopPress} onPointerDown={stop} onTouchStart={stop}
           className="flex flex-wrap items-center gap-2xs px-xs pb-2xs">
           {actions}
         </div>
