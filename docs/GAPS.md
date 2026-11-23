@@ -20,6 +20,8 @@ The first consumer outside the portfolio was a web board for running a team of c
 - **Popover / Menu.** A small anchored panel that opens from a button (the board's project switcher). Built by hand in the consumer.
 - **StatusCardDialog cuts off tall dialogs.** No max-height or scrolling, so a long dialog runs off the screen.
 - **Drag overlay width misses the grip.** The overlay is sized without the grip, so the card jumps in width when picked up.
+- **Image attachment by paste or pick, with thumbnails.** ImageUploader is drag-and-drop only (react-dropzone, multipart uploads, no paste). The consumer built its own from Button, TextArea and tokens.
+- **Plain Dialog without a card face.** The only dialog is StatusCardDialog, which needs a kind and title; a simple form dialog (Add to-do) had to borrow it.
 
 ### Phone patterns
 - **Bottom sheet.** A panel that rises from the bottom with a drag handle and snap heights.
@@ -31,6 +33,7 @@ The first consumer outside the portfolio was a web board for running a team of c
 - **Node types in a browser package.** ui-react uses the `NodeJS` namespace (DateInput, NavigationLinks), so browser-only consumers need `@types/node`.
 - **Portals render unstyled without the theme on `<body>`.** Dialogs portal to `<body>`, so the theme's look classes have to be on `<body>` too, or they render unstyled. The consumer adds them by hand.
 - **No dashed-border token.** An empty state needed a dashed border; the consumer used a raw Tailwind dashed border.
+- **Status colours fail contrast on the dark dialog surface.** In dark mode on StatusCardDialog's surface (about #323232), `--color-info-fg` measures 4.40:1 and `--color-error-fg` about 4.0:1, under 4.5:1; on the card surface they pass (info-fg 6.18:1). The consumer held the dialog to red's level instead.
 
 ## Closed
 - **Text on accent per mode.** A theme chose its text-on-accent colour once for both modes, so a lighter dark-mode accent got unreadable white text. Closed in v0.3.0 by the theme field `textOn` (text on primary and accent fills, per mode), with contrast tests for both modes.
