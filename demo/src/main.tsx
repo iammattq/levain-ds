@@ -78,6 +78,10 @@ function DragDemo() {
   );
 }
 
+/** The pair is one card, L8: the stack grows out of it and the last dialog to close goes back into it (cardId).
+ *  ?stackCard=0 drops the cardId (each dialog morphs only to a card with its own id), for before/after captures. */
+const STACK_CARD = new URLSearchParams(location.search).get('stackCard') !== '0';
+
 /** Two dialogs as a pile (StatusCardDialogStack): a look in front of the decide it's for. Next sends the look away and
  *  brings the decide forward; Back brings the look back from away. */
 function StackDemo() {
@@ -99,11 +103,11 @@ function StackDemo() {
       </div>
     ) };
   return (
-    <Section title="A dialog stack: a look over its decide" note="Open the card: the look grows out of it with the decide behind, 10 px lower and 5 % smaller. Next, Back; Escape or a click outside closes the front only.">
+    <Section title="A dialog stack: a look over its decide" note="Open the card: the look grows out of it with the decide behind, 10 px lower and 5 % smaller. Next, Back; Escape or a click outside closes the front only. The pair is one card: whichever dialog closes last goes back into it.">
       <div className="max-w-sm" data-demo="stack-card">
         <StatusCard id="L8" number="L8" kind={{ label: 'Look', tone: 'accent' }} title="The strip, second pass" markers={look.markers} open={open} onOpen={() => { setStep(0); setOpen(true); }} />
       </div>
-      <StatusCardDialogStack dialogs={open ? [look, decide].slice(step) : []} onClose={() => setOpen(false)} />
+      <StatusCardDialogStack dialogs={open ? [look, decide].slice(step) : []} onClose={() => setOpen(false)} cardId={STACK_CARD ? 'L8' : undefined} />
     </Section>
   );
 }

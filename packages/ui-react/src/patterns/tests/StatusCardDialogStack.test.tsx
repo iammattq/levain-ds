@@ -3,7 +3,8 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { useReducedMotion } from 'framer-motion';
 import { recipe } from '@levain/tokens';
-import { AWAY_LIFT, away, BEHIND_EDGE, PILE, pose, StatusCardDialogStack, type StatusCardStackDialog } from '../StatusCardDialogStack';
+import { DIALOG_PANEL } from '../StatusCard';
+import { AWAY_LIFT, away, BEHIND_EDGE, PILE, PILE_ORIGIN, pose, StatusCardDialogStack, type StatusCardStackDialog } from '../StatusCardDialogStack';
 
 jest.mock('framer-motion', () => ({ ...jest.requireActual('framer-motion'), useReducedMotion: jest.fn(() => false) }));
 const reduced = useReducedMotion as jest.Mock;
@@ -61,7 +62,7 @@ describe('StatusCardDialogStack', () => {
     expect(pose(4)).toEqual({ y: 3 * PILE.y, scale: 1 - 3 * PILE.scale, opacity: 0 });
     expect(PILE).toMatchObject({ y: 10, scale: 0.05, depth: 3, origin: '50% 100%' });
     render(stack([LOOK, DECIDE]));
-    expect(panel(1).style.transformOrigin).toBe('50% 100%');
+    expect(panel(1).style.transformOrigin).toBe(PILE.origin + ' 0');
     // in the front's grid cell, filling it without sizing it
     expect(panel(1).className).toContain('[contain:size]');
     expect(panel(0).className).not.toContain('[contain:size]');
@@ -155,12 +156,109 @@ describe('StatusCardDialogStack', () => {
     it('the front still leaves and the next comes forward, focused, with the pile drawn the same', async () => {
       reduced.mockReturnValue(true);
       const { rerender } = render(stack([LOOK, DECIDE]));
-      expect(panel(1).style.transformOrigin).toBe('50% 100%');
+      expect(panel(1).style.transformOrigin).toBe(PILE.origin + ' 0');
       expect(panel(1)).toHaveAttribute('inert');
       rerender(stack([DECIDE]));
       await waitFor(() => expect(screen.queryByText('The strip')).toBeNull());
       expect(screen.getByRole('dialog')).toHaveAccessibleName('Strip or arc');
       expect(screen.getByRole('dialog')).toHaveFocus();
+    });
+  });
+
+  it("sets the pile's origin as framer's originX/originY, which survive a layout animation, not as a CSS transformOrigin", () => {
+    // framer's projection writes transform-origin from originX/originY once a panel has had a layout animation (T23)
+    expect(PILE_ORIGIN).toEqual({ originX: 0.5, originY: 1 });
+    expect(`${PILE_ORIGIN.originX * 100}% ${PILE_ORIGIN.originY * 100}%`).toBe(PILE.origin);
+    render(<StatusCardDialogStack dialogs={[LOOK, DECIDE]} onClose={() => {}} cardId="L8" />);
+    expect(panel(1).style.transformOrigin).toBe(PILE.origin + ' 0');
+  });
+
+  describe('without a cardId', () => {
+    it('is the panel as before: its own surface and no surface layer', () => {
+      render(stack([LOOK, DECIDE]));
+      expect(document.querySelector('[data-stack-surface]')).toBeNull();
+      expect(panel(0).className).toContain(DIALOG_PANEL);
+      expect(panel(1).className).toContain(BEHIND_EDGE);
+    });
+  });
+
+  describe('with a cardId: one card for the pile', () => {
+    const cardStack = (dialogs: StatusCardStackDialog[]) => <StatusCardDialogStack dialogs={dialogs} onClose={() => {}} cardId="P1" />;
+    const surface = (depth: number) => panel(depth).querySelector<HTMLElement>('[data-stack-surface]')!;
+    // how many surfaces hold the card's layoutId, at most, across every DOM change: never two at once
+    let most = 0;
+    let watch: MutationObserver;
+    const holders = () => document.querySelectorAll('[data-stack-surface="card"]').length;
+    beforeEach(() => {
+      most = 0;
+      watch = new MutationObserver(() => { most = Math.max(most, holders()); });
+      watch.observe(document.body, { subtree: true, childList: true, attributes: true });
+    });
+    afterEach(() => watch.disconnect());
+
+    it('the front when it opens holds the card (grows out of it), the ones behind keep their own', () => {
+      render(cardStack([LOOK, DECIDE]));
+      expect(surface(0)).toHaveAttribute('data-stack-surface', 'card');
+      expect(surface(1)).toHaveAttribute('data-stack-surface', 'own');
+      expect(holders()).toBe(1);
+    });
+
+    it('draws each surface as a layer behind the content: aria-hidden, no pointer events, the pile look on it', () => {
+      render(cardStack([LOOK, DECIDE]));
+      for (const d of [0, 1]) {
+        const s = surface(d);
+        expect(panel(d).firstElementChild).toBe(s);
+        expect(s).toHaveAttribute('aria-hidden', 'true');
+        expect(s.className).toContain('pointer-events-none');
+        expect(s.className).toContain('absolute');
+        expect(s).toBeEmptyDOMElement();
+      }
+      expect(surface(0).className).toContain('shadow-[var(--elevation-3)]');
+      expect(surface(1).className).toContain(BEHIND_EDGE);
+      // the pose is on the panel, which carries its surface
+      expect(panel(1).style.transformOrigin).toBe(PILE.origin + ' 0');
+    });
+
+    it('hands the card to the next front once the one that left is gone, never two holding it', async () => {
+      const { rerender } = render(cardStack([LOOK, DECIDE]));
+      const decide = panel(1);
+      rerender(cardStack([DECIDE]));
+      await waitFor(() => expect(screen.queryByText('The strip')).toBeNull());
+      await waitFor(() => expect(surface(0)).toHaveAttribute('data-stack-surface', 'card'));
+      // the same panel, its content and focus kept: only the surface layer changed
+      expect(panel(0)).toBe(decide);
+      expect(document.activeElement).toBe(decide);
+      expect(most).toBe(1);
+    });
+
+    it('takes the card back from a holder now behind it in two steps, the behind one first', async () => {
+      const { rerender } = render(cardStack([LOOK, DECIDE]));
+      rerender(cardStack([DECIDE]));
+      await waitFor(() => expect(surface(0)).toHaveAttribute('data-stack-surface', 'card'));
+      rerender(cardStack([LOOK, DECIDE]));
+      await waitFor(() => expect(surface(0)).toHaveAttribute('data-stack-surface', 'card'));
+      expect(surface(1)).toHaveAttribute('data-stack-surface', 'own');
+      expect(most).toBe(1);
+    });
+
+    it('the last to close holds the card as it leaves, so it collapses into it', async () => {
+      const { rerender } = render(cardStack([LOOK, DECIDE]));
+      rerender(cardStack([DECIDE]));
+      await waitFor(() => expect(surface(0)).toHaveAttribute('data-stack-surface', 'card'));
+      rerender(cardStack([]));
+      // still drawn while it leaves, holding the card
+      expect(document.querySelector('[data-stack-surface="card"]')).not.toBeNull();
+      await waitFor(() => expect(document.querySelector('[data-dialog-stack]')).toBeNull());
+      expect(most).toBe(1);
+    });
+
+    it('opened again, the new front holds the card', async () => {
+      const { rerender } = render(cardStack([LOOK, DECIDE]));
+      rerender(cardStack([]));
+      await waitFor(() => expect(document.querySelector('[data-dialog-stack]')).toBeNull());
+      rerender(cardStack([DECIDE, LOOK]));
+      expect(surface(0)).toHaveAttribute('data-stack-surface', 'card');
+      expect(surface(1)).toHaveAttribute('data-stack-surface', 'own');
     });
   });
 });
