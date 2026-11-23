@@ -19,7 +19,7 @@ try {
     for (const [width, label] of [[390, 'phone'], [1280, 'desktop']]) {
       const page = await browser.newPage({ viewport: { width, height: width > 500 ? 900 : 844 }, deviceScaleFactor: 2 });
       page.on('pageerror', e => errors.push(e.message));
-      await page.goto(base + '?mode=' + mode, { waitUntil: 'networkidle' });
+      await page.goto(base + '?theme=7&mode=' + mode, { waitUntil: 'networkidle' });
       await pause(800);
       await openStack(page);
       await page.screenshot({ path: `${out}/stack-${mode}-${label}.png` });
@@ -30,7 +30,7 @@ try {
         return { front: { w: f.width, h: f.height }, behind: { w: b.width, h: b.height }, peekBelow: b.bottom - f.bottom, widthRatio: b.width / f.width,
           activeIsFront: document.activeElement === document.querySelector('[data-stack-depth="0"]'), behindInert: document.querySelector('[data-stack-depth="1"]').hasAttribute('inert') };
       });
-      await page.getByRole('button', { name: 'Next' }).click(); await pause(900); await settled(page);
+      await page.getByRole('button', { name: 'Next', exact: true }).click(); await pause(900); await settled(page);
       await page.screenshot({ path: `${out}/stack-${mode}-${label}-step2.png` });
       await page.close();
     }
@@ -40,13 +40,13 @@ try {
     const ctx = await browser.newContext({ viewport: { width: 1000, height: 760 }, reducedMotion, recordVideo: { dir: `${out}/video-${reducedMotion}`, size: { width: 1000, height: 760 } } });
     const page = await ctx.newPage();
     page.on('pageerror', e => errors.push(e.message));
-    await page.goto(base + '?mode=light', { waitUntil: 'networkidle' });
+    await page.goto(base + '?theme=7&mode=light', { waitUntil: 'networkidle' });
     await page.getByText('The strip, second pass').first().scrollIntoViewIfNeeded();
     await pause(900);
     await page.getByText('The strip, second pass').first().click(); await pause(1400);
-    await page.getByRole('button', { name: 'Next' }).click(); await pause(1400);
-    await page.getByRole('button', { name: 'Back' }).click(); await pause(1400);
-    await page.getByRole('button', { name: 'Next' }).click(); await pause(1400);
+    await page.getByRole('button', { name: 'Next', exact: true }).click(); await pause(1400);
+    await page.getByRole('button', { name: 'Back', exact: true }).click(); await pause(1400);
+    await page.getByRole('button', { name: 'Next', exact: true }).click(); await pause(1400);
     await page.keyboard.press('Escape'); await pause(1400);
     await ctx.close();
   }

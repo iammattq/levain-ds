@@ -1,5 +1,5 @@
 // levain DS's motion, density and drag, on one page. Every timing here comes from @levain/tokens.
-// ?density=condensed starts condensed; ?mode=light starts light.
+// ?density=condensed starts condensed; ?mode=light starts light; ?theme=7 starts on Cobalt Mono.
 import '@fontsource/open-sans/400.css';
 import '@fontsource/open-sans/600.css';
 import '@fontsource/oswald/400.css';
@@ -253,5 +253,6 @@ function App() {
 
 const asked = new URLSearchParams(location.search).get('mode');
 if (asked === 'light' || asked === 'dark') setTheme(asked); else initTheme();
-void themeManager.applyTheme(0);
+// ?theme=<n> starts on that built-in theme (7: Cobalt Mono)
+void themeManager.applyTheme(Number(new URLSearchParams(location.search).get('theme') ?? 0) || 0);
 createRoot(document.getElementById('root')!).render(<StrictMode><LevainProvider><App /></LevainProvider></StrictMode>);
