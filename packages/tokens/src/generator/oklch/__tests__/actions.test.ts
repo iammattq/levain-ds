@@ -137,6 +137,19 @@ describe('generateActionColor', () => {
       });
     });
 
+    it('takes darkFgLightnessOffset for the dark fg when given', () => {
+      generateActionColor({ ...baseParams, darkFgLightnessOffset: -22 }, 'dark');
+
+      // 50 - (-22) = 72
+      expect(oklchToHex).toHaveBeenNthCalledWith(2, { l: 72, c: 0.15, h: 145 });
+    });
+
+    it('leaves the light fg on fgLightnessOffset when darkFgLightnessOffset is given', () => {
+      generateActionColor({ ...baseParams, darkFgLightnessOffset: -22 }, 'light');
+
+      expect(oklchToHex).toHaveBeenNthCalledWith(2, { l: 35, c: 0.15, h: 145 });
+    });
+
     it('inverts bg offset (bg is darker in dark mode)', () => {
       generateActionColor(baseParams, 'dark');
 

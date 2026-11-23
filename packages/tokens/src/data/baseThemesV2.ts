@@ -16,7 +16,9 @@ const cobaltMono: ThemeInputV2 = {
   accent: COBALT,
   surfaces: { tint: 0, tintColor: COBALT, chromaFalloff: 1, floor: 6, ceiling: 100, darkCurve: 0.6, lightCurve: 0.2 },
   states: { light: { intensity: 4 }, dark: { intensity: 5 } },
-  actionColors: { chroma: 0.12, baseLightness: 52 },
+  // (T20) dark status text sits at L72, not the mirrored L67: at 67 caution and error missed 4.5:1 on surface-elevated
+  // and 3:1 against border-default (a progress track). Light mode keeps the default offset.
+  actionColors: { chroma: 0.12, baseLightness: 52, darkFgLightnessOffset: -20 },
   elevation: { source: 'accent', chroma: 0, lightOpacity: 8, darkOpacity: 30 },
   tokenMapping: {
     light: { 'text-emphasis': 1, 'text-default': 3, 'text-muted': 8, 'text-faint': 11, 'border-subtle': 18, 'border-default': 16, 'border-emphasis': 14, primary: 1, accent: 3 },

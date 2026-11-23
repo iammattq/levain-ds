@@ -28,7 +28,7 @@ export function generateActionColor(
   const fg = oklchToHex({
     l: isLight
       ? params.baseLightness + params.fgLightnessOffset
-      : params.baseLightness - params.fgLightnessOffset,
+      : params.baseLightness - (params.darkFgLightnessOffset ?? params.fgLightnessOffset),
     c: params.chroma,
     h: hue,
   });
