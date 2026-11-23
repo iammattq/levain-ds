@@ -74,6 +74,17 @@ describe('StatusCardDialogStack', () => {
     expect(screen.getByRole('dialog')).not.toHaveAttribute('inert');
   });
 
+  it('takes a leaving front out of flow at once, so the next one can take its place while it goes away', () => {
+    const { rerender } = render(stack([LOOK, DECIDE]));
+    const look = panel(0);
+    // jsdom lays nothing out: give the panel a size for popLayout to measure
+    Object.assign(look.style, { width: '600px', height: '400px' });
+    rerender(stack([DECIDE]));
+    // still leaving, and popped (AnimatePresence popLayout reaches it through Panel's forwarded ref)
+    expect(look).toBeInTheDocument();
+    expect(look).toHaveAttribute('data-motion-pop-id');
+  });
+
   it('Escape asks to close only the front, through the latest onClose, and keeps focus where it was put (D258)', () => {
     const first = jest.fn();
     const { rerender } = render(stack([LOOK, DECIDE], first));

@@ -16,7 +16,7 @@
  */
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { motion as motionFor, recipe } from '@levain/tokens';
-import { useEffect, useLayoutEffect, useRef, useState, type MouseEvent } from 'react';
+import { forwardRef, useEffect, useLayoutEffect, useRef, useState, type MouseEvent } from 'react';
 import { createPortal } from 'react-dom';
 import { contentIn, DIALOG_BODY, DIALOG_PANEL, DialogHead, morphId, useRadius, type StatusCardDialogProps } from './StatusCard';
 
@@ -112,10 +112,14 @@ export function StatusCardDialogStack({ dialogs, onClose }: StatusCardDialogStac
   );
 }
 
-function Panel({ dialog, depth, count, arriving, reduce, onClose, panelRef }: {
+interface PanelProps {
   dialog: StatusCardStackDialog; depth: number; count: number; arriving: boolean; reduce: boolean | null; onClose: () => void;
   panelRef: (el: HTMLDivElement | null) => void;
-}) {
+}
+
+// forwardRef: AnimatePresence's popLayout measures its direct child through this ref to take a leaving front out of
+// flow, so the next one can take its place while it goes away (without it, the next waits below until the exit ends)
+const Panel = forwardRef<HTMLDivElement, PanelProps>(function Panel({ dialog, depth, count, arriving, reduce, onClose, panelRef }, forwarded) {
   const { id, number, kind, title, markers, children } = dialog;
   const radius = useRadius('--radius-2xl');
   const front = depth === 0;
@@ -123,7 +127,11 @@ function Panel({ dialog, depth, count, arriving, reduce, onClose, panelRef }: {
   // put in front of an open stack comes back from away; one put behind fades in at its place in the pile
   const [initial] = useState(() => (!arriving && front ? false : front ? { y: reduce ? 0 : -AWAY_LIFT, opacity: 0 } : { ...pose(depth), opacity: 0 }));
   const el = useRef<HTMLDivElement | null>(null);
-  const ref = (node: HTMLDivElement | null) => { el.current = node; panelRef(node); };
+  const ref = (node: HTMLDivElement | null) => {
+    el.current = node;
+    panelRef(node);
+    if (typeof forwarded === 'function') forwarded(node); else if (forwarded) forwarded.current = node;
+  };
   // behind: inert, so nothing in it takes focus or a click (set on the node: React 18 has no boolean `inert` prop).
   // A layout effect, so it's lifted before the stack's effect focuses a new front.
   useLayoutEffect(() => { el.current?.toggleAttribute('inert', !front); }, [front]);
@@ -161,4 +169,4 @@ function Panel({ dialog, depth, count, arriving, reduce, onClose, panelRef }: {
       </motion.div>
     </motion.div>
   );
-}
+});
