@@ -26,6 +26,8 @@ export type { HeadingProps } from './src/components/Heading';
 export { default as Tag } from './src/components/Tag';
 export { CountBadge } from './src/components/CountBadge';
 export type { CountBadgeProps, CountBadgeVariant, CountBadgeTone } from './src/components/CountBadge';
+export { CommandBlock, CommandBlockCopyAll } from './src/components/CommandBlock';
+export type { CommandBlockProps, CommandBlockCopyAllProps } from './src/components/CommandBlock';
 export { default as Switch } from './src/components/Switch';
 export { default as RadioButton } from './src/components/RadioButton';
 export { default as SegmentedControl } from './src/components/SegmentedControl';
@@ -142,6 +144,8 @@ export { default as EditorialNavigation } from './src/patterns/EditorialNavigati
 export { default as SimpleAnimatedName } from './src/patterns/SimpleAnimatedName';
 export { default as AsciiHeader } from './src/patterns/AsciiHeader';
 export { Timeline, TimelineGroup, TimelineItem } from './src/patterns/Timeline';
+export { TimelineList, TimelineEntry } from './src/patterns/TimelineList';
+export type { TimelineEntryData } from './src/patterns/TimelineList';
 export type {
   TimelineGroupData,
   TimelineItemData,
@@ -250,5 +254,7 @@ export { StatusCard, StatusCardDialog, StatusMarkers, morphId } from './src/patt
 export type { StatusCardProps, StatusCardDialogProps, StatusMarker, StatusTone } from './src/patterns/StatusCard';
 export { StatusCardDialogStack } from './src/patterns/StatusCardDialogStack';
 export type { StatusCardDialogStackProps, StatusCardStackDialog } from './src/patterns/StatusCardDialogStack';
+export { CardStack } from './src/patterns/CardStack';
+export type { CardStackProps } from './src/patterns/CardStack';
 export { ColumnStrip, useColumnStrip, snapIndex, edgeSide, COLUMN_STRIP_EDGE, COLUMN_STRIP_DWELL, COLUMN_STRIP_REPEAT } from './src/patterns/ColumnStrip';
 export type { ColumnStripProps, ColumnStripDrag, StripColumn } from './src/patterns/ColumnStrip';
