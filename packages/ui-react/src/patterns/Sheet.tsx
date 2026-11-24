@@ -12,10 +12,13 @@
  * A handle at the top: dragging it (or the head) down past a quarter of the sheet's height, or flicking it down, closes
  * the sheet; a shorter drag springs back on recipe.sheetIn. Only the handle and the head start a drag (useDragControls),
  * so scrolling the body never moves the sheet.
+ *
+ * A hairline under the head only while the body is scrolled (Q36): at rest nothing divides them; once words run up under
+ * the head, the line marks the edge. Always 1 px, transparent at rest, so nothing shifts when it shows.
  */
 import { motion, useDragControls, useMotionValue, animate, type PanInfo } from 'framer-motion';
 import { motion as motionFor, recipe } from '@levain/tokens';
-import { useRef, useSyncExternalStore, type PointerEvent as ReactPointerEvent, type ReactNode, type Ref } from 'react';
+import { useRef, useState, useSyncExternalStore, type PointerEvent as ReactPointerEvent, type ReactNode, type Ref } from 'react';
 
 /** Below Tailwind's `md` (48rem): the sheet's width. */
 export const PHONE_QUERY = '(max-width: 47.99rem)';
@@ -84,6 +87,7 @@ export function SheetPanel({ onDragClose, reduce, head, children, panelRef, labe
   const controls = useDragControls();
   const y = useMotionValue(0);
   const el = useRef<HTMLDivElement | null>(null);
+  const [scrolled, setScrolled] = useState(false);
   const ref = (node: HTMLDivElement | null) => {
     el.current = node;
     if (typeof panelRef === 'function') panelRef(node); else if (panelRef) (panelRef as { current: HTMLDivElement | null }).current = node;
@@ -127,10 +131,14 @@ export function SheetPanel({ onDragClose, reduce, head, children, panelRef, labe
         <div data-sheet-handle aria-hidden className="flex justify-center pt-2xs pb-3xs">
           <span className="h-1 w-9 rounded-full bg-[var(--color-border-default)]" />
         </div>
-        <div className="px-md pb-sm">{head}</div>
+        <div data-sheet-head data-scrolled={scrolled || undefined}
+          className={'border-b px-md pb-sm ' + (scrolled ? 'border-[var(--color-border-subtle)]' : 'border-transparent')}>
+          {head}
+        </div>
       </div>
       <div
         data-sheet-body
+        onScroll={e => setScrolled(e.currentTarget.scrollTop > 0)}
         className="flex min-h-0 flex-col gap-sm overflow-y-auto overscroll-contain pt-3xs pb-[calc(var(--spacing-md)+env(safe-area-inset-bottom,0px))] pl-[calc(var(--spacing-md)+env(safe-area-inset-left,0px))] pr-[calc(var(--spacing-md)+env(safe-area-inset-right,0px))]"
       >
         {children}

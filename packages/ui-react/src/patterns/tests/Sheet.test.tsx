@@ -83,6 +83,21 @@ describe('StatusCardDialog below md: a bottom sheet', () => {
     expect(body.className).toContain('env(safe-area-inset-bottom,0px)');
   });
 
+  it('a hairline under the head only while the body is scrolled', () => {
+    render(<Card />);
+    open();
+    const head = sheet().querySelector('[data-sheet-head]')!;
+    const body = sheet().querySelector('[data-sheet-body]')! as HTMLElement;
+    expect(head.className).toContain('border-transparent');
+    body.scrollTop = 120;
+    fireEvent.scroll(body);
+    expect(head.className).toContain('border-[var(--color-border-subtle)]');
+    expect(head).toHaveAttribute('data-scrolled');
+    body.scrollTop = 0;
+    fireEvent.scroll(body);
+    expect(head.className).toContain('border-transparent');
+  });
+
   it('the card stays where it is (on a desktop its place is held empty)', () => {
     render(<Card />);
     open();
