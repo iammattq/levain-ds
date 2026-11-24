@@ -30,7 +30,7 @@
     "Size 'md' has h-2 track, 16px thumb, type-label-sm labels"
   ],
   "accessibility": [
-    "Uses native input[type=range] for keyboard navigation",
+    "Uses native input[type=range]: the arrows step, Home and End go to min and max, PageUp and PageDown take larger steps (the browser provides these keys)",
     "Proper aria-valuemin, aria-valuemax, aria-valuenow attributes",
     "aria-valuetext provides formatted value for screen readers",
     "Named by its label (htmlFor/id), or by aria-label / aria-labelledby passed through",

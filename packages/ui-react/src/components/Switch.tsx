@@ -70,7 +70,8 @@ const Switch = forwardRef<HTMLInputElement, SwitchProps>(
     const [checked, setChecked] = useControlled(
       checkedProp,
       defaultChecked,
-      onChange
+      onChange,
+      'Switch'
     );
     const styles = sizeStyles[size];
 

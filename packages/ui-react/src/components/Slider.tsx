@@ -75,7 +75,7 @@ const trackVariants = cva(
 
 /**
  * Slider follows the form-input convention (docs/prop-conventions.json, formInputs): `value` / `defaultValue` and
- * `onChange(value)`; a native range input (arrows, Home, End, PageUp, PageDown), which takes the ref, the `id` and every
+ * `onChange(value)`; a native range input, which gives the keys (arrows, Home, End, PageUp, PageDown), which takes the ref, the `id` and every
  * prop the Slider doesn't name (aria-label, name, data-*…).
  */
 export interface SliderProps
@@ -155,6 +155,10 @@ const Slider = forwardRef<HTMLInputElement, SliderProps>(function Slider(
     labelTooltip,
     showInput = false,
     inputWidth,
+    onMouseDown,
+    onMouseUp,
+    onTouchStart,
+    onTouchEnd,
     ...props
   }: SliderProps,
   ref
@@ -164,7 +168,8 @@ const Slider = forwardRef<HTMLInputElement, SliderProps>(function Slider(
   const [value, setValue] = useControlled(
     valueProp,
     defaultValue ?? min,
-    onChange
+    onChange,
+    'Slider'
   );
   const sliderRef = useRef<HTMLInputElement | null>(null);
   const setSliderRef = useCallback(
@@ -180,6 +185,12 @@ const Slider = forwardRef<HTMLInputElement, SliderProps>(function Slider(
   // What is being typed in the number field: held as typed, clamped on blur or Enter (A3: it clamped each keystroke,
   // so 15 could not be typed when the minimum is 10)
   const [draft, setDraft] = useState<string | null>(null);
+  // The last value the number field sent out: a value that differs from it came from outside (the app, or a drag), and
+  // replaces what is being typed
+  const lastTyped = useRef<number | null>(null);
+  useEffect(() => {
+    if (value !== lastTyped.current) setDraft(null);
+  }, [value]);
 
   // Calculate percentage for filled track and tooltip positioning
   const percentage = max === min ? 0 : ((value - min) / (max - min)) * 100;
@@ -203,8 +214,23 @@ const Slider = forwardRef<HTMLInputElement, SliderProps>(function Slider(
     [setValue, disabled]
   );
 
-  const handleMouseDown = useCallback(() => setIsDragging(true), []);
-  const handleMouseUp = useCallback(() => setIsDragging(false), []);
+  // The app's own handlers run first, then the drag state (they were dropped before: the spread came first)
+  const handleMouseDown = (e: React.MouseEvent<HTMLInputElement>) => {
+    onMouseDown?.(e);
+    setIsDragging(true);
+  };
+  const handleMouseUp = (e: React.MouseEvent<HTMLInputElement>) => {
+    onMouseUp?.(e);
+    setIsDragging(false);
+  };
+  const handleTouchStart = (e: React.TouchEvent<HTMLInputElement>) => {
+    onTouchStart?.(e);
+    setIsDragging(true);
+  };
+  const handleTouchEnd = (e: React.TouchEvent<HTMLInputElement>) => {
+    onTouchEnd?.(e);
+    setIsDragging(false);
+  };
 
   // Typing: the field keeps the text as typed; a number in range goes out at once, one out of range waits for commit
   const handleInputChange = useCallback(
@@ -212,7 +238,10 @@ const Slider = forwardRef<HTMLInputElement, SliderProps>(function Slider(
       if (disabled) return;
       setDraft(e.target.value);
       const typed = parseFloat(e.target.value);
-      if (!isNaN(typed) && typed >= min && typed <= max) setValue(typed);
+      if (!isNaN(typed) && typed >= min && typed <= max) {
+        lastTyped.current = typed;
+        setValue(typed);
+      }
     },
     [setValue, disabled, min, max]
   );
@@ -349,8 +378,8 @@ const Slider = forwardRef<HTMLInputElement, SliderProps>(function Slider(
           onChange={handleChange}
           onMouseDown={handleMouseDown}
           onMouseUp={handleMouseUp}
-          onTouchStart={handleMouseDown}
-          onTouchEnd={handleMouseUp}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
           disabled={disabled}
           className={cn(
             trackVariants({ size }),

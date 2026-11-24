@@ -437,3 +437,81 @@ describe('Slider: form-input convention', () => {
     ).toBe('0%');
   });
 });
+
+describe('Slider: review fixes (T35)', () => {
+  test("the app's mouse and touch handlers run (they were dropped), and the drag tooltip still shows", () => {
+    const h = {
+      onMouseDown: jest.fn(),
+      onMouseUp: jest.fn(),
+      onTouchStart: jest.fn(),
+      onTouchEnd: jest.fn(),
+    };
+    render(
+      <Slider
+        label="Size"
+        min={0}
+        max={10}
+        defaultValue={4}
+        showTooltip
+        {...h}
+      />
+    );
+    const range = screen.getByRole('slider');
+    fireEvent.mouseDown(range);
+    expect(h.onMouseDown).toHaveBeenCalledTimes(1);
+    expect(screen.getByText('4', { selector: 'div' })).toBeInTheDocument();
+    fireEvent.mouseUp(range);
+    fireEvent.touchStart(range);
+    fireEvent.touchEnd(range);
+    expect(h.onMouseUp).toHaveBeenCalledTimes(1);
+    expect(h.onTouchStart).toHaveBeenCalledTimes(1);
+    expect(h.onTouchEnd).toHaveBeenCalledTimes(1);
+  });
+
+  test('a controlled value changed from outside replaces what is being typed', () => {
+    const { rerender } = render(
+      <Slider
+        label="Size"
+        min={10}
+        max={100}
+        value={50}
+        onChange={() => {}}
+        showInput
+      />
+    );
+    const field = () => screen.getByRole('spinbutton') as HTMLInputElement;
+    fireEvent.change(field(), { target: { value: '5' } }); // out of range: held as a draft
+    expect(field().value).toBe('5');
+    rerender(
+      <Slider
+        label="Size"
+        min={10}
+        max={100}
+        value={70}
+        onChange={() => {}}
+        showInput
+      />
+    );
+    expect(field().value).toBe('70');
+  });
+
+  test('a value the field itself sent does not clear the draft', () => {
+    function Parent() {
+      const [v, setV] = React.useState(50);
+      return (
+        <Slider
+          label="Size"
+          min={0}
+          max={100}
+          value={v}
+          onChange={setV}
+          showInput
+        />
+      );
+    }
+    render(<Parent />);
+    const field = () => screen.getByRole('spinbutton') as HTMLInputElement;
+    fireEvent.change(field(), { target: { value: '1.50' } }); // sends 1.5, keeps the text "1.50"
+    expect(field().value).toBe('1.50');
+  });
+});

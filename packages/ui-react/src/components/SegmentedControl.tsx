@@ -73,11 +73,13 @@ const SegmentedControl = forwardRef<HTMLDivElement, SegmentedControlProps>(
     const autoId = useId();
     const id = idProp ?? autoId;
     const labelId = `${id}-label`;
-    // nothing chosen is allowed (undefined); the setter is only ever given an option's value
+    // `value` left out (undefined) means uncontrolled, as for every input; uncontrolled with no `defaultValue`, nothing
+    // is chosen at first. The setter is only ever given an option's value
     const [value, setValue] = useControlled<string | undefined>(
       valueProp,
       defaultValue,
-      onChange as ((v: string | undefined) => void) | undefined
+      onChange as ((v: string | undefined) => void) | undefined,
+      'SegmentedControl'
     );
     const buttons = useRef<(HTMLButtonElement | null)[]>([]);
 
