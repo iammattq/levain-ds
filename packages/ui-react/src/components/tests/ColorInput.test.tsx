@@ -370,13 +370,12 @@ describe('ColorInput Component', () => {
     );
   });
 
-  // Test ref forwarding (now forwards to button)
-  test('forwards ref to color chip button element', () => {
-    const ref = React.createRef<HTMLButtonElement>();
+  // Test ref forwarding (T54: to the text field, per formInputs.ref)
+  test('forwards ref to the text field', () => {
+    const ref = React.createRef<HTMLInputElement>();
     render(<ColorInput {...defaultProps} ref={ref} />);
 
-    expect(ref.current).not.toBeNull();
-    expect(ref.current?.tagName.toLowerCase()).toBe('button');
+    expect(ref.current).toBe(screen.getByRole('textbox'));
   });
 
   // Test aria-expanded attribute
@@ -445,5 +444,130 @@ describe('ColorInput Component', () => {
       expect(dialog.style.left).toBe('60px');
       expect(dialog.style.right).toBe('');
     });
+  });
+});
+
+// The form-input convention (docs/prop-conventions.json, formInputs), point by point (T54)
+describe('ColorInput: form-input convention', () => {
+  test('value and change: onChange(hex), value first, upper-case with # added, typed or picked', () => {
+    const onChange = jest.fn();
+    render(<ColorInput label="Accent" value="#112233" onChange={onChange} />);
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'abc' } });
+    expect(onChange).toHaveBeenLastCalledWith('#ABC');
+    fireEvent.click(screen.getByRole('button', { name: 'Choose Accent color' }));
+    fireEvent.click(screen.getByTestId('mock-color-select'));
+    expect(onChange).toHaveBeenLastCalledWith('#00FF00');
+  });
+
+  test('controlled: shows only what value says', () => {
+    render(<ColorInput label="Accent" value="#112233" onChange={() => {}} />);
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: '#445566' } });
+    expect(screen.getByRole('textbox')).toHaveValue('#112233');
+  });
+
+  test('uncontrolled: defaultValue, then its own state; onChange still fires', () => {
+    const onChange = jest.fn();
+    const { unmount } = render(<ColorInput label="Accent" defaultValue="#112233" onChange={onChange} />);
+    const input = screen.getByRole('textbox');
+    expect(input).toHaveValue('#112233');
+    fireEvent.change(input, { target: { value: '#445566' } });
+    expect(input).toHaveValue('#445566');
+    expect(screen.getByRole('button', { name: 'Choose Accent color' })).toHaveStyle({ backgroundColor: '#445566' });
+    expect(onChange).toHaveBeenCalledWith('#445566');
+    unmount();
+    render(<ColorInput label="Empty" />);
+    expect(screen.getByRole('textbox')).toHaveValue('');
+  });
+
+  test("errors (Q-touched): the app's error shows at once; touched={false} holds it", () => {
+    const { rerender } = render(<ColorInput id="c" label="Accent" value="#112233" error="Not in the palette" />);
+    const input = screen.getByRole('textbox');
+    expect(screen.getByText('Not in the palette')).toHaveAttribute('id', 'c-error');
+    expect(input).toHaveAttribute('aria-invalid', 'true');
+    expect(input).toHaveAttribute('aria-describedby', 'c-error');
+    rerender(<ColorInput id="c" label="Accent" value="#112233" error="Not in the palette" touched={false} />);
+    expect(screen.queryByText('Not in the palette')).not.toBeInTheDocument();
+  });
+
+  test('errors: its own hex check waits for the first blur (or touched)', () => {
+    render(<ColorInput label="Accent" value="#12" onChange={() => {}} helperText="Hex" />);
+    const input = screen.getByRole('textbox');
+    expect(screen.queryByText('Invalid hex color format.')).not.toBeInTheDocument();
+    expect(screen.getByText('Hex')).toBeInTheDocument();
+    fireEvent.blur(input);
+    expect(screen.getByText('Invalid hex color format.')).toBeInTheDocument();
+    expect(screen.queryByText('Hex')).not.toBeInTheDocument();
+  });
+
+  test('errors: none while disabled, the helper shows instead', () => {
+    render(<ColorInput label="Accent" value="#112233" error="Bad" helperText="Hex" disabled />);
+    expect(screen.queryByText('Bad')).not.toBeInTheDocument();
+    expect(screen.getByText('Hex')).toBeInTheDocument();
+    expect(screen.getByRole('textbox')).toHaveAttribute('aria-invalid', 'false');
+  });
+
+  test('size: the scale names, compact a deprecated alias for xs', () => {
+    const { rerender } = render(<ColorInput label="Accent" value="#112233" size="lg" />);
+    const lg = screen.getByRole('textbox').className;
+    rerender(<ColorInput label="Accent" value="#112233" compact />);
+    const xs = screen.getByRole('textbox').className;
+    rerender(<ColorInput label="Accent" value="#112233" size="xs" />);
+    expect(screen.getByRole('textbox').className).toBe(xs);
+    expect(xs).not.toBe(lg);
+  });
+
+  test('disabled: native disabled on the field and the chip; nothing fires, no picker', () => {
+    const onChange = jest.fn();
+    render(<ColorInput label="Accent" value="#112233" onChange={onChange} disabled />);
+    expect(screen.getByRole('textbox')).toBeDisabled();
+    const chip = screen.getByRole('button', { name: 'Choose Accent color' });
+    expect(chip).toBeDisabled();
+    fireEvent.click(chip);
+    expect(screen.queryByTestId('color-picker-panel')).not.toBeInTheDocument();
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  test('id optional with a useId fallback; label optional; aria-label reaches the field', () => {
+    const { unmount } = render(<ColorInput label="Accent" value="#112233" />);
+    const input = screen.getByRole('textbox', { name: 'Accent' });
+    expect(input.id).not.toBe('');
+    unmount();
+    render(<ColorInput aria-label="Border colour" value="#112233" />);
+    expect(screen.getByRole('textbox', { name: 'Border colour' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Choose color' })).toBeInTheDocument();
+  });
+
+  test('unnamed props pass through to the text field; aria-describedby is merged; onBlur still fires', () => {
+    const onBlur = jest.fn();
+    const onFocus = jest.fn();
+    render(
+      <ColorInput
+        id="c"
+        label="Accent"
+        value="#112233"
+        name="accent"
+        data-x="1"
+        aria-describedby="note"
+        helperText="Hex"
+        onBlur={onBlur}
+        onFocus={onFocus}
+      />
+    );
+    const input = screen.getByRole('textbox');
+    expect(input).toHaveAttribute('name', 'accent');
+    expect(input).toHaveAttribute('data-x', '1');
+    expect(input).toHaveAttribute('aria-describedby', 'note c-helper');
+    fireEvent.focus(input);
+    fireEvent.blur(input);
+    expect(onFocus).toHaveBeenCalled();
+    expect(onBlur).toHaveBeenCalled();
+  });
+
+  test('className on the root; the chip has the keyboard ring, the field the text-field focus', () => {
+    const { container } = render(<ColorInput label="Accent" value="#112233" className="w-40" />);
+    expect(container.firstChild).toHaveClass('w-40');
+    expect(screen.getByRole('button').className).toContain('focus-visible:ring-[var(--color-border-focus)]');
+    expect(screen.getByRole('button').className).toContain('focus-visible:ring-offset-[var(--color-surface-canvas)]');
+    expect(screen.getByRole('textbox').className).toContain('focus:ring-[var(--color-primary)]');
   });
 });

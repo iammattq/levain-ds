@@ -64,6 +64,9 @@ export default function ColorPickerPanel({
     }
     return { h: 0, s: 100, v: 100 };
   });
+  // The latest hsv, for handlers that mustn't be recreated on every change (the saturation drag)
+  const hsvRef = useRef(hsv);
+  hsvRef.current = hsv;
   const [hexInput, setHexInput] = useState(value.hex.toUpperCase());
   const [hexTouched, setHexTouched] = useState(false);
   const [hexError, setHexError] = useState<string | null>(null);
@@ -115,12 +118,12 @@ export default function ColorPickerPanel({
 
       const newS = Math.round(x * 100);
       const newV = Math.round((1 - y) * 100);
-      // Use functional update to avoid hsv in dependencies (prevents callback recreation during drag)
-      setHsv((prev) => {
-        const newHsv = { ...prev, s: newS, v: newV };
-        emitChange(newHsv);
-        return newHsv;
-      });
+      // Read hsv from a ref, so the callback isn't recreated during a drag, and call onChange outside the state
+      // updater: an updater runs twice in StrictMode, and onChange fired twice (A3)
+      const newHsv = { ...hsvRef.current, s: newS, v: newV };
+      hsvRef.current = newHsv;
+      setHsv(newHsv);
+      emitChange(newHsv);
     },
     [emitChange]
   );
