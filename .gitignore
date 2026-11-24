@@ -7,3 +7,7 @@ coverage/
 # Ringmaster PM notes and member inboxes (private, never committed)
 private/
 .ringmaster/inbox/
+
+# capture output (demo/e2e/*.sh default out) and T40's private before/after pair, copied in only for a PC run
+captures/
+demo/public/image-compare/t40/
