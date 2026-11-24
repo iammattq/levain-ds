@@ -165,6 +165,11 @@
     "description": "Full-height side panel that slides in from the left over a scrim, for a phone menu"
   },
   {
+    "category": "Patterns",
+    "name": "ImageCompare",
+    "description": "Two images compared: side by side, or before and after in one frame with a drag handle"
+  },
+  {
     "category": "Templates",
     "name": "PageTemplate",
     "description": "Standard page template for front-end pages"

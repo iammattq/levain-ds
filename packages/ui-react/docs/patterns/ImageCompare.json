@@ -1,0 +1,55 @@
+{
+  "name": "ImageCompare",
+  "description": "Two images shown large for comparison: side by side (a build beside its target), or, with mode=\"slider\", laid over each other in one frame with a handle the user drags to reveal before on one side and after on the other.",
+  "category": "patterns",
+  "usage": [
+    "`images` is a list of `{ label, src, href? }`; each label is the image's alt text and its caption (side by side) or corner label (slider)",
+    "Side by side (default): equal width from md up, stacked below md; one image alone takes the full width. Each image is a link opening the full image in a new tab (`href`, default `src`)",
+    "`mode=\"slider\"`: the first image is before (left of the handle), the second after (right). Use it for two screenshots of the same screen, such as a change's before and after",
+    "In slider mode the images are not links (a drag would follow them) and `href` is ignored; fewer than two images, or one that can't load, falls back to side by side",
+    "A broken image falls back to its label and path as text"
+  ],
+  "examples": [
+    "import { ImageCompare } from '@levain/ui-react';\n\n<ImageCompare images={[{ label: 'This build', src: '/captures/build.png' }, { label: 'Target', src: '/captures/target.png' }]} />",
+    "import { ImageCompare } from '@levain/ui-react';\n\n// before and after of one screen; drag the handle, or focus it and use the arrow keys\n<ImageCompare\n  mode=\"slider\"\n  images={[\n    { label: 'Before', src: '/captures/before-sage-dark.png' },\n    { label: 'After', src: '/captures/after-sage-dark.png' },\n  ]}\n/>"
+  ],
+  "design": [
+    "Images sit on --color-surface-section with the subtle border (--color-border-subtle) and --radius-md; each keeps its own aspect ratio, top-aligned, never cropped",
+    "Slider: the frame takes the before image's aspect ratio; the after image lies over it, fitted with object-fit contain and top-aligned, clipped at the handle (clip-path inset from the left)",
+    "Slider handle: a 2px line on --color-surface-elevated with elevation-1, and a 32px round grip (GripVertical) on --color-surface-elevated with --color-border-default and elevation-2; it starts at 50%",
+    "Slider labels: chips in the top corners (before left, after right), type-caption on --color-surface-elevated, each fading out (150ms, none under Reduce Motion) while the handle is over it",
+    "Slider drag: anywhere on the frame. A mouse or pen press jumps the handle to the point; a touch moves it as the finger moves. touch-action pan-y: a sideways swipe moves the handle and never scrolls the page sideways, a vertical swipe still scrolls the page"
+  ],
+  "accessibility": [
+    "Side by side: each image's label is its alt text and caption; each link has a title saying it opens in a new tab",
+    "Slider: the handle is role=\"slider\", focusable, named \"<before label> and <after label>\", aria-valuenow 0-100 and aria-valuetext \"Before 50%, After 50%\"",
+    "Slider keys: Left/Down and Right/Up move the handle 5%, Home and End to the ends",
+    "Slider corner labels are aria-hidden (the images' alt text and the handle's name carry them)"
+  ],
+  "props": [
+    {
+      "name": "images",
+      "type": "ImageCompareImage[]",
+      "optional": false,
+      "defaultValue": "undefined",
+      "description": "The images, each `{ label: string; src: string; href?: string }`. In slider mode the first is before, the second after",
+      "configurable": true
+    },
+    {
+      "name": "mode",
+      "type": "'side-by-side' | 'slider'",
+      "optional": true,
+      "defaultValue": "'side-by-side'",
+      "description": "Side by side, or the first two in one frame with a drag handle",
+      "configurable": true
+    },
+    {
+      "name": "className",
+      "type": "string",
+      "optional": true,
+      "defaultValue": "undefined",
+      "description": "Classes for the outer element (the grid, or the slider's frame)",
+      "configurable": false
+    }
+  ]
+}

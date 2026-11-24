@@ -38,8 +38,6 @@ GradientInput manifest
 Icons doc
 Image doc
 Image manifest
-ImageCompare doc
-ImageCompare manifest
 ImageWithLoadState doc
 ImageWithLoadState manifest
 LevainProvider doc
