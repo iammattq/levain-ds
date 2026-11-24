@@ -20,7 +20,8 @@ const pw = req('playwright-core');
 const [base, out] = process.argv.slice(2);
 fs.mkdirSync(out, { recursive: true });
 const pause = ms => new Promise(r => setTimeout(r, ms));
-const settled = async page => { await page.evaluate(() => Promise.all(document.getAnimations().map(a => a.finished.catch(() => {})))); await pause(900); };
+// finite animations only (the full demo page has endless ones), and never more than 3 s
+const settled = async page => { await page.evaluate(() => Promise.race([Promise.all(document.getAnimations().filter(a => a.effect?.getComputedTiming?.().endTime !== Infinity).map(a => a.finished.catch(() => {}))), new Promise(r => setTimeout(r, 3000))])); await pause(900); };
 
 const exe = [process.env.CHROMIUM, '/usr/bin/chromium', '/usr/bin/chromium-browser', '/snap/bin/chromium', '/usr/bin/google-chrome'].find(p => p && fs.existsSync(p));
 if (!exe) throw new Error('no Chromium found (set CHROMIUM)');
