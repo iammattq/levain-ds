@@ -141,6 +141,8 @@ const reduce = useReducedMotion();
 <motion.div layout transition={motionFor('shift', reduce)} />;
 ```
 
+**Safe area.** On a phone, clear the notch and home indicator with `pt-safe`, `pb-safe`, `px-safe` and the rest of `p*-safe` (the inset alone), or `pb-safe-md` and friends (a spacing step plus the inset, `calc(var(--spacing-md) + var(--safe-bottom))`). The insets are also variables, `--safe-top|right|bottom|left`. They read 0 unless the page's viewport meta has `viewport-fit=cover`.
+
 **Drag and drop.** Wrap the lists in one `SortableGroup` and apply each move yourself:
 
 ```tsx
