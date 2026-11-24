@@ -100,6 +100,16 @@
     "description": "Versatile calendar component for displaying and selecting dates"
   },
   {
+    "category": "Components",
+    "name": "Stack",
+    "description": "Children in a column, a spacing-scale gap apart"
+  },
+  {
+    "category": "Components",
+    "name": "Cluster",
+    "description": "Children in a wrapping row, a spacing-scale gap apart, with align and justify"
+  },
+  {
     "category": "Patterns",
     "name": "MediaCard",
     "description": "Enhanced card layout for displaying media content with various states"
@@ -113,6 +123,11 @@
     "category": "Patterns",
     "name": "ColumnStrip",
     "description": "Phone columns a screen wide, swiped with snap, with pills to jump; a held SortableGroup card pages at the screen edges"
+  },
+  {
+    "category": "Patterns",
+    "name": "Column",
+    "description": "A titled column of cards: glyph, title, count, marks and an action over the cards; the body can scroll under a fixed header"
   },
   {
     "category": "Patterns",

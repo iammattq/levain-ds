@@ -1,0 +1,91 @@
+{
+  "name": "Column",
+  "description": "A titled column of cards, as on the Ringmaster board's desktop: a rounded surface a step off the page, a 32 px header (optional glyph, an h2 title, a CountBadge count, optional marks, an action pushed right) and the cards 24 px apart. `scroll` makes the body scroll inside a height you give, under a header that stays put.",
+  "category": "patterns",
+  "usage": [
+    "Several side by side in a grid on desktop (the board's: grid items-start gap-sm, 1fr 1fr 1.2fr); one per page inside a ColumnStrip on a phone",
+    "A number `count` renders a plain CountBadge; pass a CountBadge element for another look (tone=\"caution\", a label)",
+    "`icon` is decorative: the title says it. Give the glyph aria-hidden",
+    "Drag and drop is yours: put a SortableList (inside your SortableGroup) in the children",
+    "`scroll`: give the column a bounded height (a fixed height, or a flex/grid parent with one); it fills it with h-full and its body scrolls. Without `scroll` the column is as tall as its cards"
+  ],
+  "examples": [
+    "<div className=\"grid items-start gap-sm\" style={{ gridTemplateColumns: '1fr 1fr 1.2fr' }}>\n  <Column title=\"Ideas\" count={3} icon={<Glyph aria-hidden />} action={<IconButton label=\"Add idea\" />}>{cards}</Column>\n  …\n</div>",
+    "<div className=\"h-[32rem]\">\n  <Column scroll title=\"Queued\" count={12}>{cards}</Column>\n</div>"
+  ],
+  "design": [
+    "Dark: --color-surface-section. Light: --color-border-subtle, a step below the page, as the board does: every levain light surface is lighter than the page and there is no sunken surface token yet (GAPS)",
+    "Corners: --radius-lg + 4 px, the cards' radius plus a step",
+    "Header 32 px, 14 px medium, items 8 px apart, inset 36 px so the title lines up with the cards' text; the body 12 px in from the column's edge, 8 px under the header"
+  ],
+  "accessibility": [
+    "A section named by `title` (a region), with the title as its h2",
+    "The count is read as its number unless you pass a CountBadge with a `label`"
+  ],
+  "props": [
+    {
+      "name": "title",
+      "type": "string",
+      "optional": false,
+      "defaultValue": "undefined",
+      "description": "The h2, and the region's accessible name",
+      "configurable": true
+    },
+    {
+      "name": "count",
+      "type": "number | ReactNode",
+      "optional": true,
+      "defaultValue": "undefined",
+      "description": "A number becomes a plain CountBadge; an element is rendered as given; 0 shows",
+      "configurable": true
+    },
+    {
+      "name": "icon",
+      "type": "ReactNode",
+      "optional": true,
+      "defaultValue": "undefined",
+      "description": "A glyph before the title (decorative)",
+      "configurable": true
+    },
+    {
+      "name": "marks",
+      "type": "ReactNode",
+      "optional": true,
+      "defaultValue": "undefined",
+      "description": "After the count: small marks or tags",
+      "configurable": true
+    },
+    {
+      "name": "action",
+      "type": "ReactNode",
+      "optional": true,
+      "defaultValue": "undefined",
+      "description": "A control at the header's right end",
+      "configurable": true
+    },
+    {
+      "name": "scroll",
+      "type": "boolean",
+      "optional": true,
+      "defaultValue": "false",
+      "description": "The body scrolls inside the height you give; the header stays put",
+      "configurable": true
+    },
+    {
+      "name": "children",
+      "type": "ReactNode",
+      "optional": true,
+      "defaultValue": "undefined",
+      "description": "The cards",
+      "configurable": true
+    },
+    {
+      "name": "className",
+      "type": "string",
+      "optional": true,
+      "defaultValue": "undefined",
+      "description": "On the column (the section)",
+      "configurable": true
+    }
+  ]
+}
