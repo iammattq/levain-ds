@@ -35,6 +35,21 @@ describe('Slider Component', () => {
     );
   });
 
+  test('themes its thumb on the primary token, sized 16px at md and 14px at sm (T27)', () => {
+    const { rerender } = render(<Slider {...defaultProps} />);
+    const input = screen.getByRole('slider');
+    expect(input).toHaveClass(
+      '[&::-webkit-slider-thumb]:appearance-none',
+      '[&::-webkit-slider-thumb]:bg-[var(--color-primary)]',
+      '[&::-moz-range-thumb]:bg-[var(--color-primary)]',
+      '[&::-webkit-slider-thumb]:h-4',
+      '[&::-moz-range-thumb]:w-4'
+    );
+    rerender(<Slider {...defaultProps} size="sm" />);
+    expect(screen.getByRole('slider')).toHaveClass('[&::-webkit-slider-thumb]:h-3.5', '[&::-moz-range-thumb]:w-3.5');
+    expect(screen.getByRole('slider')).not.toHaveClass('[&::-webkit-slider-thumb]:h-4');
+  });
+
   // Test label rendering
   test('renders with label when provided', () => {
     const label = 'Test Slider Label';

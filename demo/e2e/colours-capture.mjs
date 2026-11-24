@@ -35,6 +35,7 @@ const probe = page => page.evaluate(() => {
     statusMarker: cs(q('status-card', 'li:last-child'), 'color'),
     statusBar: cs(q('status-card', 'span.w-\\[3px\\]'), 'backgroundColor'),
     sliderTrack: cs(q('slider', 'input[type=range]'), 'backgroundColor', 'backgroundImage'),
+    sliderThumb: (el => el && { backgroundColor: getComputedStyle(el, '::-webkit-slider-thumb').backgroundColor, width: getComputedStyle(el, '::-webkit-slider-thumb').width })(q('slider', 'input[type=range]')),
     tableSelectedRow: cs(q('data-table', 'tbody tr'), 'backgroundColor'),
     tableChip: cs(q('data-table', 'span.rounded-full, div.rounded-full.inline-flex'), 'backgroundColor', 'color'),
     tableChipButton: cs(q('data-table', '.inline-flex.rounded-full button'), 'backgroundColor'),
@@ -123,7 +124,8 @@ try {
     const img = f => fs.existsSync(f) ? `<img src="data:image/png;base64,${fs.readFileSync(f).toString('base64')}">` : '<i>missing</i>';
     const keys = COMBOS.map(([n, , m]) => `${n}-${m}`);
     const head = `<tr><th></th>${keys.map(k => `<th colspan="2">${k.replace('sage', 'Sage').replace('cobalt', 'Cobalt Mono').replace('-', ' · ')}</th>`).join('')}</tr><tr><th></th>${keys.map(() => '<th>before</th><th>after</th>').join('')}</tr>`;
-    const rows = PIECES.map(p => `<tr><th class="p">${p}</th>${keys.map(k => `<td>${img(`${out}/before/${k}-${p}.png`)}</td><td>${img(`${out}/after/${k}-${p}.png`)}</td>`).join('')}</tr>`).join('');
+    const only = process.env.COMPOSITE_PIECES?.split(','); // e.g. slider: a composite of just those rows
+    const rows = PIECES.filter(p => !only || only.includes(p)).map(p => `<tr><th class="p">${p}</th>${keys.map(k => `<td>${img(`${out}/before/${k}-${p}.png`)}</td><td>${img(`${out}/after/${k}-${p}.png`)}</td>`).join('')}</tr>`).join('');
     const page = await browser.newPage({ viewport: { width: 3200, height: 800 } });
     await page.setContent(`<style>body{margin:0;padding:24px;background:#888;font:14px system-ui,sans-serif;color:#111}table{border-collapse:separate;border-spacing:8px;background:#fff;border-radius:8px}
       th{font-weight:600;text-align:center}th.p{text-align:right;vertical-align:top;white-space:nowrap}td{vertical-align:top}img{width:340px;display:block}</style><table>${head}${rows}</table>`);
