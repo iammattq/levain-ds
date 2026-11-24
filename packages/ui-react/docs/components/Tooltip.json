@@ -1,0 +1,94 @@
+{
+  "name": "Tooltip",
+  "description": "A short, non-interactive hint for one control: after a short mouse hover, or at once on keyboard focus, below the control (flipped when there's no room); it closes on leave, blur, Escape or a press, and never takes focus.",
+  "category": "components",
+  "usage": [
+    "Use for a name or a short read about one control: an icon button's name, the stages behind a stage strip",
+    "Use instead of the title attribute, which never shows on touch or keyboard focus",
+    "Wrap one focusable element; Tooltip keeps its ref and handlers and adds aria-describedby while open",
+    "Pass toggle when the trigger is there for its tooltip (a status you tap to read): a tap or a key press toggles it and a press outside closes it. Without it, a press on the trigger closes it and touch shows nothing, since the control has its own action",
+    "An empty content turns it off (a tooltip only for the icon-only form of a button)",
+    "Nothing interactive inside (links, buttons): that is a Popover"
+  ],
+  "examples": [
+    "<Tooltip content=\"Restart PM\">\n  <button type=\"button\" aria-label=\"Restart PM\"><RotateCcw size={15} /></button>\n</Tooltip>",
+    "// the trigger is there for its tooltip: tap or Enter toggles it\n<Tooltip toggle content={<StageRows stage={s} />}>\n  <button type=\"button\" className=\"strip\" aria-label=\"Stage: Building 2/4\">...</button>\n</Tooltip>",
+    "// only while the label is hidden\n<Tooltip content={compact ? 'Restart PM' : ''}>...</Tooltip>"
+  ],
+  "design": [
+    "The board's stage tooltip: --color-surface-component (every status colour reads 4.5:1 on it in both modes; the elevated surface misses in dark), --elevation-3 with a 1px inset --color-border-subtle ring, --radius-lg corner",
+    "Text --type-size-2xs on --type-leading-normal in --color-text-faint, padding 0.625rem 0.75rem, width to fit up to min(18rem, 100vw - 1rem), left-aligned",
+    "Placed by Popover's anchorPopup: 6px below the trigger, start-aligned, flipped when the side is short, kept viewportMargin (8px) inside the window; kept in place while the page scrolls or resizes",
+    "Portalled to the body at z-index 60, Popover's layer, above Modal",
+    "Fades in with a 4px rise on recipe.quick and fades out on recipe.contentOut; Reduce Motion: the fade only"
+  ],
+  "accessibility": [
+    "role=\"tooltip\"; the trigger gets aria-describedby naming it while open, beside any of its own",
+    "Opens on keyboard focus (:focus-visible) at once, not on a mouse click's focus; closes on blur",
+    "Escape closes it and is claimed (preventDefault, stopPropagation in the capture phase), so a Modal around it stays open; the next Escape is the Modal's",
+    "Never moves focus: it stays on the trigger",
+    "A press on the tooltip is stopped there, so it never reaches the trigger's ancestors (a card that opens on a press)"
+  ],
+  "props": [
+    {
+      "name": "content",
+      "type": "ReactNode",
+      "optional": false,
+      "description": "What it says: a line or a few rows, nothing interactive. Empty ('', null, false) turns it off."
+    },
+    {
+      "name": "children",
+      "type": "ReactElement",
+      "optional": false,
+      "description": "The trigger: one focusable element. Its ref and pointer, focus and click handlers are kept."
+    },
+    {
+      "name": "toggle",
+      "type": "boolean",
+      "optional": true,
+      "defaultValue": "false",
+      "description": "The trigger is there for its tooltip: a tap or a key press toggles it, a mouse click shows it at once, a press outside closes it."
+    },
+    {
+      "name": "delay",
+      "type": "number",
+      "optional": true,
+      "defaultValue": "300",
+      "description": "How long a mouse rests on the trigger before it opens, in ms."
+    },
+    {
+      "name": "placement",
+      "type": "'top' | 'bottom' | 'left' | 'right'",
+      "optional": true,
+      "defaultValue": "'bottom'",
+      "description": "The preferred side; flips to the opposite one when it has no room."
+    },
+    {
+      "name": "align",
+      "type": "'start' | 'center' | 'end'",
+      "optional": true,
+      "defaultValue": "'start'",
+      "description": "Alignment along the trigger."
+    },
+    {
+      "name": "sideOffset",
+      "type": "number",
+      "optional": true,
+      "defaultValue": "6",
+      "description": "Gap from the trigger, in px."
+    },
+    {
+      "name": "viewportMargin",
+      "type": "number",
+      "optional": true,
+      "defaultValue": "8",
+      "description": "Least distance from the window's edges, in px."
+    },
+    {
+      "name": "className",
+      "type": "string",
+      "optional": true,
+      "description": "Classes for the tooltip's box."
+    }
+  ]
+}

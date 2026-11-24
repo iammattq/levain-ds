@@ -129,7 +129,7 @@ describe('Tooltip', () => {
         )}
       </Modal>
     );
-    trigger().focus();
+    act(() => trigger().focus());
     fireEvent.focus(trigger());
     expect(tip()).not.toBeNull();
     await user.keyboard('{Escape}');
