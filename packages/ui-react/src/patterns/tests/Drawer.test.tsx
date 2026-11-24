@@ -168,6 +168,51 @@ describe('Drawer', () => {
     expect(drawer()).toBeInTheDocument();
   });
 
+  it('a swipe that starts on a link or a button never moves or closes it; a tap on the link still fires', async () => {
+    const onClose = jest.fn();
+    const user = userEvent.setup();
+    render(<Demo onClose={onClose} />);
+    await user.click(screen.getByRole('button', { name: 'Menu' }));
+    const link = screen.getByRole('link', { name: 'Releases' });
+    const clicked = jest.fn((e: MouseEvent) => e.preventDefault());
+    link.addEventListener('click', clicked);
+    await drag(link, -200);
+    await drag(screen.getByRole('button', { name: 'Theme' }), -200);
+    expect(onClose).not.toHaveBeenCalled();
+    expect(drawer().style.transform).not.toMatch(/translateX\(-[1-9]/);
+    await user.click(link);
+    expect(clicked).toHaveBeenCalledTimes(1);
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it('leaves vertical scroll and pinch-zoom to the browser, and text selectable', async () => {
+    const user = userEvent.setup();
+    render(<Demo />);
+    await user.click(screen.getByRole('button', { name: 'Menu' }));
+    const d = drawer();
+    for (const c of ['touch-pan-y', 'touch-pinch-zoom']) expect(d.className.split(' ')).toContain(c);
+    // framer's own listener would have set these inline (none and pan-y); the drag runs through controls instead
+    expect(d.getAttribute('style') ?? '').not.toMatch(/user-select|touch-action/);
+  });
+
+  it('two drawers closed out of order leave the page unlocked', () => {
+    document.body.style.overflow = 'auto';
+    const one = (a: boolean, b: boolean) => (
+      <>
+        <Drawer open={a} label="A" onClose={() => {}}><button type="button">A</button></Drawer>
+        <Drawer open={b} label="B" onClose={() => {}}><button type="button">B</button></Drawer>
+      </>
+    );
+    const { rerender } = render(one(true, false));
+    rerender(one(true, true));
+    expect(document.body.style.overflow).toBe('hidden');
+    rerender(one(false, true)); // the first closes first
+    expect(document.body.style.overflow).toBe('hidden');
+    rerender(one(false, false));
+    expect(document.body.style.overflow).toBe('auto');
+    document.body.style.overflow = '';
+  });
+
   it('closesDrawer: past a quarter of the width leftward, or a left flick; never rightward', () => {
     expect(closesDrawer(-81, 0, 320)).toBe(true);
     expect(closesDrawer(-79, 0, 320)).toBe(false);

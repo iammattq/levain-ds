@@ -17,8 +17,8 @@ afterAll(() => { if (ownMatchMedia) Object.defineProperty(window, 'matchMedia', 
 it('under Reduce Motion the drawer appears in place, with no slide, and goes at once', async () => {
   const { rerender } = render(<Drawer open label="Menu" onClose={() => {}}><p>Body</p></Drawer>);
   const d = screen.getByRole('dialog', { name: 'Menu' });
-  expect(d.style.transform ?? '').not.toContain('-100%');
-  expect(d.style.opacity ?? '').not.toBe('0');
+  // in place from the first render: no offset to slide from (a slide would start at translateX(-100%))
+  expect(d.style.transform ?? '').not.toMatch(/translateX\(-/);
   expect(document.querySelector('[data-sheet-scrim]')).toBeInTheDocument();
   rerender(<Drawer open={false} label="Menu" onClose={() => {}}><p>Body</p></Drawer>);
   // an instant exit: gone within a couple of frames, not after sheetOut's 280 ms

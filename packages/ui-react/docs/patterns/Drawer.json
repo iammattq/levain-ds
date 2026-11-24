@@ -9,14 +9,14 @@
     "It is a drawer at every width: the caller decides when to show one (useIsPhone is exported for that)"
   ],
   "examples": [
-    "import { Drawer } from '@levain/ui-react';\n\nconst [open, setOpen] = useState(false);\n<Button iconOnly Icon={Menu} aria-label=\"Menu\" onClick={() => setOpen(true)} />\n<Drawer open={open} onClose={() => setOpen(false)} label=\"Menu\">\n  <Logo />\n  <nav aria-label=\"Releases\">…</nav>\n  <ThemeToggle />\n  <p className=\"type-caption mt-auto\">Version 0.7.0</p>\n</Drawer>"
+    "import { setTheme } from '@levain/tokens';\nimport { Drawer, SegmentedControl } from '@levain/ui-react';\n\nconst [open, setOpen] = useState(false);\nconst [mode, setMode] = useState<'light' | 'dark'>('light');\n<Button iconOnly Icon={Menu} aria-label=\"Menu\" onClick={() => setOpen(true)} />\n<Drawer open={open} onClose={() => setOpen(false)} label=\"Menu\">\n  <Logo />\n  <nav aria-label=\"Releases\">…</nav>\n  <SegmentedControl id=\"theme\" value={mode} onChange={m => { setMode(m as 'light' | 'dark'); setTheme(m as 'light' | 'dark'); }} options={[{ label: 'Light', value: 'light' }, { label: 'Dark', value: 'dark' }]} />\n  <p className=\"type-caption mt-auto\">Version 0.7.0</p>\n</Drawer>"
   ],
   "design": [
     "Full height, min(20rem, 85vw) wide, on the elevated surface with elevation-3; the far (right) corners rounded --radius-2xl, the near ones square against the edge, as the bottom sheet's",
     "Its contents sit inside the safe-area insets: pt-safe-md, pb-safe-md, pl-safe-md, and pr-md, gap sm between children",
     "Slides in on recipe.sheetIn and out on recipe.sheetOut; the scrim fades on fadeIn and contentOut, as BottomSheet's",
-    "A swipe left on the panel past a quarter of its width, or a left flick (500 px/s), closes it; a shorter swipe springs back on sheetIn. Vertical scrolling inside is left alone",
-    "The page under it doesn't scroll while it's open (body overflow hidden, padded for the scrollbar it removes)",
+    "A swipe left on the panel past a quarter of its width, or a left flick (500 px/s), closes it; a shorter swipe springs back on sheetIn. A swipe never starts on a link, button or other control (pressing one and moving stays a click). The panel's touch-action is pan-y pinch-zoom: vertical scrolling and pinch-zoom stay the browser's, so a horizontally scrolling child inside won't pan by touch",
+    "The page under it doesn't scroll while it's open (body overflow hidden, padded for the scrollbar it removes); one lock shared by every open drawer, released when the last one closes",
     "Portalled to <body>: the theme's look classes must be on <body> too"
   ],
   "accessibility": [
