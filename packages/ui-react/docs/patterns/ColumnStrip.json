@@ -1,0 +1,132 @@
+{
+  "name": "ColumnStrip",
+  "description": "On a phone: columns a screen wide in a strip swiped with snap, under a row of pills (label and count) that follow the swipe and jump to a column on a tap. While a SortableGroup card is held, resting at either edge of the strip (on a phone, the screen's) pages the strip one column after a dwell, then on a repeat, by a transform (never a scroll), restored to the same scroll position on drop.",
+  "category": "patterns",
+  "usage": [
+    "Wire it to the SortableGroup around it with useColumnStrip(): pass the hook's onDragChange and onDragMove to the group and the hook's object to the strip as `drag`",
+    "`pageable` limits paging to the columns a card may land in",
+    "Controlled with `current` + `onCurrentChange` (keys); a new `current` scrolls there. Uncontrolled with `defaultCurrent`",
+    "`pillsClassName` styles the pills' row (sticky, a border); `pillsEnd` puts something at its end"
+  ],
+  "examples": [
+    "const drag = useColumnStrip();\n<SortableGroup onMove={move} onDragChange={drag.onDragChange} onDragMove={drag.onDragMove}>\n  <ColumnStrip drag={drag} pageable={['ideas', 'queued']} columns={[\n    { key: 'ideas', label: 'Ideas', count: 3, content: <SortableList id=\"ideas\" \u2026 /> },\n    { key: 'queued', label: 'Queued', count: 1, content: <SortableList id=\"queued\" \u2026 /> },\n  ]} />\n</SortableGroup>"
+  ],
+  "design": [
+    "The strip is as tall as the column in view, so the page scrolls it as one",
+    "A page slides on recipe.sheetIn's easing at duration.arrival (620 ms): easing out, no overshoot (like the iPhone's home screen)",
+    "The cue: a 24 px glow of --color-text-link at the paging edge, building linearly over the dwell",
+    "Defaults: edge 56 px, dwell 500 ms, repeat 600 ms",
+    "Only the column in view sets the strip's height; the others are clipped to it, so the strip never scrolls up and down"
+  ],
+  "accessibility": [
+    "The pills are buttons in a nav (label `label`, default \"Columns\"); the current one has aria-current=true",
+    "Each column is a region named by its label when the label is a string",
+    "Under Reduce Motion pill jumps and pages are instant and the cue shows at full strength"
+  ],
+  "props": [
+    {
+      "name": "columns",
+      "type": "StripColumn[] ({ key, label, count?, content })",
+      "optional": false,
+      "defaultValue": "undefined",
+      "description": "The columns, in order",
+      "configurable": true
+    },
+    {
+      "name": "current",
+      "type": "string",
+      "optional": true,
+      "defaultValue": "undefined",
+      "description": "The column in view, by key (controlled)",
+      "configurable": true
+    },
+    {
+      "name": "defaultCurrent",
+      "type": "string",
+      "optional": true,
+      "defaultValue": "first column",
+      "description": "The first column in view (uncontrolled)",
+      "configurable": true
+    },
+    {
+      "name": "onCurrentChange",
+      "type": "(key: string) => void",
+      "optional": true,
+      "defaultValue": "undefined",
+      "description": "A new column came into view (a swipe, a pill, a page)",
+      "configurable": true
+    },
+    {
+      "name": "pageable",
+      "type": "string[]",
+      "optional": true,
+      "defaultValue": "all",
+      "description": "The columns a held card may page to",
+      "configurable": true
+    },
+    {
+      "name": "drag",
+      "type": "ColumnStripDrag",
+      "optional": true,
+      "defaultValue": "undefined",
+      "description": "From useColumnStrip(); without it, no edge paging",
+      "configurable": true
+    },
+    {
+      "name": "edge",
+      "type": "number",
+      "optional": true,
+      "defaultValue": "56",
+      "description": "Each edge zone's width, px, inside the strip's left and right edges (past an edge counts as in it)",
+      "configurable": true
+    },
+    {
+      "name": "dwell",
+      "type": "number",
+      "optional": true,
+      "defaultValue": "500",
+      "description": "ms resting in an edge zone before the first page",
+      "configurable": true
+    },
+    {
+      "name": "repeat",
+      "type": "number",
+      "optional": true,
+      "defaultValue": "600",
+      "description": "ms between pages while the finger stays",
+      "configurable": true
+    },
+    {
+      "name": "label",
+      "type": "string",
+      "optional": true,
+      "defaultValue": "\"Columns\"",
+      "description": "The pills' accessible name",
+      "configurable": true
+    },
+    {
+      "name": "pillsEnd",
+      "type": "ReactNode",
+      "optional": true,
+      "defaultValue": "undefined",
+      "description": "At the end of the pills' row",
+      "configurable": true
+    },
+    {
+      "name": "className",
+      "type": "string",
+      "optional": true,
+      "defaultValue": "undefined",
+      "description": "On the root",
+      "configurable": true
+    },
+    {
+      "name": "pillsClassName",
+      "type": "string",
+      "optional": true,
+      "defaultValue": "undefined",
+      "description": "On the pills' row",
+      "configurable": true
+    }
+  ]
+}

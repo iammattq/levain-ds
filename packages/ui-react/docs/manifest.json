@@ -111,6 +111,11 @@
   },
   {
     "category": "Patterns",
+    "name": "ColumnStrip",
+    "description": "Phone columns a screen wide, swiped with snap, with pills to jump; a held SortableGroup card pages at the screen edges"
+  },
+  {
+    "category": "Patterns",
     "name": "ImageUploader",
     "description": "Interface for uploading images with preview and validation"
   },
