@@ -3,6 +3,7 @@
 // components take, so the same section renders before and after.
 import { SegmentedControl, Slider, Switch, TextArea } from '@levain/ui-react';
 import { useState } from 'react';
+import { Forms2Demo } from './forms2';
 
 export function FormsDemo({ Section }: { Section: (p: { title: string; note: string; children: React.ReactNode }) => React.ReactElement }) {
   const [text, setText] = useState('A comment, two rows tall.');
@@ -39,6 +40,7 @@ export function FormsDemo({ Section }: { Section: (p: { title: string; note: str
             options={[{ label: 'Small', value: 'sm' }, { label: 'Medium', value: 'md' }, { label: 'Large', value: 'lg', disabled: true }]} />
         </div>
       </div>
+      <Forms2Demo />
     </Section>
   );
 }
