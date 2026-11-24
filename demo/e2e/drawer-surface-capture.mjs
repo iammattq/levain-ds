@@ -91,12 +91,14 @@ for (const [name, theme, mode] of COMBOS) for (const [surface, open] of SURFACES
       await settled(page);
     }
     const file = `${out}/${key}-${state}.png`;
-    await page.screenshot({ path: file });
+    // fullPage clipped to the viewport: headless WebKit's plain shot kept the pre-resize paint (the bottom left white)
+    await page.screenshot({ path: file, fullPage: true, clip: { x: 0, y: 0, width: W, height: h } });
     const n = await probe(page);
     const y = n.panel.h * 0.7, edge = n.panel.x + n.panel.w;
     // the edge at 70 % down; and the panel's own colour just above the faked home-bar band, in the shot itself
-    const [inside, past, far, foot] = await pixels(file, [[(edge - 6) * DPR, y * DPR], [(edge + 4) * DPR, y * DPR], [(edge + 40) * DPR, y * DPR], [(edge - 30) * DPR, (n.viewport.h - INSETS.bottom - 4) * DPR]]);
-    n.edge = { inside, past, far, foot, contrastPast: ratio(inside, past), contrastFar: ratio(inside, far) };
+    // rim: the panel's last device pixel column (the canvas surface's hairline lands there)
+    const [inside, rim, past, far, foot] = await pixels(file, [[(edge - 6) * DPR, y * DPR], [edge * DPR - 2, y * DPR], [(edge + 4) * DPR, y * DPR], [(edge + 40) * DPR, y * DPR], [(edge - 30) * DPR, (n.viewport.h - INSETS.bottom - 4) * DPR]]);
+    n.edge = { inside, rim, past, far, foot, contrastPast: ratio(inside, past), contrastFar: ratio(inside, far), rimPast: ratio(rim, past), rimInside: ratio(rim, inside) };
     numbers[`${key}-${state}`] = n;
     shots[key].push([`${state} (${n.viewport.h})`, file]);
     check(`${key}-${state}: overlay, scrim and panel run the viewport's full height`, near(n.overlay.y, 0) && near(n.overlay.h, n.viewport.h) && near(n.scrim.h, n.overlay.h) && near(n.panel.y, 0) && near(n.panel.h, n.overlay.h), { vp: n.viewport.h, overlay: n.overlay.h, scrim: n.scrim.h, panel: n.panel.h });
