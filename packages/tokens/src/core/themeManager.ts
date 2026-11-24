@@ -13,6 +13,20 @@ import {
 } from '../generator/types';
 import { themeGeneratorV2 } from '../generator/generator';
 import { applyModeClass, getTheme, isDarkMode } from './themeMode';
+import {
+  THEME_ATTR,
+  THEMES_MARKER,
+  cssBlock,
+  swatchCSS,
+  themeCSS,
+  themeSelector,
+  themeSlug,
+  themesCSS,
+  themeVars,
+} from './themeCss';
+
+/** The style element that carries the base themes when the app hasn't linked generated/themes.css. */
+const BASE_THEMES_STYLE_ID = 'levain-themes';
 
 /**
  * Typography presets collection type
@@ -208,11 +222,11 @@ export class ThemeManager {
       // Clear the built-in theme session storage (prevents confusion)
       sessionStorage.removeItem(SESSION_STORAGE_KEY);
 
-      // Apply to DOM
+      // Apply to DOM. Both modes are written, scoped like a base theme, so a light/dark change needs nothing here.
       const mode = this.isDarkMode() ? 'dark' : 'light';
-      // Same as applyTheme: <html> in the mode whose tokens we write.
       applyModeClass(getTheme());
       const themeMode = generated[mode];
+      const attr = `user-${id}`;
 
       // Load typography for consistent styling
       const typography = await this.loadTypography();
@@ -224,20 +238,21 @@ export class ThemeManager {
         document.head.appendChild(styleEl);
       }
 
-      // Generate CSS
-      const themeCSS = this.generateThemeCSS(themeMode);
       const typoPreset = typography['0'];
       const typographyCSS = typoPreset
         ? this.generateTypographyCSS(typoPreset)
         : '';
 
-      // For user themes, generate simplified "all themes" CSS (just the user theme colors)
-      const userThemeIndicatorCSS = `:root {
-  --color-theme-user-primary: ${themeMode.primary} !important;
-  --color-theme-user-secondary: ${themeMode.accent} !important;
-}\n`;
+      // The user theme's own swatch, per mode (the base themes' swatches stay as they are).
+      const swatch = (m: 'light' | 'dark') =>
+        cssBlock(themeSelector(attr, m), [
+          ['--color-theme-user-primary', generated![m].primary],
+          ['--color-theme-user-secondary', generated![m].accent],
+        ]);
 
-      styleEl.textContent = themeCSS + typographyCSS + userThemeIndicatorCSS;
+      styleEl.textContent =
+        themeCSS(attr, generated) + typographyCSS + swatch('light') + swatch('dark');
+      document.documentElement.setAttribute(THEME_ATTR, attr);
 
       // Update body attributes
       document.body.setAttribute('data-theme-index', `user-${id}`);
@@ -479,9 +494,13 @@ export class ThemeManager {
       }
 
       const mode = this.isDarkMode() ? 'dark' : 'light';
-      // Put <html> in the mode whose tokens we write, so the `dark:` variants
-      // agree with the colours whether or not initTheme() ran first.
+      // Put <html> in the mode the colours follow, whether or not initTheme() ran first.
       applyModeClass(getTheme());
+
+      // The colours are plain CSS (generated/themes.css, or injected once from the same data): picking a theme is
+      // setting the attribute. Both modes are in the CSS behind .dark, so a mode change needs no call here.
+      this.ensureBaseThemesCSS(themes);
+      document.documentElement.setAttribute(THEME_ATTR, themeSlug(theme.name));
 
       let styleEl = document.getElementById('theme-styles');
       if (!styleEl) {
@@ -490,26 +509,19 @@ export class ThemeManager {
         document.head.appendChild(styleEl);
       }
 
-      // Generate all theme color variables for selector buttons
-      const allThemesCSS = this.generateAllThemesCSS(themes, mode);
-
-      // Generate current theme CSS
-      const themeMode = theme[mode];
-      const themeCSS = this.generateThemeCSS(themeMode);
-
-      // Generate typography CSS (use default preset 0 for now)
+      // Typography (default preset 0) is still injected: T32 moved only the colours.
       const typoPreset = typography['0'];
       const typographyCSS = typoPreset
         ? this.generateTypographyCSS(typoPreset)
         : '';
 
+      const themeMode = theme[mode];
       const debugInfo = {
         primary: themeMode.primary,
         accent: themeMode.accent,
       };
 
-      // Combine all CSS
-      styleEl.textContent = themeCSS + typographyCSS + allThemesCSS;
+      styleEl.textContent = typographyCSS;
 
       // Add data attribute to body for easier debugging
       document.body.setAttribute('data-theme-index', validIndex.toString());
@@ -553,116 +565,38 @@ export class ThemeManager {
   }
 
   /**
-   * Generate CSS for all themes (for gradient buttons in theme selector)
+   * Inject the base themes' CSS once, unless the page already has it (generated/themes.css linked: its marker var is
+   * set on :root). Apps that link the file get colour before JavaScript; apps that don't (the board) still get it here.
    */
-  generateAllThemesCSS(themes: ThemesV2Collection, mode: ThemeMode): string {
-    let css = ':root {\n';
-
-    // Resolve 'system' to either 'light' or 'dark'
-    const effectiveMode: 'light' | 'dark' =
-      mode === 'system' ? (this.isDarkMode() ? 'dark' : 'light') : mode;
-
-    // Add color variables for each theme
-    for (const [index, theme] of Object.entries(themes)) {
-      const themeMode = theme[effectiveMode];
-      css += `  --color-theme-${index}-primary: ${themeMode.primary} !important;\n`;
-      css += `  --color-theme-${index}-secondary: ${themeMode.accent} !important;\n`;
+  private ensureBaseThemesCSS(themes: ThemesV2Collection): void {
+    if (document.getElementById(BASE_THEMES_STYLE_ID)) return;
+    if (
+      typeof getComputedStyle === 'function' &&
+      getComputedStyle(document.documentElement)
+        .getPropertyValue(THEMES_MARKER)
+        .trim() === '1'
+    ) {
+      return;
     }
-
-    css += '}\n';
-    return css;
+    const el = document.createElement('style');
+    el.id = BASE_THEMES_STYLE_ID;
+    el.textContent = themesCSS(themes);
+    document.head.appendChild(el);
   }
 
   /**
-   * Generate CSS from V2 theme data
-   * Emits V2-native variables (26-stop ramp, semantic tokens, states)
+   * CSS for every theme's swatch vars (the theme selector's gradient buttons). Both modes: light on :root, dark on
+   * .dark. The mode argument is kept for compatibility and no longer changes the output.
+   */
+  generateAllThemesCSS(themes: ThemesV2Collection, _mode?: ThemeMode): string {
+    return swatchCSS(themes);
+  }
+
+  /**
+   * One theme mode's colour variables as a :root block (no !important). The same declarations as generated/themes.css.
    */
   generateThemeCSS(v2Mode: GeneratedThemeMode): string {
-    let css = ':root {\n';
-
-    // Primary and accent — resolved through tokenMapping so they can differ
-    // per mode (default: primary-500 / accent-500 = the picked colors).
-    const resolvedPrimary = v2Mode.tokens['primary'] ?? v2Mode.primary;
-    const resolvedAccent = v2Mode.tokens['accent'] ?? v2Mode.accent;
-    css += `  --color-primary: ${resolvedPrimary} !important;\n`;
-    css += `  --color-accent: ${resolvedAccent} !important;\n`;
-
-    // Legacy alias for base (points to primary)
-    css += `  --color-base: ${resolvedPrimary} !important;\n`;
-
-    // 26-stop surface ramp (--color-surface-0 through --color-surface-25)
-    v2Mode.surfaces.forEach((color, index) => {
-      css += `  --color-surface-${index}: ${color} !important;\n`;
-    });
-
-    // 9-stop primary ramp (--color-primary-100 through --color-primary-900)
-    v2Mode.primaryRamp.forEach((color, index) => {
-      const step = (index + 1) * 100;
-      css += `  --color-primary-${step}: ${color} !important;\n`;
-    });
-
-    // 9-stop accent ramp (--color-accent-100 through --color-accent-900)
-    v2Mode.accentRamp.forEach((color, index) => {
-      const step = (index + 1) * 100;
-      css += `  --color-accent-${step}: ${color} !important;\n`;
-    });
-
-    // Semantic tokens (--color-surface-canvas, --color-text-default, etc.)
-    // Brand semantics (primary / accent / gradient-start / gradient-end) are
-    // emitted explicitly above and below; skip here to avoid duplication.
-    const BRAND_KEYS = new Set([
-      'primary',
-      'accent',
-      'gradient-start',
-      'gradient-end',
-    ]);
-    Object.entries(v2Mode.tokens).forEach(([key, value]) => {
-      if (BRAND_KEYS.has(key)) return;
-      css += `  --color-${key}: ${value} !important;\n`;
-    });
-
-    // Action colors (--color-success, --color-error, etc.)
-    Object.entries(v2Mode.actions).forEach(([key, value]) => {
-      css += `  --color-${key}: ${value} !important;\n`;
-    });
-
-    // Spectrum stops (--color-spectrum-cool, -warm, -vivid). Decorative, not
-    // semantic: they widen the palette for effects that interpolate across it.
-    Object.entries(v2Mode.spectrum ?? {}).forEach(([key, value]) => {
-      css += `  --color-spectrum-${key}: ${value} !important;\n`;
-    });
-
-    // State overlays (--color-state-hover, --color-state-focus, --color-state-active)
-    css += `  --color-state-hover: ${v2Mode.states.hover} !important;\n`;
-    css += `  --color-state-focus: ${v2Mode.states.focus} !important;\n`;
-    css += `  --color-state-active: ${v2Mode.states.active} !important;\n`;
-
-    // Auto-contrast text colors
-    css += `  --color-text-on-primary: ${v2Mode.textOnPrimary} !important;\n`;
-    css += `  --color-text-on-accent: ${v2Mode.textOnAccent} !important;\n`;
-
-    // Gradient stops — resolved through tokenMapping (default: primary-300 →
-    // primary-700, but user can map either to any primary or accent step).
-    const gradStart = v2Mode.tokens['gradient-start'] ?? v2Mode.primaryRamp[2];
-    const gradEnd = v2Mode.tokens['gradient-end'] ?? v2Mode.primaryRamp[6];
-    css += `  --color-gradient-start: ${gradStart} !important;\n`;
-    css += `  --color-gradient-end: ${gradEnd} !important;\n`;
-    css += `  --color-grad-1: linear-gradient(to bottom right, ${gradStart}, ${gradEnd}) !important;\n`;
-    css += `  --color-grad-2: linear-gradient(to right, ${gradStart}, ${gradEnd}) !important;\n`;
-
-    // Elevation colors (shadow colors at different intensities)
-    css += `  --color-elevation-low: ${v2Mode.elevationColors.low} !important;\n`;
-    css += `  --color-elevation-default: ${v2Mode.elevationColors.default} !important;\n`;
-    css += `  --color-elevation-high: ${v2Mode.elevationColors.high} !important;\n`;
-
-    // Elevation styles (complete box-shadow values, one per level)
-    css += `  --elevation-1: ${v2Mode.elevationStyles.level1} !important;\n`;
-    css += `  --elevation-2: ${v2Mode.elevationStyles.level2} !important;\n`;
-    css += `  --elevation-3: ${v2Mode.elevationStyles.level3} !important;\n`;
-
-    css += '}\n';
-
-    return css;
+    return cssBlock(':root', themeVars(v2Mode));
   }
 
   /**

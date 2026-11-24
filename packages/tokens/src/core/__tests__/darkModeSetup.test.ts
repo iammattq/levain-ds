@@ -1,7 +1,9 @@
 /**
- * Dark mode set-up: themeManager.applyTheme puts <html> in the mode whose
- * tokens it writes, so an app needs no initTheme() call first, and calling
- * initTheme() before or after it gives the same result.
+ * Dark mode set-up: themeManager.applyTheme puts <html> in its mode and theme
+ * (the .dark class and data-levain-theme), so an app needs no initTheme() call
+ * first, and calling initTheme() before or after it gives the same result.
+ * Colours are checked as the page would resolve them: the theme CSS rule that
+ * matches <html>'s attribute and class.
  *
  * Node environment (no jsdom in this package): a small fake DOM with a real
  * classList, storage and a controllable prefers-color-scheme.
@@ -13,10 +15,13 @@ type ChangeListener = (e: { matches: boolean }) => void;
 
 interface FakeEnv {
   classes: Set<string>;
+  attrs: Record<string, string>;
   storage: Record<string, string>;
-  styleEl: { id: string; textContent: string };
+  styles: Map<string, { id: string; textContent: string }>;
   mqlListeners: ChangeListener[];
   setSystemDark: (dark: boolean) => void;
+  /** The value a colour var takes on <html>: the rule for the page's theme attribute and mode, from the styles. */
+  colour: (name: string) => string | undefined;
 }
 
 const entry = themeGeneratorV2.generate({
@@ -25,19 +30,18 @@ const entry = themeGeneratorV2.generate({
   accent: '#d946ef',
 });
 const themes: ThemesV2Collection = { '0': entry };
-// The canvas surface token, which differs between the modes.
-const canvas = (m: 'light' | 'dark') =>
-  `--color-surface-canvas: ${entry[m].tokens['surface-canvas']} !important;`;
-const darkSurface = canvas('dark');
-const lightSurface = canvas('light');
+// The canvas surface, which differs between the modes.
+const darkSurface = entry.dark.tokens['surface-canvas'];
+const lightSurface = entry.light.tokens['surface-canvas'];
+const CANVAS = '--color-surface-canvas';
 
 function installFakeDom(systemDark: boolean): FakeEnv {
   const classes = new Set<string>();
+  const attrs: Record<string, string> = {};
   const storage: Record<string, string> = {};
-  const styleEl = { id: '', textContent: '' };
+  const styles = new Map<string, { id: string; textContent: string }>();
   const mqlListeners: ChangeListener[] = [];
   let prefersDark = systemDark;
-  let styleAttached = false;
 
   const makeStorage = (s: Record<string, string>) => ({
     getItem: (k: string) => (k in s ? s[k] : null),
@@ -81,27 +85,51 @@ function installFakeDom(systemDark: boolean): FakeEnv {
           return on;
         },
       },
+      setAttribute: (k: string, v: string) => {
+        attrs[k] = v;
+      },
+      getAttribute: (k: string) => (k in attrs ? attrs[k] : null),
     },
-    getElementById: (id: string) =>
-      styleAttached && id === styleEl.id ? styleEl : null,
-    createElement: () => styleEl,
+    getElementById: (id: string) => styles.get(id) ?? null,
+    createElement: () => ({ id: '', textContent: '' }),
     head: {
-      appendChild: () => {
-        styleAttached = true;
+      appendChild: (el: { id: string; textContent: string }) => {
+        styles.set(el.id, el);
       },
     },
     body: { setAttribute: () => {} },
   };
 
+  // Only the selectors levain writes: [data-levain-theme="x"] for light, .dark[data-levain-theme="x"] for dark.
+  const colour = (name: string) => {
+    const theme = attrs['data-levain-theme'];
+    if (!theme) return undefined;
+    const sel = classes.has('dark')
+      ? `.dark[data-levain-theme="${theme}"]`
+      : `[data-levain-theme="${theme}"] {`;
+    let found: string | undefined;
+    for (const el of styles.values()) {
+      for (const block of el.textContent.split('}')) {
+        const head = block.slice(0, block.indexOf('{') + 1);
+        if (!head.trimStart().startsWith(sel)) continue;
+        const m = block.match(new RegExp(`${name}: ([^;]+);`));
+        if (m) found = m[1];
+      }
+    }
+    return found;
+  };
+
   return {
     classes,
+    attrs,
     storage,
-    styleEl,
+    styles,
     mqlListeners,
     setSystemDark: (dark: boolean) => {
       prefersDark = dark;
       mqlListeners.forEach((fn) => fn({ matches: dark }));
     },
+    colour,
   };
 }
 
@@ -127,7 +155,7 @@ describe('dark mode set-up through applyTheme', () => {
     jest.restoreAllMocks();
   });
 
-  it('the fixture modes differ (the token checks mean something)', () => {
+  it('the fixture modes differ (the colour checks mean something)', () => {
     expect(darkSurface).not.toEqual(lightSurface);
   });
 
@@ -140,7 +168,7 @@ describe('dark mode set-up through applyTheme', () => {
       await manager.applyTheme(0);
 
       expect(env.classes.has('dark')).toBe(true);
-      expect(env.styleEl.textContent).toContain(darkSurface);
+      expect(env.colour(CANVAS)).toBe(darkSurface);
     });
 
     it('nothing saved (first visit defaults to dark): .dark, dark tokens', async () => {
@@ -150,7 +178,7 @@ describe('dark mode set-up through applyTheme', () => {
       await manager.applyTheme(0);
 
       expect(env.classes.has('dark')).toBe(true);
-      expect(env.styleEl.textContent).toContain(darkSurface);
+      expect(env.colour(CANVAS)).toBe(darkSurface);
       // Reading the default doesn't save it.
       expect(env.storage.theme).toBeUndefined();
     });
@@ -164,7 +192,7 @@ describe('dark mode set-up through applyTheme', () => {
       await manager.applyTheme(0);
 
       expect(env.classes.has('dark')).toBe(false);
-      expect(env.styleEl.textContent).toContain(lightSurface);
+      expect(env.colour(CANVAS)).toBe(lightSurface);
     });
 
     it('saved system, system dark: .dark, dark tokens', async () => {
@@ -175,7 +203,7 @@ describe('dark mode set-up through applyTheme', () => {
       await manager.applyTheme(0);
 
       expect(env.classes.has('dark')).toBe(true);
-      expect(env.styleEl.textContent).toContain(darkSurface);
+      expect(env.colour(CANVAS)).toBe(darkSurface);
     });
 
     it('saved system, system light: no .dark, light tokens', async () => {
@@ -186,7 +214,7 @@ describe('dark mode set-up through applyTheme', () => {
       await manager.applyTheme(0);
 
       expect(env.classes.has('dark')).toBe(false);
-      expect(env.styleEl.textContent).toContain(lightSurface);
+      expect(env.colour(CANVAS)).toBe(lightSurface);
     });
 
     it('saved system: the class follows a later system change', async () => {
@@ -201,6 +229,83 @@ describe('dark mode set-up through applyTheme', () => {
     });
   });
 
+  describe('colours as plain CSS (T32)', () => {
+    it('applyTheme sets the theme attribute; the colours are not in the injected style', async () => {
+      const env = installFakeDom(false);
+      env.storage.theme = 'light';
+      const { manager } = await loadModules();
+
+      await manager.applyTheme(0);
+
+      expect(env.attrs['data-levain-theme']).toBe('test');
+      expect(env.styles.get('theme-styles')?.textContent).not.toContain('--color-');
+      const base = env.styles.get('levain-themes')?.textContent ?? '';
+      expect(base).toContain('[data-levain-theme="test"]');
+      expect(base).not.toContain('!important');
+    });
+
+    it('the base themes are injected once, however often applyTheme runs', async () => {
+      const env = installFakeDom(false);
+      const { manager } = await loadModules();
+      const appended = jest.spyOn(
+        (global as unknown as { document: { head: { appendChild: (el: unknown) => void } } }).document.head,
+        'appendChild'
+      );
+
+      await manager.applyTheme(0);
+      await manager.applyTheme(0);
+
+      const ids = appended.mock.calls.map(([el]) => (el as { id: string }).id);
+      expect(ids.filter((id) => id === 'levain-themes')).toHaveLength(1);
+      expect(env.styles.has('levain-themes')).toBe(true);
+    });
+
+    it('not injected when the page links generated/themes.css (its marker is set)', async () => {
+      const env = installFakeDom(false);
+      const g = global as unknown as Record<string, unknown>;
+      g.getComputedStyle = () => ({
+        getPropertyValue: (n: string) => (n === '--levain-themes' ? ' 1' : ''),
+      });
+      try {
+        const { manager } = await loadModules();
+        await manager.applyTheme(0);
+        expect(env.styles.has('levain-themes')).toBe(false);
+        expect(env.attrs['data-levain-theme']).toBe('test');
+      } finally {
+        delete g.getComputedStyle;
+      }
+    });
+
+    it('a user theme is scoped by its own attribute, both modes, no !important', async () => {
+      const env = installFakeDom(false);
+      env.storage.theme = 'light';
+      const { manager, themeMode } = await loadModules();
+      const input = { name: 'Mine', primary: '#5860fe', accent: '#d946ef' };
+
+      await manager.applyUserTheme(input, 'mine');
+
+      expect(env.attrs['data-levain-theme']).toBe('user-mine');
+      const css = env.styles.get('theme-styles')?.textContent ?? '';
+      expect(css).not.toContain('!important');
+      expect(env.colour(CANVAS)).toBe(lightSurface);
+      expect(env.colour('--color-theme-user-primary')).toBe(entry.light.primary);
+
+      // A mode change alone (no applyUserTheme again) switches the colours.
+      themeMode.setTheme('dark');
+      expect(env.colour(CANVAS)).toBe(darkSurface);
+    });
+
+    it('switching back to a base theme sets its attribute again', async () => {
+      const env = installFakeDom(false);
+      const { manager } = await loadModules();
+
+      await manager.applyUserTheme({ name: 'Mine', primary: '#5860fe', accent: '#d946ef' }, 'mine');
+      await manager.applyTheme(0);
+
+      expect(env.attrs['data-levain-theme']).toBe('test');
+    });
+  });
+
   describe('applyUserTheme alone, no initTheme()', () => {
     it('saved dark: .dark on <html>, dark tokens written', async () => {
       const env = installFakeDom(false);
@@ -211,7 +316,7 @@ describe('dark mode set-up through applyTheme', () => {
       await manager.applyUserTheme(input, 'mine');
 
       expect(env.classes.has('dark')).toBe(true);
-      expect(env.styleEl.textContent).toContain(darkSurface);
+      expect(env.colour(CANVAS)).toBe(darkSurface);
     });
   });
 
@@ -224,7 +329,7 @@ describe('dark mode set-up through applyTheme', () => {
         const first = await loadModules();
         await first.manager.applyTheme(0);
         const aloneDark = alone.classes.has('dark');
-        const aloneCss = alone.styleEl.textContent;
+        const aloneCss = alone.colour(CANVAS);
 
         jest.resetModules();
         const env = installFakeDom(true);
@@ -234,7 +339,7 @@ describe('dark mode set-up through applyTheme', () => {
         themeMode.initTheme();
 
         expect(env.classes.has('dark')).toBe(aloneDark);
-        expect(env.styleEl.textContent).toBe(aloneCss);
+        expect(env.colour(CANVAS)).toBe(aloneCss);
       }
     );
 
@@ -247,7 +352,7 @@ describe('dark mode set-up through applyTheme', () => {
       await manager.applyTheme(0);
 
       expect(env.classes.has('dark')).toBe(false);
-      expect(env.styleEl.textContent).toContain(lightSurface);
+      expect(env.colour(CANVAS)).toBe(lightSurface);
       expect(env.storage.theme).toBe('light');
     });
 
