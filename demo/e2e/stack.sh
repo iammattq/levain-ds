@@ -13,11 +13,19 @@ pnpm install --frozen-lockfile --silent
 # playwright-core lives outside the repo: the demo has no browser dependency of its own
 pw=${PW_DIR:-$HOME/.cache/levain-pw}
 [ -d "$pw/node_modules/playwright-core" ] || npm i --silent --prefix "$pw" playwright-core@1.65.0
-port=5197
+# a port of its own per run: several PC slots run captures at once, and a fixed port let one job screenshot another's
+# demo (its vite failed on --strictPort and the curl below found the other job's server)
+port=${DEMO_PORT:-$((5200 + $$ % 700))}
+log=/tmp/levain-demo-vite-$port.log
 cd demo
-pnpm exec vite --port $port --strictPort >/tmp/levain-t19-vite.log 2>&1 &
+pnpm exec vite --port $port --strictPort >"$log" 2>&1 &
 vite=$!
 trap 'kill $vite 2>/dev/null || true' EXIT
 i=0
-until curl -sf "http://localhost:$port/" >/dev/null; do i=$((i + 1)); [ $i -lt 60 ] || { cat /tmp/levain-t19-vite.log; exit 1; }; sleep 0.5; done
+until curl -sf "http://localhost:$port/" >/dev/null; do
+  i=$((i + 1))
+  kill -0 $vite 2>/dev/null || { echo "vite exited (port $port taken?)"; cat "$log"; exit 1; }
+  [ $i -lt 60 ] || { cat "$log"; exit 1; }
+  sleep 0.5
+done
 PW_DIR="$pw" node "e2e/$script" "http://localhost:$port/" "$out"

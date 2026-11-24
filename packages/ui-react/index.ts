@@ -252,3 +252,5 @@ export { StatusCard, StatusCardDialog, StatusMarkers, morphId } from './src/patt
 export type { StatusCardProps, StatusCardDialogProps, StatusMarker, StatusTone } from './src/patterns/StatusCard';
 export { StatusCardDialogStack } from './src/patterns/StatusCardDialogStack';
 export type { StatusCardDialogStackProps, StatusCardStackDialog } from './src/patterns/StatusCardDialogStack';
+export { CardStack } from './src/patterns/CardStack';
+export type { CardStackProps } from './src/patterns/CardStack';
