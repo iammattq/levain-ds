@@ -34,6 +34,7 @@ const themes: ThemesV2Collection = { '0': entry };
 const darkSurface = entry.dark.tokens['surface-canvas'];
 const lightSurface = entry.light.tokens['surface-canvas'];
 const CANVAS = '--color-surface-canvas';
+const MODE = 'levain-theme-mode';
 
 function installFakeDom(systemDark: boolean): FakeEnv {
   const classes = new Set<string>();
@@ -162,7 +163,7 @@ describe('dark mode set-up through applyTheme', () => {
   describe('applyTheme alone, no initTheme()', () => {
     it('saved dark: .dark on <html>, dark tokens written', async () => {
       const env = installFakeDom(false);
-      env.storage.theme = 'dark';
+      env.storage[MODE] = 'dark';
       const { manager } = await loadModules();
 
       await manager.applyTheme(0);
@@ -180,12 +181,12 @@ describe('dark mode set-up through applyTheme', () => {
       expect(env.classes.has('dark')).toBe(true);
       expect(env.colour(CANVAS)).toBe(darkSurface);
       // Reading the default doesn't save it.
-      expect(env.storage.theme).toBeUndefined();
+      expect(env.storage[MODE]).toBeUndefined();
     });
 
     it('saved light: no .dark, light tokens', async () => {
       const env = installFakeDom(true);
-      env.storage.theme = 'light';
+      env.storage[MODE] = 'light';
       env.classes.add('dark'); // stale class from somewhere else
       const { manager } = await loadModules();
 
@@ -197,7 +198,7 @@ describe('dark mode set-up through applyTheme', () => {
 
     it('saved system, system dark: .dark, dark tokens', async () => {
       const env = installFakeDom(true);
-      env.storage.theme = 'system';
+      env.storage[MODE] = 'system';
       const { manager } = await loadModules();
 
       await manager.applyTheme(0);
@@ -208,7 +209,7 @@ describe('dark mode set-up through applyTheme', () => {
 
     it('saved system, system light: no .dark, light tokens', async () => {
       const env = installFakeDom(false);
-      env.storage.theme = 'system';
+      env.storage[MODE] = 'system';
       const { manager } = await loadModules();
 
       await manager.applyTheme(0);
@@ -219,7 +220,7 @@ describe('dark mode set-up through applyTheme', () => {
 
     it('saved system: the class and the colours follow a later system change (D2)', async () => {
       const env = installFakeDom(false);
-      env.storage.theme = 'system';
+      env.storage[MODE] = 'system';
       const { manager } = await loadModules();
 
       await manager.applyTheme(0);
@@ -236,7 +237,7 @@ describe('dark mode set-up through applyTheme', () => {
 
     it('saved system: a user theme follows a system change too (D2)', async () => {
       const env = installFakeDom(true);
-      env.storage.theme = 'system';
+      env.storage[MODE] = 'system';
       const { manager } = await loadModules();
 
       await manager.applyUserTheme({ name: 'Mine', primary: '#5860fe', accent: '#d946ef' }, 'mine');
@@ -250,7 +251,7 @@ describe('dark mode set-up through applyTheme', () => {
   describe('colours as plain CSS (T32)', () => {
     it('applyTheme sets the theme attribute; the colours are not in the injected style', async () => {
       const env = installFakeDom(false);
-      env.storage.theme = 'light';
+      env.storage[MODE] = 'light';
       const { manager } = await loadModules();
 
       await manager.applyTheme(0);
@@ -296,7 +297,7 @@ describe('dark mode set-up through applyTheme', () => {
 
     it('a user theme is scoped by its own attribute, both modes, no !important', async () => {
       const env = installFakeDom(false);
-      env.storage.theme = 'light';
+      env.storage[MODE] = 'light';
       const { manager, themeMode } = await loadModules();
       const input = { name: 'Mine', primary: '#5860fe', accent: '#d946ef' };
 
@@ -327,7 +328,7 @@ describe('dark mode set-up through applyTheme', () => {
   describe('applyUserTheme alone, no initTheme()', () => {
     it('saved dark: .dark on <html>, dark tokens written', async () => {
       const env = installFakeDom(false);
-      env.storage.theme = 'dark';
+      env.storage[MODE] = 'dark';
       const { manager } = await loadModules();
       const input = { name: 'Mine', primary: '#5860fe', accent: '#d946ef' };
 
@@ -343,7 +344,7 @@ describe('dark mode set-up through applyTheme', () => {
       'saved %s: initTheme() after applyTheme leaves the same result as applyTheme alone',
       async (saved) => {
         const alone = installFakeDom(true);
-        if (saved) alone.storage.theme = saved;
+        if (saved) alone.storage[MODE] = saved;
         const first = await loadModules();
         await first.manager.applyTheme(0);
         const aloneDark = alone.classes.has('dark');
@@ -351,7 +352,7 @@ describe('dark mode set-up through applyTheme', () => {
 
         jest.resetModules();
         const env = installFakeDom(true);
-        if (saved) env.storage.theme = saved;
+        if (saved) env.storage[MODE] = saved;
         const { themeMode, manager } = await loadModules();
         await manager.applyTheme(0);
         themeMode.initTheme();
@@ -363,7 +364,7 @@ describe('dark mode set-up through applyTheme', () => {
 
     it('initTheme() then applyTheme (the current documented order) is unchanged', async () => {
       const env = installFakeDom(false);
-      env.storage.theme = 'light';
+      env.storage[MODE] = 'light';
       const { themeMode, manager } = await loadModules();
 
       themeMode.initTheme();
@@ -371,12 +372,12 @@ describe('dark mode set-up through applyTheme', () => {
 
       expect(env.classes.has('dark')).toBe(false);
       expect(env.colour(CANVAS)).toBe(lightSurface);
-      expect(env.storage.theme).toBe('light');
+      expect(env.storage[MODE]).toBe('light');
     });
 
     it('both called: one system listener, not two', async () => {
       const env = installFakeDom(false);
-      env.storage.theme = 'system';
+      env.storage[MODE] = 'system';
       const { themeMode, manager } = await loadModules();
 
       themeMode.initTheme();
@@ -389,7 +390,7 @@ describe('dark mode set-up through applyTheme', () => {
 
     it('the system listener reads the saved mode at change time', async () => {
       const env = installFakeDom(false);
-      env.storage.theme = 'system';
+      env.storage[MODE] = 'system';
       const { themeMode, manager } = await loadModules();
 
       await manager.applyTheme(0);

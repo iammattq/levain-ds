@@ -4,7 +4,22 @@
 
 // Import theme mode type
 import { ThemeMode } from './themeTypes';
+import { migrateKey, readKey, writeKey } from './storage';
 export type { ThemeMode };
+
+/** Where the mode is saved. A pre-paint script that sets .dark before JavaScript reads this key. */
+export const MODE_KEY = 'levain-theme-mode';
+/** The key before T32, read once and removed. */
+const OLD_MODE_KEY = 'theme';
+
+let migrated = false;
+function migrate(): void {
+  if (migrated || typeof window === 'undefined') return;
+  migrated = true;
+  migrateKey('local', OLD_MODE_KEY, MODE_KEY, (v) =>
+    v === 'light' || v === 'dark' || v === 'system' ? v : null
+  );
+}
 
 /**
  * Initialize theme based on stored preference or system setting
@@ -25,7 +40,8 @@ export function setTheme(theme: ThemeMode): void {
   if (typeof window === 'undefined') return;
 
   // Store the preference
-  localStorage.setItem('theme', theme);
+  migrate();
+  writeKey('local', MODE_KEY, theme);
 
   applyModeClass(theme);
 }
@@ -64,7 +80,9 @@ export function applyModeClass(theme: ThemeMode): void {
  */
 export function getTheme(): ThemeMode {
   if (typeof window === 'undefined') return 'dark';
-  return (localStorage.getItem('theme') as ThemeMode) || 'dark';
+  migrate();
+  const saved = readKey('local', MODE_KEY);
+  return saved === 'light' || saved === 'dark' || saved === 'system' ? saved : 'dark';
 }
 
 /**

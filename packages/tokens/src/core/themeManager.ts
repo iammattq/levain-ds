@@ -12,6 +12,8 @@ import {
   ThemeInputV2,
 } from '../generator/types';
 import { themeGeneratorV2 } from '../generator/generator';
+import { baseThemesV2 } from '../data/baseThemesV2';
+import { migrateKey, readKey, removeKey, writeKey } from './storage';
 import { applyModeClass, getTheme, isDarkMode } from './themeMode';
 import {
   THEME_ATTR,
@@ -35,17 +37,54 @@ interface TypographyV2Collection {
   [index: string]: GeneratedTypographyV2;
 }
 
-// Define storage keys
-const SESSION_STORAGE_KEY = 'themeIndex';
-const PERSISTENT_STORAGE_KEY = 'savedThemeIndex';
-const TYPOGRAPHY_PREVIEW_KEY = 'typographyPreview';
-const ACTIVE_THEME_KEY = 'ok-themes-active';
+// Storage keys (T32: levain- prefix; a base theme is kept by its name's slug, not its place in the list)
+const SESSION_STORAGE_KEY = 'levain-theme';
+const PERSISTENT_STORAGE_KEY = 'levain-theme-saved';
+const TYPOGRAPHY_PREVIEW_KEY = 'levain-typography-preview';
+const ACTIVE_THEME_KEY = 'levain-theme-active';
+
+// The keys before T32, read once (an index mapped to that theme's name) and removed.
+const OLD_SESSION_KEY = 'themeIndex';
+const OLD_PERSISTENT_KEY = 'savedThemeIndex';
+const OLD_TYPOGRAPHY_PREVIEW_KEY = 'typographyPreview';
+const OLD_ACTIVE_THEME_KEY = 'ok-themes-active';
 
 /**
- * Unified active theme state - distinguishes between built-in and user themes
+ * Unified active theme state - distinguishes between built-in and user themes.
+ * A built-in theme is stored by `name` (its slug); `index` is its place in the current list, filled in on read.
  */
 export type ActiveThemeState =
-  { type: 'builtin'; index: number } | { type: 'user'; id: string };
+  | { type: 'builtin'; index: number; name: string }
+  | { type: 'user'; id: string };
+
+/** A stored index from before T32 as the slug of the theme it meant (the list's order then), or null. */
+function legacyIndexToSlug(value: string): string | null {
+  const theme = baseThemesV2[parseInt(value, 10)];
+  return theme ? themeSlug(theme.name) : null;
+}
+
+let storageMigrated = false;
+/** Move the pre-T32 keys to the new ones, once per page. */
+function migrateStorage(): void {
+  if (storageMigrated || typeof window === 'undefined') return;
+  storageMigrated = true;
+  migrateKey('session', OLD_SESSION_KEY, SESSION_STORAGE_KEY, legacyIndexToSlug);
+  migrateKey('local', OLD_PERSISTENT_KEY, PERSISTENT_STORAGE_KEY, legacyIndexToSlug);
+  migrateKey('local', OLD_TYPOGRAPHY_PREVIEW_KEY, TYPOGRAPHY_PREVIEW_KEY);
+  migrateKey('local', OLD_ACTIVE_THEME_KEY, ACTIVE_THEME_KEY, (old) => {
+    try {
+      const state = JSON.parse(old) as { type?: string; index?: number; id?: string };
+      if (state.type === 'user' && typeof state.id === 'string') return old;
+      if (state.type === 'builtin' && typeof state.index === 'number') {
+        const name = legacyIndexToSlug(String(state.index));
+        return name ? JSON.stringify({ type: 'builtin', name }) : null;
+      }
+    } catch {
+      // unreadable: dropped
+    }
+    return null;
+  });
+}
 
 /**
  * Manages theme selection, application, and persistence
@@ -79,7 +118,31 @@ export class ThemeManager {
   private activeUserThemeInput: ThemeInputV2 | null = null;
 
   constructor() {
+    migrateStorage();
     this.initStorageListener();
+  }
+
+  /** Each theme's slug by its index: the loaded collection's, or the base list's before it loads. */
+  private slugsByIndex(): Map<number, string> {
+    const map = new Map<number, string>();
+    if (this.cachedThemes) {
+      for (const [i, t] of Object.entries(this.cachedThemes)) {
+        map.set(parseInt(i, 10), themeSlug(t.name));
+      }
+    } else {
+      baseThemesV2.forEach((t, i) => map.set(i, themeSlug(t.name)));
+    }
+    return map;
+  }
+
+  private slugForIndex(index: number): string | null {
+    return this.slugsByIndex().get(index) ?? null;
+  }
+
+  private indexForSlug(slug: string | null): number | null {
+    if (slug === null) return null;
+    for (const [i, s] of this.slugsByIndex()) if (s === slug) return i;
+    return null;
   }
 
   /**
@@ -141,8 +204,8 @@ export class ThemeManager {
     if (typeof window === 'undefined') return 0;
 
     // Check session storage first
-    const saved = sessionStorage.getItem(SESSION_STORAGE_KEY);
-    if (saved !== null) return parseInt(saved, 10);
+    const saved = this.indexForSlug(readKey('session', SESSION_STORAGE_KEY));
+    if (saved !== null) return saved;
 
     // If project-specific theme is assigned, use that
     const projectTheme = this.getProjectTheme();
@@ -152,14 +215,15 @@ export class ThemeManager {
     }
 
     // For a new session, use saved theme or generate a random index
-    const persistentTheme = localStorage.getItem(PERSISTENT_STORAGE_KEY);
+    const persistentTheme = this.indexForSlug(
+      readKey('local', PERSISTENT_STORAGE_KEY)
+    );
     if (persistentTheme !== null) {
-      const themeIndex = parseInt(persistentTheme, 10);
-      this.setTheme(themeIndex);
-      return themeIndex;
+      this.setTheme(persistentTheme);
+      return persistentTheme;
     }
 
-    // Use Green theme as default for new sessions
+    // Use the first theme as default for new sessions
     const defaultTheme = 0;
     this.setTheme(defaultTheme);
     return defaultTheme;
@@ -175,11 +239,12 @@ export class ThemeManager {
     this.activeUserThemeId = null;
     this.activeUserThemeInput = null;
 
-    // Update active theme state to built-in
-    const activeState: ActiveThemeState = { type: 'builtin', index };
-    localStorage.setItem(ACTIVE_THEME_KEY, JSON.stringify(activeState));
-
-    sessionStorage.setItem(SESSION_STORAGE_KEY, String(index));
+    // Update active theme state to built-in, kept by name
+    const name = this.slugForIndex(index);
+    if (name !== null) {
+      writeKey('local', ACTIVE_THEME_KEY, JSON.stringify({ type: 'builtin', name }));
+      writeKey('session', SESSION_STORAGE_KEY, name);
+    }
     this.applyTheme(index);
   }
 
@@ -189,9 +254,9 @@ export class ThemeManager {
   saveTheme(): void {
     if (typeof window === 'undefined') return;
 
-    const currentTheme = sessionStorage.getItem(SESSION_STORAGE_KEY);
+    const currentTheme = readKey('session', SESSION_STORAGE_KEY);
     if (currentTheme !== null) {
-      localStorage.setItem(PERSISTENT_STORAGE_KEY, currentTheme);
+      writeKey('local', PERSISTENT_STORAGE_KEY, currentTheme);
     }
   }
 
@@ -217,10 +282,10 @@ export class ThemeManager {
 
       // Persist active theme state
       const activeState: ActiveThemeState = { type: 'user', id };
-      localStorage.setItem(ACTIVE_THEME_KEY, JSON.stringify(activeState));
+      writeKey('local', ACTIVE_THEME_KEY, JSON.stringify(activeState));
 
       // Clear the built-in theme session storage (prevents confusion)
-      sessionStorage.removeItem(SESSION_STORAGE_KEY);
+      removeKey('session', SESSION_STORAGE_KEY);
 
       // Apply to DOM. Both modes are written, scoped like a base theme, so a light/dark change needs nothing here.
       const mode = this.isDarkMode() ? 'dark' : 'light';
@@ -296,9 +361,17 @@ export class ThemeManager {
     if (typeof window === 'undefined') return null;
 
     try {
-      const stored = localStorage.getItem(ACTIVE_THEME_KEY);
+      const stored = readKey('local', ACTIVE_THEME_KEY);
       if (!stored) return null;
-      return JSON.parse(stored) as ActiveThemeState;
+      const state = JSON.parse(stored) as { type?: string; name?: string; id?: string };
+      if (state.type === 'user' && typeof state.id === 'string') {
+        return { type: 'user', id: state.id };
+      }
+      if (state.type === 'builtin' && typeof state.name === 'string') {
+        const index = this.indexForSlug(state.name);
+        return index === null ? null : { type: 'builtin', index, name: state.name };
+      }
+      return null;
     } catch {
       return null;
     }
@@ -310,7 +383,7 @@ export class ThemeManager {
   clearActiveUserTheme(): void {
     this.activeUserThemeId = null;
     this.activeUserThemeInput = null;
-    localStorage.removeItem(ACTIVE_THEME_KEY);
+    removeKey('local', ACTIVE_THEME_KEY);
   }
 
   /**
@@ -658,11 +731,7 @@ export class ThemeManager {
     this.applyTypographyPreviewToDOM(typography);
 
     // Store in localStorage for cross-tab sync
-    try {
-      localStorage.setItem(TYPOGRAPHY_PREVIEW_KEY, JSON.stringify(typography));
-    } catch (e) {
-      console.error('Failed to save typography preview to storage', e);
-    }
+    writeKey('local', TYPOGRAPHY_PREVIEW_KEY, JSON.stringify(typography));
   }
 
   /**
@@ -674,11 +743,7 @@ export class ThemeManager {
     this.removeTypographyPreviewFromDOM();
 
     // Clear from localStorage (triggers storage event in other tabs)
-    try {
-      localStorage.removeItem(TYPOGRAPHY_PREVIEW_KEY);
-    } catch (e) {
-      console.error('Failed to clear typography preview from storage', e);
-    }
+    removeKey('local', TYPOGRAPHY_PREVIEW_KEY);
   }
 
   /**
@@ -688,7 +753,7 @@ export class ThemeManager {
     if (typeof window === 'undefined') return;
 
     try {
-      const stored = localStorage.getItem(TYPOGRAPHY_PREVIEW_KEY);
+      const stored = readKey('local', TYPOGRAPHY_PREVIEW_KEY);
       if (stored) {
         const typography = JSON.parse(stored) as GeneratedTypographyV2;
         this.applyTypographyPreviewToDOM(typography);
@@ -726,16 +791,16 @@ export class ThemeManager {
     // Default to 0 and then update asynchronously
     this.getCurrentThemeAsync().then((index) => this.setTheme(index));
 
-    const saved = sessionStorage.getItem(SESSION_STORAGE_KEY);
-    if (saved !== null) return parseInt(saved, 10);
+    const saved = this.indexForSlug(readKey('session', SESSION_STORAGE_KEY));
+    if (saved !== null) return saved;
 
     // If project-specific theme is assigned, use that
     const projectTheme = this.getProjectTheme();
     if (projectTheme !== null) return projectTheme;
 
     // For a new session, use saved theme
-    const persistentTheme = localStorage.getItem(PERSISTENT_STORAGE_KEY);
-    if (persistentTheme !== null) return parseInt(persistentTheme, 10);
+    const persistentTheme = this.indexForSlug(readKey('local', PERSISTENT_STORAGE_KEY));
+    if (persistentTheme !== null) return persistentTheme;
 
     // Default to first theme
     return 0;
