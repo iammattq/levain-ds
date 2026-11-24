@@ -40,8 +40,14 @@ check('TagInput: the error field is invalid and described', (await page.getByRol
 // EditableText: Tab stop, F2/Enter, focus back
 const title = page.locator('[data-demo="forms-part4"] [tabindex="0"]', { hasText: 'Spring journal' });
 await title.focus();
-const ring = await title.evaluate(el => getComputedStyle(el).boxShadow);
-check('EditableText: the focused root shows a ring', ring && ring !== 'none', ring);
+// the last input was a key (Escape), so focus() here is keyboard focus: :focus-visible, with the ring and the pencil
+const ring = await title.evaluate(el => [el.matches(':focus-visible'), getComputedStyle(el).boxShadow]);
+// Tailwind's resting box-shadow is transparent (rgba(0, 0, 0, 0)), so look for an opaque colour, not just "not none"
+check('EditableText: the focused root is focus-visible and shows a ring', ring[0] && /rgb\(/.test(ring[1]), ring);
+const pencil = title.locator('button[aria-label="Edit"]');
+await page.waitForFunction(el => getComputedStyle(el).opacity === '1', await pencil.elementHandle(), { timeout: 2000 }).catch(() => {});
+const opacity = await pencil.evaluate(el => getComputedStyle(el).opacity);
+check('EditableText: the pencil shows while the root has keyboard focus', opacity === '1', opacity);
 await shot('editabletext-focus');
 await page.keyboard.press('F2');
 const field = page.getByRole('textbox', { name: 'Edit text' });
