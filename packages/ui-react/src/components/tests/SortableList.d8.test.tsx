@@ -80,6 +80,25 @@ describe('SortableList: a group removed mid-drag (D8)', () => {
     jest.useRealTimers();
   });
 
+  it('a drag already dropped or cancelled is not reported off again when the group goes', () => {
+    const dragging: boolean[] = [];
+    const { unmount } = render(<Board onMove={jest.fn()} onDragChange={d => dragging.push(d)} />);
+    press(item('Alpha'));
+    moveTo(30, 30);
+    release(250, 50);
+    expect(dragging).toEqual([true, false]);
+    unmount();
+    expect(dragging).toEqual([true, false]);
+
+    const again: boolean[] = [];
+    const second = render(<Board onMove={jest.fn()} onDragChange={d => again.push(d)} />);
+    press(item('Alpha'));
+    moveTo(30, 30);
+    act(() => { window.dispatchEvent(new FakePointerEvent('pointercancel', { pointerId: 1 })); });
+    second.unmount();
+    expect(again).toEqual([true, false]);
+  });
+
   it('a pressed card that has not lifted yet leaves no listeners either', () => {
     const { unmount } = render(<Board onMove={jest.fn()} />);
     press(item('Alpha'));

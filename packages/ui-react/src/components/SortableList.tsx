@@ -181,7 +181,13 @@ export function SortableGroup({ onMove, onDragChange, onDragMove, children }: So
     const s = {
       started: false,
       done: false,
+      // finish has run (or been asked to): the drag is already reported off, so abort must not report it again
+      ended: false,
       last: start,
+      end(d: DragState | null, cancelled: boolean) {
+        s.ended = true;
+        finish(d, cancelled);
+      },
       lift() {
         const source = lists.current.get(list);
         if (!source || s.done) { s.done = true; return; }
@@ -228,24 +234,24 @@ export function SortableGroup({ onMove, onDragChange, onDragMove, children }: So
         const slot = d && lists.current.get(d.to);
         const placeholder = slot?.el?.querySelector<HTMLElement>('[data-sortable-placeholder]');
         const r = placeholder?.getBoundingClientRect();
-        if (!r || reduce) { finish(d, false); return; }
+        if (!r || reduce) { s.end(d, false); return; }
         setLanding(true);
         const tr = motionFor('settle', reduce);
         s.settling = [animate(x, r.left, tr), animate(y, r.top, tr)];
-        Promise.all(s.settling.map(a => a.finished)).then(() => finish(dragRef.current, false));
+        Promise.all(s.settling.map(a => a.finished)).then(() => s.end(dragRef.current, false));
       },
       cancel() {
         s.done = true;
         document.body.style.userSelect = '';
-        if (s.started) finish(dragRef.current, true);
+        if (s.started) s.end(dragRef.current, true);
       },
-      /** The group is going away: stop everything, report the drag off, commit nothing. */
+      /** The group is going away: stop everything, report a lifted, unfinished drag off, commit nothing. */
       abort() {
-        const wasLifted = s.started;
+        const unfinished = s.started && !s.ended;
         s.done = true;
         document.body.style.userSelect = '';
         s.settling.forEach(a => a.stop());
-        if (wasLifted) onDrag.current?.(false);
+        if (unfinished) onDrag.current?.(false);
       },
       settling: [] as AnimationPlaybackControls[],
     };

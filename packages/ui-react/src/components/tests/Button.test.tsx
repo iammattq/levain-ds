@@ -206,6 +206,20 @@ describe('Button Component', () => {
       expect(onClick).not.toHaveBeenCalled();
     });
 
+    test('a loading link is inert like a disabled one', () => {
+      const onClick = jest.fn();
+      render(
+        <Button href="/dashboard" loading onClick={onClick}>
+          Dashboard
+        </Button>
+      );
+      const link = screen.getByRole('link', { name: /dashboard/i });
+      expect(link).not.toHaveAttribute('href');
+      expect(link).toHaveAttribute('aria-disabled', 'true');
+      fireEvent.click(link);
+      expect(onClick).not.toHaveBeenCalled();
+    });
+
     test('a disabled external link has no href', () => {
       render(
         <Button href="https://example.com" external disabled>
