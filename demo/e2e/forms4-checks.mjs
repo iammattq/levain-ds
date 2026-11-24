@@ -21,7 +21,7 @@ const check = (what, ok, got) => results.push({ what, ok: !!ok, got });
 const shot = name => page.locator('[data-demo="forms-part4"]').screenshot({ path: `${out}/check4-${name}.png` });
 
 // TagInput: the suggestions by keyboard
-const tags = page.getByRole('combobox', { name: 'Tags' });
+const tags = page.getByRole('combobox', { name: 'Tags', exact: true });
 await tags.click();
 await tags.pressSequentially('re');
 check('TagInput: typing opens a listbox of options', (await page.getByRole('listbox').count()) === 1, await page.getByRole('option').allTextContents());
