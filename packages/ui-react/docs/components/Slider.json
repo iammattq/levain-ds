@@ -3,6 +3,7 @@
   "description": "A single-handle slider component for selecting a single value with filled track, size variants, and optional tooltip/labels",
   "category": "components",
   "usage": [
+    "Follows the form-input convention (docs/prop-conventions.json, formInputs).",
     "Use for selecting a single value from a continuous range",
     "Use size='sm' for compact sidebar controls in goodies",
     "Use size='md' (default) for standard form inputs",
@@ -32,9 +33,10 @@
     "Uses native input[type=range] for keyboard navigation",
     "Proper aria-valuemin, aria-valuemax, aria-valuenow attributes",
     "aria-valuetext provides formatted value for screen readers",
-    "Label associated via htmlFor/id",
+    "Named by its label (htmlFor/id), or by aria-label / aria-labelledby passed through",
     "Focus-visible ring for keyboard users",
-    "Label tooltip uses role='tooltip' and appears on hover of the info icon"
+    "Label tooltip uses role='tooltip' and appears on hover of the info icon",
+    "Typed entry in the number field is never rewritten while typing"
   ],
   "props": [
     {
@@ -45,18 +47,34 @@
       "description": "Size variant - 'sm' for compact sidebar controls, 'md' for standard forms"
     },
     {
+      "name": "id",
+      "type": "string",
+      "optional": true,
+      "defaultValue": null,
+      "description": "The range input's id; generated with useId() when left out",
+      "configurable": false
+    },
+    {
       "name": "label",
       "type": "string",
       "optional": true,
       "defaultValue": null,
-      "description": "Optional label text displayed above the slider"
+      "description": "Visible label, naming the range. Without it, pass aria-label or aria-labelledby"
     },
     {
       "name": "value",
       "type": "number",
-      "optional": false,
+      "optional": true,
       "defaultValue": null,
-      "description": "Current slider value (required)"
+      "description": "Controlled: the value. Leave out for uncontrolled"
+    },
+    {
+      "name": "defaultValue",
+      "type": "number",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Uncontrolled: the value at first (default min)",
+      "configurable": false
     },
     {
       "name": "min",
@@ -82,9 +100,9 @@
     {
       "name": "onChange",
       "type": "(value: number) => void",
-      "optional": false,
+      "optional": true,
       "defaultValue": null,
-      "description": "Change handler called when the slider value changes (required)"
+      "description": "Called with the new number, value first"
     },
     {
       "name": "showValue",
@@ -98,7 +116,7 @@
       "type": "boolean",
       "optional": true,
       "defaultValue": "false",
-      "description": "Show an editable number input beside the slider for precise value entry. Values are clamped to min/max range."
+      "description": "Show an editable number input beside the slider for precise value entry. Values are clamped to min/max range. What is typed is kept as typed; a value in range goes out at once, one out of range is clamped on blur or Enter"
     },
     {
       "name": "inputWidth",
@@ -176,6 +194,22 @@
       "optional": true,
       "defaultValue": null,
       "description": "Additional CSS classes for the slider input element"
+    },
+    {
+      "name": "ref",
+      "type": "Ref<HTMLInputElement>",
+      "optional": true,
+      "defaultValue": null,
+      "description": "The native range input",
+      "configurable": false
+    },
+    {
+      "name": "...rest",
+      "type": "InputHTMLAttributes",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Every other prop (aria-label, name, data-*, onBlur…) goes to the range input",
+      "configurable": false
     }
   ]
 }

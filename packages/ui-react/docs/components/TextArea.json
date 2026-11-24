@@ -3,6 +3,7 @@
   "description": "The TextArea component provides an accessible, fully-featured multiline text input field with support for labels, error states, and helper text.",
   "category": "components",
   "usage": [
+    "Follows the form-input convention (docs/prop-conventions.json, formInputs).",
     "Accessible: Includes proper labeling, ARIA attributes, and error states",
     "Error States: Displays error messages with appropriate styling",
     "Focus States: Visual indication when the textarea is focused",
@@ -10,13 +11,14 @@
     "Required Field Support: Visual indicator for required fields",
     "Customizable: Styling can be customized via className props",
     "Resizable: Users can resize the textarea to see more content at once",
-    "Compact Mode: Smaller typography and padding for dense UIs like sidebars"
+    "Sizes: 'xs' (smaller typography and padding, for dense UIs like sidebars) and 'md' (default); compact is the deprecated alias for 'xs'"
   ],
   "design": [
-    "Labels use `.type-label` (14px medium) for consistent form styling, or `.type-label-sm` in compact mode.",
-    "Textarea uses `.type-body-sm` with reduced padding in compact mode.",
-    "Helper text uses `.type-caption` which includes muted color semantically, or `.type-caption-compact` in compact mode.",
-    "Error messages use `.type-body-sm` (14px) with error color override, or `.type-caption` in compact mode."
+    "Labels use `.type-label` (14px medium) for consistent form styling, or `.type-label-sm` at size xs.",
+    "Textarea uses `.type-body-sm` with reduced padding at size xs.",
+    "Helper text uses `.type-caption` which includes muted color semantically, or `.type-caption-compact` at size xs.",
+    "Error messages use `.type-body-sm` (14px) with error color override, or `.type-caption` at size xs.",
+    "One border colour per state: --color-border-subtle at rest, --color-error with an error, --color-border-emphasis disabled"
   ],
   "examples": [
     "import { TextArea } from '@/lib/designsystem';\n\n// Basic usage\n<TextArea\n  id=\"description\"\n  label=\"Description\"\n  placeholder=\"Enter a detailed description\"\n  onChange={(e) => setDescription(e.target.value)}\n  value={description}\n  rows={4}\n/>",
@@ -30,23 +32,40 @@
     "Labels are properly associated with textareas using the for/id relationship",
     "Error states are communicated to assistive technology via aria-invalid and aria-describedby",
     "Helper text is linked to the textarea using aria-describedby",
-    "Required fields are marked both visually and with the required attribute"
+    "Required fields are marked both visually and with the required attribute",
+    "Focus shows on any focus (focus:ring-1 primary), as for every text field"
   ],
   "props": [
     {
       "name": "id",
       "type": "string",
-      "optional": false,
+      "optional": true,
       "defaultValue": null,
-      "description": "Unique identifier for the textarea (required for accessibility)",
+      "description": "The textarea's id; generated with useId() when left out",
       "configurable": true
+    },
+    {
+      "name": "value / defaultValue",
+      "type": "string",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Native: value for controlled, defaultValue for uncontrolled",
+      "configurable": false
+    },
+    {
+      "name": "onChange",
+      "type": "(event: React.ChangeEvent<HTMLTextAreaElement>) => void",
+      "optional": true,
+      "defaultValue": null,
+      "description": "The native change event (a native text field keeps the native signature)",
+      "configurable": false
     },
     {
       "name": "label",
       "type": "string",
-      "optional": false,
+      "optional": true,
       "defaultValue": null,
-      "description": "Text label displayed above the textarea",
+      "description": "Visible label. Without it, pass aria-label or aria-labelledby",
       "configurable": true
     },
     {
@@ -54,7 +73,7 @@
       "type": "string",
       "optional": true,
       "defaultValue": null,
-      "description": "Error message to display when validation fails",
+      "description": "Error message; shown unless touched is false or the field is disabled. Sets aria-invalid and aria-describedby",
       "configurable": true
     },
     {
@@ -85,8 +104,8 @@
       "name": "touched",
       "type": "boolean",
       "optional": true,
-      "defaultValue": "true",
-      "description": "Whether the field has been interacted with (controls error display)",
+      "defaultValue": null,
+      "description": "Leave out to show error at once; pass the field's touched state to hold it until the field is left (false hides it)",
       "configurable": true
     },
     {
@@ -114,12 +133,36 @@
       "configurable": true
     },
     {
+      "name": "size",
+      "type": "'xs' | 'md'",
+      "optional": true,
+      "defaultValue": "'md'",
+      "description": "xs: smaller type and padding (the scale's xs label type). Height is content-driven",
+      "configurable": true
+    },
+    {
       "name": "compact",
       "type": "boolean",
       "optional": true,
       "defaultValue": "false",
-      "description": "Whether to use compact sizing (smaller typography and padding)",
+      "description": "Deprecated: use size=\"xs\". size wins when both are given",
       "configurable": true
+    },
+    {
+      "name": "ref",
+      "type": "Ref<HTMLTextAreaElement>",
+      "optional": true,
+      "defaultValue": null,
+      "description": "The native textarea",
+      "configurable": false
+    },
+    {
+      "name": "...rest",
+      "type": "TextareaHTMLAttributes",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Every other prop (name, aria-*, data-*, onKeyDown, onBlur, placeholder…) goes to the textarea; an aria-describedby is kept beside the helper or error id",
+      "configurable": false
     }
   ]
 }

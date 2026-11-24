@@ -3,6 +3,7 @@
   "description": "The SegmentedControl component provides a set of two or more mutually exclusive options presented as connected segments, offering a more compact and visually intuitive alternative to radio buttons or select inputs.",
   "category": "components",
   "usage": [
+    "Follows the form-input convention (docs/prop-conventions.json, formInputs).",
     "Use SegmentedControl when you need users to choose one option from a small set of related choices.",
     "Perfect for toggling between views, filtering options, or setting basic preferences.",
     "Best suited for 2-5 options with short, clear labels.",
@@ -24,20 +25,20 @@
     "When disabling individual options, ensure there's a clear visual indication that they're unavailable while maintaining readability."
   ],
   "accessibility": [
-    "Uses native `button` elements for proper semantic structure and keyboard accessibility.",
-    "Each option includes the `aria-pressed` attribute to indicate the currently selected state.",
-    "The active indicator is marked with `aria-hidden=\"true\"` since it's decorative.",
-    "When provided, the `label` prop is properly associated with the control via matching HTML `for`/`id` attributes.",
-    "The component maintains sufficient color contrast between text and background in all states.",
-    "Disabled options are clearly indicated visually and prevented from receiving focus or interaction."
+    "A single-choice group: role=\"radiogroup\" with role=\"radio\" options and aria-checked (was aria-pressed buttons)",
+    "One Tab stop, on the chosen option (else the first enabled); the arrows move and select, skipping disabled options and wrapping; Home and End go to the ends; Space and Enter choose",
+    "Named by its label (aria-labelledby), or aria-label / aria-labelledby passed through",
+    "Keyboard focus ring, inset (focus-visible, 2px var(--color-border-focus)), since the group clips outside its options",
+    "The active indicator is marked with aria-hidden=\"true\" since it's decorative",
+    "Disabled options use the native disabled attribute and are skipped by the arrows; a disabled group sets aria-disabled"
   ],
   "props": [
     {
       "name": "id",
       "type": "string",
-      "optional": false,
+      "optional": true,
       "defaultValue": "",
-      "description": "Unique identifier for the control (required for accessibility)"
+      "description": "The group's id; generated with useId() when left out"
     },
     {
       "name": "options",
@@ -49,23 +50,31 @@
     {
       "name": "value",
       "type": "string",
-      "optional": false,
+      "optional": true,
       "defaultValue": "",
-      "description": "Currently selected option value"
+      "description": "Controlled: the chosen value. Leave out for uncontrolled"
+    },
+    {
+      "name": "defaultValue",
+      "type": "string",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Uncontrolled: the value chosen at first",
+      "configurable": false
     },
     {
       "name": "onChange",
       "type": "(value: string) => void",
-      "optional": false,
+      "optional": true,
       "defaultValue": "",
-      "description": "Callback when selection changes"
+      "description": "Called with the chosen value, value first; not called when the chosen option is chosen again"
     },
     {
       "name": "label",
       "type": "string",
       "optional": true,
       "defaultValue": "undefined",
-      "description": "Accessible label for the control"
+      "description": "Visible label, naming the group (aria-labelledby). Without it, pass aria-label or aria-labelledby"
     },
     {
       "name": "className",
@@ -101,6 +110,22 @@
       "optional": true,
       "defaultValue": "'default'",
       "description": "Visual style variant"
+    },
+    {
+      "name": "ref",
+      "type": "Ref<HTMLDivElement>",
+      "optional": true,
+      "defaultValue": null,
+      "description": "The group (role=\"radiogroup\"). Before T35 it was the outer wrapper, label included",
+      "configurable": false
+    },
+    {
+      "name": "...rest",
+      "type": "HTMLAttributes<HTMLDivElement>",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Every other prop (aria-label, data-*…) goes to the group; an onKeyDown runs before the arrow keys and can stop them with preventDefault()",
+      "configurable": false
     }
   ]
 }

@@ -3,6 +3,7 @@
   "description": "The Switch component provides a toggle control that allows users to switch between two states (on/off).",
   "category": "components",
   "usage": [
+    "Follows the form-input convention (docs/prop-conventions.json, formInputs).",
     "Three size options: small, medium, and large",
     "Optional label support",
     "Disabled state",
@@ -13,7 +14,8 @@
     "import { Switch } from '@/lib/designsystem';\n\nfunction MyComponent() {\n  const [isEnabled, setIsEnabled] = useState(false);\n\n  return (\n    <Switch\n      id=\"my-switch\"\n      checked={isEnabled}\n      onChange={setIsEnabled}\n      label=\"Enable feature\"\n    />\n  );\n}",
     "<Switch id=\"small-switch\" checked={checked} onChange={handleChange} size=\"sm\" label=\"Small\" />\n<Switch id=\"medium-switch\" checked={checked} onChange={handleChange} size=\"md\" label=\"Medium\" />\n<Switch id=\"large-switch\" checked={checked} onChange={handleChange} size=\"lg\" label=\"Large\" />",
     "<Switch\n  id=\"disabled-switch\"\n  checked={true}\n  onChange={() => {}}\n  disabled={true}\n  label=\"Disabled switch\"\n/>",
-    "<Switch id=\"no-label-switch\" checked={checked} onChange={handleChange} />"
+    "<Switch id=\"no-label-switch\" checked={checked} onChange={handleChange} />",
+    "// uncontrolled, named without a visible label\n<Switch defaultChecked aria-label=\"Notifications\" onChange={save} />"
   ],
   "design": [
     "Background (unchecked): var(--color-surface-card)",
@@ -21,38 +23,46 @@
     "Border: var(--color-border-default)",
     "Handle color: var(--color-surface-inverted)",
     "Label text: var(--color-text-default)",
-    "Focus ring: var(--color-primary)",
+    "Focus ring: keyboard only (focus-visible), 2px var(--color-border-focus) with offset",
     "Uses CSS variables for theming"
   ],
   "accessibility": [
-    "Uses a standard checkbox input (visually hidden) for native keyboard navigation",
-    "Maintains proper focus states",
-    "Labels are properly associated with inputs",
-    "Disabled state is properly conveyed"
+    "A native checkbox (visually hidden) with role=\"switch\": Space toggles it, and assistive technology announces a switch, on or off",
+    "Named by its label, by aria-label, or by an outside <label htmlFor={id}>",
+    "Keyboard focus ring on the track (focus-visible)",
+    "Disabled sets the native disabled attribute"
   ],
   "props": [
     {
       "name": "id",
       "type": "string",
-      "optional": false,
+      "optional": true,
       "defaultValue": null,
-      "description": "Unique identifier for the input (required)",
+      "description": "The input's id; generated with useId() when left out",
       "configurable": false
     },
     {
       "name": "checked",
       "type": "boolean",
-      "optional": false,
+      "optional": true,
       "defaultValue": null,
-      "description": "The state of the switch (required)",
+      "description": "Controlled: on or off. Leave out for uncontrolled",
       "configurable": true
+    },
+    {
+      "name": "defaultChecked",
+      "type": "boolean",
+      "optional": true,
+      "defaultValue": "false",
+      "description": "Uncontrolled: on at first",
+      "configurable": false
     },
     {
       "name": "onChange",
       "type": "(checked: boolean) => void",
-      "optional": false,
+      "optional": true,
       "defaultValue": null,
-      "description": "Callback when the switch state changes (required)",
+      "description": "Called with the new state, value first",
       "configurable": false
     },
     {
@@ -60,7 +70,7 @@
       "type": "string",
       "optional": true,
       "defaultValue": null,
-      "description": "Optional text label",
+      "description": "Visible label. Without it, pass aria-label or label it from outside with <label htmlFor={id}>",
       "configurable": true
     },
     {
@@ -78,6 +88,30 @@
       "defaultValue": "'md'",
       "description": "Size of the switch",
       "configurable": true
+    },
+    {
+      "name": "className",
+      "type": "string",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Classes for the root (merged with cn)",
+      "configurable": false
+    },
+    {
+      "name": "ref",
+      "type": "Ref<HTMLInputElement>",
+      "optional": true,
+      "defaultValue": null,
+      "description": "The native input",
+      "configurable": false
+    },
+    {
+      "name": "...rest",
+      "type": "InputHTMLAttributes",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Every other prop (aria-label, name, data-*, onBlur…) goes to the input",
+      "configurable": false
     }
   ]
 }
