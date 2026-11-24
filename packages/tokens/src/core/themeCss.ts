@@ -6,7 +6,9 @@
  * the file and the runtime CSS can't drift.
  *
  * A theme's colours sit under `[data-levain-theme="<slug>"]` (light) and `.dark` with it (dark), no `!important`.
- * `.dark[data-levain-theme]` is (0,2,0), so it outranks shared.css's `.dark` elevation glow without relying on order.
+ * Neither depends on load order against shared.css, which sets neutral `--elevation-*` on `:root` (0,1,0) and a glow on
+ * `.dark` (0,1,0): light adds `html[data-levain-theme]` (0,1,1) and dark is `.dark[data-levain-theme]` (0,2,0). The
+ * bare `[data-levain-theme]` stays for a theme set on an element below <html>.
  */
 import type { GeneratedThemeMode } from '../generator/types';
 import type { ThemesV2Collection, ThemeV2Entry } from './themeTypes';
@@ -34,7 +36,7 @@ function attrValue(value: string): string {
 /** The selectors for one theme in one mode. */
 export function themeSelector(value: string, mode: 'light' | 'dark'): string {
   const attr = `[${THEME_ATTR}="${attrValue(value)}"]`;
-  return mode === 'light' ? attr : `.dark${attr}, .dark ${attr}`;
+  return mode === 'light' ? `html${attr}, ${attr}` : `.dark${attr}, .dark ${attr}`;
 }
 
 /**

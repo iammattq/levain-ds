@@ -101,13 +101,13 @@ function installFakeDom(systemDark: boolean): FakeEnv {
     body: { setAttribute: () => {} },
   };
 
-  // Only the selectors levain writes: [data-levain-theme="x"] for light, .dark[data-levain-theme="x"] for dark.
+  // Only the selectors levain writes: html[data-levain-theme="x"] for light, .dark[data-levain-theme="x"] for dark.
   const colour = (name: string) => {
     const theme = attrs['data-levain-theme'];
     if (!theme) return undefined;
     const sel = classes.has('dark')
       ? `.dark[data-levain-theme="${theme}"]`
-      : `[data-levain-theme="${theme}"] {`;
+      : `html[data-levain-theme="${theme}"],`;
     let found: string | undefined;
     for (const el of styles.values()) {
       for (const block of el.textContent.split('}')) {

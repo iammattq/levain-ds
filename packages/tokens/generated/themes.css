@@ -39,7 +39,7 @@
   --color-theme-7-primary: #2451C9;
   --color-theme-7-secondary: #2451C9;
 }
-[data-levain-theme="sage"] {
+html[data-levain-theme="sage"], [data-levain-theme="sage"] {
   --color-primary: #97A888;
   --color-accent: #C9966B;
   --color-base: #97A888;
@@ -237,7 +237,7 @@
   --elevation-2: 0px 0px 22px rgba(170, 160, 152, 0.180);
   --elevation-3: 0px 0px 36px rgba(170, 160, 152, 0.270);
 }
-[data-levain-theme="harbor"] {
+html[data-levain-theme="harbor"], [data-levain-theme="harbor"] {
   --color-primary: #547385;
   --color-accent: #9A7155;
   --color-base: #547385;
@@ -435,7 +435,7 @@
   --elevation-2: 0px 0px 22px rgba(154, 113, 85, 0.160);
   --elevation-3: 0px 0px 36px rgba(154, 113, 85, 0.240);
 }
-[data-levain-theme="mulberry"] {
+html[data-levain-theme="mulberry"], [data-levain-theme="mulberry"] {
   --color-primary: #875E77;
   --color-accent: #88774C;
   --color-base: #875E77;
@@ -633,7 +633,7 @@
   --elevation-2: 0px 0px 22px rgba(136, 119, 76, 0.160);
   --elevation-3: 0px 0px 36px rgba(136, 119, 76, 0.240);
 }
-[data-levain-theme="slate"] {
+html[data-levain-theme="slate"], [data-levain-theme="slate"] {
   --color-primary: #626F77;
   --color-accent: #8B6F58;
   --color-base: #626F77;
@@ -831,7 +831,7 @@
   --elevation-2: 0px 0px 22px rgba(139, 111, 88, 0.160);
   --elevation-3: 0px 0px 36px rgba(139, 111, 88, 0.240);
 }
-[data-levain-theme="linen"] {
+html[data-levain-theme="linen"], [data-levain-theme="linen"] {
   --color-primary: #BFA98E;
   --color-accent: #7E8C8E;
   --color-base: #BFA98E;
@@ -1029,7 +1029,7 @@
   --elevation-2: 0px 0px 22px rgba(126, 140, 142, 0.160);
   --elevation-3: 0px 0px 36px rgba(126, 140, 142, 0.240);
 }
-[data-levain-theme="atrium"] {
+html[data-levain-theme="atrium"], [data-levain-theme="atrium"] {
   --color-primary: #6F7479;
   --color-accent: #8C7B5A;
   --color-base: #6F7479;
@@ -1227,7 +1227,7 @@
   --elevation-2: 0px 0px 22px rgba(140, 123, 90, 0.160);
   --elevation-3: 0px 0px 36px rgba(140, 123, 90, 0.240);
 }
-[data-levain-theme="heather"] {
+html[data-levain-theme="heather"], [data-levain-theme="heather"] {
   --color-primary: #968D9A;
   --color-accent: #88957D;
   --color-base: #968D9A;
@@ -1425,7 +1425,7 @@
   --elevation-2: 0px 0px 22px rgba(136, 149, 125, 0.160);
   --elevation-3: 0px 0px 36px rgba(136, 149, 125, 0.240);
 }
-[data-levain-theme="cobalt-mono"] {
+html[data-levain-theme="cobalt-mono"], [data-levain-theme="cobalt-mono"] {
   --color-primary: #0d0d0d;
   --color-accent: #222222;
   --color-base: #0d0d0d;

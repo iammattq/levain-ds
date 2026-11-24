@@ -44,4 +44,4 @@ for p in $port_a $port_b; do
   done
 done
 PW_DIR="$pw" node demo/e2e/themes-capture.mjs "http://localhost:$port_b/" "http://localhost:$port_a/" "$out" \
-  packages/tokens/generated/themes.css packages/tokens/generated/themesV2.json
+  packages/tokens/generated/themes.css packages/tokens/generated/themesV2.json packages/tokens/src/styles/shared.css

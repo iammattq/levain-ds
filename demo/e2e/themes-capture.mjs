@@ -1,33 +1,35 @@
 #!/usr/bin/env node
 // T32: theme colours as plain CSS, before and after. Run on the PC through demo/e2e/themes.sh:
-//   node themes-capture.mjs <before-url> <after-url> <out> <themes.css> <themesV2.json>
+//   node themes-capture.mjs <before-url> <after-url> <out> <themes.css> <themesV2.json> <shared.css>
 // For every base theme, light and dark, at 1280 and 390 (full page, 1x, reduced motion):
 // - <before|after>-<slug>-<mode>-<width>.png, and diff-<…>.png (differing pixels in red) when they differ;
 // - every variable generated/themes.css sets, read on <html> in both: they must be equal.
 // Then, before and after: the board's sequence (start on one theme and mode, then setTheme(mode) and applyTheme(i) at
 // runtime, through the page's own @levain/tokens module) against a fresh load of that theme and mode; system mode with
 // the OS switching light → dark (after should follow; before is D2); and, after only, a page with no JavaScript at all
-// that links themes.css and sets the attribute, against the app's values. Writes checks.json; exits 1 when a variable
+// that links themes.css and sets the attribute, against the app's values; the same with shared.css after themes.css
+// (its :root and .dark --elevation-* must not win on order). Writes checks.json; exits 1 when a variable
 // check fails (pixel differences are reported, not fatal: the report says why each one happens).
 import { createRequire } from 'node:module';
 import fs from 'node:fs';
 import path from 'node:path';
 
 const { chromium } = createRequire(path.join(process.env.PW_DIR, 'node_modules/'))('playwright-core');
-const [beforeUrl, afterUrl, out, cssPath, jsonPath] = process.argv.slice(2);
+const [beforeUrl, afterUrl, out, cssPath, jsonPath, sharedPath] = process.argv.slice(2);
 fs.mkdirSync(out, { recursive: true });
 const exe = [process.env.CHROMIUM, '/usr/bin/chromium', '/usr/bin/chromium-browser', '/snap/bin/chromium', '/usr/bin/google-chrome'].find(p => p && fs.existsSync(p));
 if (!exe) throw new Error('no Chromium found (set CHROMIUM)');
 const browser = await chromium.launch({ executablePath: exe, headless: true });
 
 const css = fs.readFileSync(cssPath, 'utf8');
+const sharedCss = fs.readFileSync(sharedPath, 'utf8');
 const themes = Object.entries(JSON.parse(fs.readFileSync(jsonPath, 'utf8')));
 const slug = name => name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 const VARS = [...new Set([...css.matchAll(/^\s+(--[a-z0-9-]+):/gm)].map(m => m[1]))].filter(v => v !== '--levain-themes');
 const MODES = ['light', 'dark'];
 const WIDTHS = [1280, 390];
 const SIDES = { before: beforeUrl, after: afterUrl };
-const checks = { vars: VARS.length, pixels: {}, varFails: [], board: {}, system: {}, noJs: {}, errors: [] };
+const checks = { vars: VARS.length, pixels: {}, varFails: [], board: {}, system: {}, noJs: {}, sharedAfter: {}, errors: [] };
 
 const readVars = page => page.evaluate(names => {
   const s = getComputedStyle(document.documentElement);
@@ -157,6 +159,9 @@ for (const side of Object.keys(SIDES)) {
     await page.setContent(`<!doctype html><html data-levain-theme="${slug(t.name)}" class="${mode === 'dark' ? 'dark' : ''}"><head><style>${css}</style></head><body></body></html>`);
     const n = diffVars(`no-js ${index} ${mode}`, await readVars(page), fresh[`${index}-${mode}`]);
     checks.noJs[`${index}-${mode}`] = n;
+    // themes.css first, shared.css after it (an app's @import order the README allows)
+    await page.setContent(`<!doctype html><html data-levain-theme="${slug(t.name)}" class="${mode === 'dark' ? 'dark' : ''}"><head><style>${css}</style><style>${sharedCss}</style></head><body></body></html>`);
+    checks.sharedAfter[`${index}-${mode}`] = diffVars(`shared.css after ${index} ${mode}`, await readVars(page), fresh[`${index}-${mode}`]);
   }
   await ctx.close();
 }
@@ -167,6 +172,8 @@ const pixelDiffs = Object.entries(checks.pixels).filter(([, r]) => r.n !== 0);
 console.log(`vars checked: ${VARS.length}; var failures: ${checks.varFails.length}; pixel differences: ${pixelDiffs.length}/${Object.keys(checks.pixels).length}; page errors: ${checks.errors.length}`);
 console.log('board', JSON.stringify(checks.board));
 console.log('system', JSON.stringify(checks.system));
+console.log('no-js', JSON.stringify(checks.noJs));
+console.log('shared.css after themes.css', JSON.stringify(checks.sharedAfter));
 // before is expected to fail system dark (D2); everything else must match
 const fatal = checks.varFails.filter(f => !/^system before/.test(f.label));
 process.exit(fatal.length ? 1 : 0);

@@ -22,7 +22,7 @@ describe('generated/themes.css', () => {
   it('has every base theme, light and dark', () => {
     for (const t of baseThemesV2) {
       const slug = themeSlug(t.name);
-      expect(css).toContain(`[data-levain-theme="${slug}"] {`);
+      expect(css).toContain(`html[data-levain-theme="${slug}"], [data-levain-theme="${slug}"] {`);
       expect(css).toContain(`.dark[data-levain-theme="${slug}"], .dark [data-levain-theme="${slug}"] {`);
     }
   });
@@ -56,7 +56,27 @@ describe('themeCss helpers', () => {
   });
 
   it('escapes quotes in an attribute value', () => {
-    expect(themeSelector('a"b', 'light')).toBe('[data-levain-theme="a\\"b"]');
+    expect(themeSelector('a"b', 'light')).toBe('html[data-levain-theme="a\\"b"], [data-levain-theme="a\\"b"]');
+  });
+
+  // shared.css sets neutral --elevation-* on :root (0,1,0) and a glow on .dark (0,1,0). An app may load themes.css
+  // before it (the README's @import does), so each theme's selector must outrank those, not tie and lose on order.
+  it('outranks shared.css :root and .dark whatever the load order', () => {
+    const specificity = (sel: string) => {
+      const ids = (sel.match(/#[\w-]+/g) ?? []).length;
+      const classesAttrs = (sel.match(/\.[\w-]+|\[[^\]]+\]|:(?!root)[\w-]+/g) ?? []).length + (sel.match(/:root/g) ?? []).length;
+      const types = (sel.replace(/\[[^\]]+\]|[.#:][\w-]+/g, ' ').match(/[a-z][\w-]*/gi) ?? []).length;
+      return [ids, classesAttrs, types];
+    };
+    const beats = (a: number[], b: number[]) => {
+      for (let i = 0; i < 3; i++) if (a[i] !== b[i]) return a[i] > b[i];
+      return false;
+    };
+    const best = (list: string) => list.split(',').map((s) => specificity(s.trim())).sort((a, b) => (beats(a, b) ? -1 : 1))[0];
+    expect(specificity(':root')).toEqual([0, 1, 0]);
+    expect(specificity('html[data-levain-theme="sage"]')).toEqual([0, 1, 1]);
+    expect(beats(best(themeSelector('sage', 'light')), specificity(':root'))).toBe(true);
+    expect(beats(best(themeSelector('sage', 'dark')), specificity('.dark'))).toBe(true);
   });
 
   it('a mode has one var per name (no duplicates)', () => {
