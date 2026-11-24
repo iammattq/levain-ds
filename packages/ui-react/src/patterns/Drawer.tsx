@@ -8,7 +8,7 @@
  * same surface (or, with surface="canvas", the darker canvas one), its far corners rounded (--radius-2xl) and its near ones square against the edge. It slides in on
  * recipe.sheetIn and out on recipe.sheetOut; under Reduce Motion it appears and goes at once. The page under it doesn't
  * scroll while it's open. It runs the screen's full height, even where iOS hands a fixed box a shorter viewport (T51);
- * its contents sit inside the safe-area insets and scroll inside it.
+ * its contents sit inside the safe-area insets and the visible viewport (100dvh), and scroll inside it.
  *
  * A swipe left on the panel past a quarter of its width, or a flick left, closes it (the sheet's thresholds); a shorter
  * one springs back. As the sheet's handle: a swipe starts only off the controls (a press on a link or button stays a
@@ -123,7 +123,9 @@ export function Drawer({ open, onClose, label, surface = 'elevated', children }:
             onClick={e => e.stopPropagation()}
             className={`absolute inset-y-0 left-0 flex w-[min(20rem,85vw)] touch-pan-y touch-pinch-zoom flex-col overflow-hidden rounded-r-[var(--radius-2xl)] ${SURFACE[surface]} shadow-[var(--elevation-3)] outline-none`}
           >
-            <div data-drawer-body className="flex min-h-0 flex-1 flex-col gap-sm overflow-y-auto overscroll-contain pt-safe-md pb-safe-md pl-safe-md pr-md">
+            {/* max-h-dvh: the panel's background runs lvh tall, but its contents stay in the visible viewport, so with a
+                browser toolbar out (the scroll lock keeps it out) a mt-auto footer is still above it; as SHEET_MAX_HEIGHT */}
+            <div data-drawer-body className="flex min-h-0 max-h-dvh flex-1 flex-col gap-sm overflow-y-auto overscroll-contain pt-safe-md pb-safe-md pl-safe-md pr-md">
               {children}
             </div>
           </motion.div>

@@ -111,6 +111,8 @@ describe('Drawer', () => {
     const body = drawer().querySelector('[data-drawer-body]')!;
     expect(body).toContainElement(screen.getByTestId('body'));
     for (const c of ['overflow-y-auto', 'overscroll-contain', 'pt-safe-md', 'pb-safe-md', 'pl-safe-md']) expect(body.className.split(' ')).toContain(c);
+    // the background runs lvh tall (behind a browser toolbar); the contents stay inside the visible viewport (T51 review)
+    for (const c of ['max-h-dvh', 'min-h-0', 'flex-1']) expect(body.className.split(' ')).toContain(c);
   });
 
   it('a tap on the scrim closes it; a tap inside does not', async () => {
