@@ -91,7 +91,9 @@ for (const [name, theme, m] of COMBOS) {
       const d = { x: +(L.tip.x - L.trigger.x - (B.tip.x - B.trigger.x)).toFixed(1), y: +(L.tip.y - L.trigger.y - (B.tip.y - B.trigger.y)).toFixed(1), w: +(L.tip.w - B.tip.w).toFixed(1), h: +(L.tip.h - B.tip.h).toFixed(1) };
       (r.delta ??= {})[l] = d;
       check(key, Object.values(d).every(v => Math.abs(v) <= 1), `${l}: not where the board's is ${JSON.stringify(d)}`);
-      for (const k of ['bg', 'shadow', 'color', 'font', 'padding']) check(key, B[k] === L[k], `${l}: ${k} differs (${B[k]} vs ${L[k]})`);
+      // Tailwind's shadow utility leads with empty ring layers (transparent, 0 px): the same shadow, so left out
+      const bare = v => v?.replaceAll('rgba(0, 0, 0, 0) 0px 0px 0px 0px, ', '');
+      for (const k of ['bg', 'shadow', 'color', 'font', 'padding']) check(key, bare(B[k]) === bare(L[k]), `${l}: ${k} differs (${B[k]} vs ${L[k]})`);
       check(key, L.role === 'tooltip' && L.describedby?.split(' ').includes(L.id), `${l}: role ${L.role}, describedby ${L.describedby}, id ${L.id}`);
       check(key, !L.focusInTip, `${l}: focus went into the tooltip`);
     };
