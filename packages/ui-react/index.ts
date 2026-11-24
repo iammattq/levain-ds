@@ -142,6 +142,8 @@ export { default as EditorialNavigation } from './src/patterns/EditorialNavigati
 export { default as SimpleAnimatedName } from './src/patterns/SimpleAnimatedName';
 export { default as AsciiHeader } from './src/patterns/AsciiHeader';
 export { Timeline, TimelineGroup, TimelineItem } from './src/patterns/Timeline';
+export { TimelineList, TimelineEntry } from './src/patterns/TimelineList';
+export type { TimelineEntryData } from './src/patterns/TimelineList';
 export type {
   TimelineGroupData,
   TimelineItemData,
