@@ -181,6 +181,7 @@ describe('a held card', () => {
     lift();
     expect(strip().style.scrollSnapType).toBe('none');
     swipeTo(W);
+    expect(strip().scrollLeft).toBe(0); // put back: held, the strip doesn't scroll
     expect(pill('Ideas')).toHaveAttribute('aria-current', 'true');
     fireEvent.click(pill('Queued'));
     expect(scrollTo).not.toHaveBeenCalled();

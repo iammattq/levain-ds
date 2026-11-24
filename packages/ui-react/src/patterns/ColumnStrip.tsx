@@ -142,7 +142,9 @@ export function ColumnStrip({
       // the strip never scrolls up and down (each column is its own height); WebKit's autoscroll under a held mouse
       // would scroll it once it shrinks to a shorter column, cutting off the column's top
       if (el.scrollTop) el.scrollTop = 0;
-      if (!held.current.on) setAt(snapIndex(el.scrollLeft, el.clientWidth, count.current));
+      // nor sideways while a card is held (the rail's transform pages it): WebKit's autoscroll would nudge it
+      if (held.current.on) { if (el.scrollLeft !== held.current.base) el.scrollLeft = held.current.base; return; }
+      setAt(snapIndex(el.scrollLeft, el.clientWidth, count.current));
     };
     el.addEventListener('scroll', on, { passive: true });
     return () => el.removeEventListener('scroll', on);
