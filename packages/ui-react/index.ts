@@ -40,6 +40,8 @@ export type {
 export { Toaster } from './src/components/Toaster';
 export { Modal } from './src/components/Modal';
 export type { ModalMenuOption } from './src/components/Modal';
+export { Popover, anchorPopup } from './src/components/Popover';
+export type { PopoverProps, PopoverTriggerProps, AnchorOptions, Anchored } from './src/components/Popover';
 export { Loader } from './src/components/Loader';
 export { ProgressRing } from './src/components/ProgressRing';
 export type { ProgressRingProps } from './src/components/ProgressRing';
