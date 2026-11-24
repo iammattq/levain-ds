@@ -349,4 +349,36 @@ describe('ColorPickerPanel Component', () => {
       expect(alphaInputContainer).toHaveClass('flex-1');
     });
   });
+
+  // D14: two panels on one page keep their own labels
+  test('two panels on one page have unique ids and each label names its own control', () => {
+    const { container } = render(
+      <>
+        <ColorPickerPanel {...defaultProps} />
+        <ColorPickerPanel {...defaultProps} />
+      </>
+    );
+    const ids = Array.from(container.querySelectorAll('[id]')).map((el) => el.id);
+    expect(new Set(ids).size).toBe(ids.length);
+    const hues = screen.getAllByLabelText('Hue');
+    expect(hues).toHaveLength(2);
+    expect(hues[0]).not.toBe(hues[1]);
+    expect(screen.getAllByLabelText('Hex')).toHaveLength(2);
+    expect(screen.getAllByLabelText('Opacity')).toHaveLength(2);
+    expect(screen.getAllByLabelText('Alpha')).toHaveLength(2);
+  });
+
+  test('the hex error is described by its own panel', () => {
+    render(
+      <>
+        <ColorPickerPanel {...defaultProps} />
+        <ColorPickerPanel {...defaultProps} />
+      </>
+    );
+    const second = screen.getAllByTestId('hex-input')[1];
+    fireEvent.change(second, { target: { value: '#GGGGGG' } });
+    fireEvent.blur(second);
+    const error = screen.getByTestId('hex-error');
+    expect(second.getAttribute('aria-describedby')).toBe(error.id);
+  });
 });

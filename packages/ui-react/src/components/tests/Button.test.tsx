@@ -135,6 +135,103 @@ describe('Button Component', () => {
     expect(link).toHaveAttribute('rel', 'noopener noreferrer');
   });
 
+  // D6: a link Button keeps its ref, aria-*, title and disabled
+  describe('with href (D6)', () => {
+    test('forwards the ref to the anchor', () => {
+      const ref = React.createRef<HTMLButtonElement>();
+      render(
+        <Button ref={ref} href="/dashboard">
+          Dashboard
+        </Button>
+      );
+      expect(ref.current).toBe(screen.getByRole('link'));
+    });
+
+    test('forwards the ref to an external anchor', () => {
+      const ref = React.createRef<HTMLButtonElement>();
+      render(
+        <Button ref={ref} href="https://example.com" external>
+          Out
+        </Button>
+      );
+      expect(ref.current).toBe(screen.getByRole('link'));
+    });
+
+    test('keeps aria-label, aria-* and title on an internal link', () => {
+      render(
+        <Button
+          href="/dashboard"
+          aria-label="Go to dashboard"
+          aria-describedby="hint"
+          title="Dashboard"
+        >
+          <svg />
+        </Button>
+      );
+      const link = screen.getByRole('link', { name: 'Go to dashboard' });
+      expect(link).toHaveAttribute('aria-describedby', 'hint');
+      expect(link).toHaveAttribute('title', 'Dashboard');
+    });
+
+    test('keeps aria-label and title on an external link', () => {
+      render(
+        <Button href="https://example.com" external aria-label="LinkedIn" title="LinkedIn">
+          <svg />
+        </Button>
+      );
+      const link = screen.getByRole('link', { name: 'LinkedIn' });
+      expect(link).toHaveAttribute('title', 'LinkedIn');
+    });
+
+    test('does not put a button type on the anchor', () => {
+      render(
+        <Button href="/dashboard" type="submit">
+          Dashboard
+        </Button>
+      );
+      expect(screen.getByRole('link')).not.toHaveAttribute('type');
+    });
+
+    test('a disabled link has no href, is aria-disabled and ignores clicks', () => {
+      const onClick = jest.fn();
+      render(
+        <Button href="/dashboard" disabled onClick={onClick}>
+          Dashboard
+        </Button>
+      );
+      const link = screen.getByRole('link', { name: /dashboard/i });
+      expect(link).not.toHaveAttribute('href');
+      expect(link).toHaveAttribute('aria-disabled', 'true');
+      fireEvent.click(link);
+      expect(onClick).not.toHaveBeenCalled();
+    });
+
+    test('a loading link is inert like a disabled one', () => {
+      const onClick = jest.fn();
+      render(
+        <Button href="/dashboard" loading onClick={onClick}>
+          Dashboard
+        </Button>
+      );
+      const link = screen.getByRole('link', { name: /dashboard/i });
+      expect(link).not.toHaveAttribute('href');
+      expect(link).toHaveAttribute('aria-disabled', 'true');
+      fireEvent.click(link);
+      expect(onClick).not.toHaveBeenCalled();
+    });
+
+    test('a disabled external link has no href', () => {
+      render(
+        <Button href="https://example.com" external disabled>
+          Out
+        </Button>
+      );
+      const link = screen.getByRole('link', { name: /out/i });
+      expect(link).not.toHaveAttribute('href');
+      expect(link).toHaveAttribute('aria-disabled', 'true');
+    });
+  });
+
   // Test icon rendering
   test('renders with icon on the left by default', () => {
     render(<Button Icon={Heart}>With Icon</Button>);

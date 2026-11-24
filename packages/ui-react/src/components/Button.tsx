@@ -240,30 +240,56 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 
     function renderElement(): React.ReactNode {
       if (href) {
+        // An anchor takes the button's own attributes (aria-*, title, handlers),
+        // minus the ones that only mean something on a <button>.
+        const {
+          type: _type,
+          form: _form,
+          formAction: _formAction,
+          formEncType: _formEncType,
+          formMethod: _formMethod,
+          formNoValidate: _formNoValidate,
+          formTarget: _formTarget,
+          name: _name,
+          value: _value,
+          ...anchorProps
+        } = props as ButtonHTMLAttributes<HTMLButtonElement>;
+        const anchorRef = ref as unknown as React.Ref<HTMLAnchorElement>;
+        const linkProps = {
+          className: buttonClasses,
+          style: shadowStyle,
+          ref: anchorRef,
+          ...iconOnlyAriaLabel,
+          ...(anchorProps as React.AnchorHTMLAttributes<HTMLAnchorElement>),
+        };
+        // A link can't be disabled: drop its href so it goes nowhere, and say so.
+        if (disabled || loading) {
+          return (
+            <a
+              {...linkProps}
+              role="link"
+              aria-disabled="true"
+              className={cn(buttonClasses, 'pointer-events-none opacity-50')}
+              onClick={(e) => e.preventDefault()}
+            >
+              {content}
+            </a>
+          );
+        }
         if (external) {
           return (
             <a
               href={href}
-              className={buttonClasses}
-              style={shadowStyle}
               target="_blank"
               rel="noopener noreferrer"
-              {...iconOnlyAriaLabel}
+              {...linkProps}
             >
               {content}
             </a>
           );
         }
         return (
-          <Link
-            href={href}
-            className={buttonClasses}
-            style={shadowStyle}
-            onClick={
-              props.onClick as unknown as React.MouseEventHandler<HTMLAnchorElement>
-            }
-            {...iconOnlyAriaLabel}
-          >
+          <Link href={href} {...linkProps}>
             {content}
           </Link>
         );

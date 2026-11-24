@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import Heading from '../components/Heading';
 import AsciiHeader from '../patterns/AsciiHeader';
 import { cn } from '../utils/cn';
@@ -92,21 +92,6 @@ export const PageTemplate: React.FC<PageTemplateProps> = ({
   compactTitle = false,
   Wrapper = DefaultWrapper,
 }) => {
-  const [isReady, setIsReady] = useState(false);
-
-  // Wait for any theme application to complete before showing content
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsReady(true);
-    }, 10);
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  if (!isReady) {
-    return null; // Return nothing until ready to prevent flash of unstyled content
-  }
-
   // Sanitize sidebarColumns (though the type helps) and calculate main columns
   const validSidebarColumns = Math.max(1, Math.min(5, sidebarColumns || 4)) as
     1 | 2 | 3 | 4 | 5;

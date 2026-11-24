@@ -502,6 +502,99 @@ describe('ImageUploader Pattern', () => {
     expect(mockFetch).toHaveBeenCalled();
   }, 30000); // Increase timeout
 
+  // D7: a fixed starting list doesn't undo removals or uploads
+  test('a removal sticks when the starting list stays the same', async () => {
+    const onImagesUploaded = jest.fn();
+    const initialImages = ['https://example.com/image1.jpg'];
+    const { rerender } = render(
+      <ImageUploader
+        entityType="test"
+        initialImages={initialImages}
+        onImagesUploaded={onImagesUploaded}
+      />
+    );
+
+    await act(async () => {
+      fireEvent.click(await screen.findByTestId('remove-button'));
+      await jest.runAllTimersAsync();
+    });
+    // The parent re-renders with a fresh array of the same starting images
+    rerender(
+      <ImageUploader
+        entityType="test"
+        initialImages={['https://example.com/image1.jpg']}
+        onImagesUploaded={onImagesUploaded}
+      />
+    );
+    await act(async () => {
+      await jest.runAllTimersAsync();
+    });
+
+    expect(screen.queryByTestId('remove-button')).not.toBeInTheDocument();
+    expect(onImagesUploaded).toHaveBeenLastCalledWith([]);
+  }, 30000);
+
+  test('an upload sticks when the starting list stays the same', async () => {
+    const onImagesUploaded = jest.fn();
+    const mockXhr = new MockXMLHttpRequest();
+    mockXhr.send = jest.fn().mockImplementation(() => {
+      setTimeout(() => {
+        mockXhr.responseText = JSON.stringify({
+          imageUrl: 'https://example.com/uploaded.jpg',
+        });
+        mockXhr.onload?.();
+      }, 10);
+    });
+    (global.XMLHttpRequest as unknown as jest.Mock).mockReturnValue(
+      mockXhr as unknown as XMLHttpRequest
+    );
+    render(
+      <ImageUploader
+        entityType="test"
+        maxImages={2}
+        initialImages={['https://example.com/image1.jpg']}
+        onImagesUploaded={onImagesUploaded}
+      />
+    );
+
+    await act(async () => {
+      dropzoneCallback?.([createMockFile('a.jpg', 1024, 'image/jpeg')]);
+      await jest.runAllTimersAsync();
+    });
+
+    expect(screen.getAllByTestId('remove-button')).toHaveLength(2);
+    expect(onImagesUploaded).toHaveBeenLastCalledWith([
+      'https://example.com/image1.jpg',
+      'https://example.com/uploaded.jpg',
+    ]);
+  }, 30000);
+
+  test('a new starting list replaces the images', async () => {
+    const onImagesUploaded = jest.fn();
+    const { rerender } = render(
+      <ImageUploader
+        entityType="test"
+        maxImages={2}
+        initialImages={['https://example.com/image1.jpg']}
+        onImagesUploaded={onImagesUploaded}
+      />
+    );
+    rerender(
+      <ImageUploader
+        entityType="test"
+        maxImages={2}
+        initialImages={['https://example.com/image2.jpg']}
+        onImagesUploaded={onImagesUploaded}
+      />
+    );
+    await act(async () => {
+      await jest.runAllTimersAsync();
+    });
+    expect(onImagesUploaded).toHaveBeenLastCalledWith([
+      'https://example.com/image2.jpg',
+    ]);
+  }, 30000);
+
   test('handles failed image removal', async () => {
     // Mock fetch to simulate failed deletion
     mockFetch.mockImplementation(() =>

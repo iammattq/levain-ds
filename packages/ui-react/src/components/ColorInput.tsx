@@ -10,6 +10,7 @@ import React, {
 } from 'react';
 import { createPortal } from 'react-dom';
 import { cn } from '../utils/cn';
+import { besideTrigger } from '../utils/besideTrigger';
 import ColorPickerPanel from './ColorPickerPanel';
 import { inputSizeConfig, type InputSize } from '../utils/inputSizing';
 
@@ -148,23 +149,18 @@ const ColorInput = forwardRef<HTMLButtonElement, ColorInputProps>(
         const popover = popoverRef.current;
         if (!trigger || !popover) return;
 
-        const triggerRect = trigger.getBoundingClientRect();
-        const viewportWidth = window.innerWidth;
-        const viewportHeight = window.innerHeight;
-
-        // Right edge stays fixed relative to trigger
-        let right = viewportWidth - triggerRect.left + OFFSET;
-        let top = triggerRect.top;
-
-        if (right < 8) right = 8;
-        if (top < 8) top = 8;
-        if (top + POPOVER_HEIGHT > viewportHeight - 8) {
-          top = viewportHeight - POPOVER_HEIGHT - 8;
-        }
+        // beside the trigger, on whichever side has room, inside the window
+        const { left, top } = besideTrigger({
+          trigger: trigger.getBoundingClientRect(),
+          width: popover.offsetWidth,
+          height: POPOVER_HEIGHT,
+          viewport: { width: window.innerWidth, height: window.innerHeight },
+          offset: OFFSET,
+        });
 
         // Direct DOM update - synchronous, bypasses React batching
         popover.style.top = `${top}px`;
-        popover.style.right = `${right}px`;
+        popover.style.left = `${left}px`;
       };
 
       // Initial position
@@ -349,7 +345,7 @@ const ColorInput = forwardRef<HTMLButtonElement, ColorInputProps>(
               style={{
                 // Initial values - useLayoutEffect sets actual position via direct DOM manipulation
                 top: 0,
-                right: 0,
+                left: 0,
               }}
             >
               <ColorPickerPanel

@@ -6,6 +6,7 @@ import React, {
   useEffect,
   useCallback,
   useMemo,
+  useId,
 } from 'react';
 import { cn } from '../utils/cn';
 import {
@@ -46,6 +47,15 @@ export default function ColorPickerPanel({
 }: ColorPickerPanelProps) {
   // When lockedHue is provided, we're in alpha-only mode
   const isLockedHueMode = Boolean(lockedHue);
+  // Ids unique to this panel, so two panels on a page keep their own labels
+  const uid = useId();
+  const ids = {
+    hue: `${uid}-hue`,
+    alpha: `${uid}-alpha`,
+    hex: `${uid}-hex`,
+    hexError: `${uid}-hex-error`,
+    alphaInput: `${uid}-alpha-input`,
+  };
   // Convert hex to HSV for internal state (computed once on mount)
   const [hsv, setHsv] = useState(() => {
     const rgb = hexToRgb(value.hex);
@@ -283,13 +293,13 @@ export default function ColorPickerPanel({
       {!isLockedHueMode && (
         <div className="flex flex-col gap-1">
           <label
-            htmlFor="hue-slider"
+            htmlFor={ids.hue}
             className="type-label-sm text-[var(--color-text-muted)]"
           >
             Hue
           </label>
           <input
-            id="hue-slider"
+            id={ids.hue}
             data-testid="hue-slider"
             type="range"
             min={0}
@@ -309,7 +319,7 @@ export default function ColorPickerPanel({
       {!hideAlpha && (
         <div className="flex flex-col gap-1">
           <label
-            htmlFor="alpha-slider"
+            htmlFor={ids.alpha}
             className="type-label-sm text-[var(--color-text-muted)]"
           >
             Opacity
@@ -339,7 +349,7 @@ export default function ColorPickerPanel({
             />
             {/* Invisible range input positioned absolutely over the track */}
             <input
-              id="alpha-slider"
+              id={ids.alpha}
               data-testid="alpha-slider"
               type="range"
               min={0}
@@ -358,13 +368,13 @@ export default function ColorPickerPanel({
         {!isLockedHueMode && (
           <div className="flex-1">
             <label
-              htmlFor="hex-input"
+              htmlFor={ids.hex}
               className="type-label-sm mb-1 block text-[var(--color-text-muted)]"
             >
               Hex
             </label>
             <input
-              id="hex-input"
+              id={ids.hex}
               data-testid="hex-input"
               type="text"
               value={hexInput}
@@ -378,11 +388,11 @@ export default function ColorPickerPanel({
                 'text-[var(--color-text-default)]'
               )}
               aria-invalid={showHexError ? true : undefined}
-              aria-describedby={showHexError ? 'hex-error' : undefined}
+              aria-describedby={showHexError ? ids.hexError : undefined}
             />
             {showHexError && (
               <p
-                id="hex-error"
+                id={ids.hexError}
                 data-testid="hex-error"
                 className="type-caption mt-1 text-[var(--color-error)]"
               >
@@ -396,14 +406,14 @@ export default function ColorPickerPanel({
         {!hideAlpha && (
           <div className={cn(isLockedHueMode ? 'flex-1' : 'w-20')}>
             <label
-              htmlFor="alpha-input"
+              htmlFor={ids.alphaInput}
               className="type-label-sm mb-1 block text-[var(--color-text-muted)]"
             >
               Alpha
             </label>
             <div className="relative">
               <input
-                id="alpha-input"
+                id={ids.alphaInput}
                 data-testid="alpha-input"
                 type="text"
                 value={value.alpha}

@@ -18,7 +18,7 @@
  *
  * Wrap the lists in one <SortableGroup onMove>. Each <SortableList id> renders its items through `renderItem`.
  */
-import { animate, motion, useMotionValue, useReducedMotion, useSpring, type MotionValue } from 'framer-motion';
+import { animate, motion, useMotionValue, useReducedMotion, useSpring, type AnimationPlaybackControls, type MotionValue } from 'framer-motion';
 import { drag as DRAG, duration, motion as motionFor, recipe, tiltSpring } from '@levain/tokens';
 import {
   createContext,
@@ -123,6 +123,17 @@ export function SortableGroup({ onMove, onDragChange, onDragMove, children }: So
   onDrag.current = onDragChange;
   const onDragAt = useRef(onDragMove);
   onDragAt.current = onDragMove;
+  // read at the drop, not captured when the drag began: the parent may have re-rendered with fresh state since
+  const onMoveNow = useRef(onMove);
+  onMoveNow.current = onMove;
+  // the press or drag in progress, so a group removed mid-drag can take its listeners, frame loop and
+  // text-selection lock with it
+  const active = useRef<(() => void) | null>(null);
+  const alive = useRef(true);
+  useEffect(() => {
+    alive.current = true;
+    return () => { alive.current = false; active.current?.(); active.current = null; };
+  }, []);
   // iOS honours preventDefault on a touch only when a non-passive touchmove listener was there before the gesture
   // began, so a no-op one stays for the group's life (as dnd-kit's)
   useEffect(() => {
@@ -154,14 +165,15 @@ export function SortableGroup({ onMove, onDragChange, onDragMove, children }: So
   }, []);
 
   const finish = useCallback((d: DragState | null, cancelled: boolean) => {
+    if (!alive.current) return;
     setLanding(false);
     setDrag(null);
     if (d?.mode === 'pointer') onDrag.current?.(false);
     if (!d || cancelled) return;
     const fromIndex = lists.current.get(d.from)?.keys.indexOf(d.key) ?? -1;
     if (d.to === d.from && d.index === fromIndex) return;
-    onMove({ key: d.key, from: d.from, to: d.to, index: d.index });
-  }, [onMove]);
+    onMoveNow.current({ key: d.key, from: d.from, to: d.to, index: d.index });
+  }, []);
 
   /** One drag from a press at `start` on `el`: lift, follow, drop (settling into the slot) or cancel. */
   const session = useCallback((el: HTMLElement, list: string, key: string, node: ReactNode, start: { x: number; y: number }) => {
@@ -169,8 +181,16 @@ export function SortableGroup({ onMove, onDragChange, onDragMove, children }: So
     const s = {
       started: false,
       done: false,
+      // finish has run (or been asked to): the drag is already reported off, so abort must not report it again
+      ended: false,
       last: start,
+      end(d: DragState | null, cancelled: boolean) {
+        s.ended = true;
+        finish(d, cancelled);
+      },
       lift() {
+        const source = lists.current.get(list);
+        if (!source || s.done) { s.done = true; return; }
         s.started = true;
         // no text selection while something is in the hand
         document.body.style.userSelect = 'none';
@@ -178,7 +198,7 @@ export function SortableGroup({ onMove, onDragChange, onDragMove, children }: So
         grab.current = { dx: start.x - rect.left, dy: start.y - rect.top };
         x.jump(rect.left);
         y.jump(rect.top);
-        const d: DragState = { key, from: list, to: list, index: lists.current.get(list)!.keys.indexOf(key), mode: 'pointer', width: rect.width, height: rect.height, node };
+        const d: DragState = { key, from: list, to: list, index: source.keys.indexOf(key), mode: 'pointer', width: rect.width, height: rect.height, node };
         dragRef.current = d;
         setDrag(d);
         onDrag.current?.(true);
@@ -214,16 +234,26 @@ export function SortableGroup({ onMove, onDragChange, onDragMove, children }: So
         const slot = d && lists.current.get(d.to);
         const placeholder = slot?.el?.querySelector<HTMLElement>('[data-sortable-placeholder]');
         const r = placeholder?.getBoundingClientRect();
-        if (!r || reduce) { finish(d, false); return; }
+        if (!r || reduce) { s.end(d, false); return; }
         setLanding(true);
         const tr = motionFor('settle', reduce);
-        Promise.all([animate(x, r.left, tr).finished, animate(y, r.top, tr).finished]).then(() => finish(dragRef.current, false));
+        s.settling = [animate(x, r.left, tr), animate(y, r.top, tr)];
+        Promise.all(s.settling.map(a => a.finished)).then(() => s.end(dragRef.current, false));
       },
       cancel() {
         s.done = true;
         document.body.style.userSelect = '';
-        if (s.started) finish(dragRef.current, true);
+        if (s.started) s.end(dragRef.current, true);
       },
+      /** The group is going away: stop everything, report a lifted, unfinished drag off, commit nothing. */
+      abort() {
+        const unfinished = s.started && !s.ended;
+        s.done = true;
+        document.body.style.userSelect = '';
+        s.settling.forEach(a => a.stop());
+        if (unfinished) onDrag.current?.(false);
+      },
+      settling: [] as AnimationPlaybackControls[],
     };
     return s;
   }, [finish, reduce, target, x, y]);
@@ -245,6 +275,7 @@ export function SortableGroup({ onMove, onDragChange, onDragMove, children }: So
       window.removeEventListener('pointerup', onUp);
       window.removeEventListener('pointercancel', onCancel);
     };
+    active.current = () => { cleanup(); s.abort(); };
     window.addEventListener('pointermove', onMove);
     window.addEventListener('pointerup', onUp);
     window.addEventListener('pointercancel', onCancel);
@@ -286,6 +317,7 @@ export function SortableGroup({ onMove, onDragChange, onDragMove, children }: So
       at.removeEventListener('touchend', onEnd);
       at.removeEventListener('touchcancel', onCancel);
     };
+    active.current = () => { cleanup(); s.abort(); };
     // on the touched element, not the window: a touch's events stay aimed at the element it began on, and once the card
     // lifts that element leaves the page, so they no longer bubble up
     at.addEventListener('touchmove', onMove, { passive: false });
@@ -298,7 +330,8 @@ export function SortableGroup({ onMove, onDragChange, onDragMove, children }: So
     const d = dragRef.current;
     const ordered = [...lists.current.values()].sort((a, b) => a.order - b.order);
     if (!d) {
-      if (e.key !== ' ') return;
+      // a key pressed on a control inside the card (a button's Space, a field's text) is that control's
+      if (e.key !== ' ' || e.target !== e.currentTarget) return;
       e.preventDefault();
       const l = lists.current.get(list)!;
       const r = e.currentTarget.getBoundingClientRect();

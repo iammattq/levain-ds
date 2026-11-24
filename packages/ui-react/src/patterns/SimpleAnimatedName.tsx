@@ -9,6 +9,16 @@ interface SimpleAnimatedNameProps {
   className?: string;
 }
 
+// Elements that own the keys typed into them: Space and S there are never taken.
+const KEY_OWNERS =
+  'input, textarea, select, button, a[href], summary, [contenteditable]:not([contenteditable="false"]), [role="textbox"], [role="button"], [role="combobox"]';
+
+function keyBelongsElsewhere(e: KeyboardEvent): boolean {
+  if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey) return true;
+  const target = e.target;
+  return target instanceof Element && target.closest(KEY_OWNERS) !== null;
+}
+
 const SimpleAnimatedName = ({
   name = 'Matt Quinn',
   className = '',
@@ -38,6 +48,7 @@ const SimpleAnimatedName = ({
     const handleKeyDown = (e: KeyboardEvent) => {
       // Only change colors when the name is hovered
       if (!isHovered) return;
+      if (keyBelongsElsewhere(e)) return;
 
       // Space key to change colors
       if (e.code === 'Space') {

@@ -180,4 +180,56 @@ describe('SimpleAnimatedName Pattern', () => {
     // Verify the element has the animated-name class
     expect(nameElement).toHaveClass('animated-name');
   });
+
+  // D9: keys typed elsewhere on the page are never taken
+  describe('while hovered, keys meant for something else (D9)', () => {
+    const keyOn = (code: string, target: Element, init: KeyboardEventInit = {}) => {
+      const event = new KeyboardEvent('keydown', { code, cancelable: true, ...init });
+      Object.defineProperty(event, 'target', { value: target });
+      if (keydownHandler) keydownHandler(event);
+      return event;
+    };
+
+    test.each([
+      ['an input', '<input />', 'input'],
+      ['a textarea', '<textarea></textarea>', 'textarea'],
+      ['a select', '<select><option>a</option></select>', 'select'],
+      ['an editable region', '<div contenteditable="true"><p>x</p></div>', 'p'],
+      ['a button', '<button>Go</button>', 'button'],
+    ])('leaves Space and S alone when typed into %s', (_name, html, selector) => {
+      const host = document.createElement('div');
+      host.innerHTML = html;
+      document.body.appendChild(host);
+      render(<SimpleAnimatedName />);
+      fireEvent.mouseEnter(screen.getByText('Matt Quinn'));
+      const target = host.querySelector(selector)!;
+
+      const space = keyOn('Space', target);
+      const s = keyOn('KeyS', target);
+
+      expect(space.defaultPrevented).toBe(false);
+      expect(s.defaultPrevented).toBe(false);
+      expect(mockSetThemeIndex).not.toHaveBeenCalled();
+      expect(mockSaveThemePreference).not.toHaveBeenCalled();
+      host.remove();
+    });
+
+    test('leaves Ctrl+S and Cmd+S to the browser', () => {
+      render(<SimpleAnimatedName />);
+      fireEvent.mouseEnter(screen.getByText('Matt Quinn'));
+      const ctrl = keyOn('KeyS', document.body, { ctrlKey: true });
+      const meta = keyOn('KeyS', document.body, { metaKey: true });
+      expect(ctrl.defaultPrevented).toBe(false);
+      expect(meta.defaultPrevented).toBe(false);
+      expect(mockSaveThemePreference).not.toHaveBeenCalled();
+    });
+
+    test('still takes Space typed on the page itself', () => {
+      render(<SimpleAnimatedName />);
+      fireEvent.mouseEnter(screen.getByText('Matt Quinn'));
+      const space = keyOn('Space', document.body);
+      expect(space.defaultPrevented).toBe(true);
+      expect(mockSetThemeIndex).toHaveBeenCalled();
+    });
+  });
 });

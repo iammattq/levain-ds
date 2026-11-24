@@ -1,6 +1,6 @@
 // levain DS's motion, density and drag, on one page. Every timing here comes from @levain/tokens.
 // ?density=condensed starts condensed; ?mode=light starts light; ?theme=7 starts on Cobalt Mono.
-// ?only=progress, ?only=decide, ?only=time, ?only=count, ?only=command, ?only=sheet, ?only=bottom-sheet, ?only=timeline, ?only=cardstack, ?only=compare, ?only=strip, ?only=column or ?only=colours shows only that section (for captures).
+// ?only=progress, ?only=decide, ?only=time, ?only=count, ?only=command, ?only=sheet, ?only=bottom-sheet, ?only=timeline, ?only=cardstack, ?only=compare, ?only=strip, ?only=column, ?only=colours or ?only=picker shows only that section (for captures).
 import '@fontsource/open-sans/400.css';
 import '@fontsource/open-sans/600.css';
 import '@fontsource/oswald/400.css';
@@ -24,6 +24,7 @@ import { CardStackDemo } from './cardStack';
 import { TimelineDemo } from './timeline';
 import { ImageCompareDemo } from './imageCompare';
 import { ColoursDemo } from './colours';
+import { PickerDemo } from './picker';
 
 type Item = { id: string; title: string; owner: string; age: string; state?: 'blocked' | 'waiting'; images?: number; links?: number };
 const TODO: Item[] = [
@@ -257,7 +258,7 @@ function App() {
         </div>
         <SegmentedControl id="density" size="sm" value={density} onChange={setDensity} options={[{ label: 'Comfortable', value: 'comfortable' }, { label: 'Condensed', value: 'condensed' }]} />
       </header>
-      {q.get('only') === 'progress' ? <ProgressDemo Section={Section} /> : q.get('only') === 'decide' ? <DecideDemo Section={Section} /> : q.get('only') === 'time' ? <RelativeTimeDemo Section={Section} /> : q.get('only') === 'count' ? <CountDemo Section={Section} /> : q.get('only') === 'command' ? <CommandDemo Section={Section} /> : q.get('only') === 'sheet' ? <SheetDemo Section={Section} /> : q.get('only') === 'bottom-sheet' ? <BottomSheetDemo Section={Section} /> : q.get('only') === 'timeline' ? <TimelineDemo Section={Section} /> : q.get('only') === 'cardstack' ? <CardStackDemo Section={Section} /> : q.get('only') === 'compare' ? <ImageCompareDemo Section={Section} /> : q.get('only') === 'strip' ? <StripDemo Section={Section} /> : q.get('only') === 'column' ? <ColumnDemo Section={Section} /> : q.get('only') === 'colours' ? <ColoursDemo Section={Section} /> : <>
+      {q.get('only') === 'progress' ? <ProgressDemo Section={Section} /> : q.get('only') === 'decide' ? <DecideDemo Section={Section} /> : q.get('only') === 'time' ? <RelativeTimeDemo Section={Section} /> : q.get('only') === 'count' ? <CountDemo Section={Section} /> : q.get('only') === 'command' ? <CommandDemo Section={Section} /> : q.get('only') === 'sheet' ? <SheetDemo Section={Section} /> : q.get('only') === 'bottom-sheet' ? <BottomSheetDemo Section={Section} /> : q.get('only') === 'timeline' ? <TimelineDemo Section={Section} /> : q.get('only') === 'cardstack' ? <CardStackDemo Section={Section} /> : q.get('only') === 'compare' ? <ImageCompareDemo Section={Section} /> : q.get('only') === 'strip' ? <StripDemo Section={Section} /> : q.get('only') === 'column' ? <ColumnDemo Section={Section} /> : q.get('only') === 'colours' ? <ColoursDemo Section={Section} /> : q.get('only') === 'picker' ? <PickerDemo Section={Section} /> : <>
       <DragDemo />
       <DecideDemo Section={Section} />
       <StackDemo />
