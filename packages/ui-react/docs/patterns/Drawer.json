@@ -1,0 +1,70 @@
+{
+  "name": "Drawer",
+  "description": "A full-height side panel that slides in from the left edge over a scrim, for a phone menu or navigation. A modal dialog with BottomSheet's feel: the same scrim, focus handling, Escape and motion recipes, turned on its side.",
+  "category": "patterns",
+  "usage": [
+    "Controlled: `open` and `onClose`; it calls onClose on a scrim tap, Escape or a swipe left, and the caller sets open to false",
+    "`label` is required: there is no head to name the dialog",
+    "The children are the whole contents (a logo, links, a theme switch, a version line); they scroll inside the drawer. Put a close button among them if you want one",
+    "It is a drawer at every width: the caller decides when to show one (useIsPhone is exported for that)"
+  ],
+  "examples": [
+    "import { Drawer } from '@levain/ui-react';\n\nconst [open, setOpen] = useState(false);\n<Button iconOnly Icon={Menu} aria-label=\"Menu\" onClick={() => setOpen(true)} />\n<Drawer open={open} onClose={() => setOpen(false)} label=\"Menu\">\n  <Logo />\n  <nav aria-label=\"Releases\">…</nav>\n  <ThemeToggle />\n  <p className=\"type-caption mt-auto\">Version 0.7.0</p>\n</Drawer>"
+  ],
+  "design": [
+    "Full height, min(20rem, 85vw) wide, on the elevated surface with elevation-3; the far (right) corners rounded --radius-2xl, the near ones square against the edge, as the bottom sheet's",
+    "Its contents sit inside the safe-area insets: pt-safe-md, pb-safe-md, pl-safe-md, and pr-md, gap sm between children",
+    "Slides in on recipe.sheetIn and out on recipe.sheetOut; the scrim fades on fadeIn and contentOut, as BottomSheet's",
+    "A swipe left on the panel past a quarter of its width, or a left flick (500 px/s), closes it; a shorter swipe springs back on sheetIn. Vertical scrolling inside is left alone",
+    "The page under it doesn't scroll while it's open (body overflow hidden, padded for the scrollbar it removes)",
+    "Portalled to <body>: the theme's look classes must be on <body> too"
+  ],
+  "accessibility": [
+    "role=\"dialog\", aria-modal=\"true\", named by `label`",
+    "Focus moves into the drawer on open, Tab and Shift+Tab wrap inside it, and focus returns to the opener on close (useDialogFocus, shared with Modal and BottomSheet)",
+    "Escape closes only the top dialog, and not when a widget inside claimed it (preventDefault)",
+    "Under Reduce Motion it appears and goes at once: no slide, no fade"
+  ],
+  "props": [
+    {
+      "name": "open",
+      "type": "boolean",
+      "optional": false,
+      "defaultValue": "undefined",
+      "description": "Whether the drawer is shown",
+      "configurable": true
+    },
+    {
+      "name": "onClose",
+      "type": "() => void",
+      "optional": false,
+      "defaultValue": "undefined",
+      "description": "Called on a scrim tap, Escape or a swipe left",
+      "configurable": true
+    },
+    {
+      "name": "label",
+      "type": "string",
+      "optional": false,
+      "defaultValue": "undefined",
+      "description": "The dialog's accessible name",
+      "configurable": true
+    },
+    {
+      "name": "side",
+      "type": "'left'",
+      "optional": true,
+      "defaultValue": "'left'",
+      "description": "The edge it slides from; only the left for now",
+      "configurable": false
+    },
+    {
+      "name": "children",
+      "type": "ReactNode",
+      "optional": false,
+      "defaultValue": "undefined",
+      "description": "The contents; they scroll inside the drawer",
+      "configurable": true
+    }
+  ]
+}
