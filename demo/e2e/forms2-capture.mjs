@@ -106,13 +106,15 @@ if (phase === 'after') {
 
   // composite.png: a row per theme and mode: before, after, diff at 390, then at 1280
   const sheet = await browser.newPage({ viewport: { width: 2000, height: 900 } });
-  const fig = (label, f, wpx) => `<figure><figcaption>${label}</figcaption>${url(f) ? `<img style="width:${wpx}px" src="${url(f)}">` : '<div class="same">identical</div>'}</figure>`;
+  // no diff file: identical, or the sizes differ (no pixel diff then), which must not read as identical
+  const none = f => { const d = diffs[f.replace(/^diff-/, '')]; return d?.differing === -1 ? `<div class="same resized">size differs: ${d.size[0].join('×')} → ${d.size[1].join('×')}</div>` : '<div class="same">identical</div>'; };
+  const fig = (label, f, wpx) => `<figure><figcaption>${label}</figcaption>${url(f) ? `<img style="width:${wpx}px" src="${url(f)}">` : none(f)}</figure>`;
   const rows = COMBOS.map(([name, , mode]) => {
     const k = w => `${name}-${mode}-${w}`;
     return `<div class="row"><b>${name === 'cobalt' ? 'Cobalt Mono' : 'Sage'} ${mode}</b>${fig('390 · before', `before-${k(390)}`, 200)}${fig('390 · after', `after-${k(390)}`, 200)}${fig('390 · diff', `diff-${k(390)}`, 200)}${fig('1280 · before', `before-${k(1280)}`, 380)}${fig('1280 · after', `after-${k(1280)}`, 380)}${fig('1280 · diff', `diff-${k(1280)}`, 380)}</div>`;
   }).join('');
-  const summary = Object.entries(diffs).map(([k, d]) => `${k}: ${d.differing === 0 ? 'identical' : d.differing + ' px differ'}`).join(' · ');
-  await sheet.setContent(`<style>body{margin:0;padding:16px;background:#bbb;font:13px system-ui}.row{display:flex;gap:12px;align-items:flex-start;margin-bottom:16px}.row b{width:90px;flex:none}figure{margin:0}figcaption{height:20px}img{display:block}.same{width:120px;padding:8px;background:#dfd}</style><p>T53: TextInput, Select, Checkbox and RadioButton at rest, before (ba01576) and after the form-input convention. Diff: magenta where a pixel differs; "identical" when none does. ${summary}. Checks: ${problems.length ? problems.join('; ') : 'all OK'}.</p>${rows}`);
+  const summary = Object.entries(diffs).map(([k, d]) => `${k}: ${d.differing === 0 ? 'identical' : d.differing === -1 ? 'size differs' : d.differing + ' px differ'}`).join(' · ');
+  await sheet.setContent(`<style>body{margin:0;padding:16px;background:#bbb;font:13px system-ui}.row{display:flex;gap:12px;align-items:flex-start;margin-bottom:16px}.row b{width:90px;flex:none}figure{margin:0}figcaption{height:20px}img{display:block}.same{width:120px;padding:8px;background:#dfd}.resized{background:#fdd}</style><p>T53: TextInput, Select, Checkbox and RadioButton at rest, before (ba01576) and after the form-input convention. Diff: magenta where a pixel differs; "identical" when none does. ${summary}. Checks: ${problems.length ? problems.join('; ') : 'all OK'}.</p>${rows}`);
   await sheet.screenshot({ path: `${out}/composite.png`, fullPage: true });
   console.log(problems.length || errors.length ? `FAILED:\n${[...problems, ...errors].join('\n')}` : 'all checks OK; before and after identical');
   if (problems.length || errors.length) process.exitCode = 1;
