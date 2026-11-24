@@ -254,3 +254,5 @@ export { StatusCardDialogStack } from './src/patterns/StatusCardDialogStack';
 export type { StatusCardDialogStackProps, StatusCardStackDialog } from './src/patterns/StatusCardDialogStack';
 export { CardStack } from './src/patterns/CardStack';
 export type { CardStackProps } from './src/patterns/CardStack';
+export { ImageCompare } from './src/patterns/ImageCompare';
+export type { ImageCompareProps, ImageCompareImage } from './src/patterns/ImageCompare';
