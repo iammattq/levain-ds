@@ -2,7 +2,7 @@
 // T27: the pieces that named colours or classes no theme defines, before and after. Run on the PC through
 // demo/e2e/colours.sh, which serves "before" then "after" and calls this once for each:
 //   node colours-capture.mjs <base-url> <out> before|after [compare]
-// Chromium, 1440x1000, ?only=colours, Sage (theme 0) and Cobalt Mono (theme 7), light and dark. Per combo: a shot of each
+// Chromium, 1440x1000 (content-navigation also at 390x844, its phone layout), ?only=colours, Sage (theme 0) and Cobalt Mono (theme 7), light and dark. Per combo: a shot of each
 // piece (data-piece) in the state that shows the fix (a row selected and a filter chip with its button hovered, the
 // surface card hovered, the calendar's month panel 100 ms into its way in), and the computed colours, backgrounds and
 // animations of the parts that changed (<phase>/numbers.json). With `compare`: compare.json (each measured value, before
@@ -20,7 +20,7 @@ if (!exe) throw new Error('no Chromium found (set CHROMIUM)');
 const pause = ms => new Promise(r => setTimeout(r, ms));
 const browser = await chromium.launch({ executablePath: exe, headless: true });
 const COMBOS = [['sage', 0, 'light'], ['sage', 0, 'dark'], ['cobalt', 7, 'light'], ['cobalt', 7, 'dark']];
-const PIECES = ['checkbox-radio', 'status-card', 'slider', 'data-table', 'calendar', 'image-uploader', 'media-card', 'surface-card', 'content-navigation', 'admin-error', 'animated-name'];
+const PIECES = ['checkbox-radio', 'status-card', 'slider', 'data-table', 'calendar', 'image-uploader', 'media-card', 'surface-card', 'content-navigation', 'admin-error', 'animated-name', 'content-navigation-390'];
 const errors = [], numbers = {};
 
 /** The computed values that the fix changes, per piece; null where a part isn't there. */
@@ -95,8 +95,18 @@ try {
     await pause(500);
     n.calendarSettled = await page.evaluate(() => { const el = document.querySelector('[data-piece="calendar"] .origin-bottom'); const s = el && getComputedStyle(el); return s && { animationName: s.animationName, transform: s.transform, opacity: s.opacity }; });
 
-    numbers[key] = n;
     await page.close();
+
+    // content-navigation's rule is on its phone layout (lg:hidden), so it gets a 390px page of its own
+    const phone = await browser.newPage({ viewport: { width: 390, height: 844 } });
+    phone.on('pageerror', e => errors.push(`${key} 390: ${e.message}`));
+    await phone.goto(`${base}?only=colours&theme=${theme}&mode=${mode}`, { waitUntil: 'networkidle' });
+    await pause(900);
+    await step('shot content-navigation-390', () => phone.locator('[data-piece="content-navigation"]').screenshot({ path: `${dir}/${key}-content-navigation-390.png`, animations: 'disabled', timeout: 10000 }));
+    n.contentNavRule390 = await phone.evaluate(() => { const el = document.querySelector('[data-piece="content-navigation"] .border-t'); return el && getComputedStyle(el).borderTopColor; });
+    await phone.close();
+
+    numbers[key] = n;
     console.log(`${phase} ${key}: done`);
   }
 
