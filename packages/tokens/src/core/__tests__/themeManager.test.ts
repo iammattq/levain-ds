@@ -436,6 +436,9 @@ describe('ThemeManager', () => {
           body: {
             setAttribute: jest.fn(),
           },
+          documentElement: {
+            setAttribute: jest.fn(),
+          },
         },
         writable: true,
       });

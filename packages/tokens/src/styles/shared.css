@@ -182,10 +182,12 @@
   /*
    * Elevations — pre-hydration fallbacks only.
    *
-   * ThemeManager injects accent-tinted --elevation-1/2/3 with !important once
-   * the theme loads; these neutral values are what paints before that. Their
-   * geometry mirrors DEFAULT_ELEVATION_STYLES so the swap changes hue, not
-   * shape. Keep the two in sync.
+   * Each theme's CSS (generated/themes.css, or what ThemeManager injects)
+   * sets accent-tinted --elevation-1/2/3 under html[data-levain-theme], which
+   * outranks :root whichever file loads first (no !important); these neutral
+   * values paint only where no theme is set. Their geometry mirrors
+   * DEFAULT_ELEVATION_STYLES so the swap changes hue, not shape. Keep the two
+   * in sync.
    *
    * Levels are boundaries, not components: 1 = L2 on canvas, 2 = L3 in a
    * section, 3 = floating (modal, dropdown, popover).

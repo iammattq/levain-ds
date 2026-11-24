@@ -15,7 +15,8 @@
       "import": "./src/styles/*",
       "require": "./src/styles/*"
     },
-    "./src/styles/shared.css": "./src/styles/shared.css"
+    "./src/styles/shared.css": "./src/styles/shared.css",
+    "./generated/themes.css": "./generated/themes.css"
   },
   "scripts": {
     "build": "echo 'No build step - TypeScript source consumed directly'",

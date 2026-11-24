@@ -12,7 +12,23 @@ import {
   ThemeInputV2,
 } from '../generator/types';
 import { themeGeneratorV2 } from '../generator/generator';
+import { baseThemesV2 } from '../data/baseThemesV2';
+import { migrateKey, readKey, removeKey, writeKey } from './storage';
 import { applyModeClass, getTheme, isDarkMode } from './themeMode';
+import {
+  THEME_ATTR,
+  THEMES_MARKER,
+  cssBlock,
+  swatchCSS,
+  themeCSS,
+  themeSelector,
+  themeSlug,
+  themesCSS,
+  themeVars,
+} from './themeCss';
+
+/** The style element that carries the base themes when the app hasn't linked generated/themes.css. */
+const BASE_THEMES_STYLE_ID = 'levain-themes';
 
 /**
  * Typography presets collection type
@@ -21,17 +37,54 @@ interface TypographyV2Collection {
   [index: string]: GeneratedTypographyV2;
 }
 
-// Define storage keys
-const SESSION_STORAGE_KEY = 'themeIndex';
-const PERSISTENT_STORAGE_KEY = 'savedThemeIndex';
-const TYPOGRAPHY_PREVIEW_KEY = 'typographyPreview';
-const ACTIVE_THEME_KEY = 'ok-themes-active';
+// Storage keys (T32: levain- prefix; a base theme is kept by its name's slug, not its place in the list)
+const SESSION_STORAGE_KEY = 'levain-theme';
+const PERSISTENT_STORAGE_KEY = 'levain-theme-saved';
+const TYPOGRAPHY_PREVIEW_KEY = 'levain-typography-preview';
+const ACTIVE_THEME_KEY = 'levain-theme-active';
+
+// The keys before T32, read once (an index mapped to that theme's name) and removed.
+const OLD_SESSION_KEY = 'themeIndex';
+const OLD_PERSISTENT_KEY = 'savedThemeIndex';
+const OLD_TYPOGRAPHY_PREVIEW_KEY = 'typographyPreview';
+const OLD_ACTIVE_THEME_KEY = 'ok-themes-active';
 
 /**
- * Unified active theme state - distinguishes between built-in and user themes
+ * Unified active theme state - distinguishes between built-in and user themes.
+ * A built-in theme is stored by `name` (its slug); `index` is its place in the current list, filled in on read.
  */
 export type ActiveThemeState =
-  { type: 'builtin'; index: number } | { type: 'user'; id: string };
+  | { type: 'builtin'; index: number; name: string }
+  | { type: 'user'; id: string };
+
+/** A stored index from before T32 as the slug of the theme it meant (the list's order then), or null. */
+function legacyIndexToSlug(value: string): string | null {
+  const theme = baseThemesV2[parseInt(value, 10)];
+  return theme ? themeSlug(theme.name) : null;
+}
+
+let storageMigrated = false;
+/** Move the pre-T32 keys to the new ones, once per page. */
+function migrateStorage(): void {
+  if (storageMigrated || typeof window === 'undefined') return;
+  storageMigrated = true;
+  migrateKey('session', OLD_SESSION_KEY, SESSION_STORAGE_KEY, legacyIndexToSlug);
+  migrateKey('local', OLD_PERSISTENT_KEY, PERSISTENT_STORAGE_KEY, legacyIndexToSlug);
+  migrateKey('local', OLD_TYPOGRAPHY_PREVIEW_KEY, TYPOGRAPHY_PREVIEW_KEY);
+  migrateKey('local', OLD_ACTIVE_THEME_KEY, ACTIVE_THEME_KEY, (old) => {
+    try {
+      const state = JSON.parse(old) as { type?: string; index?: number; id?: string };
+      if (state.type === 'user' && typeof state.id === 'string') return old;
+      if (state.type === 'builtin' && typeof state.index === 'number') {
+        const name = legacyIndexToSlug(String(state.index));
+        return name ? JSON.stringify({ type: 'builtin', name }) : null;
+      }
+    } catch {
+      // unreadable: dropped
+    }
+    return null;
+  });
+}
 
 /**
  * Manages theme selection, application, and persistence
@@ -65,7 +118,31 @@ export class ThemeManager {
   private activeUserThemeInput: ThemeInputV2 | null = null;
 
   constructor() {
+    migrateStorage();
     this.initStorageListener();
+  }
+
+  /** Each theme's slug by its index: the loaded collection's, or the base list's before it loads. */
+  private slugsByIndex(): Map<number, string> {
+    const map = new Map<number, string>();
+    if (this.cachedThemes) {
+      for (const [i, t] of Object.entries(this.cachedThemes)) {
+        map.set(parseInt(i, 10), themeSlug(t.name));
+      }
+    } else {
+      baseThemesV2.forEach((t, i) => map.set(i, themeSlug(t.name)));
+    }
+    return map;
+  }
+
+  private slugForIndex(index: number): string | null {
+    return this.slugsByIndex().get(index) ?? null;
+  }
+
+  private indexForSlug(slug: string | null): number | null {
+    if (slug === null) return null;
+    for (const [i, s] of this.slugsByIndex()) if (s === slug) return i;
+    return null;
   }
 
   /**
@@ -127,8 +204,8 @@ export class ThemeManager {
     if (typeof window === 'undefined') return 0;
 
     // Check session storage first
-    const saved = sessionStorage.getItem(SESSION_STORAGE_KEY);
-    if (saved !== null) return parseInt(saved, 10);
+    const saved = this.indexForSlug(readKey('session', SESSION_STORAGE_KEY));
+    if (saved !== null) return saved;
 
     // If project-specific theme is assigned, use that
     const projectTheme = this.getProjectTheme();
@@ -138,14 +215,15 @@ export class ThemeManager {
     }
 
     // For a new session, use saved theme or generate a random index
-    const persistentTheme = localStorage.getItem(PERSISTENT_STORAGE_KEY);
+    const persistentTheme = this.indexForSlug(
+      readKey('local', PERSISTENT_STORAGE_KEY)
+    );
     if (persistentTheme !== null) {
-      const themeIndex = parseInt(persistentTheme, 10);
-      this.setTheme(themeIndex);
-      return themeIndex;
+      this.setTheme(persistentTheme);
+      return persistentTheme;
     }
 
-    // Use Green theme as default for new sessions
+    // Use the first theme as default for new sessions
     const defaultTheme = 0;
     this.setTheme(defaultTheme);
     return defaultTheme;
@@ -161,11 +239,12 @@ export class ThemeManager {
     this.activeUserThemeId = null;
     this.activeUserThemeInput = null;
 
-    // Update active theme state to built-in
-    const activeState: ActiveThemeState = { type: 'builtin', index };
-    localStorage.setItem(ACTIVE_THEME_KEY, JSON.stringify(activeState));
-
-    sessionStorage.setItem(SESSION_STORAGE_KEY, String(index));
+    // Update active theme state to built-in, kept by name
+    const name = this.slugForIndex(index);
+    if (name !== null) {
+      writeKey('local', ACTIVE_THEME_KEY, JSON.stringify({ type: 'builtin', name }));
+      writeKey('session', SESSION_STORAGE_KEY, name);
+    }
     this.applyTheme(index);
   }
 
@@ -175,9 +254,9 @@ export class ThemeManager {
   saveTheme(): void {
     if (typeof window === 'undefined') return;
 
-    const currentTheme = sessionStorage.getItem(SESSION_STORAGE_KEY);
+    const currentTheme = readKey('session', SESSION_STORAGE_KEY);
     if (currentTheme !== null) {
-      localStorage.setItem(PERSISTENT_STORAGE_KEY, currentTheme);
+      writeKey('local', PERSISTENT_STORAGE_KEY, currentTheme);
     }
   }
 
@@ -203,16 +282,16 @@ export class ThemeManager {
 
       // Persist active theme state
       const activeState: ActiveThemeState = { type: 'user', id };
-      localStorage.setItem(ACTIVE_THEME_KEY, JSON.stringify(activeState));
+      writeKey('local', ACTIVE_THEME_KEY, JSON.stringify(activeState));
 
       // Clear the built-in theme session storage (prevents confusion)
-      sessionStorage.removeItem(SESSION_STORAGE_KEY);
+      removeKey('session', SESSION_STORAGE_KEY);
 
-      // Apply to DOM
+      // Apply to DOM. Both modes are written, scoped like a base theme, so a light/dark change needs nothing here.
       const mode = this.isDarkMode() ? 'dark' : 'light';
-      // Same as applyTheme: <html> in the mode whose tokens we write.
       applyModeClass(getTheme());
       const themeMode = generated[mode];
+      const attr = `user-${id}`;
 
       // Load typography for consistent styling
       const typography = await this.loadTypography();
@@ -224,20 +303,21 @@ export class ThemeManager {
         document.head.appendChild(styleEl);
       }
 
-      // Generate CSS
-      const themeCSS = this.generateThemeCSS(themeMode);
       const typoPreset = typography['0'];
       const typographyCSS = typoPreset
         ? this.generateTypographyCSS(typoPreset)
         : '';
 
-      // For user themes, generate simplified "all themes" CSS (just the user theme colors)
-      const userThemeIndicatorCSS = `:root {
-  --color-theme-user-primary: ${themeMode.primary} !important;
-  --color-theme-user-secondary: ${themeMode.accent} !important;
-}\n`;
+      // The user theme's own swatch, per mode (the base themes' swatches stay as they are).
+      const swatch = (m: 'light' | 'dark') =>
+        cssBlock(themeSelector(attr, m), [
+          ['--color-theme-user-primary', generated![m].primary],
+          ['--color-theme-user-secondary', generated![m].accent],
+        ]);
 
-      styleEl.textContent = themeCSS + typographyCSS + userThemeIndicatorCSS;
+      styleEl.textContent =
+        themeCSS(attr, generated) + typographyCSS + swatch('light') + swatch('dark');
+      document.documentElement.setAttribute(THEME_ATTR, attr);
 
       // Update body attributes
       document.body.setAttribute('data-theme-index', `user-${id}`);
@@ -281,9 +361,17 @@ export class ThemeManager {
     if (typeof window === 'undefined') return null;
 
     try {
-      const stored = localStorage.getItem(ACTIVE_THEME_KEY);
+      const stored = readKey('local', ACTIVE_THEME_KEY);
       if (!stored) return null;
-      return JSON.parse(stored) as ActiveThemeState;
+      const state = JSON.parse(stored) as { type?: string; name?: string; id?: string };
+      if (state.type === 'user' && typeof state.id === 'string') {
+        return { type: 'user', id: state.id };
+      }
+      if (state.type === 'builtin' && typeof state.name === 'string') {
+        const index = this.indexForSlug(state.name);
+        return index === null ? null : { type: 'builtin', index, name: state.name };
+      }
+      return null;
     } catch {
       return null;
     }
@@ -295,7 +383,7 @@ export class ThemeManager {
   clearActiveUserTheme(): void {
     this.activeUserThemeId = null;
     this.activeUserThemeInput = null;
-    localStorage.removeItem(ACTIVE_THEME_KEY);
+    removeKey('local', ACTIVE_THEME_KEY);
   }
 
   /**
@@ -479,9 +567,13 @@ export class ThemeManager {
       }
 
       const mode = this.isDarkMode() ? 'dark' : 'light';
-      // Put <html> in the mode whose tokens we write, so the `dark:` variants
-      // agree with the colours whether or not initTheme() ran first.
+      // Put <html> in the mode the colours follow, whether or not initTheme() ran first.
       applyModeClass(getTheme());
+
+      // The colours are plain CSS (generated/themes.css, or injected once from the same data): picking a theme is
+      // setting the attribute. Both modes are in the CSS behind .dark, so a mode change needs no call here.
+      this.ensureBaseThemesCSS(themes);
+      document.documentElement.setAttribute(THEME_ATTR, themeSlug(theme.name));
 
       let styleEl = document.getElementById('theme-styles');
       if (!styleEl) {
@@ -490,26 +582,19 @@ export class ThemeManager {
         document.head.appendChild(styleEl);
       }
 
-      // Generate all theme color variables for selector buttons
-      const allThemesCSS = this.generateAllThemesCSS(themes, mode);
-
-      // Generate current theme CSS
-      const themeMode = theme[mode];
-      const themeCSS = this.generateThemeCSS(themeMode);
-
-      // Generate typography CSS (use default preset 0 for now)
+      // Typography (default preset 0) is still injected: T32 moved only the colours.
       const typoPreset = typography['0'];
       const typographyCSS = typoPreset
         ? this.generateTypographyCSS(typoPreset)
         : '';
 
+      const themeMode = theme[mode];
       const debugInfo = {
         primary: themeMode.primary,
         accent: themeMode.accent,
       };
 
-      // Combine all CSS
-      styleEl.textContent = themeCSS + typographyCSS + allThemesCSS;
+      styleEl.textContent = typographyCSS;
 
       // Add data attribute to body for easier debugging
       document.body.setAttribute('data-theme-index', validIndex.toString());
@@ -553,116 +638,38 @@ export class ThemeManager {
   }
 
   /**
-   * Generate CSS for all themes (for gradient buttons in theme selector)
+   * Inject the base themes' CSS once, unless the page already has it (generated/themes.css linked: its marker var is
+   * set on :root). Apps that link the file get colour before JavaScript; apps that don't (the board) still get it here.
    */
-  generateAllThemesCSS(themes: ThemesV2Collection, mode: ThemeMode): string {
-    let css = ':root {\n';
-
-    // Resolve 'system' to either 'light' or 'dark'
-    const effectiveMode: 'light' | 'dark' =
-      mode === 'system' ? (this.isDarkMode() ? 'dark' : 'light') : mode;
-
-    // Add color variables for each theme
-    for (const [index, theme] of Object.entries(themes)) {
-      const themeMode = theme[effectiveMode];
-      css += `  --color-theme-${index}-primary: ${themeMode.primary} !important;\n`;
-      css += `  --color-theme-${index}-secondary: ${themeMode.accent} !important;\n`;
+  private ensureBaseThemesCSS(themes: ThemesV2Collection): void {
+    if (document.getElementById(BASE_THEMES_STYLE_ID)) return;
+    if (
+      typeof getComputedStyle === 'function' &&
+      getComputedStyle(document.documentElement)
+        .getPropertyValue(THEMES_MARKER)
+        .trim() === '1'
+    ) {
+      return;
     }
-
-    css += '}\n';
-    return css;
+    const el = document.createElement('style');
+    el.id = BASE_THEMES_STYLE_ID;
+    el.textContent = themesCSS(themes);
+    document.head.appendChild(el);
   }
 
   /**
-   * Generate CSS from V2 theme data
-   * Emits V2-native variables (26-stop ramp, semantic tokens, states)
+   * CSS for every theme's swatch vars (the theme selector's gradient buttons). Both modes: light on :root, dark on
+   * .dark. The mode argument is kept for compatibility and no longer changes the output.
+   */
+  generateAllThemesCSS(themes: ThemesV2Collection, _mode?: ThemeMode): string {
+    return swatchCSS(themes);
+  }
+
+  /**
+   * One theme mode's colour variables as a :root block (no !important). The same declarations as generated/themes.css.
    */
   generateThemeCSS(v2Mode: GeneratedThemeMode): string {
-    let css = ':root {\n';
-
-    // Primary and accent — resolved through tokenMapping so they can differ
-    // per mode (default: primary-500 / accent-500 = the picked colors).
-    const resolvedPrimary = v2Mode.tokens['primary'] ?? v2Mode.primary;
-    const resolvedAccent = v2Mode.tokens['accent'] ?? v2Mode.accent;
-    css += `  --color-primary: ${resolvedPrimary} !important;\n`;
-    css += `  --color-accent: ${resolvedAccent} !important;\n`;
-
-    // Legacy alias for base (points to primary)
-    css += `  --color-base: ${resolvedPrimary} !important;\n`;
-
-    // 26-stop surface ramp (--color-surface-0 through --color-surface-25)
-    v2Mode.surfaces.forEach((color, index) => {
-      css += `  --color-surface-${index}: ${color} !important;\n`;
-    });
-
-    // 9-stop primary ramp (--color-primary-100 through --color-primary-900)
-    v2Mode.primaryRamp.forEach((color, index) => {
-      const step = (index + 1) * 100;
-      css += `  --color-primary-${step}: ${color} !important;\n`;
-    });
-
-    // 9-stop accent ramp (--color-accent-100 through --color-accent-900)
-    v2Mode.accentRamp.forEach((color, index) => {
-      const step = (index + 1) * 100;
-      css += `  --color-accent-${step}: ${color} !important;\n`;
-    });
-
-    // Semantic tokens (--color-surface-canvas, --color-text-default, etc.)
-    // Brand semantics (primary / accent / gradient-start / gradient-end) are
-    // emitted explicitly above and below; skip here to avoid duplication.
-    const BRAND_KEYS = new Set([
-      'primary',
-      'accent',
-      'gradient-start',
-      'gradient-end',
-    ]);
-    Object.entries(v2Mode.tokens).forEach(([key, value]) => {
-      if (BRAND_KEYS.has(key)) return;
-      css += `  --color-${key}: ${value} !important;\n`;
-    });
-
-    // Action colors (--color-success, --color-error, etc.)
-    Object.entries(v2Mode.actions).forEach(([key, value]) => {
-      css += `  --color-${key}: ${value} !important;\n`;
-    });
-
-    // Spectrum stops (--color-spectrum-cool, -warm, -vivid). Decorative, not
-    // semantic: they widen the palette for effects that interpolate across it.
-    Object.entries(v2Mode.spectrum ?? {}).forEach(([key, value]) => {
-      css += `  --color-spectrum-${key}: ${value} !important;\n`;
-    });
-
-    // State overlays (--color-state-hover, --color-state-focus, --color-state-active)
-    css += `  --color-state-hover: ${v2Mode.states.hover} !important;\n`;
-    css += `  --color-state-focus: ${v2Mode.states.focus} !important;\n`;
-    css += `  --color-state-active: ${v2Mode.states.active} !important;\n`;
-
-    // Auto-contrast text colors
-    css += `  --color-text-on-primary: ${v2Mode.textOnPrimary} !important;\n`;
-    css += `  --color-text-on-accent: ${v2Mode.textOnAccent} !important;\n`;
-
-    // Gradient stops — resolved through tokenMapping (default: primary-300 →
-    // primary-700, but user can map either to any primary or accent step).
-    const gradStart = v2Mode.tokens['gradient-start'] ?? v2Mode.primaryRamp[2];
-    const gradEnd = v2Mode.tokens['gradient-end'] ?? v2Mode.primaryRamp[6];
-    css += `  --color-gradient-start: ${gradStart} !important;\n`;
-    css += `  --color-gradient-end: ${gradEnd} !important;\n`;
-    css += `  --color-grad-1: linear-gradient(to bottom right, ${gradStart}, ${gradEnd}) !important;\n`;
-    css += `  --color-grad-2: linear-gradient(to right, ${gradStart}, ${gradEnd}) !important;\n`;
-
-    // Elevation colors (shadow colors at different intensities)
-    css += `  --color-elevation-low: ${v2Mode.elevationColors.low} !important;\n`;
-    css += `  --color-elevation-default: ${v2Mode.elevationColors.default} !important;\n`;
-    css += `  --color-elevation-high: ${v2Mode.elevationColors.high} !important;\n`;
-
-    // Elevation styles (complete box-shadow values, one per level)
-    css += `  --elevation-1: ${v2Mode.elevationStyles.level1} !important;\n`;
-    css += `  --elevation-2: ${v2Mode.elevationStyles.level2} !important;\n`;
-    css += `  --elevation-3: ${v2Mode.elevationStyles.level3} !important;\n`;
-
-    css += '}\n';
-
-    return css;
+    return cssBlock(':root', themeVars(v2Mode));
   }
 
   /**
@@ -724,11 +731,7 @@ export class ThemeManager {
     this.applyTypographyPreviewToDOM(typography);
 
     // Store in localStorage for cross-tab sync
-    try {
-      localStorage.setItem(TYPOGRAPHY_PREVIEW_KEY, JSON.stringify(typography));
-    } catch (e) {
-      console.error('Failed to save typography preview to storage', e);
-    }
+    writeKey('local', TYPOGRAPHY_PREVIEW_KEY, JSON.stringify(typography));
   }
 
   /**
@@ -740,11 +743,7 @@ export class ThemeManager {
     this.removeTypographyPreviewFromDOM();
 
     // Clear from localStorage (triggers storage event in other tabs)
-    try {
-      localStorage.removeItem(TYPOGRAPHY_PREVIEW_KEY);
-    } catch (e) {
-      console.error('Failed to clear typography preview from storage', e);
-    }
+    removeKey('local', TYPOGRAPHY_PREVIEW_KEY);
   }
 
   /**
@@ -754,7 +753,7 @@ export class ThemeManager {
     if (typeof window === 'undefined') return;
 
     try {
-      const stored = localStorage.getItem(TYPOGRAPHY_PREVIEW_KEY);
+      const stored = readKey('local', TYPOGRAPHY_PREVIEW_KEY);
       if (stored) {
         const typography = JSON.parse(stored) as GeneratedTypographyV2;
         this.applyTypographyPreviewToDOM(typography);
@@ -785,23 +784,22 @@ export class ThemeManager {
   }
 
   /**
-   * For backward compatibility
-   * Get the current theme synchronously
+   * The current theme's index, read synchronously: session, then project, then saved, then the first theme.
+   * Reads only (D12): it neither saves nor applies a theme.
    */
   getCurrentTheme(): number {
-    // Default to 0 and then update asynchronously
-    this.getCurrentThemeAsync().then((index) => this.setTheme(index));
+    if (typeof window === 'undefined') return 0;
 
-    const saved = sessionStorage.getItem(SESSION_STORAGE_KEY);
-    if (saved !== null) return parseInt(saved, 10);
+    const saved = this.indexForSlug(readKey('session', SESSION_STORAGE_KEY));
+    if (saved !== null) return saved;
 
     // If project-specific theme is assigned, use that
     const projectTheme = this.getProjectTheme();
     if (projectTheme !== null) return projectTheme;
 
     // For a new session, use saved theme
-    const persistentTheme = localStorage.getItem(PERSISTENT_STORAGE_KEY);
-    if (persistentTheme !== null) return parseInt(persistentTheme, 10);
+    const persistentTheme = this.indexForSlug(readKey('local', PERSISTENT_STORAGE_KEY));
+    if (persistentTheme !== null) return persistentTheme;
 
     // Default to first theme
     return 0;
