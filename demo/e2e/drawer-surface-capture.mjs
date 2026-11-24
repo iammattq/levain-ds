@@ -92,9 +92,14 @@ for (const [name, theme, mode] of COMBOS) for (const [surface, open] of SURFACES
   shots[key] = [];
   for (const [state, h] of [['short', SHORT], ['full', FULL]]) {
     if (h !== SHORT) { await page.setViewportSize({ width: W, height: h }); await settled(page); }
+    // Right after setViewportSize headless WebKit still lays fixed boxes (and 100lvh) out at the old height, even with a
+    // forced layout; a screenshot's rendering update moves them on. Logged as beforeUpdate (not checked), then measured.
+    const beforeUpdate = h === SHORT ? undefined : await probe(page);
+    if (beforeUpdate) await page.screenshot();
     const n = await probe(page);
-    // the boxes are measured on the grown page; headless WebKit doesn't repaint a screenshot after setViewportSize (the
-    // grown strip came out white, then black), so the full shot is a fresh page at 844 with the drawer open on load
+    n.beforeUpdate = beforeUpdate && { overlay: beforeUpdate.overlay.h, scrim: beforeUpdate.scrim.h, panel: beforeUpdate.panel.h, lvh: beforeUpdate.lvh, vp: beforeUpdate.viewport.h };
+    // headless WebKit doesn't repaint a saved shot after setViewportSize either (the grown strip came out white, then
+    // black), so the full shot is a fresh page at 844 with the drawer open on load, checked to measure the same
     const file = `${out}/${key}-${state}.png`;
     if (h === SHORT) await page.screenshot({ path: file });
     else { const fresh = await load(key, url, h); await fresh.page.screenshot({ path: file }); n.fresh = await probe(fresh.page); await fresh.ctx.close(); }
