@@ -10,9 +10,9 @@ const T50_REC = 'PM recommends: A: short words on the line (Waiting..., Handoff.
 const T50_CONTEXT = 'PM context: restart from the board and auto compaction. When the PM context is red, the PM vitals in the header offer Restart: wait for the PM between turns, make sure the handoff is current, start a fresh PM session from it. The harness starts the PM to compact itself at 350k, with a PreCompact hook steering the summary (board, open asks, members in flight); after the second compaction in a session the board offers Restart (D327).';
 const T50_OPTIONS = ['A: short words on the line, full words on hover', 'B: let it show only the icon mid-restart', 'C: always reserve room for the long words (crowds the groups either side)'];
 
-const t50 = { id: 'T50', number: 'T50', kind: { label: 'Decide', tone: 'caution' as const }, title: 'T50: restart words that fit', markers: [{ label: '3 options' }] };
+export const t50 = { id: 'T50', number: 'T50', kind: { label: 'Decide', tone: 'caution' as const }, title: 'T50: restart words that fit', markers: [{ label: '3 options' }] };
 
-function T50Body({ onPick }: { onPick: () => void }) {
+export function T50Body({ onPick }: { onPick: () => void }) {
   return (
     <div className="space-y-sm" data-demo="sheet-t50">
       <p className="type-body text-[var(--color-text-default)]">{T50_Q}</p>

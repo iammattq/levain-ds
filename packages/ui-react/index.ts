@@ -252,3 +252,6 @@ export { StatusCard, StatusCardDialog, StatusMarkers, morphId } from './src/patt
 export type { StatusCardProps, StatusCardDialogProps, StatusMarker, StatusTone } from './src/patterns/StatusCard';
 export { StatusCardDialogStack } from './src/patterns/StatusCardDialogStack';
 export type { StatusCardDialogStackProps, StatusCardStackDialog } from './src/patterns/StatusCardDialogStack';
+export { BottomSheet } from './src/patterns/BottomSheet';
+export type { BottomSheetProps } from './src/patterns/BottomSheet';
+export { useIsPhone } from './src/patterns/Sheet';
