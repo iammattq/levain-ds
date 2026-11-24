@@ -260,8 +260,12 @@ visible; pick from the calendar; clear the field.
   ```ts
   // before
   await user.click(screen.getByRole('button', { name: 'Edit' }));
-  // after: the root at rest is a button named "<text>, edit"
-  await user.click(screen.getByRole('button', { name: 'Spring journal, edit' }));
+  // after: the root at rest is a button named "<text>, edit"; one mouse click on it doesn't start an edit,
+  // so double-click the text, or focus the root and press Enter
+  await user.dblClick(screen.getByText('Spring journal'));
+  // or
+  screen.getByRole('button', { name: 'Spring journal, edit' }).focus();
+  await user.keyboard('{Enter}');
   // or the pencil by its label, for a mouse-only test
   await user.click(container.querySelector('[aria-label="Edit"]')!);
   ```
@@ -269,9 +273,10 @@ visible; pick from the calendar; clear the field.
 **Notice:**
 - `onChange(value)` now fires at save, beside `onSave`, with the saved text. It does not fire per keystroke. An app
   that already passed `onChange` (it was ignored before) now has it called: check it does what a save should.
-- At rest the root is one Tab stop, `role="button"`, named "<text>, edit". Enter, F2 or Space start an edit (and a
-  double-click, as before). After a save or cancel, focus returns to the root. The app's `aria-label` names the field
-  while editing, not the root.
+- At rest the root is one Tab stop, `role="button"`, named "<text>, edit". Enter, F2 or Space start an edit, and so does
+  a double-click, as before. A single mouse click on the text does not (only a click with no mouse behind it, from a
+  screen reader, does). After a save or cancel, focus returns to the root. The app's `aria-label` names the field while
+  editing, not the root.
 - Blur is unchanged: it neither saves nor cancels.
 - `value` and `onSave` are optional; `defaultValue` added. The ref and `id` are on the root; the field's id is
   `${id}-input` (was random per render). Disabled: no Tab stop, `aria-disabled`.
@@ -321,8 +326,8 @@ reliable check is `expect(radio).toBeChecked()`.
 ## SegmentedControl
 
 **Find:** `rg -n '<SegmentedControl\b' src`, then read each tag to its `/>`: one with no `label`, `aria-label` or
-`aria-labelledby` needs a name (an `id` alone names nothing). Apps often have many: the portfolio has 14 unnamed out of
-41. In tests, search every test file, not only those that import it (a test of a screen renders it indirectly):
+`aria-labelledby` needs a name (an `id` alone names nothing). Apps often have many: the portfolio has 14 unnamed. In
+tests, search every test file, not only those that import it (a test of a screen renders it indirectly):
 `rg -n "aria-pressed" -g '*test*' -g '*spec*' src`, then keep the hits whose button is a SegmentedControl option
 (its text is one of an `options` label).
 
