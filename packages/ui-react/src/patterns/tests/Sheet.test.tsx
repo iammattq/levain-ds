@@ -6,15 +6,18 @@ import { closesSheet, PHONE_QUERY, SCROLLED_EDGE, SHEET_CLOSE, SHEET_MAX_HEIGHT 
 
 /** matchMedia as a phone (below md) or a desktop; nothing else matches (so no Reduce Motion here). */
 let phone = true;
+// configurable, and put back as it was: a non-configurable stub can't be removed, and strict mode throws on the delete
+const ownMatchMedia = Object.getOwnPropertyDescriptor(window, 'matchMedia');
 beforeAll(() => {
   Object.defineProperty(window, 'matchMedia', {
+    configurable: true,
     writable: true,
     value: (query: string) => ({ matches: query === PHONE_QUERY && phone, media: query, onchange: null, addListener: () => {}, removeListener: () => {}, addEventListener: () => {}, removeEventListener: () => {}, dispatchEvent: () => false }),
   });
   // jsdom lays nothing out: the sheet is 800 px tall, so a quarter is 200
   Object.defineProperty(HTMLElement.prototype, 'offsetHeight', { configurable: true, get() { return this.hasAttribute('data-sheet') ? 800 : 0; } });
 });
-afterAll(() => { delete (window as { matchMedia?: unknown }).matchMedia; delete (HTMLElement.prototype as { offsetHeight?: number }).offsetHeight; });
+afterAll(() => { if (ownMatchMedia) Object.defineProperty(window, 'matchMedia', ownMatchMedia); else delete (window as { matchMedia?: unknown }).matchMedia; delete (HTMLElement.prototype as { offsetHeight?: number }).offsetHeight; });
 beforeEach(() => { phone = true; });
 
 function Card({ onClose }: { onClose?: () => void }) {

@@ -7,14 +7,17 @@ import { PHONE_QUERY } from '../Sheet';
 import { StatusCard } from '../StatusCard';
 import { BEHIND_EDGE, PHONE_ORIGIN, phonePose, PILE, pose, StatusCardDialogStack, type StatusCardStackDialog } from '../StatusCardDialogStack';
 
+// configurable, and put back as it was: a non-configurable stub can't be removed, and strict mode throws on the delete
+const ownMatchMedia = Object.getOwnPropertyDescriptor(window, 'matchMedia');
 beforeAll(() => {
   Object.defineProperty(window, 'matchMedia', {
+    configurable: true,
     writable: true,
     value: (query: string) => ({ matches: query === PHONE_QUERY, media: query, onchange: null, addListener: () => {}, removeListener: () => {}, addEventListener: () => {}, removeEventListener: () => {}, dispatchEvent: () => false }),
   });
   Object.defineProperty(HTMLElement.prototype, 'offsetHeight', { configurable: true, get() { return this.hasAttribute('data-sheet') ? 800 : 0; } });
 });
-afterAll(() => { delete (window as { matchMedia?: unknown }).matchMedia; delete (HTMLElement.prototype as { offsetHeight?: number }).offsetHeight; });
+afterAll(() => { if (ownMatchMedia) Object.defineProperty(window, 'matchMedia', ownMatchMedia); else delete (window as { matchMedia?: unknown }).matchMedia; delete (HTMLElement.prototype as { offsetHeight?: number }).offsetHeight; });
 
 const LOOK: StatusCardStackDialog = { id: 'L8', number: 'L8', title: 'The strip', children: <p data-testid="look-body">Look</p> };
 const DECIDE: StatusCardStackDialog = { id: 'D14', number: 'D14', title: 'Strip or arc', children: <button type="button">Send</button> };
