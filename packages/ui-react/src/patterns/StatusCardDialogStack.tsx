@@ -13,12 +13,17 @@
  * when the last one closes, collapses back into it. A front removed while others remain goes away (lifts on
  * recipe.travel, ease.away, and fades) and the next comes forward on recipe.morph; one added at the front comes back
  * from away. Under Reduce Motion each of those is a cross-fade: nothing moves, the opacity still changes.
+ *
+ * Below `md` the stack is a pile of bottom sheets (Sheet.tsx): it rises from the bottom edge over a scrim, the front
+ * one scrolls inside, and the ones behind peek above its top edge (phonePose). Next/Back, Escape, a tap outside and the ✕ work as
+ * above. Swiping the front sheet down by its handle closes the whole stack: onClose for every dialog, front first.
  */
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { duration, instant, motion as motionFor, recipe } from '@levain/tokens';
 import { forwardRef, useEffect, useLayoutEffect, useRef, useState, type MouseEvent } from 'react';
 import { createPortal } from 'react-dom';
 import { contentIn, DIALOG_BODY, DIALOG_PANEL, DialogHead, morphId, useRadius, type StatusCardDialogProps } from './StatusCard';
+import { SheetPanel, SheetScrim, useIsPhone } from './Sheet';
 
 /** One dialog in the stack: a StatusCardDialog's props, less its open and onClose (the stack's). */
 export type StatusCardStackDialog = Omit<StatusCardDialogProps, 'open' | 'onClose'>;
@@ -85,6 +90,18 @@ export const pose = (d: number) => {
   return { y: k * PILE.y, scale: 1 - k * PILE.scale, opacity: d > PILE.depth ? 0 : 1 };
 };
 
+/**
+ * The pile on a phone, where the sheet is docked to the bottom edge and has no room below it (Q41, the designer: A):
+ * each step back peeks PILE.y px above the front's top edge and PILE.scale narrower, scaled from its top edge, three at
+ * most. The desktop keeps the peek below (Q11).
+ */
+export const phonePose = (d: number) => {
+  const k = Math.min(d, PILE.depth);
+  return { y: k === 0 ? 0 : -k * PILE.y, scale: 1 - k * PILE.scale, opacity: d > PILE.depth ? 0 : 1 };
+};
+/** The phone pile scales from the top edge (as framer origin values, for the reason PILE_ORIGIN gives). */
+export const PHONE_ORIGIN = { originX: 0.5, originY: 0 } as const;
+
 /** Away: lifted and faded. Under Reduce Motion only the fade. */
 export const away = (reduce: boolean | null | undefined) =>
   reduce ? { opacity: 0, transition: recipe.travel } : { y: -AWAY_LIFT, opacity: 0, transition: recipe.travel };
@@ -92,8 +109,11 @@ export const away = (reduce: boolean | null | undefined) =>
 /** The transition to a pile position: the move on recipe.morph (instant under Reduce Motion), the opacity a fade. */
 const toPose = (reduce: boolean | null | undefined) => ({ ...motionFor('morph', reduce), opacity: recipe.fadeIn });
 
-export function StatusCardDialogStack({ dialogs, onClose, cardId }: StatusCardDialogStackProps) {
+export function StatusCardDialogStack({ dialogs, onClose, cardId: givenCardId }: StatusCardDialogStackProps) {
   const reduce = useReducedMotion();
+  const phone = useIsPhone();
+  // on a phone the sheets rise from the bottom edge, never out of a card
+  const cardId = phone ? undefined : givenCardId;
   const open = dialogs.length > 0;
   const frontId = dialogs[0]?.id;
   // the overlay outlives the last dialog while its exit plays
@@ -124,6 +144,9 @@ export function StatusCardDialogStack({ dialogs, onClose, cardId }: StatusCardDi
   const frontRef = useRef(frontId);
   useLayoutEffect(() => { onCloseRef.current = onClose; frontRef.current = frontId; });
   const closeFront = () => { if (frontRef.current !== undefined) onCloseRef.current(frontRef.current); };
+  const idsRef = useRef<string[]>([]);
+  useLayoutEffect(() => { idsRef.current = dialogs.map(d => d.id); });
+  const closeAll = () => { for (const id of idsRef.current) onCloseRef.current(id); };
 
   const panels = useRef(new Map<string, HTMLDivElement>());
   // what had focus before the stack opened, read before the front's panel takes it (layout effects run first)
@@ -143,6 +166,27 @@ export function StatusCardDialogStack({ dialogs, onClose, cardId }: StatusCardDi
   if (typeof document === 'undefined' || (!open && !leaving)) return null;
   const width = dialogs[0]?.width ?? '40rem';
   const behind = Math.max(0, Math.min(dialogs.length - 1, PILE.depth));
+  const panelRef = (id: string) => (el: HTMLDivElement | null) => { if (el) panels.current.set(id, el); else panels.current.delete(id); };
+  if (phone) return createPortal(
+    <div
+      className={'fixed inset-0 z-50' + (open ? '' : ' pointer-events-none')}
+      onClick={open ? closeFront : undefined}
+      data-dialog-stack
+      data-sheet-overlay
+    >
+      <AnimatePresence>{open && <SheetScrim key="scrim" reduce={reduce} />}</AnimatePresence>
+      {/* one grid cell, docked to the bottom edge: the front sizes it and the ones behind fill it, as on the desktop */}
+      <div className="absolute inset-x-0 bottom-0 grid">
+        <AnimatePresence mode="popLayout" custom={!open} onExitComplete={() => setLeaving(false)}>
+          {dialogs.map((dialog, d) => (
+            <StackSheet key={dialog.id} dialog={dialog} depth={d} count={dialogs.length} arriving={settled.current} reduce={reduce}
+              onClose={closeFront} onDragClose={closeAll} panelRef={panelRef(dialog.id)} />
+          ))}
+        </AnimatePresence>
+      </div>
+    </div>,
+    document.body,
+  );
   return createPortal(
     // No dimmed page: the front grows out of its card, and a click outside it closes it. While the last one leaves,
     // the overlay lets clicks through.
@@ -277,5 +321,56 @@ const Panel = forwardRef<HTMLDivElement, PanelProps>(function Panel({ dialog, de
         {children}
       </motion.div>
     </motion.div>
+  );
+});
+
+interface StackSheetProps {
+  dialog: StatusCardStackDialog; depth: number; count: number; arriving: boolean; reduce: boolean | null;
+  onClose: () => void; onDragClose: () => void; panelRef: (el: HTMLDivElement | null) => void;
+}
+
+/**
+ * One dialog of the stack on a phone: a sheet in the pile. When the stack opens they all rise together (recipe.sheetIn)
+ * to their places; later moves are the desktop's (a front going away, the next coming forward on recipe.morph); when
+ * the stack closes they all drop away (recipe.sheetOut). Under Reduce Motion each is a fade.
+ */
+const StackSheet = forwardRef<HTMLDivElement, StackSheetProps>(function StackSheet({ dialog, depth, count, arriving, reduce, onClose, onDragClose, panelRef }, forwarded) {
+  const { number, kind, title, markers, children } = dialog;
+  const front = depth === 0;
+  const [initial] = useState(() =>
+    !arriving ? { ...phonePose(depth), ...(reduce ? { opacity: 0 } : { y: '100%' }) }
+      : front ? { y: reduce ? 0 : -AWAY_LIFT, opacity: 0 } : { ...phonePose(depth), opacity: 0 });
+  // rising with the stack: its first move is the sheet's; after that, the pile's
+  const [rising, setRising] = useState(!arriving);
+  const el = useRef<HTMLDivElement | null>(null);
+  useLayoutEffect(() => { el.current?.toggleAttribute('inert', !front); }, [front]);
+  const transition = rising ? { ...motionFor('sheetIn', reduce), opacity: recipe.fadeIn } : toPose(reduce);
+  return (
+    <SheetPanel
+      ref={forwarded}
+      panelRef={node => { el.current = node; panelRef(node); }}
+      front={front}
+      reduce={reduce}
+      label={typeof title === 'string' ? title : undefined}
+      onDragClose={onDragClose}
+      motionProps={{
+        initial,
+        animate: { ...phonePose(depth), transition },
+        variants: {
+          leave: (closing: boolean) => (closing
+            ? (reduce ? { opacity: 0, transition: recipe.contentOut } : { y: '100%', transition: recipe.sheetOut })
+            : front ? away(reduce) : { opacity: 0, transition: recipe.contentOut }),
+        },
+        exit: 'leave',
+      }}
+      onAnimationComplete={() => { if (rising) setRising(false); }}
+      style={{ ...PHONE_ORIGIN, zIndex: count - depth }}
+      place={'relative [grid-area:1/1]' + (front ? '' : ' [contain:size]')}
+      surface={'bg-[var(--color-surface-elevated)] ' + (front ? 'shadow-[var(--elevation-3)]' : BEHIND_EDGE)}
+      data-stack-depth={depth}
+      head={<DialogHead number={number} kind={kind} title={title} markers={markers} onClose={onClose} />}
+    >
+      {children}
+    </SheetPanel>
   );
 });
