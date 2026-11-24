@@ -1,15 +1,15 @@
 // T31 (D13): ColorInput and GradientInput with their swatch at the window's left edge, where the picker used to open
 // off-screen. ?only=picker; demo/e2e/picker.sh captures it before and after.
-import { ColorInput, GradientInput } from '@levain/ui-react';
+import { ColorInput, GradientInput, type GradientValue } from '@levain/ui-react';
 import { useState, type ReactNode } from 'react';
 
 export function PickerDemo({ Section }: { Section: (p: { title: string; note: string; children: ReactNode }) => ReactNode }) {
   const [colour, setColour] = useState('#3366CC');
-  const [gradient, setGradient] = useState({
+  const [gradient, setGradient] = useState<GradientValue>({
     angle: 90,
     stops: [
-      { id: 'a', color: '#3366CC', alpha: 100, position: 0 },
-      { id: 'b', color: '#CC6633', alpha: 100, position: 100 },
+      { position: 0, color: { hex: '#3366CC', alpha: 100 } },
+      { position: 100, color: { hex: '#CC6633', alpha: 100 } },
     ],
   });
   return (
@@ -19,7 +19,7 @@ export function PickerDemo({ Section }: { Section: (p: { title: string; note: st
           <ColorInput id="picker-colour" label="Colour" value={colour} onChange={setColour} />
         </div>
         <div data-piece="gradient-input">
-          <GradientInput id="picker-gradient" label="Gradient" value={gradient as never} onChange={setGradient as never} />
+          <GradientInput id="picker-gradient" label="Gradient" value={gradient} onChange={setGradient} />
         </div>
       </div>
     </Section>
