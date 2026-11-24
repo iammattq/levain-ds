@@ -1,0 +1,132 @@
+{
+  "name": "Popover",
+  "description": "A small panel anchored to a trigger: it grows out of the trigger (the morph recipe), flips to the other side when there's no room, and closes on Escape, a press outside, or Tab past its last control, giving focus back to the trigger.",
+  "category": "components",
+  "usage": [
+    "Use for a few controls or a short read that belongs to one button: a worker count, notifications, a status line in full",
+    "Pass the trigger as a render prop and spread its props onto your own button (levain Button, an icon button, a name)",
+    "Uncontrolled by default; pass open and onOpenChange to control it",
+    "Pass children as a function to get close, for a control that finishes the job (Save, a pick)",
+    "Menu (T41) is a Popover with role=\"menu\"; for a list of actions wait for Menu rather than building rows in a Popover",
+    "Not for a modal task (use Modal) or a hover hint (Tooltip, T42)"
+  ],
+  "examples": [
+    "<Popover label=\"Workers\" align=\"end\" alignOffset={4} className=\"w-60\"\n  trigger={p => <Button {...p} variant=\"ghost\" aria-label=\"Workers\"><Users size={16} /></Button>}>\n  <Slider label=\"Pool size\" min={1} max={8} value={n} onChange={setN} />\n</Popover>",
+    "// controlled, closed from inside\n<Popover label=\"Rename\" open={open} onOpenChange={setOpen}\n  trigger={p => <Button {...p}>Rename</Button>}>\n  {close => <form onSubmit={e => { e.preventDefault(); save(); close(); }}>...</form>}\n</Popover>",
+    "// in a bar nothing clips: rendered beside the trigger, which shows over the surface as it morphs\n<Popover portal={false} label=\"Project\" trigger={p => <button {...p}>levain</button>}>...</Popover>"
+  ],
+  "design": [
+    "One surface: --color-surface-elevated, --elevation-3 with a 1px inset --color-border-subtle ring, --radius-lg corner",
+    "Opens as recipe.morph from the trigger's box to the panel's; content follows with contentIn after contentOut; closes with contentOut then recipe.collapse. Reduce Motion: a fade in place",
+    "Placed by calculatePopupPosition (utils/popupPosition): 6px from the trigger, start-aligned under it by default, flipped when the preferred side is short, kept viewportMargin (8px) inside the window, capped to the window's width",
+    "Portalled to the body at z-index 60, above Modal and the StatusCard dialogs (z-50)",
+    "Content padding 0.75rem and width to fit by default; className sets the content box (w-60, p-1)"
+  ],
+  "accessibility": [
+    "The trigger gets aria-haspopup (the role), aria-expanded, and aria-controls naming the panel while it's open",
+    "The panel has the role (dialog by default) and label as its accessible name",
+    "Focus moves in (initialFocus, else the first control, else the panel) and back to the trigger on close",
+    "Escape closes it via useDialogFocus: only the top layer answers, so a Popover in a Modal closes alone; a widget inside that claims Escape keeps it open",
+    "Not a focus trap: Tab past the last control or Shift+Tab before the first closes it, back to the trigger"
+  ],
+  "props": [
+    {
+      "name": "trigger",
+      "type": "(props: PopoverTriggerProps) => ReactNode",
+      "optional": false,
+      "description": "Renders the trigger; spread the given ref, onClick and aria props onto a button."
+    },
+    {
+      "name": "children",
+      "type": "ReactNode | ((close: () => void) => ReactNode)",
+      "optional": false,
+      "description": "The panel's content, or a function given close."
+    },
+    {
+      "name": "label",
+      "type": "string",
+      "optional": false,
+      "description": "The panel's accessible name."
+    },
+    {
+      "name": "open",
+      "type": "boolean",
+      "optional": true,
+      "description": "Controlled open state. Leave out for uncontrolled."
+    },
+    {
+      "name": "defaultOpen",
+      "type": "boolean",
+      "optional": true,
+      "defaultValue": "false",
+      "description": "Uncontrolled: open at first."
+    },
+    {
+      "name": "onOpenChange",
+      "type": "(open: boolean) => void",
+      "optional": true,
+      "description": "Called when the trigger, Escape, a press outside, Tab or close asks to open or close."
+    },
+    {
+      "name": "placement",
+      "type": "'top' | 'bottom' | 'left' | 'right'",
+      "optional": true,
+      "defaultValue": "'bottom'",
+      "description": "The preferred side; flips to the opposite one when it has no room."
+    },
+    {
+      "name": "align",
+      "type": "'start' | 'center' | 'end'",
+      "optional": true,
+      "defaultValue": "'start'",
+      "description": "Alignment along the trigger."
+    },
+    {
+      "name": "sideOffset",
+      "type": "number",
+      "optional": true,
+      "defaultValue": "6",
+      "description": "Gap from the trigger, in px."
+    },
+    {
+      "name": "alignOffset",
+      "type": "number",
+      "optional": true,
+      "defaultValue": "0",
+      "description": "How far the panel reaches past the trigger's aligned edge, in px (the board's panels use 4)."
+    },
+    {
+      "name": "viewportMargin",
+      "type": "number",
+      "optional": true,
+      "defaultValue": "8",
+      "description": "Least distance from the window's edges, in px."
+    },
+    {
+      "name": "role",
+      "type": "'dialog' | 'menu' | 'listbox'",
+      "optional": true,
+      "defaultValue": "'dialog'",
+      "description": "The panel's role, also the trigger's aria-haspopup."
+    },
+    {
+      "name": "initialFocus",
+      "type": "RefObject<HTMLElement | null>",
+      "optional": true,
+      "description": "What gets focus on open, instead of the first control."
+    },
+    {
+      "name": "portal",
+      "type": "boolean",
+      "optional": true,
+      "defaultValue": "true",
+      "description": "Portal to the body above dialogs; false renders it beside the trigger, under it."
+    },
+    {
+      "name": "className",
+      "type": "string",
+      "optional": true,
+      "description": "Classes for the panel's content box (padding, width)."
+    }
+  ]
+}

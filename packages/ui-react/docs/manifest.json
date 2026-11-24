@@ -36,6 +36,11 @@
   },
   {
     "category": "Components",
+    "name": "Popover",
+    "description": "Panel anchored to a trigger that grows out of it, flips for room, closes on Escape or a press outside"
+  },
+  {
+    "category": "Components",
     "name": "Toaster",
     "description": "Notification system for displaying alerts and messages"
   },
