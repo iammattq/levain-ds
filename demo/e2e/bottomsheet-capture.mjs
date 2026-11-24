@@ -84,6 +84,16 @@ for (const [name, theme, mode] of COMBOS) {
     await settled(page);
     await page.screenshot({ path: `${out}/${key}-${which}.png` });
     numbers[`${key}-${which}`] = await probe(page);
+    // levain's Checkbox styles with older names (--color-surface-2, --color-border): what they resolve to, and the
+    // unchecked box's own colours (T10 review: near-black in light themes)
+    if (which === 'filters') numbers[`${key}-checkbox`] = await page.evaluate(() => {
+      const v = n => getComputedStyle(document.body).getPropertyValue(n).trim() || '(unset)';
+      const boxes = [...document.querySelectorAll('[data-sheet] input[type="checkbox"] + div')];
+      const off = boxes.find(b => !b.previousElementSibling.checked);
+      const on = boxes.find(b => b.previousElementSibling.checked);
+      const cs = el => el && { bg: getComputedStyle(el).backgroundColor, border: getComputedStyle(el).borderTopColor };
+      return { '--color-surface-2': v('--color-surface-2'), '--color-border': v('--color-border'), '--color-surface-elevated': v('--color-surface-elevated'), '--color-border-default': v('--color-border-default'), unchecked: cs(off), checked: cs(on), sheetBg: getComputedStyle(document.querySelector('[data-sheet]')).backgroundColor };
+    });
     if (which !== 'filters') {
       const s = await page.locator('[data-sheet]').boundingBox();
       const bar = await page.locator('[data-sheet-handle]').boundingBox();
@@ -210,5 +220,6 @@ await sheet.setContent(`<style>body{margin:0;padding:16px;background:#ccc;font:1
 await sheet.screenshot({ path: `${out}/look.png`, fullPage: true });
 await browser.close();
 fs.writeFileSync(`${out}/numbers.json`, JSON.stringify({ numbers, errors }, null, 2));
+for (const [k, v] of Object.entries(numbers)) if (k.endsWith('-checkbox')) console.log(`${k}: ${JSON.stringify(v)}`);
 if (errors.length) console.log(`errors: ${JSON.stringify(errors)}`);
 if (!same || !behaves || errors.length) process.exitCode = 1;

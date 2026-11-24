@@ -18,6 +18,7 @@ The first consumer outside the portfolio was a web board for running a team of c
 - **StatusCardDialog can't stack.** Two open dialogs render as two identical overlays, one over the other. Missing: placement for a dialog behind (offset up and scaled like a pile), a behind state (inert, aria-hidden, no focus, no Escape, no overlay of its own), and an "away" exit for the front one while the one behind animates forward on the morph recipe (cross-fade under Reduce Motion). Wanted for a look and its decision opened as a pile. The consumer is building the non-visual parts and waiting on levain.
 - **SortableGroup keys must be unique across the whole group.** SortableList's layoutId is group-wide, so two lists with an item key in common (D14 in both) share a layoutId and a click doesn't open the card. Not documented; the consumer prefixes keys per list (`levain:D14`, `board:D14`).
 - **Tooltip / Toggletip.** Hover delay, focus, tap, Escape, collision placement, portal. The consumer built one by hand on its switcher's surface recipe, on `--color-surface-component`, because dark info and success miss 4.5:1 on the elevated surface.
+- **Checkbox renders unchecked boxes near-black in light themes.** It styles with `--color-surface-2` and `--color-border`; found in T10's demo.
 
 ### Phone patterns
 - **Swipeable column strip.** One column a screen wide, swiped with snap, with pills to jump; while a card is held, resting at either edge slides the strip one column on a spring. Built in the consumer on top of `SortableGroup`'s `onDragMove`.
