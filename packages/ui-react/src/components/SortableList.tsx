@@ -322,6 +322,7 @@ export function SortableGroup({ onMove, onDragChange, onDragMove, children }: So
       finish(d, false);
       return;
     } else if (e.key === 'Escape') {
+      e.preventDefault(); // claimed: a dialog around the list stays open
       setAnnounce('Cancelled.');
       finish(d, true);
       return;

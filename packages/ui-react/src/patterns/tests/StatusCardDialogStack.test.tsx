@@ -107,7 +107,7 @@ describe('StatusCardDialogStack', () => {
     const latest = jest.fn();
     rerender(stack([LOOK, DECIDE], latest));
     expect(notes).toHaveFocus();
-    fireEvent.keyDown(window, { key: 'Escape' });
+    fireEvent.keyDown(document, { key: 'Escape' });
     expect(latest).toHaveBeenCalledTimes(1);
     expect(latest).toHaveBeenCalledWith('L8');
     expect(first).not.toHaveBeenCalled();
@@ -139,7 +139,7 @@ describe('StatusCardDialogStack', () => {
     const onClose = jest.fn();
     const { rerender } = render(stack([LOOK], onClose));
     rerender(stack([], onClose));
-    fireEvent.keyDown(window, { key: 'Escape' });
+    fireEvent.keyDown(document, { key: 'Escape' });
     expect(onClose).not.toHaveBeenCalled();
   });
 

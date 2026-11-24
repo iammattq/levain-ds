@@ -112,6 +112,8 @@ const EditableText = forwardRef<HTMLDivElement, EditableTextProps>(
       if (e.key === 'Enter') {
         handleSave();
       } else if (e.key === 'Escape') {
+        // claimed: a dialog around it leaves this Escape alone and stays open
+        e.preventDefault();
         handleCancel();
       }
     };
