@@ -3,75 +3,115 @@
   "description": "A standard checkbox component allowing users to select one or more options. Supports checked, unchecked, and indeterminate states.",
   "category": "components",
   "usage": [
+    "Follows the form-input convention (docs/prop-conventions.json, formInputs).",
     "Use for boolean selections or when multiple items can be chosen from a list.",
-    "Bind the `checked` prop to a state variable (boolean or 'indeterminate').",
-    "Use the `onChange` callback to update the state.",
-    "Provide a `label` for clarity.",
-    "The `indeterminate` state visually indicates that a sub-selection is partially checked (e.g., in a tree structure). You must manage the transition out of the indeterminate state logically (e.g., clicking it might turn it fully checked)."
+    "Controlled with `checked` (boolean or 'indeterminate') and `onChange(checked)`, value first; or uncontrolled with `defaultChecked` (onChange still fires).",
+    "Provide a `label`, or pass `aria-label`, or label it from outside with `<label htmlFor={id}>`.",
+    "The `indeterminate` state visually indicates that a sub-selection is partially checked (e.g., in a tree structure). A click on it calls onChange(true); a controlled parent decides what follows.",
+    "Sizes: 'sm' | 'md' (default) | 'lg'; the label takes the scale's type (sm: type-label-sm; md, lg: type-label)."
   ],
   "examples": [
     "```tsx\nimport { useState } from 'react';\nimport { Checkbox } from '@/lib/designsystem';\n\nfunction MyComponent() {\n  const [isChecked, setIsChecked] = useState(false);\n\n  return (\n    <Checkbox\n      id=\"terms\"\n      checked={isChecked}\n      onChange={setIsChecked}\n      label=\"I agree to the terms\"\n    />\n  );\n}\n```",
     "```tsx\n// Disabled Checkbox\n<Checkbox id=\"disabled-check\" checked={true} onChange={() => {}} label=\"Cannot change\" disabled />\n```",
     "```tsx\n// Indeterminate Checkbox\n<Checkbox id=\"select-all\" checked={'indeterminate'} onChange={handleSelectAllChange} label=\"Select some items\" />\n```",
-    "```tsx\n// Different Sizes\n<Checkbox id=\"small-check\" checked={val} onChange={setVal} label=\"Small\" size=\"sm\" />\n<Checkbox id=\"medium-check\" checked={val} onChange={setVal} label=\"Medium\" size=\"md\" />\n<Checkbox id=\"large-check\" checked={val} onChange={setVal} label=\"Large\" size=\"lg\" />\n```"
+    "```tsx\n// Different Sizes\n<Checkbox id=\"small-check\" checked={val} onChange={setVal} label=\"Small\" size=\"sm\" />\n<Checkbox id=\"medium-check\" checked={val} onChange={setVal} label=\"Medium\" size=\"md\" />\n<Checkbox id=\"large-check\" checked={val} onChange={setVal} label=\"Large\" size=\"lg\" />\n```",
+    "```tsx\n// Uncontrolled, named without a visible label\n<Checkbox defaultChecked aria-label=\"Select row\" onChange={save} />\n```"
   ],
   "design": [
     "Use checkboxes for lists where users can select zero, one, or multiple items.",
     "Clearly label each checkbox.",
     "Group related checkboxes together visually.",
-    "Use the indeterminate state primarily for parent checkboxes that reflect the state of child checkboxes."
+    "Use the indeterminate state primarily for parent checkboxes that reflect the state of child checkboxes.",
+    "Focus ring: keyboard only (focus-visible), 2px var(--color-border-focus) with offset"
   ],
   "accessibility": [
-    "Uses a visually hidden native `<input type=\"checkbox\">` for semantics and keyboard navigation.",
-    "Focus states are handled with `peer-focus-visible` styles on the custom visual element.",
-    "Disabled states use `opacity-50` and `cursor-not-allowed`.",
-    "The `label` prop is associated with the input via the `htmlFor` attribute.",
+    "Uses a visually hidden native `<input type=\"checkbox\">` for semantics and keyboard navigation (Space toggles it).",
+    "Keyboard focus ring on the box (peer-focus-visible, --color-border-focus with offset).",
+    "Disabled sets the native disabled attribute; the root uses `opacity-50` and `cursor-not-allowed`.",
+    "The `label` prop is associated with the input via the `htmlFor` attribute; the id is generated when left out.",
+    "Indeterminate sets the input's indeterminate property, so assistive technology announces it as mixed.",
     "The custom visual element uses `aria-hidden=\"true\"` as the native input provides the semantics."
   ],
   "props": [
     {
       "name": "id",
       "type": "string",
-      "optional": false,
-      "description": "Unique identifier for the input element."
+      "optional": true,
+      "description": "The input's id; generated with useId() when left out",
+      "defaultValue": null,
+      "configurable": false
     },
     {
       "name": "checked",
       "type": "boolean | 'indeterminate'",
-      "optional": false,
-      "description": "The state of the checkbox: true (checked), false (unchecked), or 'indeterminate'."
+      "optional": true,
+      "description": "Controlled: true, false or 'indeterminate'. Leave out for uncontrolled",
+      "defaultValue": null,
+      "configurable": true
+    },
+    {
+      "name": "defaultChecked",
+      "type": "boolean | 'indeterminate'",
+      "optional": true,
+      "defaultValue": "false",
+      "description": "Uncontrolled: the state at first",
+      "configurable": false
     },
     {
       "name": "onChange",
       "type": "(checked: boolean) => void",
-      "optional": false,
-      "description": "Callback function invoked when the checkbox state changes. Receives the new boolean state (true/false). Note: indeterminate state change triggers with 'false' if clicked."
+      "optional": true,
+      "description": "Called with the new boolean state, value first, in both modes. A click on an indeterminate box calls it with true",
+      "defaultValue": null,
+      "configurable": false
     },
     {
       "name": "label",
       "type": "ReactNode",
       "optional": true,
-      "description": "The content to display next to the checkbox, typically a string or JSX."
+      "description": "The content to display next to the checkbox, typically a string or JSX.",
+      "defaultValue": null,
+      "configurable": true
     },
     {
       "name": "disabled",
       "type": "boolean",
       "optional": true,
       "defaultValue": "false",
-      "description": "If true, the checkbox will be visually disabled and non-interactive."
+      "description": "If true, the checkbox will be visually disabled and non-interactive.",
+      "configurable": true
     },
     {
       "name": "size",
       "type": "'sm' | 'md' | 'lg'",
       "optional": true,
       "defaultValue": "'md'",
-      "description": "Specifies the size of the checkbox visual element."
+      "description": "Specifies the size of the checkbox visual element.",
+      "configurable": true
     },
     {
       "name": "className",
       "type": "string",
       "optional": true,
-      "description": "Additional CSS classes to apply to the root label element."
+      "description": "Classes for the root label (merged with cn)",
+      "defaultValue": null,
+      "configurable": false
+    },
+    {
+      "name": "ref",
+      "type": "Ref<HTMLInputElement>",
+      "optional": true,
+      "defaultValue": null,
+      "description": "The native input",
+      "configurable": false
+    },
+    {
+      "name": "...rest",
+      "type": "InputHTMLAttributes",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Every other prop (name, value, aria-*, data-*, onBlur…) goes to the input",
+      "configurable": false
     }
   ]
 }

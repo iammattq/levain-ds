@@ -3,14 +3,16 @@
   "description": "An accessible, styled dropdown component for selecting a single option from a list, with support for labels, placeholders, error states, helper text, and required/disabled states.",
   "category": "components",
   "usage": [
-    "Provide a unique `id` and a descriptive `label`.",
+    "Follows the form-input convention (docs/prop-conventions.json, formInputs).",
+    "`id` and `label` are optional: the id is generated, and without a visible label pass `aria-label`.",
     "Pass an array of `SelectOption` objects to the `options` prop.",
-    "Use `value` and `onChange` for controlled behavior.",
+    "Controlled with `value` and the native `onChange(event)`, or uncontrolled with `defaultValue`.",
     "Set `placeholder` for initial guidance.",
-    "Use `error` and `touched` props to display validation errors.",
-    "Provide `helperText` for additional context.",
+    "An `error` shows at once; pass `touched` (the field's touched state) to hold it until the field is left. `touched={false}` hides it.",
+    "Provide `helperText` for additional context; while disabled, the helper shows instead of the error.",
     "Mark as `required` or `disabled` as needed.",
-    "Customize styling with `className` (container) and `selectClassName` (select element)."
+    "Customize styling with `className` (root) and `selectClassName` (select element), merged with cn.",
+    "Sizes: '2xs' | 'xs' | 'sm' | 'md' (default) | 'lg'; compact is the deprecated alias for 'xs'."
   ],
   "examples": [
     "```tsx\\n// Basic usage\\nimport { Select } from '@/lib/designsystem';\\nimport { useState } from 'react';\\n\\nfunction BasicSelect() {\\n  const [category, setCategory] = useState('');\\n  const options = [\\n    { value: \"technology\", label: \"Technology\" },\\n    { value: \"design\", label: \"Design\" },\\n    { value: \"marketing\", label: \"Marketing\" }\\n  ];\\n\\n  return (\\n    <Select\\n      id=\"category\"\\n      label=\"Category\"\\n      options={options}\\n      value={category}\\n      onChange={(e) => setCategory(e.target.value)}\\n    />\\n  );\\n}\\n```",
@@ -27,7 +29,8 @@
     "Labels use `.type-label` (14px medium) for consistent form styling.",
     "Helper text uses `.type-caption` which includes muted color semantically.",
     "Error messages use `.type-body-sm` (14px) with error color override.",
-    "Compact mode uses smaller typography: `.type-label-sm` (12px) for labels, `.type-caption` for errors, `.type-caption-compact` (10px) for helper text, and reduced padding (`px-2 py-1`)."
+    "Size xs (and its deprecated alias compact) uses smaller typography: `.type-label-sm` (12px) for labels, `.type-caption` for errors, `.type-caption-compact` (10px) for helper text, and reduced padding.",
+    "One border colour per state: --color-border-subtle at rest, --color-error with an error, --color-border-emphasis while disabled; label and helper use --color-text-disabled while disabled"
   ],
   "accessibility": [
     "Follows WAI-ARIA patterns for Combobox/Listbox where applicable to native select.",
@@ -37,80 +40,96 @@
     "Required fields have the `required` attribute.",
     "Disabled state prevents interaction and is visually distinct.",
     "Option descriptions are available via the `title` attribute on hover/focus.",
-    "Inline mode uses `aria-label` to maintain accessibility when visible label is hidden."
+    "Inline mode uses `aria-label` to maintain accessibility when visible label is hidden.",
+    "Focus shows on any focus (focus:ring-1 primary; error: --color-error), as for every text field"
   ],
   "props": [
     {
       "name": "id",
       "type": "string",
-      "optional": false,
-      "description": "Unique identifier for the select element.",
-      "configurable": false
+      "optional": true,
+      "description": "The select's id; generated with useId() when left out",
+      "configurable": false,
+      "defaultValue": null
     },
     {
       "name": "label",
       "type": "string",
-      "optional": false,
-      "description": "Text label displayed above the select.",
-      "configurable": false
+      "optional": true,
+      "description": "Visible label (a <label for>; in inline mode, the select's aria-label). Without it, pass aria-label or aria-labelledby",
+      "configurable": false,
+      "defaultValue": null
     },
     {
       "name": "options",
       "type": "SelectOption[]",
       "optional": false,
       "description": "Array of options (value, label, ?description, ?disabled).",
-      "configurable": false
+      "configurable": false,
+      "defaultValue": null
     },
     {
       "name": "value",
       "type": "string | number | readonly string[] | undefined",
       "optional": true,
-      "description": "The currently selected value (controlled).",
+      "description": "Controlled: the chosen value. Leave out for uncontrolled",
+      "configurable": false,
+      "defaultValue": null
+    },
+    {
+      "name": "defaultValue",
+      "type": "string",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Uncontrolled: the value chosen at first",
       "configurable": false
     },
     {
       "name": "onChange",
       "type": "(event: React.ChangeEvent<HTMLSelectElement>) => void",
       "optional": true,
-      "description": "Callback fired when the value changes.",
-      "configurable": false
+      "description": "The native change event, in both modes",
+      "configurable": false,
+      "defaultValue": null
     },
     {
       "name": "error",
       "type": "string",
       "optional": true,
-      "description": "Error message to display (enables error state).",
-      "configurable": false
+      "description": "Error message; shown unless touched is false or the field is disabled. Sets aria-invalid and aria-describedby",
+      "configurable": false,
+      "defaultValue": null
     },
     {
       "name": "helperText",
       "type": "string",
       "optional": true,
       "description": "Optional helper text shown below the select.",
-      "configurable": true
+      "configurable": true,
+      "defaultValue": null
     },
     {
       "name": "className",
       "type": "string",
       "optional": true,
-      "defaultValue": "''",
-      "description": "Additional class name for the select container.",
+      "defaultValue": null,
+      "description": "Classes for the root (merged with cn)",
       "configurable": false
     },
     {
       "name": "selectClassName",
       "type": "string",
       "optional": true,
-      "defaultValue": "''",
-      "description": "Additional class name for the select element itself.",
+      "defaultValue": null,
+      "description": "Classes for the select (merged with cn; the app's class wins a conflict)",
       "configurable": false
     },
     {
       "name": "touched",
       "type": "boolean",
       "optional": true,
-      "defaultValue": "true",
-      "description": "Whether the field has been touched (used for error display).",
+      "defaultValue": null,
+      "description": "Leave out to show error at once; pass the field's touched state to hold it until the field is left (false hides it)",
       "configurable": false
     },
     {
@@ -134,6 +153,15 @@
       "type": "string",
       "optional": true,
       "description": "Placeholder text shown when no value is selected.",
+      "configurable": true,
+      "defaultValue": null
+    },
+    {
+      "name": "size",
+      "type": "'2xs' | 'xs' | 'sm' | 'md' | 'lg'",
+      "optional": true,
+      "defaultValue": "'md'",
+      "description": "Height, padding and type from the input size scale (utils/inputSizing)",
       "configurable": true
     },
     {
@@ -141,7 +169,7 @@
       "type": "boolean",
       "optional": true,
       "defaultValue": "false",
-      "description": "Enables compact mode with h-7 (28px) height, smaller typography (type-body-sm), and reduced padding for space-constrained UIs. Aligns with Button size='xs'.",
+      "description": "Deprecated: use size=\"xs\". size wins when both are given",
       "configurable": true
     },
     {
@@ -149,8 +177,24 @@
       "type": "boolean",
       "optional": true,
       "defaultValue": "false",
-      "description": "Inline mode: hides the visible label (uses aria-label for accessibility), removes block layout, and sets width to auto. Use for horizontal flows like '[20 ▼] per page'.",
+      "description": "Inline mode: hides the visible label (it becomes the select's aria-label; an app's aria-label wins) and lays the root out inline. Use for horizontal flows like '[20 ▼] per page'.",
       "configurable": true
+    },
+    {
+      "name": "ref",
+      "type": "Ref<HTMLSelectElement>",
+      "optional": true,
+      "defaultValue": null,
+      "description": "The native select",
+      "configurable": false
+    },
+    {
+      "name": "...rest",
+      "type": "SelectHTMLAttributes",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Every other prop (name, aria-*, data-*, onBlur, autoFocus…) goes to the select; an aria-describedby is kept beside the helper or error id",
+      "configurable": false
     }
   ]
 }

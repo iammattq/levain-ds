@@ -1,16 +1,17 @@
 {
   "name": "TextInput",
-  "description": "The TextInput component provides an accessible, fully-featured text input field with support for labels, helper text, validation, and error states. It is designed to be used as a controlled component.",
+  "description": "The TextInput component provides an accessible text input field with support for labels, helper text, validation, and error states. Controlled (value) or uncontrolled (defaultValue).",
   "category": "components",
   "usage": [
-    "Use as a controlled component with value and onChange props",
-    "Leverage the validate prop for custom inline validation logic",
-    "Error messages are displayed only when the field is touched (after blur)",
-    "External errors (from error prop) override internal validation errors",
-    "Helper text provides additional context and is hidden when errors are shown",
-    "Always provide a unique id for accessibility",
+    "Follows the form-input convention (docs/prop-conventions.json, formInputs).",
+    "Controlled with `value` and the native `onChange(event)`, or uncontrolled with `defaultValue` (onChange still fires)",
+    "An `error` the app passes shows at once; pass `touched` (the field's touched state) to hold it until the field is left. `touched={false}` hides it",
+    "The `validate` message shows after the field's first blur, or at once when `touched` is true",
+    "An external `error` wins over the `validate` message",
+    "Helper text provides additional context and is hidden when an error is shown; while disabled, the helper shows instead of the error",
+    "`id` and `label` are optional: the id is generated, and without a visible label pass `aria-label`",
     "Mark required fields with the required prop for both visual and semantic indication",
-    "Use the onBlur callback to mark fields as touched"
+    "Sizes: '2xs' | 'xs' | 'sm' | 'md' (default) | 'lg'; compact is the deprecated alias for 'xs'"
   ],
   "examples": [
     "import React, { useState } from 'react';\nimport { TextInput } from '@/lib/designsystem';\n\nfunction MyForm() {\n  const [username, setUsername] = useState('');\n\n  return (\n    <TextInput\n      id=\"username\"\n      label=\"Username\"\n      placeholder=\"Enter your username\"\n      value={username}\n      onChange={(e) => setUsername(e.target.value)}\n    />\n  );\n}",
@@ -20,54 +21,65 @@
     "Labels use `.type-label` (14px medium) for consistent form styling.",
     "Helper text uses `.type-caption` which includes muted color semantically.",
     "Error messages use `.type-body-sm` (14px) with error color override.",
-    "Compact mode uses h-7 (28px) height, smaller typography: `.type-label-sm` (12px) for labels, `.type-caption` for errors, `.type-caption-compact` (10px) for helper text. Aligns with Button size='xs'.",
-    "Number inputs have custom styled increment/decrement buttons with ChevronUp/ChevronDown icons, replacing native browser spinners for consistent cross-browser appearance."
+    "Size xs (and its deprecated alias compact) uses h-7 (28px) height, smaller typography: `.type-label-sm` (12px) for labels, `.type-caption` for errors, `.type-caption-compact` (10px) for helper text. Aligns with Button size='xs'.",
+    "Number inputs have custom styled increment/decrement buttons with ChevronUp/ChevronDown icons, replacing native browser spinners for consistent cross-browser appearance.",
+    "One border colour per state: --color-border-subtle at rest, --color-error with an error, --color-border-emphasis while disabled"
   ],
   "accessibility": [
     "Labels are properly associated with inputs using the for/id relationship",
     "Error states are communicated to assistive technology via aria-invalid and aria-describedby",
     "Helper text is linked to the input using aria-describedby",
     "Required fields are marked both visually and with the required attribute",
-    "Number input spinner buttons have aria-labels and are removed from tab order (tabIndex=-1) to preserve native keyboard navigation"
+    "Number input spinner buttons have aria-labels and are removed from tab order (tabIndex=-1) to preserve native keyboard navigation",
+    "Focus shows on any focus (focus:ring-1 primary; error: --color-error), as for every text field"
   ],
   "props": [
     {
       "name": "id",
       "type": "string",
-      "optional": false,
+      "optional": true,
       "defaultValue": null,
-      "description": "Unique identifier for the input (required for accessibility)",
+      "description": "The input's id; generated with useId() when left out",
       "configurable": false
     },
     {
       "name": "label",
       "type": "string",
-      "optional": false,
+      "optional": true,
       "defaultValue": null,
-      "description": "Text label displayed above the input",
+      "description": "Visible label (a <label for>). Without it, pass aria-label or aria-labelledby",
       "configurable": true
     },
     {
       "name": "hideLabel",
       "type": "boolean",
-      "required": false,
+      "optional": true,
       "defaultValue": "false",
-      "description": "Hides the label visually; screen readers still read it as the field's name. For a field whose purpose the layout already shows."
+      "description": "Hides the label visually; screen readers still read it as the field's name. For a field whose purpose the layout already shows.",
+      "configurable": true
     },
     {
       "name": "value",
       "type": "string",
-      "optional": false,
+      "optional": true,
       "defaultValue": null,
-      "description": "The current value of the input (controlled component)",
+      "description": "Controlled: the field's text. Leave out for uncontrolled",
       "configurable": true
+    },
+    {
+      "name": "defaultValue",
+      "type": "string",
+      "optional": true,
+      "defaultValue": "''",
+      "description": "Uncontrolled: the text at first",
+      "configurable": false
     },
     {
       "name": "onChange",
       "type": "(event: React.ChangeEvent<HTMLInputElement>) => void",
-      "optional": false,
+      "optional": true,
       "defaultValue": null,
-      "description": "Callback function executed when the input value changes",
+      "description": "The native change event, in both modes",
       "configurable": false
     },
     {
@@ -83,7 +95,7 @@
       "type": "string",
       "optional": true,
       "defaultValue": null,
-      "description": "External error message (e.g., from server validation). Overrides internal validation error",
+      "description": "External error message (e.g. from server validation); shown at once unless touched is false or the field is disabled. Wins over the validate message. Sets aria-invalid and aria-describedby",
       "configurable": true
     },
     {
@@ -91,7 +103,7 @@
       "type": "(value: string) => string | null | undefined",
       "optional": true,
       "defaultValue": null,
-      "description": "Validation function. Returns an error message string if invalid, null or undefined if valid",
+      "description": "Returns an error message string if invalid, null or undefined if valid. Its message shows after the first blur, or at once when touched is true",
       "configurable": false
     },
     {
@@ -107,7 +119,7 @@
       "type": "string",
       "optional": true,
       "defaultValue": null,
-      "description": "Additional CSS class for the container element",
+      "description": "Classes for the root (merged with cn)",
       "configurable": false
     },
     {
@@ -115,15 +127,15 @@
       "type": "string",
       "optional": true,
       "defaultValue": null,
-      "description": "Additional CSS class specifically for the input element",
+      "description": "Classes for the input (merged with cn; the app's class wins a conflict)",
       "configurable": false
     },
     {
       "name": "touched",
       "type": "boolean",
       "optional": true,
-      "defaultValue": "false",
-      "description": "Whether the field has been interacted with (e.g., blurred). Controls when validation errors are displayed",
+      "defaultValue": null,
+      "description": "Leave out to show error at once (and validate's after the first blur); pass the field's touched state to hold both until the field is left (false hides them)",
       "configurable": true
     },
     {
@@ -131,7 +143,7 @@
       "type": "(event: React.FocusEvent<HTMLInputElement>) => void",
       "optional": true,
       "defaultValue": null,
-      "description": "Callback function executed when the input loses focus. Typically used to set touched state to true",
+      "description": "Called when the input loses focus (the field also notes its own first blur for validate)",
       "configurable": false
     },
     {
@@ -151,12 +163,36 @@
       "configurable": true
     },
     {
+      "name": "size",
+      "type": "'2xs' | 'xs' | 'sm' | 'md' | 'lg'",
+      "optional": true,
+      "defaultValue": "'md'",
+      "description": "Height, padding and type from the input size scale (utils/inputSizing)",
+      "configurable": true
+    },
+    {
       "name": "compact",
       "type": "boolean",
       "optional": true,
       "defaultValue": "false",
-      "description": "Enables compact mode with h-7 (28px) height, smaller typography (type-body-sm), and reduced padding for space-constrained UIs. Aligns with Button size='xs'.",
+      "description": "Deprecated: use size=\"xs\". size wins when both are given",
       "configurable": true
+    },
+    {
+      "name": "ref",
+      "type": "Ref<HTMLInputElement>",
+      "optional": true,
+      "defaultValue": null,
+      "description": "The native input",
+      "configurable": false
+    },
+    {
+      "name": "...rest",
+      "type": "InputHTMLAttributes",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Every other prop (name, aria-*, data-*, onKeyDown, onFocus, placeholder, autoComplete, min/max/step…) goes to the input; an aria-describedby is kept beside the helper or error id",
+      "configurable": false
     }
   ]
 }
