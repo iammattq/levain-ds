@@ -81,6 +81,11 @@
   },
   {
     "category": "Components",
+    "name": "Skeleton",
+    "description": "Placeholder line, box or circle that pulses while a list loads, inside a group that says Loading"
+  },
+  {
+    "category": "Components",
     "name": "TextInput",
     "description": "Accessible text input component with error states and helper text"
   },
