@@ -52,6 +52,8 @@ export type { ProgressRingProps } from './src/components/ProgressRing';
 export { ProgressBar } from './src/components/ProgressBar';
 export type { ProgressBarProps } from './src/components/ProgressBar';
 export type { ProgressSize, ProgressTone } from './src/components/progress';
+export { Skeleton, SkeletonGroup } from './src/components/Skeleton';
+export type { SkeletonProps, SkeletonShape, SkeletonGroupProps } from './src/components/Skeleton';
 export { RelativeTime } from './src/components/RelativeTime';
 export type { RelativeTimeProps } from './src/components/RelativeTime';
 export { formatSpan } from './src/utils/time';
