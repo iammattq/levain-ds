@@ -20,12 +20,12 @@ afterAll(() => {
   delete (HTMLElement.prototype as { offsetWidth?: number }).offsetWidth;
 });
 
-function Demo({ onClose, inner }: { onClose?: () => void; inner?: React.ReactNode }) {
+function Demo({ onClose, inner, surface }: { onClose?: () => void; inner?: React.ReactNode; surface?: 'elevated' | 'canvas' }) {
   const [open, setOpen] = useState(false);
   return (
     <>
       <button type="button" onClick={() => setOpen(true)}>Menu</button>
-      <Drawer open={open} label="Main menu" onClose={() => { onClose?.(); setOpen(false); }}>
+      <Drawer open={open} label="Main menu" surface={surface} onClose={() => { onClose?.(); setOpen(false); }}>
         <a href="#releases">Releases</a>
         <p data-testid="body">Version 1.2.3</p>
         {inner}
@@ -68,6 +68,42 @@ describe('Drawer', () => {
     await gone();
   });
 
+  it('on the elevated surface by default; surface="canvas" puts it on the canvas surface with a hairline edge, the shadow kept (T51)', async () => {
+    const user = userEvent.setup();
+    const { unmount } = render(<Demo />);
+    await user.click(screen.getByRole('button', { name: 'Menu' }));
+    let cls = drawer().className.split(' ');
+    expect(drawer()).toHaveAttribute('data-surface', 'elevated');
+    expect(cls).toContain('bg-[var(--color-surface-elevated)]');
+    expect(cls).not.toContain('bg-[var(--color-surface-canvas)]');
+    expect(cls).toContain('shadow-[var(--elevation-3)]');
+    expect(cls).not.toContain('border-r');
+    unmount();
+    render(<Demo surface="canvas" />);
+    await user.click(screen.getByRole('button', { name: 'Menu' }));
+    cls = drawer().className.split(' ');
+    expect(drawer()).toHaveAttribute('data-surface', 'canvas');
+    expect(cls).toContain('bg-[var(--color-surface-canvas)]');
+    expect(cls).not.toContain('bg-[var(--color-surface-elevated)]');
+    expect(cls).toContain('shadow-[var(--elevation-3)]');
+    // the open edge's hairline: lost in dark mode without it
+    for (const c of ['border-r', 'border-[var(--color-border-subtle)]', 'dark:border-[var(--color-border-default)]']) expect(cls).toContain(c);
+  });
+
+  it('the overlay is never shorter than the largest viewport, and the scrim and panel fill it top to bottom (T51)', async () => {
+    const user = userEvent.setup();
+    render(<Demo />);
+    await user.click(screen.getByRole('button', { name: 'Menu' }));
+    const overlay = document.querySelector('[data-drawer-overlay]')!;
+    for (const c of ['fixed', 'inset-0', 'min-h-lvh']) expect(overlay.className.split(' ')).toContain(c);
+    for (const c of ['absolute', 'inset-y-0']) expect(drawer().className.split(' ')).toContain(c);
+    expect(drawer().className).not.toMatch(/(^| )(max-)?h-/);
+    const scrim = document.querySelector('[data-sheet-scrim]')!;
+    expect(scrim.parentElement).toBe(overlay);
+    expect(drawer().parentElement).toBe(overlay);
+    expect(scrim.className.split(' ')).toContain('inset-0');
+  });
+
   it('the contents scroll inside it, inside the safe-area insets', async () => {
     const user = userEvent.setup();
     render(<Demo />);
@@ -75,6 +111,8 @@ describe('Drawer', () => {
     const body = drawer().querySelector('[data-drawer-body]')!;
     expect(body).toContainElement(screen.getByTestId('body'));
     for (const c of ['overflow-y-auto', 'overscroll-contain', 'pt-safe-md', 'pb-safe-md', 'pl-safe-md']) expect(body.className.split(' ')).toContain(c);
+    // the background runs lvh tall (behind a browser toolbar); the contents stay inside the visible viewport (T51 review)
+    for (const c of ['max-h-dvh', 'min-h-0', 'flex-1']) expect(body.className.split(' ')).toContain(c);
   });
 
   it('a tap on the scrim closes it; a tap inside does not', async () => {
