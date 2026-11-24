@@ -93,7 +93,7 @@ export const CARD_FOCUS_RING = 'outline-none rounded-[var(--radius-lg)] focus-vi
 
 /**
  * The card a tap opens; with `swipe` it can be pulled sideways (a pile's top card). A press that travelled past TAP_SLOP
- * is never a tap. A button to the keyboard: Enter or Space opens it; a Tab stop only when `tabbable`; `onKey` hears the
+ * is never a tap. With `onOpen`, a button to the keyboard: Enter or Space opens it; a Tab stop only when `tabbable`; `onKey` hears the
  * other keys (a pile's arrows), `onFocus` its focus (the row scrolls to it).
  */
 function Live({ id, layoutId, open, swipe, tabbable = true, onOpen, onEvent, onFling, onKey, onFocus, children }: {
@@ -110,19 +110,20 @@ function Live({ id, layoutId, open, swipe, tabbable = true, onOpen, onEvent, onF
   const opens = () => { onEvent?.(`${id} opened`); onOpen?.(id); };
   return (
     <motion.div ref={box} data-stack-card={id} layoutId={layoutId} transition={motionFor('collapse', reduce)}
-      role="button" tabIndex={tabbable ? 0 : -1} {...{ [opensAttr]: layoutId }}
+      {...(onOpen ? { role: 'button', tabIndex: tabbable ? 0 : -1, [opensAttr]: layoutId } : {})}
       drag={swipe ? 'x' : false} dragSnapToOrigin dragElastic={0.6} whileDrag={swipe ? { scale: DRAG.liftScale, zIndex: 50 } : undefined} className={'cursor-pointer touch-pan-y ' + CARD_FOCUS_RING}
       onPointerDown={e => { moved.current = false; down.current = { x: e.clientX, y: e.clientY }; }}
       onDrag={(_, info) => { if (Math.hypot(info.offset.x, info.offset.y) > TAP_SLOP) moved.current = true; }}
       onDragEnd={(_, info) => onFling?.(info)}
       onFocus={onFocus}
       onKeyDown={e => {
-        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); opens(); return; }
+        if (onOpen && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); opens(); return; }
         onKey?.(e);
       }}
       // a press that travelled is never a tap, swiping or not (with swiping off, onDrag never says so). Framer turns
       // Enter on a focused card into a pointer press of its own (no pointerType): onKeyDown has already opened it.
-      onTap={(e, info) => { if (!(e as PointerEvent).pointerType || moved.current || Math.hypot(info.point.x - down.current.x - window.scrollX, info.point.y - down.current.y - window.scrollY) > TAP_SLOP) return; opens(); }}>
+      // Only with onOpen: framer makes anything with onTap a Tab stop, and with nothing to open the card is no button.
+      onTap={onOpen && ((e, info) => { if (!(e as PointerEvent).pointerType || moved.current || Math.hypot(info.point.x - down.current.x - window.scrollX, info.point.y - down.current.y - window.scrollY) > TAP_SLOP) return; opens(); })}>
       {children}
     </motion.div>
   );

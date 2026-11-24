@@ -288,6 +288,20 @@ describe('CardStack from the keyboard', () => {
   });
   afterAll(() => { (window as { PointerEvent?: unknown }).PointerEvent = ownPE; });
 
+  it('without onOpen a card is no button and no Tab stop, in a pile or a row', async () => {
+    const user = userEvent.setup();
+    const { unmount } = render(<Stack items={cards('a', 'b')} />);
+    expect(card('a')).not.toHaveAttribute('role');
+    expect(card('a')).not.toHaveAttribute('tabindex');
+    expect(screen.queryByRole('button', { name: /^a/ })).toBeNull();
+    unmount();
+    render(<Stack variant="row" items={cards('a', 'b')} />);
+    for (const k of ['a', 'b']) expect(card(k)).not.toHaveAttribute('tabindex');
+    await user.tab();
+    await user.tab();
+    expect(document.activeElement?.closest('[data-stack-card]')).toBeNull();
+  });
+
   describe('pile', () => {
     it('stacked: the top card is the one Tab stop; Enter and Space open it, once each', async () => {
       const user = userEvent.setup();
@@ -311,7 +325,7 @@ describe('CardStack from the keyboard', () => {
 
     it('the arrow keys step the pile as a swipe does, and focus follows the new top', async () => {
       const user = userEvent.setup();
-      render(<Stack items={cards('a', 'b', 'c')} />);
+      render(<Stack items={cards('a', 'b', 'c')} onOpen={() => {}} />);
       act(() => { (card('a') as HTMLElement).focus(); });
       await user.keyboard('{ArrowRight}');
       expect(top()).toBe('b');
@@ -327,7 +341,7 @@ describe('CardStack from the keyboard', () => {
 
     it('shown all: every card is a Tab stop, and the arrows step nothing', async () => {
       const user = userEvent.setup();
-      render(<Stack items={cards('a', 'b', 'c')} />);
+      render(<Stack items={cards('a', 'b', 'c')} onOpen={() => {}} />);
       await user.click(screen.getByRole('button', { name: 'Show all 3' }));
       for (const k of ['a', 'b', 'c']) expect(card(k)).toHaveAttribute('tabindex', '0');
       await user.tab();
@@ -350,7 +364,7 @@ describe('CardStack from the keyboard', () => {
     it('Tab walks every card in order; one under a pile scrolls the row the least that brings it into the open', async () => {
       const user = userEvent.setup();
       const onEvent = jest.fn();
-      render(<Stack variant="row" items={cards('a', 'b', 'c', 'd', 'e', 'f')} onEvent={onEvent} />);
+      render(<Stack variant="row" items={cards('a', 'b', 'c', 'd', 'e', 'f')} onEvent={onEvent} onOpen={() => {}} />);
       await user.tab(); // Show all
       for (const k of ['a', 'b', 'c', 'd']) { await user.tab(); expect(card(k)).toHaveFocus(); }
       expect(scrolls(onEvent)).toEqual([]);
@@ -375,7 +389,7 @@ describe('CardStack from the keyboard', () => {
 
     it('the focus a press brings scrolls nothing (a pile edge pressed never jumps the row)', () => {
       const onEvent = jest.fn();
-      render(<Stack variant="row" items={cards('a', 'b', 'c', 'd', 'e', 'f')} onEvent={onEvent} />);
+      render(<Stack variant="row" items={cards('a', 'b', 'c', 'd', 'e', 'f')} onEvent={onEvent} onOpen={() => {}} />);
       act(() => { card('e').dispatchEvent(ptr('pointerdown', 900)); (card('e') as HTMLElement).focus(); });
       expect(scrolls(onEvent)).toEqual([]);
       act(() => { window.dispatchEvent(ptr('pointerup', 900)); });

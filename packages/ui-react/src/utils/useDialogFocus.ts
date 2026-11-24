@@ -9,7 +9,8 @@
  *
  * Dialogs layer: the one opened last is the top, and only the top answers Tab and Escape. So a dialog opened over
  * another (a confirmation over a card's dialog) closes alone on Escape, and its trap holds focus, not the one below.
- * The top claims Escape (preventDefault), so anything around it can tell the key was already answered.
+ * The top claims Escape (preventDefault) in the capture phase, before any other listener on the page, so every one
+ * of them can tell the key was already answered (a widget inside a dialog with its own Escape must check for it).
  *
  * Focus goes back to what had it, or, when that left the page as the dialog opened (a card that morphs into its dialog
  * is unmounted until it closes, so focus falls to the body), to `returnTo()`: the card as it comes back. See `opensAttr`.
@@ -75,13 +76,15 @@ export function useDialogFocus(open: boolean, container: Container, onEscape: ()
       if (e.shiftKey && (!inside || at === first)) { e.preventDefault(); last.focus(); }
       else if (!e.shiftKey && (!inside || at === last)) { e.preventDefault(); first.focus(); }
     };
-    window.addEventListener('keydown', key);
+    // on the document, in the capture phase: before any listener on the document or an element below, so all of them
+    // see an Escape the top dialog took as defaultPrevented
+    document.addEventListener('keydown', key, true);
     const prev = before.current;
     // returnTo as it was at open: a caller that clears the dialog's id as it closes (open ? item.id : '') still finds
     // the card that opened it
     const back = returnToRef.current;
     return () => {
-      window.removeEventListener('keydown', key);
+      document.removeEventListener('keydown', key, true);
       const i = layers.indexOf(me);
       if (i >= 0) layers.splice(i, 1);
       // the opener may have left in the very commit that opened the dialog (focus fell to the body) or since

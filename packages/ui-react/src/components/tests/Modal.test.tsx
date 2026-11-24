@@ -193,9 +193,9 @@ describe('Modal Keyboard Interactions', () => {
   });
 
   test('removes event listener when component unmounts', async () => {
-    // the shared dialog behaviour (useDialogFocus) listens on the window
-    const addEventListenerSpy = jest.spyOn(window, 'addEventListener');
-    const removeEventListenerSpy = jest.spyOn(window, 'removeEventListener');
+    // the shared dialog behaviour (useDialogFocus) listens on the document, in the capture phase
+    const addEventListenerSpy = jest.spyOn(document, 'addEventListener');
+    const removeEventListenerSpy = jest.spyOn(document, 'removeEventListener');
 
     const { unmount } = render(
       <Modal isOpen={true} onClose={jest.fn()}>
@@ -205,14 +205,16 @@ describe('Modal Keyboard Interactions', () => {
 
     expect(addEventListenerSpy).toHaveBeenCalledWith(
       'keydown',
-      expect.any(Function)
+      expect.any(Function),
+      true
     );
 
     unmount();
 
     expect(removeEventListenerSpy).toHaveBeenCalledWith(
       'keydown',
-      expect.any(Function)
+      expect.any(Function),
+      true
     );
 
     // Clean up

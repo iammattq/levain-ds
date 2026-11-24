@@ -94,7 +94,7 @@ describe('StatusCardDialogStack below md', () => {
   it('Escape, a tap outside and the ✕ close the front only', () => {
     const onClose = jest.fn();
     render(<StatusCardDialogStack dialogs={[LOOK, DECIDE]} onClose={onClose} />);
-    fireEvent.keyDown(window, { key: 'Escape' });
+    fireEvent.keyDown(document, { key: 'Escape' });
     fireEvent.click(document.querySelector('[data-sheet-scrim]')!);
     fireEvent.click(screen.getByRole('button', { name: 'Close' }));
     expect(onClose.mock.calls).toEqual([['L8'], ['L8'], ['L8']]);

@@ -31,7 +31,7 @@ describe('StatusCard', () => {
     expect(screen.getByText('The full question')).toBeInTheDocument();
     // the card's slot is held (no second copy of the title outside the dialog)
     expect(screen.getAllByText('Strip or arc')).toHaveLength(1);
-    fireEvent.keyDown(window, { key: 'Escape' });
+    fireEvent.keyDown(document, { key: 'Escape' });
   });
 
   it('the dialog floats on the elevated surface, a step above the cards it grows out of', () => {
@@ -58,7 +58,7 @@ describe('StatusCard', () => {
     const latest = jest.fn();
     rerender(dialog(true, latest));
     expect(box).toHaveFocus();
-    fireEvent.keyDown(window, { key: 'Escape' });
+    fireEvent.keyDown(document, { key: 'Escape' });
     expect(latest).toHaveBeenCalledTimes(1);
     expect(first).not.toHaveBeenCalled();
     rerender(dialog(false, latest));

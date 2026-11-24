@@ -107,6 +107,20 @@ describe('useDialogFocus', () => {
     expect(seen).toEqual([true]);
   });
 
+  it('claims Escape before a document listener or a handler inside the dialog hears it', async () => {
+    const user = userEvent.setup();
+    const seen: string[] = [];
+    const onDoc = (e: KeyboardEvent) => { if (e.key === 'Escape') seen.push('document ' + e.defaultPrevented); };
+    render(<Page />);
+    await user.click(btn('Open A'));
+    await user.tab();
+    btn('A first').addEventListener('keydown', e => { if (e.key === 'Escape') seen.push('inside ' + e.defaultPrevented); });
+    document.addEventListener('keydown', onDoc);
+    await user.keyboard('{Escape}');
+    document.removeEventListener('keydown', onDoc);
+    expect(seen).toEqual(['inside true', 'document true']);
+  });
+
   it('leaves focus where it is when something inside already has it', async () => {
     function Auto() {
       const ref = useRef<HTMLDivElement>(null);

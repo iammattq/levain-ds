@@ -21,6 +21,6 @@ it('under Reduce Motion the sheet does not rise: it fades in where it lands', ()
   expect(s).toHaveAttribute('data-sheet');
   expect(s.style.transform ?? '').not.toContain('100%');
   expect(s.style.opacity).toBe('0');
-  fireEvent.keyDown(window, { key: 'Escape' });
+  fireEvent.keyDown(document, { key: 'Escape' });
   expect(onClose).toHaveBeenCalledTimes(1);
 });
