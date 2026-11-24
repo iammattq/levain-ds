@@ -41,6 +41,11 @@
   },
   {
     "category": "Components",
+    "name": "Tooltip",
+    "description": "Short hint for one control on hover or keyboard focus, placed and flipped like Popover, never takes focus"
+  },
+  {
+    "category": "Components",
     "name": "Toaster",
     "description": "Notification system for displaying alerts and messages"
   },

@@ -42,6 +42,8 @@ export { Modal } from './src/components/Modal';
 export type { ModalMenuOption } from './src/components/Modal';
 export { Popover, anchorPopup } from './src/components/Popover';
 export type { PopoverProps, PopoverTriggerProps, AnchorOptions, Anchored } from './src/components/Popover';
+export { Tooltip } from './src/components/Tooltip';
+export type { TooltipProps } from './src/components/Tooltip';
 export { Loader } from './src/components/Loader';
 export { ProgressRing } from './src/components/ProgressRing';
 export type { ProgressRingProps } from './src/components/ProgressRing';
