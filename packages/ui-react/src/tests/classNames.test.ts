@@ -98,6 +98,9 @@ for (const path of files(SRC)) {
 
 const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const definedInShared = (name: string) => new RegExp(`\\.${escapeRe(name)}(?![\\w-])`).test(shared);
+/** Whether built CSS has a selector for the whole class: `.p-2` must not count because `.p-2xs` exists. */
+const builtIn = (css: string, token: string) =>
+  new RegExp(`\\.${escapeRe(token.replace(/[^\w-]/g, c => '\\' + c))}(?![\\w\\\\-])`).test(css);
 
 describe('class names (T27)', () => {
   it('finds the classes it checks (cn, cva, className, class-returning helpers)', () => {
@@ -107,13 +110,21 @@ describe('class names (T27)', () => {
     expect(tokens).not.toContain('default'); // a key into a tone map
   });
 
+  it('matches a whole class, not a longer one it starts', () => {
+    const css = '.p-2xs { padding: 1px; }\n.hover\\:bg-x:hover { color: red; }\n.w-1\\/2 { width: 50%; }';
+    expect(builtIn(css, 'p-2')).toBe(false);
+    expect(builtIn(css, 'p-2xs')).toBe(true);
+    expect(builtIn(css, 'hover:bg-x')).toBe(true);
+    expect(builtIn(css, 'w-1/2')).toBe(true);
+    expect(builtIn(css, 'w-1/20')).toBe(false);
+  });
+
   it('every class is built by Tailwind or defined in shared.css', async () => {
     const compiler = await compile(theme + '\n' + shared + '\n@tailwind utilities;\n', { base: __dirname });
     const css = compiler.build([...new Set(uses.map(u => u.token))]);
-    const built = (token: string) => css.includes('.' + token.replace(/[^\w-]/g, c => '\\' + c));
     const unknown: Record<string, string[]> = {};
     for (const { token, at } of uses) {
-      if (built(token) || definedInShared(token) || MARKERS.some(m => m.test(token))) continue;
+      if (builtIn(css, token) || definedInShared(token) || MARKERS.some(m => m.test(token))) continue;
       (unknown[token] ??= []).push(at);
     }
     expect(unknown).toEqual({});
