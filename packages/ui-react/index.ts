@@ -21,6 +21,8 @@ export { default as CardMedia } from './src/components/CardMedia';
 export { default as CardTitle } from './src/components/CardTitle';
 export { default as Section } from './src/components/Section';
 export type { SectionProps } from './src/components/Section';
+export { Stack, Cluster } from './src/components/Layout';
+export type { StackProps, ClusterProps, ClusterAlign, ClusterJustify, Space } from './src/components/Layout';
 export { default as Heading } from './src/components/Heading';
 export type { HeadingProps } from './src/components/Heading';
 export { default as Tag } from './src/components/Tag';
