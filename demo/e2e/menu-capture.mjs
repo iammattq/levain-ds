@@ -98,7 +98,15 @@ for (const [name, theme, m] of COMBOS) {
       r.delta = { x: +(lp.x - bp.x).toFixed(1), y: +(lp.y - bp.y).toFixed(1), w: +(L.panel.w - B.panel.w).toFixed(1), h: +(L.panel.h - B.panel.h).toFixed(1),
         rowH: +(L.row.h - B.row.h).toFixed(1), labelX: +(ll.x - bl.x).toFixed(1), labelY: +(ll.y - bl.y).toFixed(1) };
       // w is reported, not checked: levain's rows are type-label (14px), the board's 13px (PM, T41: keep type-label)
-      for (const k of ['x', 'y', 'h', 'rowH', 'labelX', 'labelY']) check(key, Math.abs(r.delta[k]) <= 1, `${k} differs by ${r.delta[k]} px from the board's`);
+      // at 390 the long name doesn't fit beside the button: the board caps its menu's width at the room to the window's
+      // right edge and truncates the name; Popover keeps the menu whole and slides it left inside the 8px margin. So
+      // there x is reported and levain's menu is checked to sit inside the window instead.
+      const narrow = L.panel.x + L.panel.w > +w - 8 - 1 || r.delta.x < -1;
+      if (narrow) {
+        r.narrow = { boardTruncates: B.panel.x + B.panel.w <= +w, levainInside: L.panel.x >= 7 && L.panel.x + L.panel.w <= +w - 7 };
+        check(key, r.narrow.levainInside, `levain's menu leaves the window ${JSON.stringify(L.panel)}`);
+      }
+      for (const k of narrow ? ['y', 'h', 'rowH', 'labelY'] : ['x', 'y', 'h', 'rowH', 'labelX', 'labelY']) check(key, Math.abs(r.delta[k]) <= 1, `${k} differs by ${r.delta[k]} px from the board's`);
       check(key, B.bg === L.bg, `fill differs (${B.bg} vs ${L.bg})`);
       check(key, B.rows === L.rows, `rows ${B.rows} vs ${L.rows}`);
       check(key, L.text?.size === '14px', `levain row text ${JSON.stringify(L.text)} (expected type-label, 14px; the board's ${JSON.stringify(B.text)})`);
@@ -144,7 +152,7 @@ const rows = COMBOS.map(([name, , m]) => {
   const k = w => `${name}-${m}-${w}`;
   return `<div class="row"><b>${name === 'cobalt' ? 'Cobalt Mono' : 'Sage'} ${m}</b>${fig('390 · board', `${k(390)}-board-keys`, 190)}${fig('390 · levain', `${k(390)}-levain-keys`, 190)}${fig('1280 · board', `${k(1280)}-board-keys`, 230)}${fig('1280 · levain', `${k(1280)}-levain-keys`, 230)}${fig('1280 · board hover', `${k(1280)}-board-hover`, 230)}${fig('1280 · levain hover', `${k(1280)}-levain-hover`, 230)}</div>`;
 }).join('');
-await sheet.setContent(`<style>body{margin:0;padding:16px;background:#bbb;font:13px system-ui}.row{display:flex;gap:12px;align-items:flex-start;margin-bottom:16px}.row b{width:90px;flex:none}figure{margin:0}figcaption{height:20px}img{display:block}</style><p>T41: levain Menu beside the board's project switcher (a copy), same button and rows; opened with ArrowDown, then ArrowDown once (keyboard focus on the second row; the chosen one checked); hover on the fourth. Expected differences: the corner (levain --radius-lg 8px, the board 10px), the row text (levain type-label 14px, the board 13px: 1px larger, so long names run a little wider; same 36px rows) and the hover / focus overlays (levain --color-state-hover / -active against the board's 4-5% / 8-9%).</p>${rows}`);
+await sheet.setContent(`<style>body{margin:0;padding:16px;background:#bbb;font:13px system-ui}.row{display:flex;gap:12px;align-items:flex-start;margin-bottom:16px}.row b{width:90px;flex:none}figure{margin:0}figcaption{height:20px}img{display:block}</style><p>T41: levain Menu beside the board's project switcher (a copy), same button and rows; opened with ArrowDown, then ArrowDown once (keyboard focus on the second row; the chosen one checked); hover on the fourth. Expected differences: the corner (levain --radius-lg 8px, the board 10px), the row text (levain type-label 14px, the board 13px: 1px larger, so long names run a little wider; same 36px rows), at 390 the long name (the board truncates it at the window's edge; levain's menu slides left to keep it whole, 8px inside the window) and the hover / focus overlays (levain --color-state-hover / -active against the board's 4-5% / 8-9%).</p>${rows}`);
 await sheet.screenshot({ path: `${out}/composite.png`, fullPage: true });
 await browser.close();
 if (problems.length || errors.length) process.exitCode = 1;
