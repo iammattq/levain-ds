@@ -2,7 +2,7 @@
 // Further tests will be implemented later.
 
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import Calendar from '../Calendar';
 
@@ -257,7 +257,13 @@ describe('Calendar: form-input convention', () => {
     const grid = screen.getByRole('grid', { name: 'March 2024' });
     expect(grid.querySelectorAll('button[tabindex="0"]')).toHaveLength(1);
     expect(day('2024-03-15')).toHaveAttribute('tabindex', '0');
-    expect(screen.getAllByRole('row')).toHaveLength(6);
+    // the weekday header is the grid's first row, of columnheaders; then 6 weeks of 7 gridcells
+    const rows = within(grid).getAllByRole('row');
+    expect(rows).toHaveLength(7);
+    expect(within(rows[0]).getAllByRole('columnheader').map((c) => c.textContent)).toEqual(['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']);
+    rows.slice(1).forEach((r) => expect(within(r).getAllByRole('gridcell')).toHaveLength(7));
+    // no display:contents (Safari drops those elements from the accessibility tree)
+    expect(grid.querySelectorAll('.contents')).toHaveLength(0);
   });
 
   test('date grid keys: arrows by day and week, Home/End the week, PageUp/PageDown the month, Shift for the year', () => {

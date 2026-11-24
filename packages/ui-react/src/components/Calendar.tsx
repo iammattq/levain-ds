@@ -528,29 +528,30 @@ const Calendar = forwardRef<HTMLDivElement, CalendarProps>(function Calendar(
         </div>
       )}
 
-      {/* Days of Week Header */}
-      <div className="mb-1 grid grid-cols-7 gap-1">
-        {DAYS_OF_WEEK.map((day) => (
-          <div
-            key={day}
-            className="type-label-sm py-1 text-center text-[var(--color-text-muted)]"
-          >
-            {day}
-          </div>
-        ))}
-      </div>
-
-      {/* Calendar Grid: a WAI-ARIA date grid; the rows are display:contents, so the 7-column layout is unchanged */}
+      {/* Calendar Grid: a WAI-ARIA date grid. The weekday header is its first row (columnheaders); each row is its
+          own 7-column CSS grid and each gridcell a one-cell grid around its day button, so the layout is the one the
+          separate header and single 7-column grid had, with no display:contents (Safari drops those elements' roles) */}
       <div
         ref={gridRef}
         role="grid"
         aria-label={`${MONTHS[currentMonth]} ${currentYear}`}
-        className="grid grid-cols-7 gap-1"
+        className="flex flex-col gap-1"
       >
+        <div role="row" className="grid grid-cols-7 gap-1">
+          {DAYS_OF_WEEK.map((day) => (
+            <div
+              key={day}
+              role="columnheader"
+              className="type-label-sm py-1 text-center text-[var(--color-text-muted)]"
+            >
+              {day}
+            </div>
+          ))}
+        </div>
         {weeks.map((week, w) => (
-          <div key={w} role="row" className="contents">
+          <div key={w} role="row" className="grid grid-cols-7 gap-1">
             {week.map((date) => (
-              <div key={dayKey(date)} role="gridcell" className="contents" aria-selected={isSelected(date) || undefined}>
+              <div key={dayKey(date)} role="gridcell" className="grid" aria-selected={isSelected(date) || undefined}>
                 <Button
                   variant={isSelected(date) ? 'primary' : 'ghost'}
                   size="sm"

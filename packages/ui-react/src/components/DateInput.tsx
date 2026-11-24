@@ -142,11 +142,10 @@ const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
     const id = idProp ?? autoId;
     const config = inputSizeConfig[size];
 
-    // What the field shows: as typed (never rewritten while typing); a controlled `value` from outside replaces it
-    const [localValue, setLocalValue] = useState(value ?? defaultValue);
-    useEffect(() => {
-      if (value !== undefined) setLocalValue(value);
-    }, [value]);
+    // What the field shows. Controlled: `value`, always; the masked text reaches the parent on the event, and a parent
+    // that rejects or resets an edit wins. Uncontrolled: its own state, from `defaultValue`
+    const [ownValue, setOwnValue] = useState(defaultValue);
+    const localValue = value !== undefined ? value : ownValue;
 
     const [blurred, setBlurred] = useState(false);
     const [showCalendar, setShowCalendar] = useState(false);
@@ -249,7 +248,7 @@ const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
       if (disabled) return;
       const masked = maskDate(event.target.value);
       if (masked !== event.target.value) event.target.value = masked;
-      setLocalValue(masked);
+      if (value === undefined) setOwnValue(masked);
       onChange?.(event);
     };
 
@@ -272,6 +271,7 @@ const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
         input.dispatchEvent(new Event('input', { bubbles: true }));
       }
       setShowCalendar(false);
+      calendarButtonRef.current?.focus();
     };
 
     const handleBlur = (event: React.FocusEvent<HTMLInputElement>) => {
@@ -308,6 +308,15 @@ const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
         document.removeEventListener('mousedown', handleClickOutside);
       };
     }, [showCalendar]);
+
+    // Opening moves focus to the grid's Tab stop (the chosen day), once the popup is placed: a hidden element can't
+    // take focus
+    useEffect(() => {
+      if (!showCalendar || calendarStyles.visibility !== 'visible') return;
+      calendarRef.current
+        ?.querySelector<HTMLElement>('[role="grid"] [tabindex="0"]')
+        ?.focus();
+    }, [showCalendar, calendarStyles.visibility]);
 
     // Escape closes the calendar and puts focus back on its button
     useEffect(() => {

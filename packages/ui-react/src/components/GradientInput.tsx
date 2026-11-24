@@ -98,6 +98,7 @@ const GradientInput = forwardRef<HTMLButtonElement, GradientInputProps>(
       lockedHue,
       'aria-describedby': describedBy,
       'aria-label': ariaLabel,
+      onClick,
       ...props
     },
     ref
@@ -264,7 +265,11 @@ const GradientInput = forwardRef<HTMLButtonElement, GradientInputProps>(
             ref={setRefs}
             type="button"
             id={id}
-            onClick={handleChipClick}
+            onClick={(e) => {
+              // the app's onClick first; it can keep the editor shut with preventDefault()
+              onClick?.(e);
+              if (!e.defaultPrevented) handleChipClick();
+            }}
             disabled={disabled}
             aria-expanded={isOpen}
             aria-haspopup="dialog"

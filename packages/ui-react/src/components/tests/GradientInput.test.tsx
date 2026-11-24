@@ -165,3 +165,16 @@ test.each([
   const { container: bare } = render(<GradientInput aria-label="Fill" value={value as never} />);
   expect(bare.querySelector('label')).toBeNull();
 });
+
+// T54 review: an app's onClick on the chip runs, and preventDefault() keeps the editor shut
+test("GradientInput: the app's onClick runs before the chip's own; preventDefault keeps the editor shut", () => {
+  const onClick = jest.fn();
+  const { unmount } = render(<GradientInput label="Fill" value={value as never} onClick={onClick} />);
+  fireEvent.click(screen.getByRole('button', { name: 'Edit Fill gradient' }));
+  expect(onClick).toHaveBeenCalledTimes(1);
+  expect(screen.getByRole('dialog')).toBeInTheDocument();
+  unmount();
+  render(<GradientInput label="Fill" value={value as never} onClick={(e) => e.preventDefault()} />);
+  fireEvent.click(screen.getByRole('button', { name: 'Edit Fill gradient' }));
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+});
