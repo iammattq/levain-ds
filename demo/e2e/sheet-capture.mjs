@@ -3,7 +3,7 @@
 // the desktop dialog at 1440. Run on the PC through demo/e2e/stack.sh:
 //   ringmaster heavy t24 --kind capture --on pc --out <dir> sh demo/e2e/stack.sh <dir> sheet-capture.mjs
 // Writes <engine>-<mode>-<width>-<state>.png, numbers.json (each dialog's box against the viewport) and, with
-// SHEET_VIDEO=1, recordings (SHEET_REDUCE=1: under Reduce Motion) of the phone sheet opening and closing (video-<engine>/).
+// SHEET_VIDEO=1, recordings (SHEET_REDUCE=1: under Reduce Motion; SHEET_VIDEO_CASE=stack: the pair) of the phone sheet opening and closing (video-<engine>/).
 // The phone is Playwright's iPhone 14 (390x844, touch, DPR 3). Neither headless engine has a notch, so the phone pages
 // fake one: every env(safe-area-inset-*) in the page's stylesheets is rewritten to the iPhone 14's insets (47 px top,
 // 34 px bottom), and the two bands are drawn over the page, faintly, so a shot shows what would sit under them.
@@ -76,13 +76,35 @@ for (const engine of engines) {
       for (const [width, height] of [[390, 844], [1440, 900]].filter(([w]) => (process.env.SHEET_WIDTHS ?? '390,1440').split(',').includes(String(w)))) {
         const phone = width < 768;
         if (videoOnly && !phone) continue;
-        const ctx = await browser.newContext(phone ? { ...iphone, ...(process.env.SHEET_REDUCE === '1' ? { reducedMotion: 'reduce' } : {}), ...(videoOnly ? { recordVideo: { dir: `${out}/video-${engine}-${mode}${process.env.SHEET_REDUCE === '1' ? '-reduce' : ''}`, size: { width, height } } } : {}) } : { viewport: { width, height } });
+        const ctx = await browser.newContext(phone ? { ...iphone, ...(process.env.SHEET_REDUCE === '1' ? { reducedMotion: 'reduce' } : {}), ...(videoOnly ? { recordVideo: { dir: `${out}/video-${process.env.SHEET_VIDEO_CASE ?? 'single'}-${engine}-${mode}${process.env.SHEET_REDUCE === '1' ? '-reduce' : ''}`, size: { width, height } } } : {}) } : { viewport: { width, height } });
         const page = await ctx.newPage();
         page.on('pageerror', e => errors.push(`${engine} ${mode} ${width}: ${e.message}`));
         const tag = `${engine}-${mode}-${width}`;
         await page.goto(base + `?theme=7&mode=${mode}&only=sheet`, { waitUntil: 'networkidle' });
         await pause(600);
         if (phone) await fakeInsets(page);
+        if (videoOnly && process.env.SHEET_VIDEO_CASE === 'stack') {
+          // the pair: open, Next, Back, a short swipe (springs back), a long swipe on the front (closes both); open, Next,
+          // a swipe on the decide (closes it)
+          const handle = async (dy, steps, stepMs) => {
+            const h = await page.locator('[data-stack-depth="0"] [data-sheet-handle]').first().boundingBox();
+            const x = h.x + h.width / 2, y = h.y + h.height / 2;
+            await page.mouse.move(x, y); await page.mouse.down();
+            for (let i = 1; i <= steps; i++) { await page.mouse.move(x, y + (dy * i) / steps); await pause(stepMs); }
+            await page.mouse.up();
+          };
+          const card = page.getByText('The header at 1440, mid-restart').first();
+          await card.click(); await pause(1400);
+          await page.locator('[data-demo="sheet-next"]').click(); await pause(1400);
+          await page.locator('[data-demo="sheet-back"]').click(); await pause(1400);
+          await handle(90, 12, 40); await pause(1200);
+          await handle(320, 16, 30); await pause(1400);
+          await card.click(); await pause(1400);
+          await page.locator('[data-demo="sheet-next"]').click(); await pause(1400);
+          await handle(320, 16, 30); await pause(1400);
+          await ctx.close();
+          continue;
+        }
         if (videoOnly) {
           // open, scroll the body, close with the ✕; open again, close with a tap on the scrim
           const card = page.getByText('T50: restart words that fit').first();
@@ -123,6 +145,11 @@ for (const engine of engines) {
         await page.locator('[data-demo="sheet-next"]').click(); await pause(900); await settled(page);
         await page.screenshot({ path: `${out}/${tag}-stack-step2.png` });
         numbers[`${tag}-stack-step2`] = await probe(page);
+        if (phone) {
+          await page.locator('[data-demo="sheet-back"]').click(); await pause(900); await settled(page);
+          await page.screenshot({ path: `${out}/${tag}-stack-back.png` });
+          numbers[`${tag}-stack-back`] = await probe(page);
+        }
         await ctx.close();
       }
     }

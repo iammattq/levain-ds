@@ -5,7 +5,7 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { PHONE_QUERY } from '../Sheet';
 import { StatusCard } from '../StatusCard';
-import { BEHIND_EDGE, StatusCardDialogStack, type StatusCardStackDialog } from '../StatusCardDialogStack';
+import { BEHIND_EDGE, PHONE_ORIGIN, phonePose, PILE, pose, StatusCardDialogStack, type StatusCardStackDialog } from '../StatusCardDialogStack';
 
 beforeAll(() => {
   Object.defineProperty(window, 'matchMedia', {
@@ -65,6 +65,18 @@ describe('StatusCardDialogStack below md', () => {
     expect(behind.className).toContain('[contain:size]');
     // a handle on each; only the front's can be dragged (checked below)
     expect(panel(0).querySelector('[data-sheet-handle]')).toBeInTheDocument();
+  });
+
+  it('the pile peeks above the front (Q41 A): each step PILE.y px higher and PILE.scale narrower from the top edge, three at most', () => {
+    expect(phonePose(0)).toEqual({ y: 0, scale: 1, opacity: 1 });
+    expect(phonePose(1)).toEqual({ y: -PILE.y, scale: 1 - PILE.scale, opacity: 1 });
+    expect(phonePose(3)).toEqual({ y: -3 * PILE.y, scale: 1 - 3 * PILE.scale, opacity: 1 });
+    expect(phonePose(4)).toEqual({ ...phonePose(3), opacity: 0 });
+    // the desktop's pile is unchanged: below
+    expect(pose(1).y).toBe(PILE.y);
+    render(<StatusCardDialogStack dialogs={[LOOK, DECIDE]} onClose={() => {}} />);
+    for (const d of [0, 1]) expect(panel(d).style.transformOrigin).toBe('50% 0% 0');
+    expect(PHONE_ORIGIN).toEqual({ originX: 0.5, originY: 0 });
   });
 
   it('rises from the bottom when it opens; never grows out of the card, which stays where it is', () => {

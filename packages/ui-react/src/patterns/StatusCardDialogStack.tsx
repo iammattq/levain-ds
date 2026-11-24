@@ -15,7 +15,7 @@
  * from away. Under Reduce Motion each of those is a cross-fade: nothing moves, the opacity still changes.
  *
  * Below `md` the stack is a pile of bottom sheets (Sheet.tsx): it rises from the bottom edge over a scrim, the front
- * one scrolls inside, and the ones behind show as PHONE_PILE says. Next/Back, Escape, a tap outside and the ✕ work as
+ * one scrolls inside, and the ones behind peek above its top edge (phonePose). Next/Back, Escape, a tap outside and the ✕ work as
  * above. Swiping the front sheet down by its handle closes the whole stack: onClose for every dialog, front first.
  */
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
@@ -91,22 +91,16 @@ export const pose = (d: number) => {
 };
 
 /**
- * How the pile shows on a phone, where the sheet is docked to the bottom edge and has no room below it (T24, the
- * designer's call). 'above': each step back peeks PILE.y px above the front's top edge, PILE.scale narrower, scaled
- * from its top. 'below': as on the desktop, the front lifted PILE.y px a step off the bottom edge and the ones behind
- * peeking under it. 'none': no pile; the head's count says there is more.
+ * The pile on a phone, where the sheet is docked to the bottom edge and has no room below it (Q41, the designer: A):
+ * each step back peeks PILE.y px above the front's top edge and PILE.scale narrower, scaled from its top edge, three at
+ * most. The desktop keeps the peek below (Q11).
  */
-export type PhonePile = 'above' | 'below' | 'none';
-export const PHONE_PILE = 'above' as PhonePile;
-
-/** Where the sheet `d` steps back from the front sits, on a phone. */
 export const phonePose = (d: number) => {
-  if (PHONE_PILE === 'below') return pose(d);
-  if (PHONE_PILE === 'none') return { y: 0, scale: 1, opacity: d === 0 ? 1 : 0 };
   const k = Math.min(d, PILE.depth);
-  return { y: -k * PILE.y, scale: 1 - k * PILE.scale, opacity: d > PILE.depth ? 0 : 1 };
+  return { y: k === 0 ? 0 : -k * PILE.y, scale: 1 - k * PILE.scale, opacity: d > PILE.depth ? 0 : 1 };
 };
-const PHONE_ORIGIN = PHONE_PILE === 'above' ? { originX: 0.5, originY: 0 } : PILE_ORIGIN;
+/** The phone pile scales from the top edge (as framer origin values, for the reason PILE_ORIGIN gives). */
+export const PHONE_ORIGIN = { originX: 0.5, originY: 0 } as const;
 
 /** Away: lifted and faded. Under Reduce Motion only the fade. */
 export const away = (reduce: boolean | null | undefined) =>
@@ -182,7 +176,7 @@ export function StatusCardDialogStack({ dialogs, onClose, cardId: givenCardId }:
     >
       <AnimatePresence>{open && <SheetScrim key="scrim" reduce={reduce} />}</AnimatePresence>
       {/* one grid cell, docked to the bottom edge: the front sizes it and the ones behind fill it, as on the desktop */}
-      <div className="absolute inset-x-0 bottom-0 grid" style={{ marginBottom: PHONE_PILE === 'below' ? behind * PILE.y : 0 }}>
+      <div className="absolute inset-x-0 bottom-0 grid">
         <AnimatePresence mode="popLayout" custom={!open} onExitComplete={() => setLeaving(false)}>
           {dialogs.map((dialog, d) => (
             <StackSheet key={dialog.id} dialog={dialog} depth={d} count={dialogs.length} arriving={settled.current} reduce={reduce}
