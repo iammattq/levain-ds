@@ -264,3 +264,118 @@ describe('TextArea Component', () => {
     });
   });
 });
+
+// The form-input convention (docs/prop-conventions.json, formInputs), point by point (T35)
+describe('TextArea: form-input convention', () => {
+  test('value and change: controlled, the native onChange(event)', () => {
+    const onChange = jest.fn();
+    render(<TextArea label="Notes" value="a" onChange={onChange} />);
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'ab' } });
+    expect(onChange.mock.calls[0][0].target).toBe(screen.getByRole('textbox'));
+  });
+
+  test('uncontrolled: defaultValue, the field keeps what is typed', () => {
+    render(<TextArea label="Notes" defaultValue="hi" />);
+    const box = screen.getByRole('textbox') as HTMLTextAreaElement;
+    expect(box.value).toBe('hi');
+    fireEvent.change(box, { target: { value: 'hello' } });
+    expect(box.value).toBe('hello');
+  });
+
+  test('error: shown when touched is left out (the board passes no touched)', () => {
+    render(
+      <TextArea label="Notes" value="" onChange={() => {}} error="Too long" />
+    );
+    expect(screen.getByText('Too long')).toBeInTheDocument();
+    const box = screen.getByRole('textbox');
+    expect(box).toHaveAttribute('aria-invalid', 'true');
+    expect(box).toHaveAttribute(
+      'aria-describedby',
+      expect.stringContaining('-error')
+    );
+    expect(box).toHaveAccessibleDescription('Too long');
+  });
+
+  test('error: one border colour per state (error, normal, disabled)', () => {
+    const { rerender } = render(<TextArea label="N" error="Bad" />);
+    const box = screen.getByRole('textbox');
+    expect(box).toHaveClass('border-[var(--color-error)]');
+    expect(box).not.toHaveClass('border-[var(--color-border-emphasis)]');
+    rerender(<TextArea label="N" />);
+    expect(box).toHaveClass('border-[var(--color-border-subtle)]');
+    expect(box).not.toHaveClass('border-[var(--color-border-emphasis)]');
+    rerender(<TextArea label="N" disabled />);
+    expect(box).toHaveClass('border-[var(--color-border-emphasis)]');
+  });
+
+  test('size: xs draws the compact type; compact is its deprecated alias; size wins', () => {
+    const { rerender } = render(<TextArea label="N" size="xs" />);
+    expect(screen.getByText('N')).toHaveClass('type-label-sm');
+    expect(screen.getByRole('textbox')).toHaveClass('px-2', 'py-1.5');
+    rerender(<TextArea label="N" compact size="md" />);
+    expect(screen.getByText('N')).toHaveClass('type-label');
+    expect(screen.getByRole('textbox')).toHaveClass('px-3', 'py-2');
+  });
+
+  test('ref: the native textarea', () => {
+    const ref = React.createRef<HTMLTextAreaElement>();
+    render(<TextArea ref={ref} label="N" />);
+    expect(ref.current).toBe(screen.getByRole('textbox'));
+  });
+
+  test('disabled: native disabled; the error waits, not invalid', () => {
+    render(<TextArea label="N" disabled error="Bad" helperText="Help" />);
+    const box = screen.getByRole('textbox');
+    expect(box).toBeDisabled();
+    expect(box).toHaveAttribute('aria-invalid', 'false');
+    expect(screen.queryByText('Bad')).not.toBeInTheDocument();
+    expect(screen.getByText('Help')).toBeInTheDocument();
+  });
+
+  test('id: optional, generated, and the label still names the field', () => {
+    render(<TextArea label="Notes" />);
+    expect(screen.getByLabelText('Notes').id).toBeTruthy();
+  });
+
+  test('label: optional; aria-label and other unnamed props reach the textarea', () => {
+    const onKeyDown = jest.fn();
+    render(
+      <TextArea
+        aria-label="Comment"
+        name="c"
+        data-x="1"
+        onKeyDown={onKeyDown}
+      />
+    );
+    const box = screen.getByRole('textbox', { name: 'Comment' });
+    expect(box).toHaveAttribute('name', 'c');
+    expect(box).toHaveAttribute('data-x', '1');
+    fireEvent.keyDown(box, { key: 'Enter', metaKey: true });
+    expect(onKeyDown).toHaveBeenCalledTimes(1);
+    expect(document.querySelector('label')).toBeNull();
+  });
+
+  test("aria-describedby: the app's own id is kept beside the helper", () => {
+    render(<TextArea label="N" helperText="Help" aria-describedby="extra" />);
+    expect(
+      screen.getByRole('textbox').getAttribute('aria-describedby')
+    ).toMatch(/-helper extra$/);
+  });
+
+  test("className: merged on the root; the app's textarea class wins a conflict", () => {
+    const { container } = render(
+      <TextArea label="N" className="mt-4" textareaClassName="px-6" />
+    );
+    expect(container.firstChild).toHaveClass('mt-4');
+    const box = screen.getByRole('textbox');
+    expect(box).toHaveClass('px-6');
+    expect(box).not.toHaveClass('px-3');
+  });
+
+  test('focus: a text field shows focus however it came (focus:, ring-1)', () => {
+    expect(render(<TextArea label="N" />).getByRole('textbox')).toHaveClass(
+      'focus:ring-1',
+      'focus:border-[var(--color-primary)]'
+    );
+  });
+});
