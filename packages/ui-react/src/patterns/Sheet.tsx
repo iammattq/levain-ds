@@ -67,7 +67,8 @@ export function SheetScrim({ reduce }: { reduce: boolean | null | undefined }) {
   );
 }
 
-const INTERACTIVE = 'button, a, input, textarea, select, [role="button"], [contenteditable="true"]';
+/** What never starts a drag: a press on a control stays a click. */
+export const INTERACTIVE = 'button, a, input, textarea, select, [role="button"], [contenteditable="true"]';
 
 export interface SheetPanelProps {
   /** Called when a drag ends past the threshold. */

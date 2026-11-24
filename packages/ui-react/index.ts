@@ -259,6 +259,8 @@ export type { StatusCardDialogStackProps, StatusCardStackDialog } from './src/pa
 export { BottomSheet } from './src/patterns/BottomSheet';
 export type { BottomSheetProps } from './src/patterns/BottomSheet';
 export { useIsPhone } from './src/patterns/Sheet';
+export { Drawer } from './src/patterns/Drawer';
+export type { DrawerProps } from './src/patterns/Drawer';
 export { CardStack } from './src/patterns/CardStack';
 export type { CardStackProps } from './src/patterns/CardStack';
 export { ColumnStrip, useColumnStrip, snapIndex, edgeSide, COLUMN_STRIP_EDGE, COLUMN_STRIP_DWELL, COLUMN_STRIP_REPEAT } from './src/patterns/ColumnStrip';

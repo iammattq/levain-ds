@@ -155,6 +155,11 @@
     "description": "Reusable confirmation dialog with optional type-to-confirm for destructive actions"
   },
   {
+    "category": "Patterns",
+    "name": "Drawer",
+    "description": "Full-height side panel that slides in from the left over a scrim, for a phone menu"
+  },
+  {
     "category": "Templates",
     "name": "PageTemplate",
     "description": "Standard page template for front-end pages"
