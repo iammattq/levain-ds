@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // T16: CardStack, levain's beside the board's copy, in Sage and Cobalt Mono, light and dark. Run on the PC:
 //   ringmaster heavy t16 --kind capture --on pc --out captures/T16 sh demo/e2e/stack.sh captures/T16 cardstack-capture.mjs
-// Writes <theme>-<mode>-<desktop|phone>-<state>.png (desktop: rest, mid, mid2, expanded; phone: rest, mid, expanded),
+// Writes <theme>-<mode>-<desktop|phone>-<state>.png (desktop: rest, mid, mid2, expanded; phone: rest, mid-levain, mid-board, expanded),
 // numbers.json (every card's box, levain's against the board's, in each state, and the largest difference), and
 // recordings of the row scrolling and the pile stepping (video-desktop/, video-phone/; CARDSTACK_VIDEO=0 skips them).
 // Mid-gesture states hold both stacks at once with synthetic pointers (one pointerId each), so one shot shows both.
@@ -62,6 +62,8 @@ try {
         const page = await browser.newPage({ viewport: { width: 1280, height: 900 }, deviceScaleFactor: 2 });
         page.on('pageerror', e => errors.push(e.message));
         await page.goto(`${base}?only=cardstack&theme=${theme}&mode=${mode}`, { waitUntil: 'networkidle' });
+        // a fresh vite may reload the page once it has optimised its dependencies: wait for the cards themselves
+        await page.waitForSelector('[data-demo=stack-pile-board] [data-stack-card]', { timeout: 30000 });
         await settled(page);
         const rows = page.locator('[data-demo=stack-rows]');
         const step = await page.evaluate(() => { const c = [...document.querySelectorAll('[data-demo=stack-row-levain] [data-stack-card]')]; return c[1].getBoundingClientRect().x - c[0].getBoundingClientRect().x; });
@@ -91,17 +93,27 @@ try {
         const page = await browser.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 3, hasTouch: true });
         page.on('pageerror', e => errors.push(e.message));
         await page.goto(`${base}?only=cardstack&theme=${theme}&mode=${mode}`, { waitUntil: 'networkidle' });
+        // a fresh vite may reload the page once it has optimised its dependencies: wait for the cards themselves
+        await page.waitForSelector('[data-demo=stack-pile-board] [data-stack-card]', { timeout: 30000 });
         await settled(page);
         const piles = page.locator('[data-demo=stack-piles]');
         await piles.scrollIntoViewIfNeeded();
         const key = `${tname}-${mode}-phone`;
         numbers[key] = { rest: await compare(page, ...PILES) };
         await piles.screenshot({ path: `${out}/${key}-rest.png` });
-        await hold(page, PILES, -70, 'top');
-        await pause(400);
-        numbers[key].mid = await compare(page, ...PILES);
-        await piles.screenshot({ path: `${out}/${key}-mid.png` });
-        await release(page); await settled(page);
+        // mid-swipe: framer lets one sideways drag run at a time (a global lock), so each pile is held in turn and
+        // levain's held boxes are compared with the board's held ones
+        const held = {};
+        for (const [who, s] of [['levain', PILES[0]], ['board', PILES[1]]]) {
+          await hold(page, [s], -70, 'top');
+          await pause(400);
+          held[who] = await boxes(page, s);
+          await piles.screenshot({ path: `${out}/${key}-mid-${who}.png` });
+          await release(page); await settled(page);
+        }
+        let worst = 0;
+        for (const k of Object.keys(held.board)) for (const f of ['x', 'y', 'w', 'h']) worst = Math.max(worst, Math.abs((held.levain[k]?.[f] ?? Infinity) - held.board[k][f]));
+        numbers[key].mid = { worst, ...held };
         await showAll(page, PILES);
         numbers[key].expanded = await compare(page, ...PILES);
         await piles.screenshot({ path: `${out}/${key}-expanded.png` });

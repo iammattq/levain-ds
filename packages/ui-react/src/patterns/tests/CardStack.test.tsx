@@ -185,9 +185,10 @@ describe('CardStack row', () => {
     expect(wheel(120, 10).defaultPrevented).toBe(true);
   });
 
-  it('dragging the row scrolls it and it settles on a whole card', async () => {
+  it('dragging the row scrolls it and it settles on a whole card (and selects no words)', async () => {
     const onEvent = jest.fn();
     render(<Row onEvent={onEvent} />);
+    expect(row().className).toContain('select-none');
     act(() => { row().dispatchEvent(ptr('pointerdown', 600)); });
     act(() => { window.dispatchEvent(ptr('pointermove', 600 - STEP * 0.7)); });
     act(() => { window.dispatchEvent(ptr('pointerup', 600 - STEP * 0.7)); });

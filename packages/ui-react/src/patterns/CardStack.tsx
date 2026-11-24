@@ -243,8 +243,10 @@ function Row<T>({ items, getKey, renderItem, expanded, openKey, onOpen, layoutId
   );
   return (
     // isolate: the piles' z-indexes stay inside the row, never over a dialog. It reaches a pile's room into each gutter,
-    // so at rest its cards line up with the content edges and the piles' edges sit in the gutters.
-    <div ref={box} role="list" data-stack-row onPointerDown={pan} style={{ height: rowHeight + 8, marginInline: -left }} className="relative isolate cursor-grab touch-pan-y overflow-hidden active:cursor-grabbing">
+    // so at rest its cards line up with the content edges and the piles' edges sit in the gutters. select-none: dragging
+    // the row with a mouse would otherwise select its cards' words (the board's page turns selection off for the whole
+    // page; a component can't count on that).
+    <div ref={box} role="list" data-stack-row onPointerDown={pan} style={{ height: rowHeight + 8, marginInline: -left }} className="relative isolate cursor-grab touch-pan-y select-none overflow-hidden active:cursor-grabbing">
       {items.map((it, i) => (
         <RowSlot key={getKey(it)} i={i} n={n} at={at} g={geo}>{live(it)}</RowSlot>
       ))}
