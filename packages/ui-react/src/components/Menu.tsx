@@ -154,8 +154,10 @@ export function Menu({
               size="md"
               radius="md"
               onClick={() => select(it)}
+              // the switcher's row: 0 0.5rem padding (MenuItem's px-xs / py-2xs aren't merged away by tailwind-merge,
+              // so these win by importance), a state overlay for hover and keyboard focus rather than a ring
               className={cn(
-                'py-0 px-2xs text-left',
+                'px-2xs! py-0! text-left',
                 'hover:bg-[var(--color-state-hover)] focus-visible:bg-[var(--color-state-active)] focus-visible:text-[var(--color-text-default)] focus-visible:ring-0 focus-visible:ring-offset-0',
                 checked && 'font-semibold text-[var(--color-text-default)]',
                 it.disabled &&
