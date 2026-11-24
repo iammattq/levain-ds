@@ -73,7 +73,8 @@ describe('ContentNavigation Pattern', () => {
     jest.useRealTimers();
   });
 
-  test('renders nothing initially (before delay)', () => {
+  // D5: the links are in the first render (so a server-rendered page carries them); the fade-in stays on top
+  test('renders its links at once, faded until the delay', () => {
     render(
       <ContentNavigation
         previous={mockPrevious}
@@ -82,13 +83,28 @@ describe('ContentNavigation Pattern', () => {
       />
     );
 
-    // Navigation should not be visible immediately
+    const previous = screen.getAllByTestId(
+      `link-to-${mockBasePath}/${mockPrevious.slug}`
+    );
+    expect(previous.length).toBeGreaterThan(0);
     expect(
-      screen.queryByTestId(`link-to-${mockBasePath}/${mockPrevious.slug}`)
-    ).not.toBeInTheDocument();
-    expect(
-      screen.queryByTestId(`link-to-${mockBasePath}/${mockNext.slug}`)
-    ).not.toBeInTheDocument();
+      screen.getAllByTestId(`link-to-${mockBasePath}/${mockNext.slug}`).length
+    ).toBeGreaterThan(0);
+    expect(previous[0]).toHaveClass('opacity-0');
+  });
+
+  test('a server render carries the links', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { renderToString } = require('react-dom/server.node');
+    const html: string = renderToString(
+      <ContentNavigation
+        previous={mockPrevious}
+        next={mockNext}
+        basePath={mockBasePath}
+      />
+    );
+    expect(html).toContain(`${mockBasePath}/${mockPrevious.slug}`);
+    expect(html).toContain(`${mockBasePath}/${mockNext.slug}`);
   });
 
   test('renders navigation links after delay', async () => {

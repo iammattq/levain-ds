@@ -38,7 +38,7 @@ export default function ContentNavigation({
   delayMs = 600, // Default delay of 600ms to allow page transition to complete
   truncateLength,
 }: ContentNavigationProps) {
-  const [isVisible, setIsVisible] = useState(false);
+  // The links render at once (a server-rendered page carries them) and fade in once the page transition is done.
   const [hasAnimated, setHasAnimated] = useState(false);
 
   const scrollToTop = () => {
@@ -46,22 +46,10 @@ export default function ContentNavigation({
   };
 
   useEffect(() => {
-    // Wait for page transition to complete before showing navigation
-    const visibilityTimer = setTimeout(() => {
-      setIsVisible(true);
-
-      // Set animation state after a small delay to ensure the CSS transition works
-      const animationTimer = setTimeout(() => {
-        setHasAnimated(true);
-      }, 50);
-
-      return () => clearTimeout(animationTimer);
-    }, delayMs);
-
-    return () => clearTimeout(visibilityTimer);
+    // Wait for page transition to complete before fading the navigation in
+    const timer = setTimeout(() => setHasAnimated(true), delayMs);
+    return () => clearTimeout(timer);
   }, [delayMs]);
-
-  if (!isVisible) return null;
 
   return (
     <>
