@@ -8,6 +8,8 @@ import '@testing-library/jest-dom';
 import { StatusCard, StatusCardDialog } from '../StatusCard';
 import { StatusCardDialogStack, type StatusCardStackDialog } from '../StatusCardDialogStack';
 import { Modal } from '../../components/Modal';
+import { EditableText } from '../../components/EditableText';
+import ColorInput from '../../components/ColorInput';
 
 const LOOK: StatusCardStackDialog = { id: 'L8', number: 'L8', title: 'The strip', children: <textarea aria-label="look notes" /> };
 const DECIDE: StatusCardStackDialog = { id: 'D14', number: 'D14', title: 'Strip or arc', children: <button type="button">Send</button> };
@@ -141,5 +143,48 @@ describe('StatusCardDialogStack focus', () => {
     expect(screen.getByRole('dialog')).toContainElement(document.activeElement as HTMLElement);
     await user.keyboard('{Escape}');
     await waitFor(() => expect(card('The strip card')).toHaveFocus());
+  });
+});
+
+describe('Escape inside a Modal: the widget first, then the Modal (T29)', () => {
+  const afterThis: (() => void)[] = [];
+  afterEach(() => { afterThis.splice(0).forEach(f => f()); });
+  it('Escape in an EditableText cancels the edit and the Modal stays open; a second Escape closes it; the page sees both claimed', async () => {
+    const user = userEvent.setup();
+    const onClose = jest.fn();
+    const seen: boolean[] = [];
+    const page = (e: KeyboardEvent) => { if (e.key === 'Escape') seen.push(e.defaultPrevented); };
+    document.addEventListener('keydown', page);
+    render(<Modal isOpen onClose={onClose} title="Rename">{() => <EditableText value="Sage" showEditIcon onSave={jest.fn()} />}</Modal>);
+    await user.click(screen.getByRole('button', { name: 'Edit' }));
+    await user.clear(screen.getByRole('textbox'));
+    await user.type(screen.getByRole('textbox'), 'Moss');
+    await user.keyboard('{Escape}');
+    expect(screen.queryByRole('textbox')).toBeNull();
+    expect(screen.getByText('Sage')).toBeInTheDocument();
+    expect(onClose).not.toHaveBeenCalled();
+    // focus went with the input; back inside the Modal, the next Escape is the Modal's
+    screen.getByRole('button', { name: 'Edit' }).focus();
+    await user.keyboard('{Escape}');
+    document.removeEventListener('keydown', page);
+    expect(onClose).toHaveBeenCalled();
+    expect(seen).toEqual([true, true]);
+  });
+
+  it('Escape with a ColorInput picker open closes the picker, not the Modal', async () => {
+    const ownRO = (globalThis as { ResizeObserver?: unknown }).ResizeObserver;
+    (globalThis as { ResizeObserver?: unknown }).ResizeObserver = class { observe() {} unobserve() {} disconnect() {} };
+    afterThis.push(() => { (globalThis as { ResizeObserver?: unknown }).ResizeObserver = ownRO; });
+    const user = userEvent.setup();
+    const onClose = jest.fn();
+    render(<Modal isOpen onClose={onClose} title="Colour">{() => <ColorInput id="c" label="Accent" value="#97a888" onChange={jest.fn()} />}</Modal>);
+    const chip = screen.getByRole('button', { name: 'Choose Accent color' });
+    await user.click(chip);
+    expect(chip).toHaveAttribute('aria-expanded', 'true');
+    await user.keyboard('{Escape}');
+    expect(chip).toHaveAttribute('aria-expanded', 'false');
+    expect(onClose).not.toHaveBeenCalled();
+    await user.keyboard('{Escape}');
+    expect(onClose).toHaveBeenCalled();
   });
 });

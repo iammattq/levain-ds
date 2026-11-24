@@ -42,6 +42,8 @@ export function ToolInfo({
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return;
+      // claimed, in the capture phase (below): a dialog around it leaves this Escape alone and stays open
+      event.preventDefault();
       setOpen(false);
       // Escape should leave focus where it started, not on the document.
       triggerRef.current?.focus();
@@ -57,10 +59,10 @@ export function ToolInfo({
       setOpen(false);
     };
 
-    document.addEventListener('keydown', onKeyDown);
+    document.addEventListener('keydown', onKeyDown, true);
     document.addEventListener('pointerdown', onPointerDown);
     return () => {
-      document.removeEventListener('keydown', onKeyDown);
+      document.removeEventListener('keydown', onKeyDown, true);
       document.removeEventListener('pointerdown', onPointerDown);
     };
   }, [open]);

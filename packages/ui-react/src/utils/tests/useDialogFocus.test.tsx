@@ -107,18 +107,23 @@ describe('useDialogFocus', () => {
     expect(seen).toEqual([true]);
   });
 
-  it('claims Escape before a document listener or a handler inside the dialog hears it', async () => {
+  it('a widget inside that claims Escape hears it first, and the dialog stays open; unclaimed, the page sees the dialog took it', async () => {
     const user = userEvent.setup();
     const seen: string[] = [];
     const onDoc = (e: KeyboardEvent) => { if (e.key === 'Escape') seen.push('document ' + e.defaultPrevented); };
     render(<Page />);
     await user.click(btn('Open A'));
     await user.tab();
-    btn('A first').addEventListener('keydown', e => { if (e.key === 'Escape') seen.push('inside ' + e.defaultPrevented); });
+    let claim = true;
+    btn('A first').addEventListener('keydown', e => { if (e.key === 'Escape') { seen.push('inside ' + e.defaultPrevented); if (claim) e.preventDefault(); } });
     document.addEventListener('keydown', onDoc);
     await user.keyboard('{Escape}');
+    expect(screen.getByRole('dialog', { name: 'A' })).toBeInTheDocument();
+    claim = false;
+    await user.keyboard('{Escape}');
     document.removeEventListener('keydown', onDoc);
-    expect(seen).toEqual(['inside true', 'document true']);
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(seen).toEqual(['inside false', 'document true', 'inside false', 'document true']);
   });
 
   it('leaves focus where it is when something inside already has it', async () => {

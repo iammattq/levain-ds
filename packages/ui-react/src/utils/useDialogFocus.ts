@@ -9,8 +9,14 @@
  *
  * Dialogs layer: the one opened last is the top, and only the top answers Tab and Escape. So a dialog opened over
  * another (a confirmation over a card's dialog) closes alone on Escape, and its trap holds focus, not the one below.
- * The top claims Escape (preventDefault) in the capture phase, before any other listener on the page, so every one
- * of them can tell the key was already answered (a widget inside a dialog with its own Escape must check for it).
+ *
+ * Escape, in order: a widget inside the dialog that answers Escape itself (an edit cancelled, a picker closed, a drag
+ * put back) hears it first and claims it (preventDefault); the dialog then leaves it alone and stays open. Unclaimed,
+ * the dialog takes it and claims it, so the page around can tell (defaultPrevented). That order comes from one keydown
+ * listener on the document, bubble phase, added when this module loads: React's handlers (on the root, or a portal's
+ * container) all run below it, so before it; the page's own document listeners, added after levain loads, and every
+ * window listener run after it. A widget with a native document listener of its own claims Escape in the capture
+ * phase (ColorInput, GradientInput, ToolInfo).
  *
  * Focus goes back to what had it, or, when that left the page as the dialog opened (a card that morphs into its dialog
  * is unmounted until it closes, so focus falls to the body), to `returnTo()`: the card as it comes back. See `opensAttr`.
@@ -33,8 +39,9 @@ export const opener = (layoutId: string) => document.querySelector<HTMLElement>(
 
 type Container = RefObject<HTMLElement | null> | (() => HTMLElement | null | undefined);
 
-/** The open dialogs, oldest first: the last is the top. */
-const layers: object[] = [];
+/** The open dialogs, oldest first: the last is the top, the one the shared listener hands keys to. */
+const layers: { key: (e: KeyboardEvent) => void }[] = [];
+if (typeof document !== 'undefined') document.addEventListener('keydown', e => layers[layers.length - 1]?.key(e));
 
 /** What Tab can reach inside `root`, in order: nothing disabled, nothing inert. */
 export function focusables(root: HTMLElement) {
@@ -53,8 +60,7 @@ export function useDialogFocus(open: boolean, container: Container, onEscape: ()
   }, [open]);
   useEffect(() => {
     if (!open) return;
-    const me = {};
-    layers.push(me);
+
     const get = () => {
       const c = containerRef.current;
       return (typeof c === 'function' ? c() : c.current) ?? null;
@@ -62,8 +68,12 @@ export function useDialogFocus(open: boolean, container: Container, onEscape: ()
     const el = get();
     if (el && !el.contains(document.activeElement)) el.focus();
     const key = (e: KeyboardEvent) => {
-      if (layers[layers.length - 1] !== me) return;
-      if (e.key === 'Escape') { e.preventDefault(); onEscapeRef.current(); return; }
+      if (e.key === 'Escape') {
+        if (e.defaultPrevented) return; // a widget inside answered it
+        e.preventDefault();
+        onEscapeRef.current();
+        return;
+      }
       const root = get();
       if (e.key !== 'Tab' || !root) return;
       // Tab and Shift+Tab wrap inside; from outside it (or the container itself), they come back in
@@ -76,15 +86,13 @@ export function useDialogFocus(open: boolean, container: Container, onEscape: ()
       if (e.shiftKey && (!inside || at === first)) { e.preventDefault(); last.focus(); }
       else if (!e.shiftKey && (!inside || at === last)) { e.preventDefault(); first.focus(); }
     };
-    // on the document, in the capture phase: before any listener on the document or an element below, so all of them
-    // see an Escape the top dialog took as defaultPrevented
-    document.addEventListener('keydown', key, true);
+    const me = { key };
+    layers.push(me);
     const prev = before.current;
     // returnTo as it was at open: a caller that clears the dialog's id as it closes (open ? item.id : '') still finds
     // the card that opened it
     const back = returnToRef.current;
     return () => {
-      document.removeEventListener('keydown', key, true);
       const i = layers.indexOf(me);
       if (i >= 0) layers.splice(i, 1);
       // the opener may have left in the very commit that opened the dialog (focus fell to the body) or since

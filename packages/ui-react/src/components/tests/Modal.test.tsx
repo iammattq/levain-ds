@@ -192,34 +192,16 @@ describe('Modal Keyboard Interactions', () => {
     expect(onClose).not.toHaveBeenCalled();
   });
 
-  test('removes event listener when component unmounts', async () => {
-    // the shared dialog behaviour (useDialogFocus) listens on the document, in the capture phase
-    const addEventListenerSpy = jest.spyOn(document, 'addEventListener');
-    const removeEventListenerSpy = jest.spyOn(document, 'removeEventListener');
-
+  test('stops answering Escape once unmounted', () => {
+    const onClose = jest.fn();
     const { unmount } = render(
-      <Modal isOpen={true} onClose={jest.fn()}>
+      <Modal isOpen={true} onClose={onClose}>
         {() => <div>Modal content</div>}
       </Modal>
     );
-
-    expect(addEventListenerSpy).toHaveBeenCalledWith(
-      'keydown',
-      expect.any(Function),
-      true
-    );
-
     unmount();
-
-    expect(removeEventListenerSpy).toHaveBeenCalledWith(
-      'keydown',
-      expect.any(Function),
-      true
-    );
-
-    // Clean up
-    addEventListenerSpy.mockRestore();
-    removeEventListenerSpy.mockRestore();
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(onClose).not.toHaveBeenCalled();
   });
 });
 
