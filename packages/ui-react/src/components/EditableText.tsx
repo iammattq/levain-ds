@@ -19,7 +19,8 @@ import TextInput from './TextInput';
  * EditableText follows the form-input convention (docs/prop-conventions.json, formInputs) as an input with no native
  * field at rest: `value` / `defaultValue` is the saved text, and `onChange(value)` and `onSave(value)` both fire when an
  * edit is saved (the draft while typing stays inside). The root is focusable at rest and takes the ref, the `id` and
- * every prop it doesn't name; double-click, Enter or F2 on it (or the edit icon) starts editing; in the field Enter
+ * every prop it doesn't name except `aria-label`, which names the field. At rest the root is a button named by its text
+ * and ", edit"; double-click, Enter, Space or F2 on it (or a click on the edit icon) starts editing; in the field Enter
  * saves and Escape cancels, and focus goes back to the root. No `error`: no use needs one yet.
  */
 export interface EditableTextProps extends Omit<
@@ -60,6 +61,8 @@ const EditableText = forwardRef<HTMLDivElement, EditableTextProps>(
       placeholder = 'Enter text...',
       disabled = false,
       onKeyDown,
+      onClick,
+      'aria-label': ariaLabel,
       ...props
     },
     ref
@@ -152,7 +155,7 @@ const EditableText = forwardRef<HTMLDivElement, EditableTextProps>(
 
     const handleInputKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
       // an Enter that ends an IME composition picks the characters; it doesn't save
-      if (e.nativeEvent.isComposing) return;
+      if (e.nativeEvent.isComposing || e.keyCode === 229) return;
       if (e.key === 'Enter') {
         e.preventDefault();
         handleSave();
@@ -163,12 +166,12 @@ const EditableText = forwardRef<HTMLDivElement, EditableTextProps>(
       }
     };
 
-    // at rest, Enter or F2 on the root starts editing (not from the edit button inside it)
+    // at rest, Enter, Space or F2 on the root starts editing (not from inside it)
     const handleRootKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
       onKeyDown?.(e);
       if (e.defaultPrevented || isEditing || e.target !== e.currentTarget)
         return;
-      if (e.key === 'Enter' || e.key === 'F2') {
+      if (e.key === 'Enter' || e.key === ' ' || e.key === 'F2') {
         e.preventDefault();
         handleStartEdit();
       }
@@ -178,8 +181,12 @@ const EditableText = forwardRef<HTMLDivElement, EditableTextProps>(
       <div
         ref={setRef}
         id={id}
+        // at rest a button named by its text and ", edit"; while editing a plain wrapper around the field
+        // (the name as aria-label, not a hidden span: name-from-content puts a space before the comma, "Sage , edit")
+        role={isEditing ? undefined : 'button'}
+        aria-label={isEditing ? undefined : `${value || placeholder}, edit`}
         tabIndex={!isEditing && !disabled ? 0 : undefined}
-        aria-disabled={disabled || undefined}
+        aria-disabled={(!isEditing && disabled) || undefined}
         className={cn(
           'group inline-flex items-center rounded-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface-canvas)]',
           disabled ? 'cursor-not-allowed opacity-70' : 'cursor-text',
@@ -187,6 +194,12 @@ const EditableText = forwardRef<HTMLDivElement, EditableTextProps>(
         )}
         {...props}
         onKeyDown={handleRootKeyDown}
+        onClick={(e) => {
+          onClick?.(e);
+          // a click with no mouse behind it (detail 0) is a screen reader activating the button; a mouse needs a double-click
+          if (!e.defaultPrevented && !isEditing && e.detail === 0 && e.target === e.currentTarget)
+            handleStartEdit();
+        }}
       >
         {/* Invisible span used for measuring text width */}
         <span
@@ -202,7 +215,7 @@ const EditableText = forwardRef<HTMLDivElement, EditableTextProps>(
           <div className="inline-flex items-center gap-1 rounded-md bg-[var(--color-surface-card)]">
             <TextInput
               id={`${id}-input`}
-              label={props['aria-label'] ?? 'Edit text'}
+              label={ariaLabel ?? 'Edit text'}
               hideLabel
               value={inputValue}
               onChange={handleInputChange}
@@ -243,12 +256,15 @@ const EditableText = forwardRef<HTMLDivElement, EditableTextProps>(
             <span className="inline-block" onDoubleClick={handleStartEdit}>
               {value || placeholder}
             </span>
+            {/* a mouse target only: the root is the button, so the pencil stays out of the Tab order and the tree */}
             {showEditIcon && !disabled && (
               <Button
                 onClick={handleStartEdit}
+                tabIndex={-1}
+                aria-hidden="true"
                 variant="ghost"
                 size="icon"
-                className="ml-1 h-8 w-8 p-1 text-[var(--color-text-default)] opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
+                className="ml-1 h-8 w-8 p-1 text-[var(--color-text-default)] opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
                 aria-label="Edit"
                 Icon={Pencil}
                 iconOnly

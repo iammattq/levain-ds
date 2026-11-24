@@ -447,4 +447,24 @@ describe('TagInput: form-input convention', () => {
     expect(onKeyDown).toHaveBeenCalled();
     expect(onChange).not.toHaveBeenCalled();
   });
+
+  test('an Enter that ends an IME composition (isComposing, or keyCode 229) adds nothing', () => {
+    const onChange = jest.fn();
+    render(<TagInput label="S" availableTags={tags} value={[]} onChange={onChange} />);
+    const box = screen.getByRole('combobox');
+    fireEvent.change(box, { target: { value: 'React' } });
+    fireEvent.keyDown(box, { key: 'Enter', isComposing: true });
+    fireEvent.keyDown(box, { key: 'Enter', keyCode: 229 });
+    expect(onChange).not.toHaveBeenCalled();
+    fireEvent.keyDown(box, { key: 'Enter' });
+    expect(onChange).toHaveBeenCalledWith(['r']);
+  });
+
+  test('a callback ref is called once, not again on a rerender', () => {
+    const ref = jest.fn();
+    const { rerender } = render(<TagInput ref={ref} label="S" availableTags={tags} value={[]} />);
+    rerender(<TagInput ref={ref} label="S" availableTags={tags} value={['r']} />);
+    expect(ref).toHaveBeenCalledTimes(1);
+    expect(ref).toHaveBeenCalledWith(screen.getByRole('combobox'));
+  });
 });

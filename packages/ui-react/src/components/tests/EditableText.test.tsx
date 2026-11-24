@@ -3,7 +3,8 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { EditableText } from '../EditableText';
 
-const root = () => screen.getByText('Sage').closest('[tabindex]') as HTMLElement;
+const root = () => screen.getByText('Sage', { selector: '.inline-block' }).closest('[id]') as HTMLElement;
+const icon = () => document.querySelector('button[aria-label="Edit"]') as HTMLElement;
 
 describe('EditableText', () => {
   test('shows the value, or the placeholder when empty', () => {
@@ -33,12 +34,12 @@ describe('EditableText', () => {
     const user = userEvent.setup();
     const onSave = jest.fn();
     render(<EditableText value="Sage" showEditIcon onSave={onSave} />);
-    await user.click(screen.getByRole('button', { name: 'Edit' }));
+    await user.click(icon());
     await user.type(screen.getByRole('textbox'), 'x');
     await user.click(screen.getByRole('button', { name: 'Cancel' }));
     expect(onSave).not.toHaveBeenCalled();
     expect(screen.getByText('Sage')).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Edit' }));
+    await user.click(icon());
     expect(screen.getByRole('textbox')).toHaveValue('Sage'); // the draft starts again from the value
     await user.type(screen.getByRole('textbox'), '!');
     await user.click(screen.getByRole('button', { name: 'Save' }));
@@ -94,20 +95,20 @@ describe('EditableText: form-input convention', () => {
   test('disabled: no Tab stop, no edit by double-click, Enter or the icon', async () => {
     const user = userEvent.setup();
     render(<EditableText value="Sage" disabled showEditIcon />);
-    const el = screen.getByText('Sage').parentElement as HTMLElement;
+    const el = screen.getByRole('button', { name: 'Sage, edit' });
     expect(el).not.toHaveAttribute('tabindex');
     expect(el).toHaveAttribute('aria-disabled', 'true');
-    expect(screen.queryByRole('button', { name: 'Edit' })).toBeNull();
+    expect(icon()).toBeNull();
     await user.dblClick(screen.getByText('Sage'));
     fireEvent.keyDown(el, { key: 'Enter' });
     expect(screen.queryByRole('textbox')).toBeNull();
   });
 
-  test('aria-label and other unnamed props reach the root; aria-label names the field', async () => {
+  test('unnamed props reach the root; aria-label names the field, not the root', async () => {
     const user = userEvent.setup();
     const onKeyDown = jest.fn();
     render(<EditableText value="Sage" aria-label="Theme name" data-x="1" onKeyDown={onKeyDown} />);
-    expect(root()).toHaveAttribute('aria-label', 'Theme name');
+    expect(screen.getByRole('button', { name: 'Sage, edit' })).toBe(root()); // not 'Theme name'
     expect(root()).toHaveAttribute('data-x', '1');
     root().focus();
     await user.keyboard('{Enter}');
@@ -159,12 +160,58 @@ describe('EditableText: form-input convention', () => {
     expect(root()).toHaveFocus();
   });
 
-  test('Enter on the edit icon starts editing once (the root leaves keys from inside it alone)', async () => {
+  test('the edit icon: a mouse target only (no Tab stop, hidden from the tree); a click starts editing', async () => {
     const user = userEvent.setup();
     render(<EditableText value="Sage" showEditIcon />);
-    screen.getByRole('button', { name: 'Edit' }).focus();
-    await user.keyboard('{Enter}');
+    expect(icon()).toHaveAttribute('tabindex', '-1');
+    expect(icon()).toHaveAttribute('aria-hidden', 'true');
+    expect(screen.getAllByRole('button')).toEqual([root()]);
+    await user.tab();
+    expect(root()).toHaveFocus();
+    await user.tab();
+    expect(icon()).not.toHaveFocus();
+    await user.click(icon());
     expect(screen.getAllByRole('textbox')).toHaveLength(1);
+  });
+
+  test('role: a button named by its text and ", edit" at rest; no role while editing', async () => {
+    const user = userEvent.setup();
+    render(<EditableText value="Sage" />);
+    const el = screen.getByRole('button', { name: 'Sage, edit' });
+    expect(el).toBe(root());
+    await user.dblClick(screen.getByText('Sage'));
+    expect(el).not.toHaveAttribute('role');
+    expect(el).not.toHaveAttribute('aria-label');
+    expect(screen.queryByRole('button', { name: /edit/ })).toBeNull();
+  });
+
+  test('Space starts editing; a click with no mouse (a screen reader, detail 0) starts editing; one mouse click does not', async () => {
+    const user = userEvent.setup();
+    render(<EditableText value="Sage" />);
+    await user.click(root());
+    expect(screen.queryByRole('textbox')).toBeNull();
+    fireEvent.click(root(), { detail: 0 });
+    expect(screen.getByRole('textbox')).toBeInTheDocument();
+    await user.keyboard('{Escape}');
+    root().focus();
+    await user.keyboard(' ');
+    expect(screen.getByRole('textbox')).toHaveFocus();
+  });
+
+  test('blur neither saves nor cancels: the draft stays open', async () => {
+    const user = userEvent.setup();
+    const onSave = jest.fn();
+    render(
+      <>
+        <EditableText value="Sage" onSave={onSave} />
+        <button>elsewhere</button>
+      </>
+    );
+    await user.dblClick(screen.getByText('Sage'));
+    await user.type(screen.getByRole('textbox'), '!');
+    await user.click(screen.getByRole('button', { name: 'elsewhere' }));
+    expect(onSave).not.toHaveBeenCalled();
+    expect(screen.getByRole('textbox')).toHaveValue('Sage!');
   });
 
   test('an Enter that ends an IME composition does not save', () => {
@@ -172,6 +219,7 @@ describe('EditableText: form-input convention', () => {
     render(<EditableText value="Sage" onSave={onSave} />);
     fireEvent.doubleClick(screen.getByText('Sage'));
     fireEvent.keyDown(screen.getByRole('textbox'), { key: 'Enter', isComposing: true });
+    fireEvent.keyDown(screen.getByRole('textbox'), { key: 'Enter', keyCode: 229 });
     expect(onSave).not.toHaveBeenCalled();
     expect(screen.getByRole('textbox')).toBeInTheDocument();
   });

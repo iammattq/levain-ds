@@ -36,6 +36,7 @@
     "Labelled with <label htmlFor>; without label, pass aria-label or aria-labelledby",
     "A shown error sets aria-invalid and aria-describedby (the helper's id otherwise); an app's aria-describedby is kept",
     "Escape that closes the suggestions is claimed (preventDefault), so a dialog around it stays open",
+    "Keys while an IME composition is open (isComposing, or keyCode 229) are left to the IME: an Enter that picks characters adds no tag",
     "Remove tag buttons have aria-label describing the action and a keyboard ring",
     "Required fields indicated with visual asterisk and the required attribute while no tag is chosen"
   ],

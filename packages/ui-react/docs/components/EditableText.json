@@ -6,7 +6,7 @@
     "Follows the form-input convention (docs/prop-conventions.json, formInputs).",
     "Use for in-place editing of titles, labels, and short text content.",
     "value is the saved text: controlled with value, uncontrolled with defaultValue. onChange(value) and onSave(value) both fire when an edit is saved; the draft while typing stays inside (the commit is the change).",
-    "Start editing by double-click, by Enter or F2 when it has focus (it is a Tab stop at rest), or with the optional pencil icon (showEditIcon).",
+    "Start editing by double-click, by Enter, Space or F2 when it has focus (it is a Tab stop at rest), or by clicking the optional pencil icon (showEditIcon). Leaving the field (blur) neither saves nor cancels: the draft stays open until Enter/Save or Escape/Cancel.",
     "Edit mode includes a text input with save (check) and cancel (X) buttons.",
     "Pressing Enter in the input field saves the changes, Escape cancels them; focus then goes back to the text.",
     "Style the component with `className` and the input with `inputClassName`.",
@@ -26,15 +26,15 @@
     "Action buttons use semantic colors: success (green) for save, error (red) for cancel.",
     "The component visually indicates its disabled state with reduced opacity.",
     "Edit mode uses a slightly different background color to indicate the mode change.",
-    "At rest it shows a keyboard ring (focus-visible:ring-2 --color-border-focus, offset) and the pencil icon shows on keyboard focus too."
+    "At rest it shows a keyboard ring (focus-visible:ring-2 --color-border-focus, offset) and the pencil icon shows while the root has keyboard focus too."
   ],
   "accessibility": [
-    "At rest the root is focusable (tabIndex 0) and takes the ref, id and every unnamed prop (aria-label, data-*, onKeyDown…); Enter or F2 starts editing.",
+    "At rest the root is role=button, named by its text and ', edit' (it reads 'Sage, edit, button'), a Tab stop, and takes the ref, id and every unnamed prop except aria-label (data-*, onKeyDown…); Enter, Space or F2 starts editing, as does a screen reader's click. While editing it has no role. The pencil is a mouse target only: tabIndex -1 and aria-hidden, since a button can't hold another.",
     "The input is named by the app's aria-label, or 'Edit text'; its id is `${id}-input`.",
-    "Appropriate aria-labels are provided for the edit, save, and cancel buttons.",
+    "The save and cancel buttons are named 'Save' and 'Cancel'.",
     "Focus moves into the input when editing starts and back to the root when it ends.",
     "Escape in the input is claimed (preventDefault), so a dialog around it stays open.",
-    "An Enter that ends an IME composition does not save.",
+    "An Enter that ends an IME composition (isComposing, or keyCode 229) does not save.",
     "Disabled: no Tab stop, aria-disabled, no editing by any route."
   ],
   "props": [
@@ -131,7 +131,7 @@
       "type": "HTMLAttributes<HTMLDivElement>",
       "optional": true,
       "defaultValue": null,
-      "description": "Every other prop goes to the root. The app's onKeyDown runs first; preventDefault there skips Enter/F2",
+      "description": "Every other prop goes to the root (aria-label names the field instead). The app's onKeyDown and onClick run first; preventDefault there skips ours",
       "configurable": false
     }
   ]

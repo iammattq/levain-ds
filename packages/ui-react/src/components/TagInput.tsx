@@ -6,6 +6,7 @@ import React, {
   KeyboardEvent,
   forwardRef,
   useId,
+  useCallback,
   InputHTMLAttributes,
 } from 'react';
 import { X, Plus, Loader2 } from 'lucide-react';
@@ -128,14 +129,18 @@ const TagInput = forwardRef<HTMLInputElement, TagInputProps>(
         ? helperId
         : undefined;
 
-    const combinedRef = (node: HTMLInputElement) => {
-      if (typeof ref === 'function') {
-        ref(node);
-      } else if (ref) {
-        ref.current = node;
-      }
-      inputRef.current = node;
-    };
+    // stable, so a callback ref isn't called again (with null, then the node) on every render
+    const combinedRef = useCallback(
+      (node: HTMLInputElement | null) => {
+        if (typeof ref === 'function') {
+          ref(node);
+        } else if (ref) {
+          ref.current = node;
+        }
+        inputRef.current = node;
+      },
+      [ref]
+    );
 
     const reachedMaxTags =
       maxTags !== undefined && selectedTags.length >= maxTags;
@@ -192,6 +197,8 @@ const TagInput = forwardRef<HTMLInputElement, TagInputProps>(
       // the app's handler runs first; preventDefault there skips ours
       onKeyDown?.(e);
       if (e.defaultPrevented) return;
+      // keys while an IME composition is open (an Enter there picks the characters) belong to the IME
+      if (e.nativeEvent.isComposing || e.keyCode === 229) return;
       const count = filteredAvailableTags.length;
       if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
         if (!inputValue || !count) return;
