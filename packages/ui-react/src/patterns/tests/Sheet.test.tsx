@@ -37,9 +37,9 @@ const ptr = (type: string, y: number) => Object.assign(new MouseEvent(type, { bu
 const frame = (ms = 40) => act(() => new Promise(r => setTimeout(r, ms)));
 /** A press at y 100 on `from`, moved down to 100 + dy in steps (framer reads a move on the next frame), then released.
  *  Slow (40 ms a step): a velocity well under a flick's, so only the distance decides. */
-const drag = async (from: Element, dy: number, stepMs = 40) => {
+const drag = async (from: Element, dy: number, stepMs = 40, steps = 8) => {
   act(() => { from.dispatchEvent(ptr('pointerdown', 100)); });
-  for (let i = 1; i <= 8; i++) { act(() => { window.dispatchEvent(ptr('pointermove', 100 + (dy * i) / 8)); }); await frame(stepMs); }
+  for (let i = 1; i <= steps; i++) { act(() => { window.dispatchEvent(ptr('pointermove', 100 + (dy * i) / steps)); }); await frame(stepMs); }
   if (stepMs >= 40) { await frame(); await frame(); }
   act(() => { window.dispatchEvent(ptr('pointerup', 100 + dy)); });
   await frame(); // framer calls onDragEnd after the next render
@@ -146,8 +146,9 @@ describe('StatusCardDialog below md: a bottom sheet', () => {
     const onClose = jest.fn();
     render(<Card onClose={onClose} />);
     open();
-    // 80 px (a tenth of the sheet) in about 8 frames of 17 ms: well past a flick's 500 px/s
-    await drag(sheet().querySelector('[data-sheet-handle]')!, 80, 17);
+    // 150 px (under the 200 px a quarter needs) in two big steps: 75 px a step is past a flick's 500 px/s even if a
+    // loaded machine stretches a step to 100 ms
+    await drag(sheet().querySelector('[data-sheet-handle]')!, 150, 10, 2);
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
