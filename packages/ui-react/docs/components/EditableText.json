@@ -3,13 +3,15 @@
   "description": "An interactive text component that can be edited in-place, transforming between text display and input field modes based on user interaction.",
   "category": "components",
   "usage": [
+    "Follows the form-input convention (docs/prop-conventions.json, formInputs).",
     "Use for in-place editing of titles, labels, and short text content.",
-    "Double-clicking text or clicking the optional pencil icon enters edit mode.",
-    "Control whether to show the pencil icon with the `showEditIcon` prop.",
+    "value is the saved text: controlled with value, uncontrolled with defaultValue. onChange(value) and onSave(value) both fire when an edit is saved; the draft while typing stays inside (the commit is the change).",
+    "Start editing by double-click, by Enter, Space or F2 when it has focus (it is a Tab stop at rest), or by clicking the optional pencil icon (showEditIcon). Leaving the field (blur) neither saves nor cancels: the draft stays open until Enter/Save or Escape/Cancel.",
     "Edit mode includes a text input with save (check) and cancel (X) buttons.",
-    "Pressing Enter in the input field saves the changes, Escape cancels them.",
+    "Pressing Enter in the input field saves the changes, Escape cancels them; focus then goes back to the text.",
     "Style the component with `className` and the input with `inputClassName`.",
-    "Use the `disabled` prop to prevent editing."
+    "Use the `disabled` prop to prevent editing.",
+    "No error, touched or helperText: no use needs one yet (add them when one does). No size: it takes the font of its surroundings."
   ],
   "examples": [
     "```tsx\n// Basic usage\nimport { EditableText } from '@/lib/designsystem';\nimport { useState } from 'react';\n\nfunction SimpleExample() {\n  const [text, setText] = useState('Click to edit me');\n  \n  return (\n    <EditableText \n      value={text} \n      onSave={setText} \n    />\n  );\n}\n```",
@@ -23,29 +25,57 @@
     "Edit icon (pencil) only appears on hover when `showEditIcon` is true, following progressive disclosure patterns.",
     "Action buttons use semantic colors: success (green) for save, error (red) for cancel.",
     "The component visually indicates its disabled state with reduced opacity.",
-    "Edit mode uses a slightly different background color to indicate the mode change."
+    "Edit mode uses a slightly different background color to indicate the mode change.",
+    "At rest it shows a keyboard ring (focus-visible:ring-2 --color-border-focus, offset) and the pencil icon shows while the root has keyboard focus too."
   ],
   "accessibility": [
-    "Appropriate aria-labels are provided for the edit, save, and cancel buttons.",
-    "The component maintains focus when transitioning to edit mode.",
-    "When entering edit mode, text is automatically selected for easy replacement.",
-    "Keyboard support includes Enter to save and Escape to cancel edits.",
-    "Disabled state properly prevents interaction with appropriate cursor styling."
+    "At rest the root is role=button, named by its text and ', edit' (it reads 'Sage, edit, button'), a Tab stop, and takes the ref, id and every unnamed prop except aria-label (data-*, onKeyDown…); Enter, Space or F2 starts editing, as does a screen reader's click. While editing it has no role. The pencil is a mouse target only: tabIndex -1 and aria-hidden, since a button can't hold another.",
+    "The input is named by the app's aria-label, or 'Edit text'; its id is `${id}-input`.",
+    "The save and cancel buttons are named 'Save' and 'Cancel'.",
+    "Focus moves into the input when editing starts and back to the root when it ends.",
+    "Escape in the input is claimed (preventDefault), so a dialog around it stays open.",
+    "An Enter that ends an IME composition (isComposing, or keyCode 229) does not save.",
+    "Disabled: no Tab stop, aria-disabled, no editing by any route."
   ],
   "props": [
     {
+      "name": "id",
+      "type": "string",
+      "optional": true,
+      "defaultValue": null,
+      "description": "The root's id; generated with useId() when left out. The input gets `${id}-input`",
+      "configurable": true
+    },
+    {
       "name": "value",
       "type": "string",
-      "optional": false,
-      "defaultValue": "Editable Text",
-      "description": "The text value to display and edit.",
-      "configurable": true
+      "optional": true,
+      "defaultValue": null,
+      "description": "The saved text (controlled). Leave out for uncontrolled",
+      "configurable": false
+    },
+    {
+      "name": "defaultValue",
+      "type": "string",
+      "optional": true,
+      "defaultValue": "''",
+      "description": "The text at first, when value is left out",
+      "configurable": false
+    },
+    {
+      "name": "onChange",
+      "type": "(value: string) => void",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Called with the new text when an edit is saved (value-first; fires with onSave)",
+      "configurable": false
     },
     {
       "name": "onSave",
       "type": "(value: string) => void",
-      "optional": false,
-      "description": "Callback function executed when the edited text is saved (via Enter key or save button).",
+      "optional": true,
+      "defaultValue": null,
+      "description": "The commit: called with the new text when an edit is saved",
       "configurable": false
     },
     {
@@ -53,23 +83,23 @@
       "type": "boolean",
       "optional": true,
       "defaultValue": "false",
-      "description": "Whether to show the pencil icon beside the text which can be clicked to enter edit mode.",
+      "description": "Show the pencil button (on hover or keyboard focus)",
       "configurable": true
     },
     {
       "name": "className",
       "type": "string",
       "optional": true,
-      "defaultValue": "''",
-      "description": "Additional CSS class for the text container.",
+      "defaultValue": null,
+      "description": "Merged with cn on the root; the app's class wins",
       "configurable": false
     },
     {
       "name": "inputClassName",
       "type": "string",
       "optional": true,
-      "defaultValue": "''",
-      "description": "Additional CSS class specifically for the input element when in edit mode.",
+      "defaultValue": null,
+      "description": "Additional class for the input element",
       "configurable": false
     },
     {
@@ -77,16 +107,32 @@
       "type": "string",
       "optional": true,
       "defaultValue": "'Enter text...'",
-      "description": "Placeholder text shown when value is empty.",
-      "configurable": false
+      "description": "Shown when the value is empty, and in the input",
+      "configurable": true
     },
     {
       "name": "disabled",
       "type": "boolean",
       "optional": true,
       "defaultValue": "false",
-      "description": "Whether the editable text is disabled, preventing any editing.",
+      "description": "No editing; no Tab stop; aria-disabled",
       "configurable": true
+    },
+    {
+      "name": "ref",
+      "type": "Ref<HTMLDivElement>",
+      "optional": true,
+      "defaultValue": null,
+      "description": "The focusable root (no native field at rest)",
+      "configurable": false
+    },
+    {
+      "name": "...rest",
+      "type": "HTMLAttributes<HTMLDivElement>",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Every other prop goes to the root (aria-label names the field instead). The app's onKeyDown and onClick run first; preventDefault there skips ours",
+      "configurable": false
     }
   ]
 }
