@@ -63,7 +63,7 @@ export function ColoursDemo({ Section }: { Section: (p: { title: string; note: s
           <MediaCard title="A card with no image" subtitle="the placeholder icon" href="#" />
         </Piece>
         <Piece name="surface-card">
-          <SurfaceCard selectable shadowStyle="offset"><p className="type-body p-sm">Hover me: a 1px ring</p></SurfaceCard>
+          <SurfaceCard selectable shadowStyle="none"><p className="type-body p-sm">Hover me: a 1px ring</p></SurfaceCard>
         </Piece>
         <Piece name="content-navigation" className="md:col-span-2">
           <ContentNavigation previous={{ title: 'Dialog height', slug: 't25' }} next={{ title: 'Missing colours', slug: 't27' }} basePath="#" backLinkText="Back to tasks" delayMs={0} />
