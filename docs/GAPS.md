@@ -25,7 +25,6 @@ The first consumer outside the portfolio was a web board for running a team of c
 
 ### Phone patterns
 - **Swipeable column strip.** One column a screen wide, swiped with snap, with pills to jump; while a card is held, resting at either edge slides the strip one column on a spring. Built in the consumer on top of `SortableGroup`'s `onDragMove`.
-- **Safe-area padding** for the notch and home indicator, as a token or utility.
 
 ### Foundations
 - **Portals render unstyled without the theme on `<body>`.** Dialogs portal to `<body>`, so the theme's look classes have to be on `<body>` too, or they render unstyled. The consumer adds them by hand.
@@ -34,6 +33,7 @@ The first consumer outside the portfolio was a web board for running a team of c
 - **No sunken surface token.** Nothing is darker than the page: in Cobalt Mono light every surface token is lighter than the canvas (#f2f2f2; section #f6f6f6, card #f9f9f9, component #fcfcfc). The consumer's light-mode columns use `--color-border-subtle` (#e4e4e4) as a background instead.
 
 ## Closed
+- **Safe-area padding** for the notch and home indicator, as a token or utility. Closed in T12: `--safe-top|right|bottom|left` (each `env(safe-area-inset-*, 0px)`) and the utilities `pt-safe` to `p-safe`, plus `pb-safe-md` and the like for a spacing step plus the inset. The bottom sheet uses them, with the same computed padding as before.
 - **Bottom sheet.** On a phone the board's StatusCard dialogs were taller than the screen, and the look-and-decide pair had no phone form. Closed in T24: below md, StatusCardDialog and StatusCardDialogStack open as bottom sheets (handle, swipe down to close, scrolling body under a fixed title, clear of the safe-area insets), and the pair keeps the pile peeking above, Next/Back, close-all and Reduce Motion. No snap heights (Q34): a dialog does not need them. The general sheet stays internal for now.
 - **No caution (amber) status hue.** The consumer hand-picks its own amber (light #975d04), which misses 4.5:1 on darker light surfaces (4.25:1 on #e4e4e4); it falls back to the text colour for words there and keeps amber only for small pips. Closed by `--color-caution-fg` (T18) and, in Cobalt Mono, a true ochre apart from error (T21): 4.5:1 text on every surface, light and dark.
 - **Node types in a browser package.** ui-react uses the `NodeJS` namespace (DateInput, NavigationLinks), so browser-only consumers need `@types/node`. Closed in T15: ui-react no longer needs `@types/node`, and CI typechecks it without Node types.

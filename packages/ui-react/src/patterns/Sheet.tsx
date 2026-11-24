@@ -6,8 +6,8 @@
  * Full width, docked to the bottom edge, its top corners rounded (--radius-2xl) and its bottom square against the edge.
  * It rises on recipe.sheetIn and drops away on recipe.sheetOut; under Reduce Motion it doesn't move, it fades. It is
  * capped below the top inset, 2rem short, so the page always peeks above it; the head stays put and the body scrolls
- * inside, clear of the home bar. A scrim behind it (as ToolInfo's) gives it something to read against and takes the tap
- * that closes it.
+ * inside, clear of the home bar (shared.css's safe-area utilities: px-safe, pb-safe-md, and --safe-top in the cap). A
+ * scrim behind it (as ToolInfo's) gives it something to read against and takes the tap that closes it.
  *
  * A handle at the top: dragging it (or the head) down past a quarter of the sheet's height, or flicking it down, closes
  * the sheet; a shorter drag springs back on recipe.sheetIn. Only the handle and the head start a drag (useDragControls),
@@ -44,7 +44,7 @@ export const closesSheet = (offsetY: number, velocityY: number, height: number) 
   offsetY > height * SHEET_CLOSE.distance || velocityY > SHEET_CLOSE.velocity;
 
 /** The sheet's cap: the viewport less the top inset less 2rem, so the page peeks above it. */
-export const SHEET_MAX_HEIGHT = 'max-h-[calc(100dvh-env(safe-area-inset-top,0px)-2rem)]';
+export const SHEET_MAX_HEIGHT = 'max-h-[calc(100dvh-var(--safe-top)-2rem)]';
 
 /** Rising and dropping away; under Reduce Motion no rise, a fade. */
 const enter = (reduce: boolean | null | undefined) => (reduce ? { opacity: 0 } : { y: '100%' });
@@ -153,11 +153,11 @@ export const SheetPanel = forwardRef<HTMLDivElement, SheetPanelProps>(function S
       onClick={front ? e => e.stopPropagation() : undefined}
       className={
         // the cap spelled out in full here, as Tailwind finds classes by reading the source
-        place + ' flex max-h-[calc(100dvh-env(safe-area-inset-top,0px)-2rem)] flex-col overflow-hidden rounded-t-[var(--radius-2xl)] outline-none ' + surface + ' ' + className
+        place + ' flex max-h-[calc(100dvh-var(--safe-top)-2rem)] flex-col overflow-hidden rounded-t-[var(--radius-2xl)] outline-none ' + surface + ' ' + className
       }
     >
       <motion.div onPointerDown={startDrag} data-sheet-grab initial={false} animate={words}
-        className="shrink-0 touch-none select-none pl-[env(safe-area-inset-left,0px)] pr-[env(safe-area-inset-right,0px)]">
+        className="shrink-0 touch-none select-none px-safe">
         <div data-sheet-handle aria-hidden className="flex justify-center pt-2xs pb-3xs">
           <span className="h-1 w-9 rounded-full bg-[var(--color-border-default)]" />
         </div>
@@ -171,7 +171,7 @@ export const SheetPanel = forwardRef<HTMLDivElement, SheetPanelProps>(function S
         initial={false}
         animate={words}
         onScroll={e => setScrolled(e.currentTarget.scrollTop > 0)}
-        className="flex min-h-0 flex-col gap-sm overflow-y-auto overscroll-contain pt-3xs pb-[calc(var(--spacing-md)+env(safe-area-inset-bottom,0px))] pl-[calc(var(--spacing-md)+env(safe-area-inset-left,0px))] pr-[calc(var(--spacing-md)+env(safe-area-inset-right,0px))]"
+        className="flex min-h-0 flex-col gap-sm overflow-y-auto overscroll-contain pt-3xs pb-safe-md px-safe-md"
       >
         {children}
       </motion.div>
