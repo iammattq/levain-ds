@@ -24,7 +24,16 @@ describe('Toaster Component', () => {
     // Check position
     expect(mockToaster).toHaveAttribute('data-position', 'bottom-center');
 
-    // No class names of its own (T27): the toast-* classes were defined nowhere, so sonner's own styles always applied
-    expect(mockToaster.getAttribute('data-options')).toBeNull();
+    // Check that toast options have correct class names
+    const toastOptions = JSON.parse(
+      mockToaster.getAttribute('data-options') || '{}'
+    );
+
+    expect(toastOptions).toHaveProperty('classNames');
+    expect(toastOptions.classNames).toHaveProperty('toast', 'toast-base');
+    expect(toastOptions.classNames).toHaveProperty('success', 'toast-success');
+    expect(toastOptions.classNames).toHaveProperty('error', 'toast-error');
+    expect(toastOptions.classNames).toHaveProperty('warning', 'toast-warning');
+    expect(toastOptions.classNames).toHaveProperty('info', 'toast-info');
   });
 });

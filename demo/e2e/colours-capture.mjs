@@ -57,28 +57,30 @@ try {
   for (const [name, theme, mode] of COMBOS) {
     const key = `${name}-${mode}`;
     const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
-    page.on('pageerror', e => errors.push(`${key}: ${e.message}`));
+    page.on('pageerror', e => { errors.push(`${key}: ${e.message}`); console.log(`pageerror ${key}: ${e.stack ?? e.message}`); });
+    page.on('console', m => m.type() === 'error' && console.log(`console ${key}: ${m.text()}`));
+    const step = async (what, fn) => { try { await fn(); } catch (e) { errors.push(`${key} ${what}: ${e.message.split('\n')[0]}`); console.log(`step failed ${key} ${what}: ${e.message.split('\n')[0]}`); } };
     await page.goto(`${base}?only=colours&theme=${theme}&mode=${mode}`, { waitUntil: 'networkidle' });
     await page.evaluate(() => document.fonts.ready);
     await pause(900);
+    if (key === 'sage-light') await page.screenshot({ path: `${dir}/page.png`, fullPage: true });
 
     // the table: T27's row selected, then the Doing filter (a chip), its remove button hovered
     const table = page.locator('[data-piece="data-table"]');
-    await table.locator('tbody input[type=checkbox]').nth(2).check({ force: true });
-    await table.getByRole('button', { name: 'Filter' }).click();
-    await table.getByRole('button', { name: 'Doing' }).click();
+    await step('select row', () => table.locator('tbody input[type=checkbox]').nth(2).check({ force: true, timeout: 3000 }));
+    await step('filter', async () => { await table.getByRole('button', { name: 'Filter' }).click({ timeout: 3000 }); await table.getByRole('button', { name: 'Doing' }).click({ timeout: 3000 }); });
     await page.mouse.click(5, 5);
-    await table.locator('.inline-flex.rounded-full button').hover();
+    await step('hover chip', () => table.locator('.inline-flex.rounded-full button').hover({ timeout: 3000 }));
     await pause(300);
     const n = { still: await probe(page) };
-    await shot(page, key, 'data-table');
+    await step('shot data-table', () => shot(page, key, 'data-table'));
 
-    for (const piece of ['checkbox-radio', 'status-card', 'slider', 'image-uploader', 'media-card', 'content-navigation', 'admin-error', 'animated-name']) await shot(page, key, piece);
+    for (const piece of ['checkbox-radio', 'status-card', 'slider', 'image-uploader', 'media-card', 'content-navigation', 'admin-error', 'animated-name']) await step(`shot ${piece}`, () => shot(page, key, piece));
 
-    await page.locator('[data-piece="surface-card"] p').hover();
+    await step('hover surface', () => page.locator('[data-piece="surface-card"] p').hover({ timeout: 3000 }));
     await pause(300);
     n.hover = { surfaceCardHover: (await probe(page)).surfaceCardHover };
-    await shot(page, key, 'surface-card');
+    await step('shot surface-card', () => shot(page, key, 'surface-card'));
 
     // the name's gradient drifts (after) or holds (before)
     const pos0 = (await probe(page)).animatedName;
@@ -86,10 +88,10 @@ try {
     n.animatedNameLater = { at0: pos0, at1500: (await probe(page)).animatedName };
 
     // the month panel, 100 ms into its way in, then settled
-    await page.locator('[data-piece="calendar"]').getByRole('button', { name: 'November' }).click();
+    await step('open month', () => page.locator('[data-piece="calendar"]').getByRole('button', { name: 'November' }).click({ timeout: 3000 }));
     await pause(100);
     n.calendarAt100 = await page.evaluate(() => { const el = document.querySelector('[data-piece="calendar"] .origin-bottom'); const s = el && getComputedStyle(el); return s && { animationName: s.animationName, transform: s.transform, opacity: s.opacity }; });
-    await shot(page, key, 'calendar', 'allow');
+    await step('shot calendar', () => shot(page, key, 'calendar', 'allow'));
     await pause(500);
     n.calendarSettled = await page.evaluate(() => { const el = document.querySelector('[data-piece="calendar"] .origin-bottom'); const s = el && getComputedStyle(el); return s && { animationName: s.animationName, transform: s.transform, opacity: s.opacity }; });
 

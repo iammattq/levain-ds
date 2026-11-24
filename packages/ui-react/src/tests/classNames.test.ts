@@ -24,8 +24,11 @@ function files(dir: string): string[] {
 const shared = readFileSync(join(SRC, '..', '..', 'tokens', 'src', 'styles', 'shared.css'), 'utf8');
 const theme = readFileSync(join(SRC, '..', 'node_modules', 'tailwindcss', 'theme.css'), 'utf8');
 
-/** Hooks with no styles of their own: Tailwind's group and peer markers, and names kept for a selector or a reader. */
-const MARKERS = [/^(group|peer)(\/[\w-]+)?$/, /^highlight-pill$/, /^surface-card$/];
+/**
+ * Hooks with no styles of their own: Tailwind's group and peer markers, names kept for a selector or a reader, and
+ * Toaster's toast-* classes, which its docs (docs/components/Toaster.json) leave for the consumer's stylesheet.
+ */
+const MARKERS = [/^(group|peer)(\/[\w-]+)?$/, /^highlight-pill$/, /^surface-card$/, /^toast-(base|success|error|warning|info)$/];
 
 const CLASS_CALLS = new Set(['cn', 'cva', 'clsx', 'twMerge']);
 
