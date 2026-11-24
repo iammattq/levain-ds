@@ -4,43 +4,51 @@ import React, {
   forwardRef,
   InputHTMLAttributes,
   useState,
-  useEffect,
   useRef,
   useImperativeHandle,
+  useId,
 } from 'react';
 import { ChevronUp, ChevronDown } from 'lucide-react';
+import { cn } from '../utils/cn';
+import { useControlled } from '../utils/useControlled';
 import { inputSizeConfig, type InputSize } from '../utils/inputSizing';
 
 /** Size variants for TextInput */
 export type TextInputSize = InputSize;
 
+/**
+ * TextInput follows the form-input convention (docs/prop-conventions.json, formInputs): a native field, so `value` /
+ * `defaultValue` and the native `onChange(event)`; every prop it doesn't name goes to the <input>, as does the ref.
+ */
 export interface TextInputProps extends Omit<
   InputHTMLAttributes<HTMLInputElement>,
   'className' | 'onChange' | 'size'
 > {
-  /** Unique identifier for the input */
-  id: string;
-  /** Text label for the input field */
-  label: string;
+  /** The input's id; generated when left out */
+  id?: string;
+  /** Visible label. Without it, pass `aria-label` or `aria-labelledby` */
+  label?: string;
   /** Hides the label visually; screen readers still read it. For a field whose purpose the layout already shows. */
   hideLabel?: boolean;
-  /** Current value of the input */
-  value: string;
-  /** Function called when the input value changes */
-  onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  /** Controlled: the field's text. Leave out for uncontrolled */
+  value?: string;
+  /** Uncontrolled: the text at first */
+  defaultValue?: string;
+  /** The native change event */
+  onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void;
   /** Input type (text, password, email, etc.) */
   type?: 'text' | 'password' | 'email' | 'number' | 'tel' | 'url';
-  /** Error message to display (external validation or server error) */
+  /** Error message (external validation or server error); shown unless `touched` is false or the field is disabled */
   error?: string;
-  /** Validation function: returns error message string if invalid, null/undefined if valid */
+  /** Returns a message when the value is invalid; it shows after the field's first blur (or when `touched` is true) */
   validate?: (value: string) => string | null | undefined;
   /** Optional helper text shown below the input */
   helperText?: string;
-  /** Additional class name for the input container */
+  /** Additional class name for the root (merged with cn) */
   className?: string;
   /** Additional class name for the input element */
   inputClassName?: string;
-  /** Whether the field has been touched/blurred (controls validation visibility) */
+  /** Leave out to show `error` at once; pass the field's touched state to hold errors until the field is left */
   touched?: boolean;
   /** Function called when the input loses focus */
   onBlur?: (event: React.FocusEvent<HTMLInputElement>) => void;
@@ -59,50 +67,57 @@ export interface TextInputProps extends Omit<
 const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
   (
     {
-      id,
+      id: idProp,
       label,
       hideLabel = false,
       type = 'text',
-      value,
+      value: valueProp,
+      defaultValue = '',
       onChange,
       onBlur,
       error: externalError,
       validate,
       helperText,
-      className = '',
-      inputClassName = '',
-      touched = false,
+      className,
+      inputClassName,
+      touched,
       required = false,
       disabled = false,
       size,
       compact = false,
-      step,
-      min,
-      max,
       ...props
     },
     ref
   ) => {
+    const autoId = useId();
+    const id = idProp ?? autoId;
     // Handle deprecated compact prop - size takes precedence
     const effectiveSize: TextInputSize = size ?? (compact ? 'xs' : 'md');
     const config = inputSizeConfig[effectiveSize];
 
-    const [internalError, setInternalError] = useState<string | null>(null);
+    // the text, controlled or own (only `validate` reads it; the native onChange is called with the event below)
+    const [value, setValue] = useControlled(
+      valueProp,
+      defaultValue,
+      undefined,
+      'TextInput'
+    );
+    const [blurred, setBlurred] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
 
     useImperativeHandle(ref, () => inputRef.current as HTMLInputElement);
 
-    useEffect(() => {
-      if (validate) {
-        const validationResult = validate(value);
-        setInternalError(validationResult ?? null);
-      } else {
-        setInternalError(null);
-      }
-    }, [value, validate]);
-
-    const effectiveError = externalError ?? internalError;
-    const showError = touched && !!effectiveError;
+    // An error the app passes shows at once unless touched is false; validate's waits for the first blur (or touched).
+    // Neither shows while disabled: the helper does.
+    const validationError = validate?.(value) || null;
+    const shownError = disabled
+      ? null
+      : externalError && touched !== false
+        ? externalError
+        : validationError && (touched ?? blurred)
+          ? validationError
+          : null;
+    const showError = !!shownError;
 
     const errorId = `${id}-error`;
     const helperId = `${id}-helper`;
@@ -143,38 +158,61 @@ const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
     `;
 
     return (
-      <div className={`${className}`}>
-        <label
-          htmlFor={id}
-          className={`${hideLabel ? 'sr-only' : `${config.labelClass} mb-1 block`} ${disabled ? 'text-[var(--color-text-disabled)]' : 'text-[var(--color-text-default)]'}`}
-        >
-          {label}{' '}
-          {required && <span className="text-[var(--color-error)]">*</span>}
-        </label>
+      <div className={cn(className)}>
+        {label && (
+          <label
+            htmlFor={id}
+            className={cn(
+              hideLabel ? 'sr-only' : [config.labelClass, 'mb-1 block'],
+              disabled
+                ? 'text-[var(--color-text-disabled)]'
+                : 'text-[var(--color-text-default)]'
+            )}
+          >
+            {label}{' '}
+            {required && <span className="text-[var(--color-error)]">*</span>}
+          </label>
+        )}
 
         <div className="relative flex">
           <input
+            {...props}
             ref={inputRef}
             id={id}
             type={type}
             value={value}
-            onChange={onChange}
-            onBlur={onBlur}
+            onChange={(e) => {
+              setValue(e.target.value);
+              onChange?.(e);
+            }}
+            onBlur={(e) => {
+              setBlurred(true);
+              onBlur?.(e);
+            }}
             disabled={disabled}
             required={required}
-            step={step}
-            min={min}
-            max={max}
             aria-invalid={showError}
-            aria-describedby={descriptionId}
-            {...props}
-            className={`block w-full ${config.rounded} ${config.height} ${config.padding} ${config.textClass} ${
+            aria-describedby={
+              [descriptionId, props['aria-describedby']]
+                .filter(Boolean)
+                .join(' ') || undefined
+            }
+            // one border colour per state (before, two were set and the alphabet chose: disabled drew emphasis)
+            className={cn(
+              'block w-full border transition-colors focus:ring-1 focus:outline-none',
+              config.rounded,
+              config.height,
+              config.padding,
+              config.textClass,
               disabled
-                ? 'cursor-not-allowed border-[var(--color-border-default)] bg-[var(--color-surface-canvas)] text-[var(--color-text-disabled)]'
+                ? 'cursor-not-allowed border-[var(--color-border-emphasis)] bg-[var(--color-surface-canvas)] text-[var(--color-text-disabled)]'
                 : showError
-                  ? 'border-[var(--color-error)] bg-[var(--color-surface-section)] focus:border-[var(--color-error)] focus:ring-[var(--color-error)]'
-                  : 'border-[var(--color-border-subtle)] bg-[var(--color-surface-interactive)] focus:border-[var(--color-primary)] focus:ring-[var(--color-primary)]'
-            } border border-[var(--color-border-emphasis)] text-[var(--color-text-default)] transition-colors focus:ring-1 focus:outline-none ${isNumber ? '[appearance:textfield] pr-8 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none' : ''} ${inputClassName}`}
+                  ? 'border-[var(--color-error)] bg-[var(--color-surface-section)] text-[var(--color-text-default)] focus:border-[var(--color-error)] focus:ring-[var(--color-error)]'
+                  : 'border-[var(--color-border-subtle)] bg-[var(--color-surface-interactive)] text-[var(--color-text-default)] focus:border-[var(--color-primary)] focus:ring-[var(--color-primary)]',
+              isNumber &&
+                '[appearance:textfield] pr-8 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none',
+              inputClassName
+            )}
           />
 
           {isNumber && !disabled && (
@@ -205,19 +243,23 @@ const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
           )}
         </div>
 
-        {showError && !disabled && (
+        {showError && (
           <p
             id={errorId}
-            className={`${config.errorClass} mt-1 text-[var(--color-error)]`}
+            className={cn(config.errorClass, 'mt-1 text-[var(--color-error)]')}
           >
-            {effectiveError}
+            {shownError}
           </p>
         )}
 
-        {(!showError || disabled) && helperText && (
+        {!showError && helperText && (
           <p
             id={helperId}
-            className={`${config.helperClass} mt-1 ${disabled ? 'text-[var(--color-text-disabled)]' : ''}`}
+            className={cn(
+              config.helperClass,
+              'mt-1',
+              disabled && 'text-[var(--color-text-disabled)]'
+            )}
           >
             {helperText}
           </p>
