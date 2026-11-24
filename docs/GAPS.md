@@ -24,7 +24,7 @@ The first consumer outside the portfolio was a web board for running a team of c
 - **Tooltip / Toggletip.** Hover delay, focus, tap, Escape, collision placement, portal. The consumer built one by hand on its switcher's surface recipe, on `--color-surface-component`, because dark info and success miss 4.5:1 on the elevated surface.
 
 ### Phone patterns
-- **Bottom sheet.** A panel that rises from the bottom with a drag handle and snap heights.
+- **Bottom sheet.** A panel that rises from the bottom with a drag handle and snap heights. Hit again by the board (2026-11-23): on a phone its StatusCard dialogs are taller than the screen, and the look-and-decide pair (StatusCardDialogStack) has no phone form. Wanted: StatusCardDialog as a sheet on phones (rising from the bottom, scrolling inside, clear of the safe-area insets, on the `sheetIn`/`sheetOut` recipes), and a stacked sheet keeping the pile, Next/Back, close-all and Reduce Motion. The board shows the desktop dialog on phones for now.
 - **Swipeable column strip.** One column a screen wide, swiped with snap, with pills to jump; while a card is held, resting at either edge slides the strip one column on a spring. Built in the consumer on top of `SortableGroup`'s `onDragMove`.
 - **Safe-area padding** for the notch and home indicator, as a token or utility.
 
