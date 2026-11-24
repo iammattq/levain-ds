@@ -170,8 +170,8 @@ describe('RadioButton Component', () => {
     const radioContainer = container.querySelector(
       'div[class*="rounded-full"]'
     );
-    expect(radioContainer).toHaveClass('border-[var(--color-border)]');
-    expect(radioContainer).toHaveClass('bg-[var(--color-surface-2)]');
+    expect(radioContainer).toHaveClass('border-[var(--color-border-default)]');
+    expect(radioContainer).toHaveClass('bg-[var(--color-surface-card)]');
 
     // Dot should not be present
     const dot = container.querySelector('span');

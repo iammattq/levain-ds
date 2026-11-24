@@ -491,6 +491,62 @@
 }
 
 /*
+ * Calendar's month and year panels: up from below on the way in, back down on the way out. The calendar swaps the
+ * panel 300 ms after starting the way out, so both run at sheet-out length (280 ms) and hold their end state.
+ */
+@keyframes slide-in {
+  from {
+    transform: translateY(100%);
+    opacity: 0.8;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slide-out {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+}
+
+.animate-slide-in {
+  animation: slide-in var(--duration-sheet-out) var(--ease-out) forwards;
+}
+
+.animate-slide-out {
+  animation: slide-out var(--duration-sheet-out) var(--ease-away) forwards;
+}
+
+/*
+ * SimpleAnimatedName's gradient drift: the 200%-wide gradient behind the text pans across and back. A continuous
+ * decoration, so under Reduce Motion it stops rather than running at 0 ms.
+ */
+@keyframes gradientMove {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animated-name {
+    animation: none !important;
+  }
+}
+
+/*
  * Density: data-density="condensed" on <html> or on any element tightens everything inside it through the same
  * tokens. Each spacing and radius step takes roughly the value of the step below, so the order of the scale (and with
  * it every spacing invariant in assembly.json) is unchanged; body, small body and label text drop one size, never

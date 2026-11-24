@@ -44,14 +44,19 @@ const valueVariants = cva('', {
   },
 });
 
-// Track variants for size
+// Track variants for size. The thumb is themed too (webkit and moz): primary, ringed in the card surface so it stands
+// off the fill, 14px at sm and 16px at md (thumbWidth below places the tooltip by the same sizes)
 const trackVariants = cva(
-  'w-full cursor-pointer appearance-none rounded-lg bg-[var(--color-surface-canvas)] border border-[var(--color-border-default)] focus:outline-none',
+  [
+    'w-full cursor-pointer appearance-none rounded-lg bg-[var(--color-surface-canvas)] border border-[var(--color-border-default)] focus:outline-none',
+    '[&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-[var(--color-surface-card)] [&::-webkit-slider-thumb]:bg-[var(--color-primary)] [&::-webkit-slider-thumb]:shadow-sm',
+    '[&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-[var(--color-surface-card)] [&::-moz-range-thumb]:bg-[var(--color-primary)] [&::-moz-range-thumb]:shadow-sm',
+  ],
   {
     variants: {
       size: {
-        sm: 'h-1.5',
-        md: 'h-2',
+        sm: 'h-1.5 [&::-webkit-slider-thumb]:h-3.5 [&::-webkit-slider-thumb]:w-3.5 [&::-moz-range-thumb]:h-3.5 [&::-moz-range-thumb]:w-3.5',
+        md: 'h-2 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:w-4',
       },
     },
     defaultVariants: {
@@ -280,8 +285,8 @@ export default function Slider({
           disabled={disabled}
           className={cn(
             trackVariants({ size }),
-            // Filled track via linear gradient
-            'slider-filled-track',
+            // Filled track: primary up to the value (--slider-percentage, set above), the track's own surface after
+            'bg-[linear-gradient(to_right,var(--color-primary)_var(--slider-percentage,0%),transparent_var(--slider-percentage,0%))]',
             // Focus ring
             'focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)] focus-visible:ring-offset-2',
             disabled && 'cursor-not-allowed opacity-50',

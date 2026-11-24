@@ -17,12 +17,12 @@
   ],
   "design": [
     "The RadioButton component uses CSS variables for theming:",
-    "Border (unchecked): var(--color-border)",
-    "Background (unchecked): var(--color-surface-2)",
+    "Border (unchecked): var(--color-border-default)",
+    "Background (unchecked): var(--color-surface-card)",
     "Border (checked): var(--color-accent)",
     "Background (checked): var(--color-accent)/10",
     "Dot color: var(--color-accent)",
-    "Label text: var(--color-text)"
+    "Label text: var(--color-text-default)"
   ],
   "accessibility": [
     "Uses a standard radio input (visually hidden) for native keyboard navigation",

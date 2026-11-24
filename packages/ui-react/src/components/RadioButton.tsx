@@ -61,7 +61,7 @@ const RadioButton: FC<RadioButtonProps> = ({
           className={`${classes.container} relative rounded-full border-2 transition-colors ${
             checked
               ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/10'
-              : 'border-[var(--color-border)] bg-[var(--color-surface-2)]'
+              : 'border-[var(--color-border-default)] bg-[var(--color-surface-card)]'
           }`}
         >
           {checked && (

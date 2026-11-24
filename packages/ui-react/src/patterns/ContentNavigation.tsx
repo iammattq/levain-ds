@@ -147,7 +147,7 @@ export default function ContentNavigation({
 
           {/* Optional Back link */}
           {backLinkText && (
-            <div className="mt-8 border-t border-[var(--color-surface-tone-2)] pt-8">
+            <div className="mt-8 border-t border-[var(--color-border-subtle)] pt-8">
               <Link
                 href={basePath}
                 onClick={scrollToTop}

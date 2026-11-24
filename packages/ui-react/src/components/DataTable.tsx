@@ -392,12 +392,12 @@ export function DataTable<TData, TValue>({
           {activeFilters.map((filter) => (
             <div
               key={filter.id}
-              className="type-label-sm inline-flex items-center rounded-full bg-[var(--color-primary-light)] px-2 py-1 text-[var(--color-primary)]"
+              className="type-label-sm inline-flex items-center rounded-full bg-[var(--color-primary)]/10 px-2 py-1 text-[var(--color-primary)]"
             >
               <span className="mr-1">{filter.label}</span>
               <button
                 onClick={() => removeFilter(filter)}
-                className="hover:bg-opacity-80 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[var(--color-primary)] text-white"
+                className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary)]/80"
               >
                 <X className="h-2 w-2" />
                 <span className="sr-only">Remove filter</span>
@@ -451,7 +451,7 @@ export function DataTable<TData, TValue>({
                     return (
                       <button
                         key={option.id}
-                        className={`type-body-sm w-full rounded-sm px-2 py-1 text-left ${isActive ? 'bg-[var(--color-primary-light)] text-[var(--color-primary)]' : 'hover:bg-[var(--color-surface-section)]'}`}
+                        className={`type-body-sm w-full rounded-sm px-2 py-1 text-left ${isActive ? 'bg-[var(--color-primary)]/10 text-[var(--color-primary)]' : 'hover:bg-[var(--color-surface-section)]'}`}
                         onClick={() => applyFilter(option)}
                       >
                         {option.label}
@@ -615,7 +615,7 @@ export function DataTable<TData, TValue>({
                   className={cn(
                     'border-t border-[var(--color-border-subtle)] transition-colors',
                     row.getIsSelected()
-                      ? 'bg-[var(--color-primary-light)] hover:bg-[var(--color-primary-light)]'
+                      ? 'bg-[var(--color-primary)]/10 hover:bg-[var(--color-primary)]/10'
                       : 'hover:bg-[var(--color-surface-section)]'
                   )}
                 >

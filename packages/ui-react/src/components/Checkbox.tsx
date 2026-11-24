@@ -91,16 +91,14 @@ const Checkbox: FC<CheckboxProps> = ({
         <div
           className={cn(
             `${classes.container} relative flex items-center justify-center rounded border-2 transition-colors`,
-            'border-[var(--color-border)] bg-[var(--color-surface-2)] peer-focus-visible:ring-2 peer-focus-visible:ring-[var(--color-primary)] peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-[var(--color-surface-1)]',
+            'border-[var(--color-border-default)] bg-[var(--color-surface-card)] peer-focus-visible:ring-2 peer-focus-visible:ring-[var(--color-primary)] peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-[var(--color-surface-canvas)]',
             {
               'border-[var(--color-accent)] bg-[var(--color-accent)]':
                 isChecked || isIndeterminate,
-              'border-[var(--color-border)] bg-[var(--color-surface-2)]':
+              'border-[var(--color-border-default)] bg-[var(--color-surface-card)]':
                 !isChecked && !isIndeterminate,
-              'group-hover:border-[var(--color-border-hover)]':
+              'group-hover:border-[var(--color-border-emphasis)]':
                 !disabled && !isChecked && !isIndeterminate,
-              // Optional: Add hover state for checked/indeterminate if desired
-              // 'group-hover:border-[var(--color-accent-hover)] group-hover:bg-[var(--color-accent-hover)]': !disabled && (isChecked || isIndeterminate)
             }
           )}
           aria-hidden="true" // Hide decorative element from screen readers

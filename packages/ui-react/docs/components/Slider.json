@@ -23,7 +23,7 @@
   "design": [
     "Filled track uses var(--color-primary) from min to current value",
     "Unfilled track uses var(--color-surface-canvas)",
-    "Thumb uses var(--color-surface-inverted) with subtle shadow",
+    "Thumb uses var(--color-primary), ringed 2px in var(--color-surface-card), with subtle shadow (webkit and moz)",
     "Focus ring uses 2px var(--color-border-focus) with offset",
     "Size 'sm' has h-1.5 track, 14px thumb, type-caption-compact labels",
     "Size 'md' has h-2 track, 16px thumb, type-label-sm labels"
