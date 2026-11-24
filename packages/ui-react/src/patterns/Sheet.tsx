@@ -53,7 +53,12 @@ const shown = (reduce: boolean | null | undefined) =>
 const leave = (reduce: boolean | null | undefined) =>
   reduce ? { opacity: 0, transition: recipe.contentOut } : { y: '100%', transition: recipe.sheetOut };
 
-/** The scrim behind a sheet; a tap on it reaches the overlay's onClick, which closes. */
+/**
+ * The scrim behind a sheet or drawer; a tap on it reaches the overlay's onClick, which closes. It dims the page in both
+ * modes (T37). Light: the inverted surface at 30 %. Dark: the surface ramp's darkest step at 50 %, since surface-inverted
+ * is light in dark mode and would lighten the page; --color-surface-0 is one ramp written the same in both modes, near
+ * black in every theme. Spelled out in the className so Tailwind finds it (and the classNames test checks it).
+ */
 export function SheetScrim({ reduce }: { reduce: boolean | null | undefined }) {
   return (
     <motion.div
@@ -62,7 +67,7 @@ export function SheetScrim({ reduce }: { reduce: boolean | null | undefined }) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1, transition: motionFor('fadeIn', reduce) }}
       exit={{ opacity: 0, transition: motionFor('contentOut', reduce) }}
-      className="absolute inset-0 bg-[var(--color-surface-inverted)]/30"
+      className="absolute inset-0 bg-[var(--color-surface-inverted)]/30 dark:bg-[var(--color-surface-0)]/50"
     />
   );
 }
