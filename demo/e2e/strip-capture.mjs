@@ -54,12 +54,15 @@ const state = (page, which) => page.evaluate(([which, KEY]) => {
   return {
     scrollLeft: Math.round(strip.scrollLeft),
     scrollTop: Math.round(strip.scrollTop), height: Math.round(strip.getBoundingClientRect().height), pageY: Math.round(scrollY),
+    // the page's own sideways scroll: WebKit's autoscroll under a held mouse moves the document when the lifted card
+    // hangs off the right edge (the demo page's, not the strip's); columns are measured against the strip
+    pageX: Math.round(scrollX),
     snap: strip.style.scrollSnapType,
     railX: Math.round(new DOMMatrix(getComputedStyle(rail).transform).m41),
     cue: root.querySelector('[data-page-cue]')?.dataset.pageCue ?? null,
     cueOpacity: (c => c ? Number(getComputedStyle(c).opacity) : null)(root.querySelector('[data-page-cue]')),
     current: pill ? key(Object.keys(KEY).find(n => pill.textContent.trim().startsWith(n))) : null,
-    cols: Object.fromEntries(cols.map(c => [key(c.getAttribute('aria-label')), Math.round(c.getBoundingClientRect().x)])),
+    cols: Object.fromEntries(cols.map(c => [key(c.getAttribute('aria-label')), Math.round(c.getBoundingClientRect().x - strip.getBoundingClientRect().x)])),
     lists: Object.fromEntries(cols.map(c => [key(c.getAttribute('aria-label')), [...c.querySelectorAll('[role="listitem"], h3, p')].map(e => e.textContent.match(/T\d+/)?.[0]).filter((v, i, a) => v && a.indexOf(v) === i)])),
   };
 }, [which, KEY]);
