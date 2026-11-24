@@ -34,7 +34,7 @@ import {
 } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
-import { duration, recipe } from '@levain/tokens';
+import { duration, instant, recipe } from '@levain/tokens';
 import { cn } from '../utils/cn';
 import { calculatePopupPosition, type PopupAlignment, type PopupPlacement } from '../utils/popupPosition';
 import { focusables, useDialogFocus } from '../utils/useDialogFocus';
@@ -253,14 +253,14 @@ export function Popover({
             ...to,
             opacity: 1,
             transition: reduce
-              ? { duration: s(duration.quick) }
-              : { default: geo ? recipe.morph : { duration: 0 }, opacity: recipe.contentOut },
+              ? recipe.quick
+              : { default: geo ? recipe.morph : instant, opacity: recipe.contentOut },
           }}
           exit={{
             ...(geo && !reduce ? geo.from : to),
             opacity: 0,
             transition: reduce
-              ? { duration: s(duration.quick) }
+              ? recipe.quick
               : { default: recipe.collapse, opacity: { ...recipe.quick, delay: s(duration.contentOut) } },
           }}
         >
@@ -274,8 +274,8 @@ export function Popover({
             className={cn('absolute w-max p-3 outline-none', className)}
             style={anchor}
             initial={reduce ? false : { opacity: 0, ...nudge }}
-            animate={{ opacity: 1, x: 0, y: 0, transition: reduce ? { duration: 0 } : { ...recipe.contentIn, delay: s(duration.contentOut) } }}
-            exit={{ opacity: 0, transition: reduce ? { duration: 0 } : recipe.contentOut }}
+            animate={{ opacity: 1, x: 0, y: 0, transition: reduce ? instant : { ...recipe.contentIn, delay: s(duration.contentOut) } }}
+            exit={{ opacity: 0, transition: reduce ? instant : recipe.contentOut }}
             {...data}
           >
             {typeof children === 'function' ? children(close) : children}
