@@ -7,7 +7,8 @@
  * focus moved in, kept in, given back on close; Escape from the top dialog only, unless a widget inside claimed it), the
  * same surface (or, with surface="canvas", the darker canvas one), its far corners rounded (--radius-2xl) and its near ones square against the edge. It slides in on
  * recipe.sheetIn and out on recipe.sheetOut; under Reduce Motion it appears and goes at once. The page under it doesn't
- * scroll while it's open. Its contents sit inside the safe-area insets and scroll inside it.
+ * scroll while it's open. It runs the screen's full height, even where iOS hands a fixed box a shorter viewport (T51);
+ * its contents sit inside the safe-area insets and scroll inside it.
  *
  * A swipe left on the panel past a quarter of its width, or a flick left, closes it (the sheet's thresholds); a shorter
  * one springs back. As the sheet's handle: a swipe starts only off the controls (a press on a link or button stays a
@@ -90,7 +91,9 @@ export function Drawer({ open, onClose, label, surface = 'elevated', children }:
   return createPortal(
     <AnimatePresence>
       {open && (
-        <div className="fixed inset-0 z-50" onClick={onClose} data-drawer-overlay>
+        // min-h-lvh (T51): iOS can size a fixed inset-0 box to a viewport shorter than the screen (Safari's toolbar, the
+        // standalone app after the keyboard); never shorter than the largest viewport, the scrim and panel reach the bottom
+        <div className="fixed inset-0 z-50 min-h-lvh" onClick={onClose} data-drawer-overlay>
           <SheetScrim reduce={reduce} />
           <motion.div
             ref={panel}

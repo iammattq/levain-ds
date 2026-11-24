@@ -87,6 +87,20 @@ describe('Drawer', () => {
     expect(cls).toContain('shadow-[var(--elevation-3)]');
   });
 
+  it('the overlay is never shorter than the largest viewport, and the scrim and panel fill it top to bottom (T51)', async () => {
+    const user = userEvent.setup();
+    render(<Demo />);
+    await user.click(screen.getByRole('button', { name: 'Menu' }));
+    const overlay = document.querySelector('[data-drawer-overlay]')!;
+    for (const c of ['fixed', 'inset-0', 'min-h-lvh']) expect(overlay.className.split(' ')).toContain(c);
+    for (const c of ['absolute', 'inset-y-0']) expect(drawer().className.split(' ')).toContain(c);
+    expect(drawer().className).not.toMatch(/(^| )(max-)?h-/);
+    const scrim = document.querySelector('[data-sheet-scrim]')!;
+    expect(scrim.parentElement).toBe(overlay);
+    expect(drawer().parentElement).toBe(overlay);
+    expect(scrim.className.split(' ')).toContain('inset-0');
+  });
+
   it('the contents scroll inside it, inside the safe-area insets', async () => {
     const user = userEvent.setup();
     render(<Demo />);
