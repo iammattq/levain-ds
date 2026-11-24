@@ -263,5 +263,7 @@ export { CardStack } from './src/patterns/CardStack';
 export type { CardStackProps } from './src/patterns/CardStack';
 export { ColumnStrip, useColumnStrip, snapIndex, edgeSide, COLUMN_STRIP_EDGE, COLUMN_STRIP_DWELL, COLUMN_STRIP_REPEAT } from './src/patterns/ColumnStrip';
 export type { ColumnStripProps, ColumnStripDrag, StripColumn } from './src/patterns/ColumnStrip';
+export { Column } from './src/patterns/Column';
+export type { ColumnProps } from './src/patterns/Column';
 export { ImageCompare } from './src/patterns/ImageCompare';
 export type { ImageCompareProps, ImageCompareImage } from './src/patterns/ImageCompare';
