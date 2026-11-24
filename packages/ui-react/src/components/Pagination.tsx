@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useId } from 'react';
 import {
   ChevronsLeft,
   ChevronsRight,
@@ -54,6 +54,7 @@ export function Pagination({
   onPageSizeChange,
   className,
 }: PaginationProps) {
+  const pageSizeId = useId();
   const canGoPrevious = currentPage > 1;
   const canGoNext = currentPage < totalPages;
 
@@ -86,7 +87,7 @@ export function Pagination({
         {showPageSize && (
           <div className="flex items-center gap-1.5">
             <Select
-              id="pagination-page-size"
+              id={pageSizeId}
               label="Items per page"
               value={String(pageSize)}
               onChange={(e) => onPageSizeChange(parseInt(e.target.value, 10))}

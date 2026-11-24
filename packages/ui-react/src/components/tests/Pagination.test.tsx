@@ -173,4 +173,23 @@ describe('Pagination', () => {
       expect(container.firstChild).toHaveClass('custom-class');
     });
   });
+
+  // D14: two paginations on one page keep their own page-size labels
+  it('gives each page-size select its own id', () => {
+    const props = {
+      ...defaultProps,
+      pageSize: 10,
+      pageSizeOptions: [10, 20],
+      onPageSizeChange: jest.fn(),
+    };
+    render(
+      <>
+        <Pagination {...props} />
+        <Pagination {...props} />
+      </>
+    );
+    const selects = screen.getAllByLabelText('Items per page');
+    expect(selects).toHaveLength(2);
+    expect(selects[0].id).not.toBe(selects[1].id);
+  });
 });
