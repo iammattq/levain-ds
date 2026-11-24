@@ -253,7 +253,10 @@ describe('ImageCompare mode="slider"', () => {
   test('the chips are on the inverted surface, in the inverted text colour', () => {
     const { container } = render(<ImageCompare mode="slider" images={BA} />);
     for (const side of ['left', 'right']) {
-      expect(container.querySelector(`[data-image-compare-label="${side}"]`)).toHaveClass('bg-[var(--color-surface-inverted)]', 'text-[var(--color-text-inverted)]');
+      const chip = container.querySelector(`[data-image-compare-label="${side}"]`)!;
+      expect(chip).toHaveClass('bg-[var(--color-surface-inverted)]');
+      // on the inner span, so .type-caption's colour on the chip doesn't win
+      expect(chip.firstElementChild).toHaveClass('text-[var(--color-text-inverted)]');
     }
   });
 

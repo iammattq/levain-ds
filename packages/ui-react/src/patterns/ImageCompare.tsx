@@ -50,12 +50,13 @@ const SliderLabel = React.forwardRef<HTMLSpanElement, { side: 'left' | 'right'; 
       aria-hidden="true"
       data-image-compare-label={side}
       className={cn(
-        'type-caption pointer-events-none absolute top-xs rounded-full bg-[var(--color-surface-inverted)] px-2xs py-3xs text-[var(--color-text-inverted)] shadow-[var(--elevation-1)] transition-opacity duration-150 motion-reduce:transition-none',
+        'type-caption pointer-events-none absolute top-xs rounded-full bg-[var(--color-surface-inverted)] px-2xs py-3xs shadow-[var(--elevation-1)] transition-opacity duration-150 motion-reduce:transition-none',
         side === 'left' ? 'left-xs' : 'right-xs',
         covered ? 'opacity-0' : 'opacity-100'
       )}
     >
-      {children}
+      {/* the colour on an inner span: .type-caption's own colour (unlayered) beats a text utility on the same element */}
+      <span className="text-[var(--color-text-inverted)]">{children}</span>
     </span>
   )
 );
