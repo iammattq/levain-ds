@@ -1,6 +1,6 @@
 // levain DS's motion, density and drag, on one page. Every timing here comes from @levain/tokens.
 // ?density=condensed starts condensed; ?mode=light starts light; ?theme=7 starts on Cobalt Mono.
-// ?only=progress, ?only=decide, ?only=time, ?only=count, ?only=command, ?only=sheet, ?only=bottom-sheet, ?only=drawer, ?only=timeline, ?only=cardstack, ?only=compare, ?only=slider, ?only=strip, ?only=column, ?only=colours, ?only=picker, ?only=popover, ?only=tooltip, ?only=menu or ?only=skeleton shows only that section (for captures).
+// ?only=progress, ?only=decide, ?only=time, ?only=count, ?only=command, ?only=sheet, ?only=bottom-sheet, ?only=drawer, ?only=timeline, ?only=cardstack, ?only=compare, ?only=slider, ?only=strip, ?only=column, ?only=colours, ?only=picker, ?only=popover, ?only=tooltip, ?only=menu, ?only=skeleton or ?only=empty shows only that section (for captures).
 import '@fontsource/open-sans/400.css';
 import '@fontsource/open-sans/600.css';
 import '@fontsource/oswald/400.css';
@@ -24,6 +24,7 @@ import { PopoverDemo } from './popover';
 import { TooltipDemo } from './tooltip';
 import { MenuDemo as LevainMenuDemo } from './menu';
 import { SkeletonDemo } from './skeleton';
+import { EmptyStateDemo } from './emptyState';
 import { SheetDemo } from './sheet';
 import { CardStackDemo } from './cardStack';
 import { TimelineDemo } from './timeline';
@@ -263,7 +264,7 @@ function App() {
         </div>
         <SegmentedControl id="density" size="sm" value={density} onChange={setDensity} options={[{ label: 'Comfortable', value: 'comfortable' }, { label: 'Condensed', value: 'condensed' }]} />
       </header>
-      {q.get('only') === 'progress' ? <ProgressDemo Section={Section} /> : q.get('only') === 'decide' ? <DecideDemo Section={Section} /> : q.get('only') === 'time' ? <RelativeTimeDemo Section={Section} /> : q.get('only') === 'count' ? <CountDemo Section={Section} /> : q.get('only') === 'command' ? <CommandDemo Section={Section} /> : q.get('only') === 'sheet' ? <SheetDemo Section={Section} /> : q.get('only') === 'bottom-sheet' ? <BottomSheetDemo Section={Section} /> : q.get('only') === 'drawer' ? <DrawerDemo Section={Section} /> : q.get('only') === 'timeline' ? <TimelineDemo Section={Section} /> : q.get('only') === 'cardstack' ? <CardStackDemo Section={Section} /> : q.get('only') === 'compare' ? <ImageCompareDemo Section={Section} /> : q.get('only') === 'slider' ? <ImageCompareSliderDemo Section={Section} /> : q.get('only') === 'strip' ? <StripDemo Section={Section} /> : q.get('only') === 'column' ? <ColumnDemo Section={Section} /> : q.get('only') === 'colours' ? <ColoursDemo Section={Section} /> : q.get('only') === 'picker' ? <PickerDemo Section={Section} /> : q.get('only') === 'popover' ? <PopoverDemo Section={Section} /> : q.get('only') === 'tooltip' ? <TooltipDemo Section={Section} /> : q.get('only') === 'menu' ? <LevainMenuDemo Section={Section} /> : q.get('only') === 'skeleton' ? <SkeletonDemo Section={Section} /> : <>
+      {q.get('only') === 'progress' ? <ProgressDemo Section={Section} /> : q.get('only') === 'decide' ? <DecideDemo Section={Section} /> : q.get('only') === 'time' ? <RelativeTimeDemo Section={Section} /> : q.get('only') === 'count' ? <CountDemo Section={Section} /> : q.get('only') === 'command' ? <CommandDemo Section={Section} /> : q.get('only') === 'sheet' ? <SheetDemo Section={Section} /> : q.get('only') === 'bottom-sheet' ? <BottomSheetDemo Section={Section} /> : q.get('only') === 'drawer' ? <DrawerDemo Section={Section} /> : q.get('only') === 'timeline' ? <TimelineDemo Section={Section} /> : q.get('only') === 'cardstack' ? <CardStackDemo Section={Section} /> : q.get('only') === 'compare' ? <ImageCompareDemo Section={Section} /> : q.get('only') === 'slider' ? <ImageCompareSliderDemo Section={Section} /> : q.get('only') === 'strip' ? <StripDemo Section={Section} /> : q.get('only') === 'column' ? <ColumnDemo Section={Section} /> : q.get('only') === 'colours' ? <ColoursDemo Section={Section} /> : q.get('only') === 'picker' ? <PickerDemo Section={Section} /> : q.get('only') === 'popover' ? <PopoverDemo Section={Section} /> : q.get('only') === 'tooltip' ? <TooltipDemo Section={Section} /> : q.get('only') === 'menu' ? <LevainMenuDemo Section={Section} /> : q.get('only') === 'skeleton' ? <SkeletonDemo Section={Section} /> : q.get('only') === 'empty' ? <EmptyStateDemo Section={Section} /> : <>
       <DragDemo />
       <DecideDemo Section={Section} />
       <StackDemo />
@@ -277,6 +278,7 @@ function App() {
       <TooltipDemo Section={Section} />
       <LevainMenuDemo Section={Section} />
       <SkeletonDemo Section={Section} />
+      <EmptyStateDemo Section={Section} />
       <ProgressDemo Section={Section} />
       <RelativeTimeDemo Section={Section} />
       <CountDemo Section={Section} />
