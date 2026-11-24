@@ -121,15 +121,17 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
 `useTheme` is needed only by the theme patterns (ThemeToggle, ThemeColorButton, SimpleAnimatedName). It returns `{ theme, setTheme, themeIndex, setThemeIndex, saveThemePreference }`.
 
-**Start the theme.** Dark mode is a class on `<html>`, and the components' `dark:` styles follow that class, not the colour values. `applyTheme` sets that class from the saved mode (dark by default) as it writes the tokens, so one call is enough:
+**Start the theme.** A theme's colours are plain CSS, light and dark, picked by `data-levain-theme` on `<html>`; dark mode is the `.dark` class beside it, and both the colours and the components' `dark:` styles follow that class. `applyTheme` sets the class from the saved mode (dark by default) and the attribute, so one call is enough:
 
 ```ts
 import { themeManager } from '@levain/tokens';
 
-themeManager.applyTheme(0); // puts <html> in the saved mode and writes theme 0's tokens for it
+themeManager.applyTheme(0); // puts <html> in the saved mode and in theme 0
 ```
 
-`initTheme()` does the same for the class alone; calling it too, before or after, changes nothing, so the order doesn't matter. In a server-rendered app, also set the class in an inline script before paint, as mattquinn.ca does, so the first frame is already in the right mode.
+`initTheme()` does the same for the class alone; calling it too, before or after, changes nothing, so the order doesn't matter.
+
+**Colour before JavaScript.** Link the themes' CSS once (`@import '@levain/tokens/generated/themes.css';`, 54 KB, 6 KB gzipped), put the theme on `<html>` in the markup (`<html data-levain-theme="sage">`, each theme's name in lowercase with hyphens: `cobalt-mono`), and set `.dark` in an inline script before paint from the saved mode (`localStorage['levain-theme-mode']`: `dark`, `light` or `system`, dark when unset), as mattquinn.ca does. The first frame then has its colours; `applyTheme` later finds the CSS already there and doesn't add it again.
 
 **Motion.** In CSS, time transitions with the tokens: `transition: width var(--duration-morph) var(--ease-spring)`. In framer-motion, pass a recipe through `motion()`, which reads reduced motion for you:
 

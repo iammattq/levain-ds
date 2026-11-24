@@ -784,12 +784,11 @@ export class ThemeManager {
   }
 
   /**
-   * For backward compatibility
-   * Get the current theme synchronously
+   * The current theme's index, read synchronously: session, then project, then saved, then the first theme.
+   * Reads only (D12): it neither saves nor applies a theme.
    */
   getCurrentTheme(): number {
-    // Default to 0 and then update asynchronously
-    this.getCurrentThemeAsync().then((index) => this.setTheme(index));
+    if (typeof window === 'undefined') return 0;
 
     const saved = this.indexForSlug(readKey('session', SESSION_STORAGE_KEY));
     if (saved !== null) return saved;

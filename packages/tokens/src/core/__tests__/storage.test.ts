@@ -195,6 +195,32 @@ describe('theme storage', () => {
     });
   });
 
+  describe('getCurrentTheme (D12)', () => {
+    it('reads without side effects: no setTheme, no applyTheme, storage unchanged', async () => {
+      const local: Store = { 'levain-theme-saved': slug(2) };
+      const session: Store = {};
+      installStorage(local, session);
+      const { manager } = await load();
+      const setTheme = jest.spyOn(manager, 'setTheme');
+      const applyTheme = jest.spyOn(manager, 'applyTheme');
+      const before = JSON.stringify([local, session]);
+
+      expect(manager.getCurrentTheme()).toBe(2);
+      await new Promise((r) => setTimeout(r, 0)); // anything it might have started asynchronously
+
+      expect(setTheme).not.toHaveBeenCalled();
+      expect(applyTheme).not.toHaveBeenCalled();
+      expect(JSON.stringify([local, session])).toBe(before);
+    });
+
+    it('prefers the session theme over the saved one', async () => {
+      installStorage({ 'levain-theme-saved': slug(2) }, { 'levain-theme': slug(5) });
+      const { manager } = await load();
+
+      expect(manager.getCurrentTheme()).toBe(5);
+    });
+  });
+
   describe('blocked storage', () => {
     it('reads as nothing saved and writes are dropped, without throwing', async () => {
       installBlockedStorage();
