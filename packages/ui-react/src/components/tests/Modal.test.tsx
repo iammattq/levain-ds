@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { Modal } from '../Modal';
 
 // Mock createPortal
@@ -192,8 +193,9 @@ describe('Modal Keyboard Interactions', () => {
   });
 
   test('removes event listener when component unmounts', async () => {
-    const addEventListenerSpy = jest.spyOn(document, 'addEventListener');
-    const removeEventListenerSpy = jest.spyOn(document, 'removeEventListener');
+    // the shared dialog behaviour (useDialogFocus) listens on the window
+    const addEventListenerSpy = jest.spyOn(window, 'addEventListener');
+    const removeEventListenerSpy = jest.spyOn(window, 'removeEventListener');
 
     const { unmount } = render(
       <Modal isOpen={true} onClose={jest.fn()}>
@@ -216,5 +218,80 @@ describe('Modal Keyboard Interactions', () => {
     // Clean up
     addEventListenerSpy.mockRestore();
     removeEventListenerSpy.mockRestore();
+  });
+});
+
+// T29: one dialog behaviour (useDialogFocus): a named modal dialog that holds focus, gives it back, and is alone in
+// answering Escape when it's on top
+describe('Modal as a dialog', () => {
+  function Page({ inner = false }: { inner?: boolean }) {
+    const [open, setOpen] = React.useState(false);
+    const [second, setSecond] = React.useState(false);
+    return (
+      <>
+        <button type="button" onClick={() => setOpen(true)}>Open</button>
+        <button type="button">Behind</button>
+        <Modal isOpen={open} onClose={() => setOpen(false)} title="Settings">
+          {() => (
+            <>
+              <input aria-label="Name" />
+              {inner && <button type="button" onClick={() => setSecond(true)}>Confirm</button>}
+            </>
+          )}
+        </Modal>
+        <Modal isOpen={second} onClose={() => setSecond(false)} label="Are you sure?">
+          {close => <button type="button" onClick={close}>Yes</button>}
+        </Modal>
+      </>
+    );
+  }
+
+  test('is a modal dialog named by its title, or by label without one', async () => {
+    const user = userEvent.setup();
+    render(<Page inner />);
+    await user.click(screen.getByRole('button', { name: 'Open' }));
+    const d = screen.getByRole('dialog', { name: 'Settings' });
+    expect(d).toHaveAttribute('aria-modal', 'true');
+    await user.click(screen.getByRole('button', { name: 'Confirm' }));
+    expect(screen.getByRole('dialog', { name: 'Are you sure?' })).toHaveAttribute('aria-modal', 'true');
+  });
+
+  test('takes focus on open; Tab and Shift+Tab stay inside; focus returns to the opener on close', async () => {
+    const user = userEvent.setup();
+    render(<Page />);
+    const opener = screen.getByRole('button', { name: 'Open' });
+    await user.click(opener);
+    const d = screen.getByRole('dialog', { name: 'Settings' });
+    expect(d).toHaveFocus();
+    const close = screen.getByRole('button', { name: /close modal/i });
+    const name = screen.getByRole('textbox', { name: 'Name' });
+    await user.tab();
+    expect(close).toHaveFocus();
+    await user.tab();
+    expect(name).toHaveFocus();
+    await user.tab();
+    expect(close).toHaveFocus();
+    await user.tab({ shift: true });
+    expect(name).toHaveFocus();
+    expect(screen.getByRole('button', { name: 'Behind' })).not.toHaveFocus();
+    await user.click(close);
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(opener).toHaveFocus();
+  });
+
+  test('one over another: Escape closes only the top, then the one below', async () => {
+    const user = userEvent.setup();
+    render(<Page inner />);
+    await user.click(screen.getByRole('button', { name: 'Open' }));
+    const confirm = screen.getByRole('button', { name: 'Confirm' });
+    await user.click(confirm);
+    expect(screen.getAllByRole('dialog')).toHaveLength(2);
+    await user.keyboard('{Escape}');
+    expect(screen.getAllByRole('dialog')).toHaveLength(1);
+    expect(screen.getByRole('dialog', { name: 'Settings' })).toBeInTheDocument();
+    expect(confirm).toHaveFocus();
+    await user.keyboard('{Escape}');
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(screen.getByRole('button', { name: 'Open' })).toHaveFocus();
   });
 });

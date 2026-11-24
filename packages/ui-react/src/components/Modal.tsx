@@ -1,12 +1,13 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion, MotionProps, useReducedMotion } from 'framer-motion';
 import { motion as motionFor } from '@levain/tokens';
 import Heading from './Heading';
 import { Button } from './Button';
 import { X, MoreVertical } from 'lucide-react';
+import { useDialogFocus } from '../utils/useDialogFocus';
 
 export interface ModalMenuOption {
   label: string;
@@ -18,6 +19,8 @@ interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
   title?: React.ReactNode;
+  /** The dialog's accessible name when it has no `title` (with one, the title names it). */
+  label?: string;
   menuOptions?: ModalMenuOption[];
   children: (handleClose: () => void) => React.ReactNode;
   motionProps?: MotionProps;
@@ -28,6 +31,7 @@ export function Modal({
   isOpen,
   onClose,
   title,
+  label,
   menuOptions,
   children,
   motionProps,
@@ -36,6 +40,8 @@ export function Modal({
   const overlayRef = useRef<HTMLDivElement>(null);
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const titleId = useId();
 
   // Default motion props for fade and slide, timed by the motion tokens (instant under reduced motion)
   const reduce = useReducedMotion();
@@ -60,25 +66,12 @@ export function Modal({
     full: 'max-w-full',
   };
 
-  // Close on escape key
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
-        // Claim the key. Anything containing this modal — an OS window, a
-        // drawer — must be able to tell that Escape was already answered and
-        // not dismiss itself as well.
-        e.preventDefault();
-        if (showMenu) {
-          setShowMenu(false);
-        } else {
-          onClose();
-        }
-      }
-    };
-
-    document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
-  }, [isOpen, onClose, showMenu]);
+  // Focus held inside while open and given back on close; Escape closes the menu if it's open, else the modal, and
+  // only when this modal is the top dialog (one over another closes alone)
+  useDialogFocus(isOpen, panelRef, () => {
+    if (showMenu) setShowMenu(false);
+    else onClose();
+  });
 
   // Close menu on click outside
   useEffect(() => {
@@ -136,12 +129,18 @@ export function Modal({
             onClick={handleOverlayClick}
           >
             <motion.div
-              className={`w-full rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-surface-card)] shadow-xl ${sizeClasses[size]} overflow-hidden`}
+              ref={panelRef}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby={title ? titleId : undefined}
+              aria-label={title ? undefined : label}
+              tabIndex={-1}
+              className={`w-full outline-none rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-surface-card)] shadow-xl ${sizeClasses[size]} overflow-hidden`}
               {...finalMotionProps}
             >
               {(title || (menuOptions && menuOptions.length > 0)) && (
                 <div className="flex items-center justify-between p-4 md:p-6 md:pt-4 md:pb-2">
-                  <div className="flex-1">
+                  <div className="flex-1" id={titleId}>
                     {typeof title === 'string'
                       ? title && (
                           <Heading
