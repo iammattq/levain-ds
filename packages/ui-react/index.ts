@@ -254,7 +254,12 @@ export { StatusCard, StatusCardDialog, StatusMarkers, morphId } from './src/patt
 export type { StatusCardProps, StatusCardDialogProps, StatusMarker, StatusTone } from './src/patterns/StatusCard';
 export { StatusCardDialogStack } from './src/patterns/StatusCardDialogStack';
 export type { StatusCardDialogStackProps, StatusCardStackDialog } from './src/patterns/StatusCardDialogStack';
+export { BottomSheet } from './src/patterns/BottomSheet';
+export type { BottomSheetProps } from './src/patterns/BottomSheet';
+export { useIsPhone } from './src/patterns/Sheet';
 export { CardStack } from './src/patterns/CardStack';
 export type { CardStackProps } from './src/patterns/CardStack';
 export { ColumnStrip, useColumnStrip, snapIndex, edgeSide, COLUMN_STRIP_EDGE, COLUMN_STRIP_DWELL, COLUMN_STRIP_REPEAT } from './src/patterns/ColumnStrip';
 export type { ColumnStripProps, ColumnStripDrag, StripColumn } from './src/patterns/ColumnStrip';
+export { ImageCompare } from './src/patterns/ImageCompare';
+export type { ImageCompareProps, ImageCompareImage } from './src/patterns/ImageCompare';
