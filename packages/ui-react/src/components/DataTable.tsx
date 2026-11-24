@@ -397,7 +397,7 @@ export function DataTable<TData, TValue>({
               <span className="mr-1">{filter.label}</span>
               <button
                 onClick={() => removeFilter(filter)}
-                className="hover:bg-opacity-80 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[var(--color-primary)] text-white"
+                className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary)]/80"
               >
                 <X className="h-2 w-2" />
                 <span className="sr-only">Remove filter</span>

@@ -249,7 +249,7 @@ export function ToolSidebar({
         )}
       </div>
       {sections && sections.length > 1 && (
-        <div className="scrollbar-hide shrink-0 overflow-x-auto border-t border-[var(--color-border-subtle)] p-2 md:hidden">
+        <div className="shrink-0 overflow-x-auto [scrollbar-width:none] border-t border-[var(--color-border-subtle)] p-2 md:hidden">
           <Tabs
             size="sm"
             surface="section"

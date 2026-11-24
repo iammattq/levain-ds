@@ -24,6 +24,17 @@ describe('Slider Component', () => {
     expect(sliderInput).toHaveValue('50');
   });
 
+  test('draws its fill: a primary gradient up to --slider-percentage, over the track surface (T27)', () => {
+    render(<Slider {...defaultProps} value={30} />);
+    const input = screen.getByRole('slider');
+    expect(input.style.getPropertyValue('--slider-percentage')).toBe('30%');
+    // both kept by tailwind-merge: the gradient is a background image, the surface the colour under it
+    expect(input).toHaveClass(
+      'bg-[linear-gradient(to_right,var(--color-primary)_var(--slider-percentage,0%),transparent_var(--slider-percentage,0%))]',
+      'bg-[var(--color-surface-canvas)]'
+    );
+  });
+
   // Test label rendering
   test('renders with label when provided', () => {
     const label = 'Test Slider Label';

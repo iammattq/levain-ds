@@ -280,8 +280,8 @@ export default function Slider({
           disabled={disabled}
           className={cn(
             trackVariants({ size }),
-            // Filled track via linear gradient
-            'slider-filled-track',
+            // Filled track: primary up to the value (--slider-percentage, set above), the track's own surface after
+            'bg-[linear-gradient(to_right,var(--color-primary)_var(--slider-percentage,0%),transparent_var(--slider-percentage,0%))]',
             // Focus ring
             'focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)] focus-visible:ring-offset-2',
             disabled && 'cursor-not-allowed opacity-50',
