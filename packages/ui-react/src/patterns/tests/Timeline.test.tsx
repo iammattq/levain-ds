@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { Timeline } from '../Timeline';
+import { Timeline, TimelineItem } from '../Timeline';
 
 // The career Timeline's output, pinned before T9 rebuilt it on TimelineList: what the reader sees and every class
 // that makes the look (heading, company, dot, line, title, period). Written against the old Timeline first.
@@ -53,5 +53,24 @@ describe('Timeline (career)', () => {
     const row = title.parentElement!.parentElement!;
     expect(row).toHaveClass('flex', 'gap-4');
     expect(row.firstElementChild).toHaveClass('flex', 'flex-col', 'items-center');
+  });
+
+  test('since T9: each company’s roles are a TimelineList (an ol, one li per role)', () => {
+    const { container } = render(<Timeline groups={GROUPS} />);
+    const lists = container.querySelectorAll('ol');
+    expect(lists).toHaveLength(2);
+    expect(lists[0]).toHaveClass('mt-2', 'list-none');
+    expect([...lists].map(l => l.children.length)).toEqual([2, 1]);
+  });
+});
+
+describe('TimelineItem (on its own)', () => {
+  test('is still a div row with the marker, title over period', () => {
+    const { container } = render(<TimelineItem period="2018 – 2020" title="Lead Product Designer" isCurrent />);
+    const row = container.firstElementChild!;
+    expect(row.tagName).toBe('DIV');
+    expect(row).toHaveClass('flex', 'gap-4');
+    expect(dots(container)[0]).toHaveClass('animate-pulse');
+    expect(lines(container)).toHaveLength(1);
   });
 });
