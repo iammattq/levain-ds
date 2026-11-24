@@ -22,11 +22,19 @@
  * the caller's dialog shares its layoutId (`layoutId(key)`) and morphs from it on recipe.collapse. Nothing in the stack
  * drags out of it. A swipe is never a tap: past TAP_SLOP px it's a swipe.
  *
+ * Keyboard (T29): every card a tap can reach is a button (Enter or Space opens it, with the focus ring). The row's cards
+ * are each a Tab stop, in order, and a card taking focus scrolls the row until it's in the open, as a scroll would: plain
+ * focusable cards rather than a roving tabindex, because the row is a list of separate items a screen reader should
+ * read in order, every one reachable, and Tab is how the rest of the board moves between cards. A stacked pile shows
+ * one live card, so it is one Tab stop: its top card, and the arrow keys step it (Right to the next, Left back), as a
+ * swipe does. Show all makes every card a Tab stop.
+ *
  * Reduce Motion: the row follows the scroll without the spring, and the collapse and morph are instant.
  */
 import { drag as DRAG, motion as motionFor, tiltSpring } from '@levain/tokens';
 import { motion, useMotionValue, useReducedMotion, useSpring, useTransform, type MotionValue, type PanInfo } from 'framer-motion';
-import { useEffect, useLayoutEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react';
+import { opensAttr } from '../utils/useDialogFocus';
 
 export interface CardStackProps<T> {
   items: T[];
@@ -80,10 +88,17 @@ export function CardStack<T>(p: CardStackProps<T>) {
   );
 }
 
-/** The card a tap opens; with `swipe` it can be pulled sideways (a pile's top card). A press that travelled past TAP_SLOP is never a tap. */
-function Live({ id, layoutId, open, swipe, onOpen, onEvent, onFling, children }: {
-  id: string; layoutId: string; open: boolean; swipe: boolean; onOpen?: (k: string) => void
-  onEvent?: (w: string) => void; onFling?: (info: PanInfo) => void; children: ReactNode
+/** A card's keyboard focus ring (the focus colour round its edge), on the card's live box. */
+export const CARD_FOCUS_RING = 'outline-none rounded-[var(--radius-lg)] focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)]';
+
+/**
+ * The card a tap opens; with `swipe` it can be pulled sideways (a pile's top card). A press that travelled past TAP_SLOP
+ * is never a tap. A button to the keyboard: Enter or Space opens it; a Tab stop only when `tabbable`; `onKey` hears the
+ * other keys (a pile's arrows), `onFocus` its focus (the row scrolls to it).
+ */
+function Live({ id, layoutId, open, swipe, tabbable = true, onOpen, onEvent, onFling, onKey, onFocus, children }: {
+  id: string; layoutId: string; open: boolean; swipe: boolean; tabbable?: boolean; onOpen?: (k: string) => void
+  onEvent?: (w: string) => void; onFling?: (info: PanInfo) => void; onKey?: (e: ReactKeyboardEvent) => void; onFocus?: () => void; children: ReactNode
 }) {
   const reduce = useReducedMotion();
   const box = useRef<HTMLDivElement>(null);
@@ -92,14 +107,22 @@ function Live({ id, layoutId, open, swipe, onOpen, onEvent, onFling, children }:
   const down = useRef({ x: 0, y: 0 });
   useLayoutEffect(() => { if (!open && box.current) setHeight(box.current.offsetHeight); });
   if (open) return <div data-stack-open={id} style={{ height }} aria-hidden />;
+  const opens = () => { onEvent?.(`${id} opened`); onOpen?.(id); };
   return (
     <motion.div ref={box} data-stack-card={id} layoutId={layoutId} transition={motionFor('collapse', reduce)}
-      drag={swipe ? 'x' : false} dragSnapToOrigin dragElastic={0.6} whileDrag={swipe ? { scale: DRAG.liftScale, zIndex: 50 } : undefined} className="cursor-pointer touch-pan-y"
+      role="button" tabIndex={tabbable ? 0 : -1} {...{ [opensAttr]: layoutId }}
+      drag={swipe ? 'x' : false} dragSnapToOrigin dragElastic={0.6} whileDrag={swipe ? { scale: DRAG.liftScale, zIndex: 50 } : undefined} className={'cursor-pointer touch-pan-y ' + CARD_FOCUS_RING}
       onPointerDown={e => { moved.current = false; down.current = { x: e.clientX, y: e.clientY }; }}
       onDrag={(_, info) => { if (Math.hypot(info.offset.x, info.offset.y) > TAP_SLOP) moved.current = true; }}
       onDragEnd={(_, info) => onFling?.(info)}
-      // a press that travelled is never a tap, swiping or not (with swiping off, onDrag never says so)
-      onTap={(_, info) => { if (moved.current || Math.hypot(info.point.x - down.current.x - window.scrollX, info.point.y - down.current.y - window.scrollY) > TAP_SLOP) return; onEvent?.(`${id} opened`); onOpen?.(id); }}>
+      onFocus={onFocus}
+      onKeyDown={e => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); opens(); return; }
+        onKey?.(e);
+      }}
+      // a press that travelled is never a tap, swiping or not (with swiping off, onDrag never says so). Framer turns
+      // Enter on a focused card into a pointer press of its own (no pointerType): onKeyDown has already opened it.
+      onTap={(e, info) => { if (!(e as PointerEvent).pointerType || moved.current || Math.hypot(info.point.x - down.current.x - window.scrollX, info.point.y - down.current.y - window.scrollY) > TAP_SLOP) return; opens(); }}>
       {children}
     </motion.div>
   );
@@ -228,8 +251,20 @@ function Row<T>({ items, getKey, renderItem, expanded, openKey, onOpen, layoutId
     window.addEventListener('pointercancel', up);
   };
 
-  const live = (it: T) => (
-    <Live id={getKey(it)} layoutId={layoutId(getKey(it))} open={openKey === getKey(it)} swipe={false} onOpen={onOpen} onEvent={onEvent}>
+  // a card taking focus (Tab) comes into the open: the row scrolls the least that shows it whole, as a scroll would.
+  // Not for the focus a press gives (a pile's edge pressed would jump the row): a press marks the moment, and the focus
+  // it brings comes in the same task.
+  const pressing = useRef(false);
+  const press = () => { pressing.current = true; setTimeout(() => { pressing.current = false; }); };
+  const reveal = (i: number) => {
+    if (pressing.current) return;
+    const v = o.get();
+    const next = clamp(Math.min(Math.max(v, (i - count + 1) * STEP), i * STEP));
+    if (next !== v) { o.set(next); onEvent?.(`row at ${Math.round(next)}`); }
+  };
+  const live = (it: T, i: number) => (
+    <Live id={getKey(it)} layoutId={layoutId(getKey(it))} open={openKey === getKey(it)} swipe={false} onOpen={onOpen} onEvent={onEvent}
+      onFocus={expanded ? undefined : () => reveal(i)}>
       {renderItem(it)}
     </Live>
   );
@@ -238,7 +273,7 @@ function Row<T>({ items, getKey, renderItem, expanded, openKey, onOpen, layoutId
   );
   if (expanded) return (
     <div role="list" className="flex flex-wrap gap-[12px]">
-      {items.map(it => <div role="listitem" key={getKey(it)} style={{ width: W }}>{live(it)}</div>)}
+      {items.map((it, i) => <div role="listitem" key={getKey(it)} style={{ width: W }}>{live(it, i)}</div>)}
     </div>
   );
   return (
@@ -246,9 +281,9 @@ function Row<T>({ items, getKey, renderItem, expanded, openKey, onOpen, layoutId
     // so at rest its cards line up with the content edges and the piles' edges sit in the gutters. select-none: dragging
     // the row with a mouse would otherwise select its cards' words (the board's page turns selection off for the whole
     // page; a component can't count on that).
-    <div ref={box} role="list" data-stack-row onPointerDown={pan} style={{ height: rowHeight + 8, marginInline: -left }} className="relative isolate cursor-grab touch-pan-y select-none overflow-hidden active:cursor-grabbing">
+    <div ref={box} role="list" data-stack-row onPointerDownCapture={press} onPointerDown={pan} style={{ height: rowHeight + 8, marginInline: -left }} className="relative isolate cursor-grab touch-pan-y select-none overflow-hidden active:cursor-grabbing">
       {items.map((it, i) => (
-        <RowSlot key={getKey(it)} i={i} n={n} at={at} g={geo}>{live(it)}</RowSlot>
+        <RowSlot key={getKey(it)} i={i} n={n} at={at} g={geo}>{live(it, i)}</RowSlot>
       ))}
     </div>
   );
@@ -289,6 +324,21 @@ function Pile<T>({ items, getKey, renderItem, expanded, openKey, onOpen, layoutI
   const order = items.map((_, k) => items[(first + k) % n]!);
   const morph = motionFor('morph', reduce);
   const step = (dir: number) => { setTopKey(getKey(order[dir < 0 ? 1 : n - 1]!)); onEvent?.(`stepped ${dir < 0 ? 'on' : 'back'}`); };
+  // the arrow keys on the top card step as a swipe does (Right: on to the next, as a swipe left; Left: back), and focus
+  // follows to the new top
+  const list = useRef<HTMLDivElement>(null);
+  const keyed = useRef(false);
+  const arrows = (e: ReactKeyboardEvent) => {
+    if (n < 2 || (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft')) return;
+    e.preventDefault();
+    keyed.current = true;
+    step(e.key === 'ArrowRight' ? -1 : 1);
+  };
+  useEffect(() => {
+    if (!keyed.current) return;
+    keyed.current = false;
+    list.current?.querySelector<HTMLElement>(`[data-stack-card="${topKey}"]`)?.focus();
+  }, [topKey]);
   // stacked, the pile is as tall as its top card, plus the edges of the ones behind it
   const topBox = useRef<HTMLDivElement>(null);
   const [topHeight, setTopHeight] = useState(96);
@@ -303,7 +353,7 @@ function Pile<T>({ items, getKey, renderItem, expanded, openKey, onOpen, layoutI
   // (after the hooks: the board's copy returned before them, which broke a pile going from empty to not)
   if (n === 0 && empty) return <div data-stack-empty>{empty}</div>;
   return (
-    <motion.div role="list" layout transition={morph} data-top={n ? getKey(order[0]!) : ''}
+    <motion.div ref={list} role="list" layout transition={morph} data-top={n ? getKey(order[0]!) : ''}
       className={expanded ? 'flex flex-col gap-2xs' : 'relative'} style={expanded ? undefined : { height: topHeight + Math.min(n - 1, DEPTH) * 10 }}>
       {order.map((it, k) => {
         const id = getKey(it), d = Math.min(k, DEPTH), isTop = k === 0;
@@ -317,6 +367,7 @@ function Pile<T>({ items, getKey, renderItem, expanded, openKey, onOpen, layoutI
             style={{ zIndex: n - k, transformOrigin: '50% 0%', pointerEvents: expanded || isTop ? 'auto' : 'none', '--pile-h': topHeight + 'px' } as never}
             animate={expanded ? { y: 0, scale: 1, opacity: 1 } : { y: d * 10, scale: 1 - d * 0.05, opacity: k > DEPTH ? 0 : 1 }}>
             <Live id={id} layoutId={layoutId(id)} open={openKey === id} swipe={!expanded && isTop} onOpen={onOpen} onEvent={onEvent}
+              tabbable={expanded || isTop} onKey={!expanded && isTop ? arrows : undefined}
               // flung sideways, the top card goes to the back of the pile (it springs home behind the next one)
               onFling={info => { if (!expanded && isTop && n > 1 && (Math.abs(info.offset.x) > PILE_FLING.distance || Math.abs(info.velocity.x) > PILE_FLING.velocity)) step(Math.sign(info.offset.x)); }}>
               {renderItem(it)}

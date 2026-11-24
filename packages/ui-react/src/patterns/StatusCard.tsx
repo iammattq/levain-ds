@@ -18,9 +18,10 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { duration, motion as motionFor } from '@levain/tokens';
 import type { LucideIcon } from 'lucide-react';
 import { X } from 'lucide-react';
-import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode, type SyntheticEvent } from 'react';
+import { useLayoutEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode, type SyntheticEvent } from 'react';
 import { createPortal } from 'react-dom';
 import { SheetPanel, SheetScrim, useIsPhone } from './Sheet';
+import { opener, opensAttr, useDialogFocus } from '../utils/useDialogFocus';
 
 export type StatusTone = 'default' | 'accent' | 'info' | 'caution' | 'success' | 'error' | 'muted';
 
@@ -91,6 +92,9 @@ export function useRadius(token = '--radius-lg') {
 
 export const morphId = (id: string) => 'status-card-' + id;
 
+/** The card's keyboard focus ring: the focus colour round its rounded edge while its open target has keyboard focus. */
+export const FOCUS_RING = 'has-[[data-opens]:focus-visible]:ring-2 has-[[data-opens]:focus-visible]:ring-[var(--color-border-focus)]';
+
 const stop = (e: SyntheticEvent) => e.stopPropagation();
 /** Only the keys the open target and SortableGroup act on (Enter, Space): every other key, Escape included, still
  *  reaches the page's own shortcuts. */
@@ -140,14 +144,18 @@ export function StatusCard({ id, number, kind, title, markers, accent, open = fa
       layoutId={morphId(id)}
       transition={motionFor('collapse', reduce)}
       style={{ borderRadius: radius }}
-      className={'relative overflow-hidden bg-[var(--color-surface-card)] text-left ' + className}
+      // the focus ring is the card's (its whole rounded edge), drawn while the open target has keyboard focus
+      className={'relative overflow-hidden bg-[var(--color-surface-card)] text-left ' + FOCUS_RING + ' ' + className}
     >
       {accent && <span aria-hidden className={'absolute inset-y-0 left-0 w-[3px] ' + BAR[accent]} />}
       <div
         role={onOpen ? 'button' : undefined}
-        tabIndex={onOpen ? -1 : undefined}
+        tabIndex={onOpen ? 0 : undefined}
+        {...(onOpen ? { [opensAttr]: morphId(id) } : {})}
         onClick={onOpen}
-        className={'flex flex-col gap-3xs px-xs py-2xs ' + (onOpen ? 'cursor-pointer' : '')}
+        // Enter or Space opens it, as a button; stopped here so a SortableGroup around the card doesn't pick it up too
+        onKeyDown={onOpen ? e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); onOpen(); } } : undefined}
+        className={'flex flex-col gap-3xs px-xs py-2xs outline-none ' + (onOpen ? 'cursor-pointer' : '')}
       >
         <Face number={number} kind={kind} title={title} markers={markers} />
         {children}
@@ -196,18 +204,9 @@ export function StatusCardDialog({ id, open, onClose, number, kind, title, marke
   const phone = useIsPhone();
   const radius = useRadius('--radius-2xl');
   const panel = useRef<HTMLDivElement>(null);
-  // The latest onClose, read through a ref: a consumer passing a fresh inline onClose on every render must not re-run
-  // the open effect below, or focus would jump back to the panel mid-typing.
-  const onCloseRef = useRef(onClose);
-  useLayoutEffect(() => { onCloseRef.current = onClose; });
-  useEffect(() => {
-    if (!open) return;
-    const prev = document.activeElement as HTMLElement | null;
-    panel.current?.focus();
-    const key = (e: KeyboardEvent) => { if (e.key === 'Escape') onCloseRef.current(); };
-    window.addEventListener('keydown', key);
-    return () => { window.removeEventListener('keydown', key); prev?.focus?.(); };
-  }, [open]);
+  // focus moved in, held (Tab wraps) and given back on close; Escape closes it when it's the top dialog
+  // (back to the card, when it was the opener: it left the page as it morphed into the dialog)
+  useDialogFocus(open, panel, onClose, () => opener(morphId(id)));
   if (typeof document === 'undefined') return null;
   if (phone) return createPortal(
     <AnimatePresence>

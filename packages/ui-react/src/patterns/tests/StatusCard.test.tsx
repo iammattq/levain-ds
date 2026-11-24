@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
-import { StatusCard, StatusCardDialog } from '../StatusCard';
+import { FOCUS_RING, StatusCard, StatusCardDialog } from '../StatusCard';
 import { SortableGroup, SortableList } from '../../components/SortableList';
 
 function Card() {
@@ -116,9 +116,11 @@ describe('StatusCard', () => {
       expect(target.compareDocumentPosition(row) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     });
 
-    it('Tab reaches the answers, though the card\'s own target takes no Tab stop', async () => {
+    it('Tab reaches the card\'s own target first (T29), then the answers', async () => {
       const user = userEvent.setup();
       render(<StatusCard id="T4" title="Strip or arc" onOpen={() => {}} actions={answers(() => {})} />);
+      await user.tab();
+      expect(screen.getByText('Strip or arc').closest('[role="button"]')).toHaveFocus();
       await user.tab();
       expect(screen.getByRole('button', { name: 'Strip' })).toHaveFocus();
       await user.tab();
@@ -180,6 +182,21 @@ describe('StatusCard', () => {
         expect(screen.getByText(/Picked up/)).toBeInTheDocument();
       });
 
+      it('Enter or Space on the card\'s target opens it and picks nothing up (T29)', () => {
+        const onOpen = jest.fn();
+        render(
+          <SortableGroup onMove={onMove}>
+            <SortableList id="decide" label="Decide" items={['T4']} getKey={t => t}
+              renderItem={t => <StatusCard id={t} title="Strip or arc" onOpen={onOpen} />} />
+          </SortableGroup>,
+        );
+        const target = screen.getByText('Strip or arc').closest('[data-opens]')!;
+        fireEvent.keyDown(target, { key: ' ' });
+        fireEvent.keyDown(target, { key: 'Enter' });
+        expect(onOpen).toHaveBeenCalledTimes(2);
+        expect(screen.queryByText(/Picked up/)).toBeNull();
+      });
+
       it('a touch in the row (between the answers) starts no hold', () => {
         jest.useFakeTimers();
         board();
@@ -191,5 +208,37 @@ describe('StatusCard', () => {
         jest.useRealTimers();
       });
     });
+  });
+});
+
+// T29: a card opens from the keyboard, with a visible focus ring
+describe('StatusCard from the keyboard', () => {
+  it('its open target is a Tab stop; Enter and Space open it; focus comes back to it on close', async () => {
+    const user = userEvent.setup();
+    render(<Card />);
+    await user.tab();
+    const target = screen.getByRole('button', { name: /Strip or arc/ });
+    expect(target).toHaveFocus();
+    await user.keyboard('{Enter}');
+    expect(screen.getByRole('dialog')).toHaveFocus();
+    await user.keyboard('{Escape}');
+    await waitFor(() => expect(screen.getByRole('button', { name: /Strip or arc/ })).toHaveFocus());
+    await user.keyboard(' ');
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+  });
+
+  it('draws the focus ring round the card while its target has keyboard focus', () => {
+    render(<StatusCard id="T4" title="Strip or arc" onOpen={() => {}} />);
+    const card = screen.getByRole('button').parentElement!;
+    expect(card.className).toContain(FOCUS_RING);
+    expect(FOCUS_RING).toContain('ring-[var(--color-border-focus)]');
+  });
+
+  it('without onOpen it is no button and takes no Tab stop', async () => {
+    const user = userEvent.setup();
+    render(<StatusCard id="T4" title="Strip or arc" />);
+    expect(screen.queryByRole('button')).toBeNull();
+    await user.tab();
+    expect(document.body).toHaveFocus();
   });
 });

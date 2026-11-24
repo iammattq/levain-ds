@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { act, fireEvent, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
-import { CardStack, PILE_FLING, ROW, TAP_SLOP, rowGeometry, rowPlace, type CardStackProps } from '../CardStack';
+import { CARD_FOCUS_RING, CardStack, PILE_FLING, ROW, TAP_SLOP, rowGeometry, rowPlace, type CardStackProps } from '../CardStack';
 
 // jsdom has no ResizeObserver and lays nothing out: a stand-in that observes nothing, and every card 96 px tall
 const ownRO = (window as { ResizeObserver?: unknown }).ResizeObserver;
@@ -65,7 +66,7 @@ describe('CardStack header', () => {
 
   it('no toggle for one card or none', () => {
     const { rerender } = render(<Stack items={cards('a')} />);
-    expect(screen.queryByRole('button')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Show all|Stack/ })).not.toBeInTheDocument();
     rerender(<Stack items={[]} />);
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
   });
@@ -271,5 +272,119 @@ describe('CardStack layoutId and motion', () => {
     await frame(30);
     expect(x('b')).toBeLessThan(g.left + g.STEP);
     expect(x('b')).toBeGreaterThan(g.left + 1);
+  });
+});
+
+// T29: a keyboard path through the stack
+describe('CardStack from the keyboard', () => {
+  // framer turns Enter on a focused card into a pointer press of its own, with a PointerEvent jsdom lacks: a stand-in
+  // (no pointerType, as a browser's constructed one), so the test sees what a browser does
+  const ownPE = (window as { PointerEvent?: unknown }).PointerEvent;
+  beforeAll(() => {
+    (window as { PointerEvent?: unknown }).PointerEvent = class extends MouseEvent {
+      pointerType: string; isPrimary: boolean; pointerId: number;
+      constructor(type: string, init: PointerEventInit = {}) { super(type, init); this.pointerType = init.pointerType ?? ''; this.isPrimary = init.isPrimary ?? false; this.pointerId = init.pointerId ?? 0; }
+    };
+  });
+  afterAll(() => { (window as { PointerEvent?: unknown }).PointerEvent = ownPE; });
+
+  describe('pile', () => {
+    it('stacked: the top card is the one Tab stop; Enter and Space open it, once each', async () => {
+      const user = userEvent.setup();
+      const onOpen = jest.fn();
+      render(<Stack items={cards('a', 'b', 'c')} onOpen={onOpen} />);
+      expect(card('a')).toHaveAttribute('role', 'button');
+      expect(card('a')).toHaveAttribute('tabindex', '0');
+      for (const k of ['b', 'c']) expect(card(k)).toHaveAttribute('tabindex', '-1');
+      await user.tab(); // Show all, in the header
+      await user.tab();
+      expect(card('a')).toHaveFocus();
+      await user.keyboard('{Enter}');
+      expect(onOpen).toHaveBeenCalledTimes(1);
+      expect(onOpen).toHaveBeenLastCalledWith('a');
+      await user.keyboard(' ');
+      expect(onOpen).toHaveBeenCalledTimes(2);
+      // the ones behind take no Tab: the next Tab leaves the stack
+      await user.tab();
+      expect(document.body).toHaveFocus();
+    });
+
+    it('the arrow keys step the pile as a swipe does, and focus follows the new top', async () => {
+      const user = userEvent.setup();
+      render(<Stack items={cards('a', 'b', 'c')} />);
+      act(() => { (card('a') as HTMLElement).focus(); });
+      await user.keyboard('{ArrowRight}');
+      expect(top()).toBe('b');
+      expect(card('b')).toHaveFocus();
+      expect(card('b')).toHaveAttribute('tabindex', '0');
+      expect(card('a')).toHaveAttribute('tabindex', '-1');
+      await user.keyboard('{ArrowLeft}');
+      expect(top()).toBe('a');
+      expect(card('a')).toHaveFocus();
+      await user.keyboard('{ArrowLeft}');
+      expect(top()).toBe('c');
+    });
+
+    it('shown all: every card is a Tab stop, and the arrows step nothing', async () => {
+      const user = userEvent.setup();
+      render(<Stack items={cards('a', 'b', 'c')} />);
+      await user.click(screen.getByRole('button', { name: 'Show all 3' }));
+      for (const k of ['a', 'b', 'c']) expect(card(k)).toHaveAttribute('tabindex', '0');
+      await user.tab();
+      expect(card('a')).toHaveFocus();
+      await user.keyboard('{ArrowRight}');
+      expect(card('a')).toHaveFocus();
+      await user.tab();
+      expect(card('b')).toHaveFocus();
+    });
+  });
+
+  describe('row', () => {
+    const ownWidth = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'clientWidth');
+    beforeAll(() => { Object.defineProperty(HTMLElement.prototype, 'clientWidth', { configurable: true, get() { return this.hasAttribute('data-stack-row') ? 1054 : 0; } }); });
+    afterAll(() => { if (ownWidth) Object.defineProperty(HTMLElement.prototype, 'clientWidth', ownWidth); });
+    // 1054 px: four cards in the open, the rest piled at the right
+    const STEP = rowGeometry(1054, 232).STEP;
+    const scrolls = (onEvent: jest.Mock) => onEvent.mock.calls.map(c => c[0]).filter((w: string) => w.startsWith('row at '));
+
+    it('Tab walks every card in order; one under a pile scrolls the row the least that brings it into the open', async () => {
+      const user = userEvent.setup();
+      const onEvent = jest.fn();
+      render(<Stack variant="row" items={cards('a', 'b', 'c', 'd', 'e', 'f')} onEvent={onEvent} />);
+      await user.tab(); // Show all
+      for (const k of ['a', 'b', 'c', 'd']) { await user.tab(); expect(card(k)).toHaveFocus(); }
+      expect(scrolls(onEvent)).toEqual([]);
+      await user.tab();
+      expect(card('e')).toHaveFocus();
+      expect(scrolls(onEvent)).toEqual([`row at ${STEP}`]);
+      await user.tab();
+      expect(card('f')).toHaveFocus();
+      expect(scrolls(onEvent).at(-1)).toBe(`row at ${STEP * 2}`);
+      // back: c is in the open at this offset (c, d, e, f), so no scroll; b peels back off the left pile
+      await user.tab({ shift: true });
+      await user.tab({ shift: true });
+      await user.tab({ shift: true });
+      expect(card('c')).toHaveFocus();
+      expect(scrolls(onEvent)).toHaveLength(2);
+      await user.tab({ shift: true });
+      expect(card('b')).toHaveFocus();
+      expect(scrolls(onEvent).at(-1)).toBe(`row at ${STEP}`);
+      await user.keyboard('{Enter}');
+      expect(onEvent).toHaveBeenCalledWith('b opened');
+    });
+
+    it('the focus a press brings scrolls nothing (a pile edge pressed never jumps the row)', () => {
+      const onEvent = jest.fn();
+      render(<Stack variant="row" items={cards('a', 'b', 'c', 'd', 'e', 'f')} onEvent={onEvent} />);
+      act(() => { card('e').dispatchEvent(ptr('pointerdown', 900)); (card('e') as HTMLElement).focus(); });
+      expect(scrolls(onEvent)).toEqual([]);
+      act(() => { window.dispatchEvent(ptr('pointerup', 900)); });
+    });
+
+    it('each card carries the focus ring', () => {
+      render(<Stack variant="row" items={cards('a', 'b')} />);
+      expect(card('a').className).toContain(CARD_FOCUS_RING);
+      expect(CARD_FOCUS_RING).toContain('focus-visible:ring-[var(--color-border-focus)]');
+    });
   });
 });
