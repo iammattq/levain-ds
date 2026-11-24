@@ -259,3 +259,5 @@ export type { BottomSheetProps } from './src/patterns/BottomSheet';
 export { useIsPhone } from './src/patterns/Sheet';
 export { CardStack } from './src/patterns/CardStack';
 export type { CardStackProps } from './src/patterns/CardStack';
+export { ImageCompare } from './src/patterns/ImageCompare';
+export type { ImageCompareProps, ImageCompareImage } from './src/patterns/ImageCompare';
