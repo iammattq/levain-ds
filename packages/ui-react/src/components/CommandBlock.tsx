@@ -86,4 +86,34 @@ export function CommandBlock({ commands, className }: CommandBlockProps) {
   );
 }
 
+export interface CommandBlockCopyAllProps {
+  /** The same commands the CommandBlock shows; copied joined with newlines. */
+  commands: string[];
+  className?: string;
+}
+
+/**
+ * The board's "Copy all": a small ghost button, rendered only past one command. Place it where the commands' actions
+ * go (the board's button row).
+ */
+export function CommandBlockCopyAll({ commands, className }: CommandBlockCopyAllProps) {
+  const { copied, copy } = useCopy();
+  if (commands.length < 2) return null;
+  return (
+    <>
+      <Button
+        size="sm"
+        variant="ghost"
+        Icon={copied ? Check : Copy}
+        className={className}
+        data-copied={copied || undefined}
+        onClick={() => void copy(commands.join('\n'))}
+      >
+        Copy all
+      </Button>
+      <Announce text={copied ? 'Copied all ' + commands.length + ' commands' : ''} />
+    </>
+  );
+}
+
 export default CommandBlock;
