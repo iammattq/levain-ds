@@ -51,7 +51,7 @@ const probe = page => page.evaluate(() => {
 });
 
 const shot = (page, key, piece, animations = 'disabled') =>
-  page.locator(`[data-piece="${piece}"]`).screenshot({ path: `${dir}/${key}-${piece}.png`, animations });
+  page.locator(`[data-piece="${piece}"]`).screenshot({ path: `${dir}/${key}-${piece}.png`, animations, timeout: 10000 });
 
 try {
   for (const [name, theme, mode] of COMBOS) {

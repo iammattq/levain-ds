@@ -2,7 +2,7 @@
 // shows only this section (for captures). Each piece carries data-piece for the capture script.
 import {
   AdminPageTemplate, Calendar, Checkbox, ContentNavigation, DataTable, ImageUploader, MediaCard, RadioButton,
-  SimpleAnimatedName, Slider, StatusCard, SurfaceCard, type DataTableProps,
+  LevainProvider, SimpleAnimatedName, Slider, StatusCard, SurfaceCard, type DataTableProps,
 } from '@levain/ui-react';
 import { useState, type ReactNode } from 'react';
 
@@ -17,6 +17,8 @@ const COLUMNS: DataTableProps<Row, unknown>['columns'] = [
   { accessorKey: 'title', header: 'Title' },
   { accessorKey: 'state', header: 'State' },
 ];
+
+const staticTheme = () => ({ theme: 'light' as const, setTheme: () => {}, themeIndex: 0, setThemeIndex: () => {}, saveThemePreference: () => {} });
 
 const Piece = ({ name, children, className = '' }: { name: string; children: ReactNode; className?: string }) => (
   <div data-piece={name} className={'space-y-2xs rounded-[var(--radius-lg)] bg-[var(--color-surface-canvas)] p-sm ' + className}>
@@ -68,7 +70,8 @@ export function ColoursDemo({ Section }: { Section: (p: { title: string; note: s
           <AdminPageTemplate title="Admin" error="Could not load the tasks.">{null}</AdminPageTemplate>
         </Piece>
         <Piece name="animated-name">
-          <SimpleAnimatedName name="levain" className="type-heading-2" />
+          {/* SimpleAnimatedName reads the app's theme state; a fixed one is enough to show its drift */}
+          <LevainProvider useTheme={staticTheme}><SimpleAnimatedName name="levain" className="type-heading-2" /></LevainProvider>
         </Piece>
       </div>
     </Section>
