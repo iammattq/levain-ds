@@ -269,7 +269,8 @@ describe('CardStack layoutId and motion', () => {
     await frame();
     expect(x('b')).toBeCloseTo(g.left + g.STEP);
     act(() => { document.querySelector('[data-stack-row]')!.dispatchEvent(new WheelEvent('wheel', { deltaX: g.STEP, bubbles: true, cancelable: true })); });
-    await frame(30);
+    // poll frames until the card leaves its start (a slow runner may not have run one yet), capped at ~1 s
+    for (let i = 0; i < 50 && x('b') === g.left + g.STEP; i++) await frame(20);
     expect(x('b')).toBeLessThan(g.left + g.STEP);
     expect(x('b')).toBeGreaterThan(g.left + 1);
   });

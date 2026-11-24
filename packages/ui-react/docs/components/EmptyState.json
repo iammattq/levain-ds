@@ -1,0 +1,67 @@
+{
+  "name": "EmptyState",
+  "description": "Where a list or region has nothing to show: a dashed 1px outline in the emphasis border colour, the card's corner, no fill or shadow, a muted centred message and an optional action under it. The Ringmaster board's empty Your work card.",
+  "category": "components",
+  "usage": [
+    "Use in place of a list, stack or column body that is empty, so the space reads as a place where things will go rather than a gap",
+    "Say what is missing in plain words (\"No tasks for you right now\"); an action only when the person can do something about it here (a small Button, a TextLink)",
+    "Give minHeight one card's height when it holds a card's place in a row or stack, so the layout doesn't jump when the first card arrives",
+    "Width is the container's; className and style for layout",
+    "For content that is loading, not empty, use Skeleton"
+  ],
+  "examples": [
+    "// the board's empty Your work: one compact card's height\n<EmptyState message=\"No tasks for you right now\" minHeight=\"9.1875rem\" />",
+    "// with an action and a glyph\n<EmptyState\n  icon={<Inbox size={20} />}\n  message=\"Nothing queued\"\n  action={<Button size=\"sm\" variant=\"outline\" onClick={add}>New task</Button>}\n/>"
+  ],
+  "design": [
+    "Outline: 1px dashed --color-border-emphasis (a border style on the existing colour, no token of its own)",
+    "Corner --radius-lg (8px; 6px condensed), the board card's",
+    "No fill, no shadow: the column or page shows through",
+    "Padding --spacing-md (24px; 16px condensed), the board card's 1.5rem",
+    "Text type-body-sm (14px, line height 1.5) in --color-text-muted, centred both ways; icon, message and action stacked --spacing-xs apart",
+    "No height of its own beyond its content and padding unless minHeight is given"
+  ],
+  "accessibility": [
+    "A plain div: its message is read in order, like the list it stands in for",
+    "Not a live region by default. One that mounts with its text is announced unreliably, and when it is, it repeats on every mount (each tab switch). Announcing that an action emptied the list is that action's job. Pass role=\"status\" for an empty state whose appearing should be announced",
+    "The icon is decorative and aria-hidden; the message carries the meaning",
+    "The action stays in the Tab order"
+  ],
+  "props": [
+    {
+      "name": "message",
+      "type": "ReactNode",
+      "optional": true,
+      "description": "What is (not) here. Or pass children; children win when both are given.",
+      "configurable": true
+    },
+    {
+      "name": "action",
+      "type": "ReactNode",
+      "optional": true,
+      "description": "Something to do about it, under the message: a levain Button or TextLink.",
+      "configurable": false
+    },
+    {
+      "name": "icon",
+      "type": "ReactNode",
+      "optional": true,
+      "description": "A decorative glyph above the message, hidden from screen readers.",
+      "configurable": false
+    },
+    {
+      "name": "minHeight",
+      "type": "number | string",
+      "optional": true,
+      "description": "The least height: px when a number, else any CSS length. None by default.",
+      "configurable": true
+    },
+    {
+      "name": "className",
+      "type": "string",
+      "optional": true,
+      "description": "Layout classes added to the box's own.",
+      "configurable": false
+    }
+  ]
+}
