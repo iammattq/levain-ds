@@ -7,9 +7,13 @@ import React, {
   forwardRef,
   useState,
   useEffect,
+  useCallback,
+  useId,
+  useMemo,
 } from 'react';
 import { createPortal } from 'react-dom';
 import { cn } from '../utils/cn';
+import { inputSizeConfig, type InputSize } from '../utils/inputSizing';
 import Calendar from './Calendar';
 
 // Validate date format YYYY-MM-DD
@@ -41,21 +45,56 @@ const isValidDate = (dateString: string): boolean => {
   );
 };
 
+/** Size variants for DateInput (the input scale, utils/inputSizing.ts) */
+export type DateInputSize = InputSize;
+
+const ICON_PX: Record<DateInputSize, number> = {
+  '2xs': 12,
+  xs: 14,
+  sm: 16,
+  md: 18,
+  lg: 20,
+};
+
+const INVALID = 'Please enter a valid date in YYYY-MM-DD format';
+
+/** The date as YYYY-MM-DD, from its local components */
+const formatDate = (date: Date): string =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+
+/** YYYY-MM-DD masking of whatever was typed: digits only, hyphens put in */
+const maskDate = (raw: string): string => {
+  const digits = raw.replace(/\D/g, '');
+  if (!digits) return raw;
+  let masked = digits.substring(0, 4);
+  if (digits.length > 4) masked += '-' + digits.substring(4, 6);
+  if (digits.length > 6) masked += '-' + digits.substring(6, 8);
+  return masked;
+};
+
+/**
+ * DateInput follows the form-input convention (docs/prop-conventions.json, formInputs) as a native text field: `value`
+ * / `defaultValue` (YYYY-MM-DD) and the native `onChange(event)`, a real ChangeEvent from the <input> whose
+ * `target.value` is the masked date, whether typed or picked from the calendar. The <input> takes the ref, the `id` and
+ * every prop the DateInput doesn't name.
+ */
 export interface DateInputProps extends Omit<
   InputHTMLAttributes<HTMLInputElement>,
-  'className' | 'onChange' | 'value' | 'type'
+  'className' | 'onChange' | 'value' | 'defaultValue' | 'type' | 'size'
 > {
-  /** Unique identifier for the input */
-  id: string;
-  /** Text label for the input field */
-  label: string;
-  /** Current date value (string, in YYYY-MM-DD format) */
-  value: string;
-  /** Function called when the date value changes */
-  onChange: (event: ChangeEvent<HTMLInputElement>) => void;
-  /** Optional: Error message to display */
+  /** The input's id; generated when left out */
+  id?: string;
+  /** Visible label. Without it, pass `aria-label` or `aria-labelledby` */
+  label?: string;
+  /** Controlled: the date, YYYY-MM-DD ('' for none). Leave out for uncontrolled */
+  value?: string;
+  /** Uncontrolled: the date at first */
+  defaultValue?: string;
+  /** The native change event; `event.target.value` is the masked date */
+  onChange?: (event: ChangeEvent<HTMLInputElement>) => void;
+  /** Error message; shows at once unless `touched` is false */
   error?: string;
-  /** Optional: Validation function */
+  /** Own validation; its message (and the format check's) shows after the first blur, or when `touched` is true */
   validate?: (value: string) => string | null | undefined;
   /** Optional helper text shown below the input */
   helperText?: string;
@@ -65,90 +104,82 @@ export interface DateInputProps extends Omit<
   inputClassName?: string;
   /** Additional class name for the calendar button element */
   buttonClassName?: string;
-  /** Whether the field has been touched/blurred (controls validation visibility) */
+  /** Leave out to show errors at once; pass the field's touched state to hold them until it is left */
   touched?: boolean;
-  /** Function called when the text input loses focus */
-  onBlur?: (event: React.FocusEvent<HTMLInputElement>) => void;
   /** Whether the field is required */
   required?: boolean;
   /** Whether the field is disabled */
   disabled?: boolean;
+  /** Size variant. Defaults to 'md' */
+  size?: DateInputSize;
 }
 
 const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
   (
     {
-      id,
+      id: idProp,
       label,
       value,
+      defaultValue = '',
       onChange,
       onBlur,
       error: externalError,
       validate,
       helperText,
-      className = '',
-      inputClassName = '',
-      buttonClassName = '',
-      touched = false,
+      className,
+      inputClassName,
+      buttonClassName,
+      touched,
       required = false,
       disabled = false,
+      size = 'md',
+      'aria-describedby': describedBy,
       ...props
     },
-    ref // Forwarding ref to the text input element
+    ref
   ) => {
-    // Internal state for local input value
-    const [localValue, setLocalValue] = useState(value);
+    const autoId = useId();
+    const id = idProp ?? autoId;
+    const config = inputSizeConfig[size];
 
-    // Internal state to track if field has been touched
-    const [internalTouched, setInternalTouched] = useState(touched);
-
-    // Update local value when prop changes
+    // What the field shows: as typed (never rewritten while typing); a controlled `value` from outside replaces it
+    const [localValue, setLocalValue] = useState(value ?? defaultValue);
     useEffect(() => {
-      setLocalValue(value);
+      if (value !== undefined) setLocalValue(value);
     }, [value]);
 
-    // Update touched state when prop changes
-    useEffect(() => {
-      setInternalTouched(touched);
-    }, [touched]);
-
+    const [blurred, setBlurred] = useState(false);
     const [showCalendar, setShowCalendar] = useState(false);
-    const [internalError, setInternalError] = useState<string | null>(null);
     const [calendarStyles, setCalendarStyles] = useState<React.CSSProperties>({
       visibility: 'hidden',
     });
     const inputContainerRef = useRef<HTMLDivElement>(null);
     const calendarRef = useRef<HTMLDivElement>(null);
     const calendarButtonRef = useRef<HTMLButtonElement>(null);
-    const inputRef = useRef<HTMLInputElement>(null);
+    const inputRef = useRef<HTMLInputElement | null>(null);
 
     // Use both forwarded ref and internal ref
-    const handleInputRef = (el: HTMLInputElement) => {
-      inputRef.current = el;
-      if (typeof ref === 'function') {
-        ref(el);
-      } else if (ref) {
-        ref.current = el;
-      }
-    };
+    const handleInputRef = useCallback(
+      (el: HTMLInputElement | null) => {
+        inputRef.current = el;
+        if (typeof ref === 'function') ref(el);
+        else if (ref) ref.current = el;
+      },
+      [ref]
+    );
 
-    // UPDATED: Increased estimated width
     const estimatedCalendarWidth = 340; // pixels
     const estimatedCalendarHeight = 340; // pixels
     const positionOffset = 4; // Space between input and calendar
 
-    // Validate date format and validity internally
-    useEffect(() => {
-      let validationResult: string | null | undefined = null;
-      if (localValue && !isValidDateFormat(localValue)) {
-        validationResult = 'Date must be in YYYY-MM-DD format.';
-      } else if (localValue && !isValidDate(localValue)) {
-        validationResult = 'Please enter a valid date.';
-      } else if (validate) {
-        validationResult = validate(localValue);
-      }
-      setInternalError(validationResult ?? null);
-    }, [localValue, validate]);
+    // Own validation: the format, a real date, required, then the app's validate
+    const internalError = !localValue
+      ? required
+        ? 'This field is required'
+        : (validate?.(localValue) ?? null)
+      : !isValidDate(localValue)
+        ? INVALID
+        : (validate?.(localValue) ?? null);
 
     // Calculate and set position when calendar is shown
     useEffect(() => {
@@ -163,7 +194,7 @@ const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
         }
         // Prevent falling off top edge if positioned above
         if (newTop < 0) {
-          newTop = positionOffset; // Position slightly below top edge
+          newTop = positionOffset;
         }
 
         // Basic right edge detection (using estimated width)
@@ -176,185 +207,88 @@ const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
         }
 
         setCalendarStyles({
-          position: 'fixed', // Use fixed positioning
+          position: 'fixed',
           top: `${newTop}px`,
           left: `${newLeft}px`,
-          zIndex: 50, // Ensure it's above other content
-          visibility: 'visible', // Make it visible
+          zIndex: 50,
+          visibility: 'visible',
         });
       } else {
-        // Hide when not shown
         setCalendarStyles({ visibility: 'hidden' });
       }
-    }, [showCalendar]); // Rerun only when showCalendar changes
+    }, [showCalendar]);
 
-    // Helper function to get a valid date for the calendar
-    const getValidDateForCalendar = (): Date => {
-      // If we have a valid date in the input, use it
-      if (
-        localValue &&
-        isValidDateFormat(localValue) &&
-        isValidDate(localValue)
-      ) {
-        // Parse the date and ensure it's at midnight in local time
-        const [year, month, day] = localValue.split('-').map(Number);
-        const midnightDate = new Date(year, month - 1, day, 0, 0, 0, 0);
-        return midnightDate;
-      }
+    // The date the calendar shows: the field's, else today; kept by its day so a re-render doesn't hand the calendar a
+    // new Date (A3: its month view snapped back)
+    const calendarDay =
+      localValue && isValidDate(localValue) ? localValue : formatDate(new Date());
+    const calendarDate = useMemo(() => {
+      const [y, m, d] = calendarDay.split('-').map(Number);
+      return new Date(y, m - 1, d, 0, 0, 0, 0);
+    }, [calendarDay]);
 
-      // Otherwise, default to today's date at midnight
-      const today = new Date();
-      const todayMidnight = new Date(
-        today.getFullYear(),
-        today.getMonth(),
-        today.getDate(),
-        0,
-        0,
-        0,
-        0
-      );
-      return todayMidnight;
-    };
-
-    // Computed effective touched state (either from props or internal state)
-    const effectiveTouched = internalTouched || touched;
-    const effectiveError = externalError ?? internalError;
-    const showError = effectiveTouched && !!effectiveError;
+    // Errors (Q-touched): the app's shows at once unless touched is false; our own waits for the first blur (or
+    // touched); neither while disabled
+    const shownExternal = touched !== false ? externalError : undefined;
+    const shownInternal =
+      touched === true || (touched !== false && blurred)
+        ? internalError
+        : null;
+    const effectiveError = shownExternal || shownInternal || null;
+    const showError = !disabled && !!effectiveError;
     const errorId = `${id}-error`;
     const helperId = `${id}-helper`;
-    const descriptionId = showError
-      ? errorId
-      : helperText
-        ? helperId
-        : undefined;
+    const descriptionId =
+      [describedBy, showError ? errorId : helperText ? helperId : undefined]
+        .filter(Boolean)
+        .join(' ') || undefined;
 
-    // Handle input changes with local state before propagating to parent
+    // Typing: the masked value is put on the input itself, then the real event goes out, so event.target.value is the
+    // masked date (A3: it was a spread copy of the event)
     const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
       if (disabled) return;
-
-      // Get raw value from the input
-      let newValue = event.target.value;
-
-      // Remove any non-digit characters for clean processing
-      const digits = newValue.replace(/\D/g, '');
-
-      // Apply masking logic (YYYY-MM-DD format)
-      if (digits.length > 0) {
-        let maskedValue = '';
-
-        // Add year portion
-        if (digits.length >= 1) {
-          maskedValue += digits.substring(0, Math.min(4, digits.length));
-        }
-
-        // Add month portion with hyphen separator
-        if (digits.length > 4) {
-          maskedValue += '-' + digits.substring(4, Math.min(6, digits.length));
-        }
-
-        // Add day portion with hyphen separator
-        if (digits.length > 6) {
-          maskedValue += '-' + digits.substring(6, Math.min(8, digits.length));
-        }
-
-        newValue = maskedValue;
-      }
-
-      // Update local state immediately for responsive typing
-      setLocalValue(newValue);
-
-      // Create a synthetic event with the masked value
-      const syntheticEvent = {
-        ...event,
-        target: { ...event.target, value: newValue },
-      };
-
-      // Let the parent component know about the change
-      onChange(syntheticEvent);
+      const masked = maskDate(event.target.value);
+      if (masked !== event.target.value) event.target.value = masked;
+      setLocalValue(masked);
+      onChange?.(event);
     };
 
     const handleCalendarClick = () => {
       if (disabled) return;
-      // Just toggle the state, useEffect handles positioning
       setShowCalendar(!showCalendar);
     };
 
+    // A pick goes through the input as a native input event, so onChange gets the same real event as typing (A3: it
+    // was a { target: { id, value } } object)
     const handleDateSelect = (selectedDate: Date) => {
       if (disabled) return;
-
-      // Create a new date that's exactly the same day but at midnight in local timezone
-      // to avoid any timezone-related date shifting
-      const localDate = new Date(
-        selectedDate.getFullYear(),
-        selectedDate.getMonth(),
-        selectedDate.getDate(),
-        0,
-        0,
-        0,
-        0
-      );
-
-      // Format as YYYY-MM-DD from local components
-      const year = localDate.getFullYear();
-      const month = String(localDate.getMonth() + 1).padStart(2, '0');
-      const day = String(localDate.getDate()).padStart(2, '0');
-
-      const formattedDate = `${year}-${month}-${day}`;
-
-      // Update local state immediately
-      setLocalValue(formattedDate);
-
-      // Create a synthetic event with the formatted date
-      const syntheticEvent = {
-        target: { id, value: formattedDate },
-      } as unknown as ChangeEvent<HTMLInputElement>;
-
-      // Notify parent component
-      onChange(syntheticEvent);
+      const input = inputRef.current;
+      if (input) {
+        const setValue = Object.getOwnPropertyDescriptor(
+          HTMLInputElement.prototype,
+          'value'
+        )?.set;
+        setValue?.call(input, formatDate(selectedDate));
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+      }
       setShowCalendar(false);
     };
 
-    // Handle blur event with validation
     const handleBlur = (event: React.FocusEvent<HTMLInputElement>) => {
-      // Mark as touched on blur
-      setInternalTouched(true);
-
-      // If empty, clear the value and notify parent
-      if (!localValue || localValue.trim() === '') {
-        onChange({
-          ...event,
-          target: { ...event.target, value: '' },
-        });
-        setInternalError(required ? 'This field is required' : null);
-        return;
-      }
-
-      // Check if date is valid and properly formatted
-      if (isValidDateFormat(localValue) && isValidDate(localValue)) {
-        // Clear any previous errors
-        setInternalError(null);
-      } else {
-        // Invalid format, show error but keep the value for editing
-        setInternalError('Please enter a valid date in YYYY-MM-DD format');
-      }
-
-      // Call the provided onBlur if it exists
-      if (onBlur) {
-        onBlur(event);
-      }
+      setBlurred(true);
+      onBlur?.(event);
     };
 
     // Close calendar when clicking outside (Portal Aware)
     useEffect(() => {
       const handleClickOutside = (event: MouseEvent) => {
-        // Check if click is outside the input container AND the button AND the calendar itself (if rendered)
         if (
           showCalendar &&
           inputContainerRef.current &&
           !inputContainerRef.current.contains(event.target as Node) &&
           calendarButtonRef.current &&
           !calendarButtonRef.current.contains(event.target as Node) &&
-          calendarRef.current && // Check if calendar exists in DOM (portal renders async)
+          calendarRef.current &&
           !calendarRef.current.contains(event.target as Node)
         ) {
           setShowCalendar(false);
@@ -373,18 +307,39 @@ const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
         if (timeoutId) clearTimeout(timeoutId);
         document.removeEventListener('mousedown', handleClickOutside);
       };
-    }, [showCalendar]); // Dependency is correct
+    }, [showCalendar]);
+
+    // Escape closes the calendar and puts focus back on its button
+    useEffect(() => {
+      if (!showCalendar) return;
+      const handleEscape = (event: KeyboardEvent) => {
+        if (event.key !== 'Escape') return;
+        event.preventDefault();
+        setShowCalendar(false);
+        calendarButtonRef.current?.focus();
+      };
+      document.addEventListener('keydown', handleEscape, true);
+      return () => document.removeEventListener('keydown', handleEscape, true);
+    }, [showCalendar]);
 
     return (
       <div className={cn('relative flex flex-col', className)}>
         {/* Label */}
-        <label
-          htmlFor={id}
-          className={`type-label mb-1 block ${disabled ? 'text-[var(--color-text-disabled)]' : 'text-[var(--color-text-default)]'}`}
-        >
-          {label}{' '}
-          {required && <span className="text-[var(--color-error)]">*</span>}
-        </label>
+        {label && (
+          <label
+            htmlFor={id}
+            className={cn(
+              config.labelClass,
+              'mb-1 block',
+              disabled
+                ? 'text-[var(--color-text-disabled)]'
+                : 'text-[var(--color-text-default)]'
+            )}
+          >
+            {label}{' '}
+            {required && <span className="text-[var(--color-error)]">*</span>}
+          </label>
+        )}
 
         {/* Input Group (Calendar Button + Text Input) */}
         <div ref={inputContainerRef} className="relative flex items-center">
@@ -394,28 +349,33 @@ const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
             ref={calendarButtonRef}
             onClick={handleCalendarClick}
             disabled={disabled}
+            aria-expanded={showCalendar}
+            aria-haspopup="dialog"
             className={cn(
-              'flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-l-md border border-r-0 transition-colors focus:outline-none',
+              'flex flex-shrink-0 items-center justify-center border border-r-0 transition-colors focus:outline-none',
+              config.chipSize,
+              config.roundedL,
               disabled
                 ? 'cursor-not-allowed border-[var(--color-border-default)]'
-                : 'border-[var(--color-border-emphasis)] focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-1',
-              showError && !disabled
+                : 'border-[var(--color-border-emphasis)] focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface-canvas)]',
+              showError
                 ? 'border-[var(--color-error)]'
                 : 'border-[var(--color-border-emphasis)]',
               buttonClassName
             )}
-            aria-label={`Choose ${label} date`}
+            aria-label={label ? `Choose ${label} date` : 'Choose date'}
           >
             {/* Calendar Icon */}
             <svg
-              width="18"
-              height="18"
+              width={ICON_PX[size]}
+              height={ICON_PX[size]}
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
+              aria-hidden="true"
               className={
                 disabled
                   ? 'text-[var(--color-text-disabled)]'
@@ -431,6 +391,8 @@ const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
 
           {/* Text Input */}
           <input
+            placeholder="YYYY-MM-DD"
+            {...props}
             ref={handleInputRef}
             id={id}
             type="text"
@@ -439,12 +401,15 @@ const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
             onBlur={handleBlur}
             disabled={disabled}
             required={required}
-            placeholder="YYYY-MM-DD"
             aria-invalid={showError}
             aria-describedby={descriptionId}
-            {...props}
             className={cn(
-              'block h-10 w-full rounded-l-none rounded-r-md border px-3 py-2 transition-colors focus:ring-1 focus:outline-none',
+              'block w-full rounded-l-none border transition-colors focus:ring-1 focus:outline-none',
+              config.roundedR,
+              config.height,
+              config.padding,
+              config.paddingY,
+              config.textClass,
               disabled
                 ? 'cursor-not-allowed border-[var(--color-border-default)] bg-[var(--color-surface-canvas)] text-[var(--color-text-disabled)]'
                 : showError
@@ -459,36 +424,40 @@ const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
           {showCalendar &&
             createPortal(
               <div
-                ref={calendarRef} // Attach ref here
-                style={calendarStyles} // Apply calculated fixed styles
+                ref={calendarRef}
+                role="dialog"
+                aria-label={label ? `Choose ${label} date` : 'Choose date'}
+                style={calendarStyles}
                 className="rounded-md border border-[var(--color-border-emphasis)] bg-[var(--color-surface-section)] shadow-xl"
-                // Add animation classes if desired
-                // className="... animate-fade-in ..."
               >
                 <Calendar
-                  selectedDate={getValidDateForCalendar()}
+                  selectedDate={calendarDate}
                   onDateSelect={handleDateSelect}
                 />
               </div>,
-              document.body // Render into body
+              document.body
             )}
         </div>
 
         {/* Error Message */}
-        {showError && !disabled && (
+        {showError && (
           <p
             id={errorId}
-            className="type-body-sm mt-1 text-[var(--color-error)]"
+            className={cn(config.errorClass, 'mt-1 text-[var(--color-error)]')}
           >
             {effectiveError}
           </p>
         )}
 
         {/* Helper Text */}
-        {(!showError || disabled) && helperText && (
+        {!showError && helperText && (
           <p
             id={helperId}
-            className={`type-caption mt-1 ${disabled ? 'text-[var(--color-text-disabled)]' : ''}`}
+            className={cn(
+              config.helperClass,
+              'mt-1',
+              disabled && 'text-[var(--color-text-disabled)]'
+            )}
           >
             {helperText}
           </p>
