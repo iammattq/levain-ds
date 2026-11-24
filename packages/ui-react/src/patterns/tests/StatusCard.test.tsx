@@ -24,6 +24,15 @@ describe('StatusCard', () => {
     for (const t of ['T4', 'Decide', 'Strip or arc', 'eng1', '2h', 'blocked', 'waiting 2 hours']) expect(screen.getAllByText(t)[0]).toBeInTheDocument();
   });
 
+  it('the caution tone is amber: its text on --color-caution-fg, its bar on --color-caution (T27)', () => {
+    const { container } = render(
+      <StatusCard id="T5" title="Held" accent="caution" kind={{ label: 'Waiting', tone: 'caution' }} markers={[{ label: 'stale', tone: 'caution' }]} />
+    );
+    expect(screen.getByText('Waiting').className).toContain('text-[var(--color-caution-fg)]');
+    expect(screen.getByText('stale').closest('li')!.className).toContain('text-[var(--color-caution-fg)]');
+    expect(container.querySelector('span.w-\\[3px\\]')!.className).toContain('bg-[var(--color-caution)]');
+  });
+
   it('opens into its dialog and closes back with Escape; the card itself is in the dialog while open', () => {
     render(<Card />);
     fireEvent.click(screen.getByRole('button'));

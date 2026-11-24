@@ -147,7 +147,7 @@ export const AdminPageTemplate: React.FC<AdminPageTemplateProps> = ({
         {errorContent || (
           <div className="rounded-lg bg-[var(--color-surface-section)] p-12 text-center">
             <XCircle className="mx-auto h-12 w-12 text-[var(--color-error)]" />
-            <p className="type-body mt-4 text-[var(--color-text-secondary)]">
+            <p className="type-body mt-4 text-[var(--color-text-muted)]">
               {error}
             </p>
             {hasBackNavigation && (

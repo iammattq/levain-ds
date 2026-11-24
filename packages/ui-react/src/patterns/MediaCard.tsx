@@ -101,7 +101,7 @@ export function MediaCard({
               <div className="absolute inset-0 z-5 flex items-center justify-center bg-[var(--color-surface-section)]">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-12 w-12 text-[var(--color-text-light)]"
+                  className="h-12 w-12 text-[var(--color-text-muted)]"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -136,7 +136,7 @@ export function MediaCard({
           <div className="absolute inset-0 flex items-center justify-center bg-[var(--color-surface-section)]">
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="h-12 w-12 text-[var(--color-text-light)]"
+              className="h-12 w-12 text-[var(--color-text-muted)]"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"

@@ -413,7 +413,7 @@ export default function ImageUploader({
   return (
     <div className="space-y-1">
       {label && (
-        <label className="type-label block text-[var(--color-text)]">
+        <label className="type-label block text-[var(--color-text-default)]">
           {label}
         </label>
       )}
@@ -433,7 +433,7 @@ export default function ImageUploader({
                   />
                 ) : (
                   <div className="flex h-full items-center justify-center">
-                    <ImageIcon className="h-8 w-8 text-[var(--color-text-light)]" />
+                    <ImageIcon className="h-8 w-8 text-[var(--color-text-muted)]" />
                   </div>
                 )}
               </div>
@@ -456,12 +456,12 @@ export default function ImageUploader({
       {!isFull && (
         <div
           {...getRootProps()}
-          className={`mb-4 rounded-lg border-2 border-dashed p-8 text-center ${isDragActive ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/5' : 'border-[var(--color-border)]'} ${isUploading || isFull ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:bg-[var(--color-surface-2)]'}`}
+          className={`mb-4 rounded-lg border-2 border-dashed p-8 text-center ${isDragActive ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/5' : 'border-[var(--color-border-default)]'} ${isUploading || isFull ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:bg-[var(--color-surface-2)]'}`}
         >
           <input {...getInputProps()} aria-label={label || 'Upload image'} />
           {isUploading ? (
             <div className="animate-pulse">
-              <Upload className="mx-auto h-8 w-8 text-[var(--color-text-light)]" />
+              <Upload className="mx-auto h-8 w-8 text-[var(--color-text-muted)]" />
               <p className="type-body-sm mt-2 text-[var(--color-text-muted)]">
                 Uploading...
               </p>
@@ -477,7 +477,7 @@ export default function ImageUploader({
                 </div>
               ) : (
                 <div>
-                  <ImageIcon className="mx-auto h-8 w-8 text-[var(--color-text-light)]" />
+                  <ImageIcon className="mx-auto h-8 w-8 text-[var(--color-text-muted)]" />
                   <p className="type-body-sm mt-2 text-[var(--color-text-muted)]">
                     {description}
                   </p>
@@ -499,7 +499,7 @@ export default function ImageUploader({
           {uploadProgress.map((item, index) => (
             <div key={index} className="relative">
               <div className="type-body-sm mb-1 flex justify-between">
-                <span className="max-w-[80%] truncate text-[var(--color-text)]">
+                <span className="max-w-[80%] truncate text-[var(--color-text-default)]">
                   {item.file.name}
                 </span>
                 <span className="text-[var(--color-text-muted)]">

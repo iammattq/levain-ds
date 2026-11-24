@@ -296,7 +296,7 @@ export function SurfaceCard({
       selectable && active ? '0 0 0 2px var(--color-primary)' : null;
     const hoverRing =
       selectable && isHovered && !active
-        ? '0 0 0 1px var(--color-border)'
+        ? '0 0 0 1px var(--color-border-default)'
         : null;
 
     switch (shadowStyle) {
