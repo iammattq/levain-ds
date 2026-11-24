@@ -26,6 +26,8 @@ export type { HeadingProps } from './src/components/Heading';
 export { default as Tag } from './src/components/Tag';
 export { CountBadge } from './src/components/CountBadge';
 export type { CountBadgeProps, CountBadgeVariant, CountBadgeTone } from './src/components/CountBadge';
+export { CommandBlock, CommandBlockCopyAll } from './src/components/CommandBlock';
+export type { CommandBlockProps, CommandBlockCopyAllProps } from './src/components/CommandBlock';
 export { default as Switch } from './src/components/Switch';
 export { default as RadioButton } from './src/components/RadioButton';
 export { default as SegmentedControl } from './src/components/SegmentedControl';
@@ -255,3 +257,5 @@ export type { StatusCardDialogStackProps, StatusCardStackDialog } from './src/pa
 export { BottomSheet } from './src/patterns/BottomSheet';
 export type { BottomSheetProps } from './src/patterns/BottomSheet';
 export { useIsPhone } from './src/patterns/Sheet';
+export { CardStack } from './src/patterns/CardStack';
+export type { CardStackProps } from './src/patterns/CardStack';
