@@ -230,6 +230,16 @@
   --ease-away: cubic-bezier(0.5, 0, 0.2, 1);
   --ease-out: cubic-bezier(0, 0, 0.58, 1);
 
+  /*
+   * Safe area: the insets a phone keeps clear for the notch, the rounded corners and the home indicator. 0px on a
+   * screen without them, and on every screen unless the page's viewport meta says `viewport-fit=cover` (without it the
+   * browser keeps the page out of those areas itself). Read them through the *-safe utilities in Section 5.
+   */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+
   /* Overrides Tailwind's shadow-2xl utility so it participates in theming.
    * TODO: migrate `shadow-2xl` call sites to --elevation-3 and drop this. */
   --shadow-2xl: 0 10px 30px 0 rgba(0, 0, 0, 0.1);
@@ -533,6 +543,66 @@ html[data-density='condensed'],
     --duration-arrival: 0ms;
     --stagger: 0ms;
   }
+}
+
+/* =========================================================================
+ * Section 5: Safe-area padding
+ * Padding that clears the notch and home indicator (the --safe-* vars in
+ * :root). `pb-safe` is the inset alone; `pb-safe-md` is a step of the spacing
+ * scale plus the inset, calc(var(--spacing-md) + var(--safe-bottom)), so
+ * content keeps its own breathing room above the home bar and follows density.
+ * Any spacing step works (pt-safe-2xs, px-safe-lg); a name off the scale
+ * produces nothing. @utility rather than @theme, so the vars stay in :root
+ * and survive tree-shaking (ADR-010).
+ * ========================================================================= */
+
+@utility pt-safe {
+  padding-top: var(--safe-top);
+}
+@utility pr-safe {
+  padding-right: var(--safe-right);
+}
+@utility pb-safe {
+  padding-bottom: var(--safe-bottom);
+}
+@utility pl-safe {
+  padding-left: var(--safe-left);
+}
+@utility px-safe {
+  padding-left: var(--safe-left);
+  padding-right: var(--safe-right);
+}
+@utility py-safe {
+  padding-top: var(--safe-top);
+  padding-bottom: var(--safe-bottom);
+}
+@utility p-safe {
+  padding: var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left);
+}
+
+@utility pt-safe-* {
+  padding-top: calc(--value(--spacing-*) + var(--safe-top));
+}
+@utility pr-safe-* {
+  padding-right: calc(--value(--spacing-*) + var(--safe-right));
+}
+@utility pb-safe-* {
+  padding-bottom: calc(--value(--spacing-*) + var(--safe-bottom));
+}
+@utility pl-safe-* {
+  padding-left: calc(--value(--spacing-*) + var(--safe-left));
+}
+@utility px-safe-* {
+  padding-left: calc(--value(--spacing-*) + var(--safe-left));
+  padding-right: calc(--value(--spacing-*) + var(--safe-right));
+}
+@utility py-safe-* {
+  padding-top: calc(--value(--spacing-*) + var(--safe-top));
+  padding-bottom: calc(--value(--spacing-*) + var(--safe-bottom));
+}
+@utility p-safe-* {
+  padding: calc(--value(--spacing-*) + var(--safe-top)) calc(--value(--spacing-*) + var(--safe-right))
+    calc(--value(--spacing-*) + var(--safe-bottom)) calc(--value(--spacing-*) + var(--safe-left));
 }
 
 /* Gradient border utility for pill buttons (used by ui-react Button outline variant) */
