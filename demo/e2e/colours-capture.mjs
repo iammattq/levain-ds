@@ -35,7 +35,7 @@ const probe = page => page.evaluate(() => {
     statusMarker: cs(q('status-card', 'li:last-child'), 'color'),
     statusBar: cs(q('status-card', 'span.w-\\[3px\\]'), 'backgroundColor'),
     sliderTrack: cs(q('slider', 'input[type=range]'), 'backgroundColor', 'backgroundImage'),
-    sliderThumb: (el => el && { backgroundColor: getComputedStyle(el, '::-webkit-slider-thumb').backgroundColor, width: getComputedStyle(el, '::-webkit-slider-thumb').width })(q('slider', 'input[type=range]')),
+    // (the thumb isn't measurable: getComputedStyle can't read ::-webkit-slider-thumb; the shots show it)
     tableSelectedRow: cs(q('data-table', 'tbody tr'), 'backgroundColor'),
     tableChip: cs(q('data-table', 'span.rounded-full, div.rounded-full.inline-flex'), 'backgroundColor', 'color'),
     tableChipButton: cs(q('data-table', '.inline-flex.rounded-full button'), 'backgroundColor'),
