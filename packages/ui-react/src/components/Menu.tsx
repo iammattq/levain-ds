@@ -10,13 +10,14 @@
  * - ArrowDown / ArrowUp move through the enabled rows and wrap at both ends; Home / End go to the first and last;
  * - Enter or Space (the row button's own click) selects and closes;
  * - Tab, either way and from any row, closes it (Popover alone closes only on Tab past the last control);
- * - disabled rows (`aria-disabled`) are skipped by the keys and do nothing when pressed.
+ * - disabled rows (`aria-disabled`) are skipped by the keys and do nothing when pressed; with every row disabled,
+ *   focus goes to the menu itself.
  *
  * Rows are MenuItem buttons with `tabIndex=-1` (focus moves by script, not by Tab). With a `value` the menu is a
  * pick-one menu: rows are `menuitemradio` with `aria-checked`, the chosen one checked (a check at the row's end, in a
  * slot every row keeps so the columns line up). Without one they are plain `menuitem`s.
  */
-import { useCallback, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
+import { useCallback, useLayoutEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { Check } from 'lucide-react';
 import { cn } from '../utils/cn';
 import { MenuItem } from './MenuItem';
@@ -88,6 +89,24 @@ export function Menu({
   const focusAt = start >= 0 ? start : items.findIndex((it) => !it.disabled);
   const pick = value !== undefined;
 
+  // every row disabled: focus goes to the menu itself (not a row that does nothing), and Tab from there closes it,
+  // as from a row (the rows' keys are on the list inside it, which doesn't see the menu's own keys)
+  const list = useRef<HTMLDivElement>(null);
+  const none = focusAt < 0;
+  useLayoutEffect(() => {
+    const panel = list.current?.closest<HTMLElement>('[role="menu"]');
+    if (!open || !none || !panel) return;
+    first.current = panel;
+    const tab = (e: globalThis.KeyboardEvent) => {
+      if (e.key !== 'Tab' || e.target !== panel) return;
+      e.preventDefault();
+      e.stopPropagation();
+      setOpen(false);
+    };
+    panel.addEventListener('keydown', tab);
+    return () => panel.removeEventListener('keydown', tab);
+  }, [open, none, setOpen]);
+
   const select = (it: MenuOption) => {
     if (it.disabled) return;
     onSelect?.(it.value);
@@ -137,7 +156,11 @@ export function Menu({
         })
       }
     >
-      <div className="flex flex-col" onKeyDown={onKeyDown}>
+      <div
+        className="flex flex-col"
+        onKeyDown={onKeyDown}
+        ref={list}
+      >
         {items.map((it, i) => {
           const checked = it.value === value;
           return (

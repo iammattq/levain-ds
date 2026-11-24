@@ -103,6 +103,25 @@ describe('Menu', () => {
     expect(row('b')).toHaveFocus();
   });
 
+  it('with every row disabled, focus goes to the menu itself, not a row; Tab still closes it', async () => {
+    render(
+      <Switcher
+        initial="a"
+        items={[
+          { value: 'a', label: 'a', disabled: true },
+          { value: 'b', label: 'b', disabled: true },
+        ]}
+      />
+    );
+    await openByKey();
+    expect(menu()).toHaveFocus();
+    await userEvent.keyboard('{ArrowDown}');
+    expect(menu()).toHaveFocus();
+    await userEvent.tab();
+    expect(menu()).toBeNull();
+    expect(trigger()).toHaveFocus();
+  });
+
   it('ArrowDown and ArrowUp move through the rows and wrap at both ends', async () => {
     render(<Switcher />);
     await openByKey();

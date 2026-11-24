@@ -28,7 +28,7 @@
     "Rows have tabIndex -1: focus moves by the keys, not by Tab. Focus starts on the chosen row, else the first enabled one",
     "ArrowDown/ArrowUp move through enabled rows and wrap at both ends; Home/End go to the first and last; Enter or Space selects and closes",
     "Escape, a press outside, or Tab / Shift+Tab from any row closes it, and focus goes back to the trigger",
-    "Disabled rows carry aria-disabled=\"true\", are skipped by the keys and do nothing when pressed"
+    "Disabled rows carry aria-disabled=\"true\", are skipped by the keys and do nothing when pressed; with every row disabled, focus goes to the menu itself"
   ],
   "props": [
     { "name": "trigger", "type": "(props: MenuTriggerProps) => ReactNode", "optional": false, "description": "Renders the trigger; spread the given ref, onClick, onKeyDown and aria props onto a button." },
