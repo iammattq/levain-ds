@@ -1,0 +1,75 @@
+{
+  "name": "Cluster",
+  "description": "Children side by side, wrapping onto new rows when they run out of width, a step of the spacing scale apart both ways (a wrapping flex row with a gap).",
+  "category": "components",
+  "usage": [
+    "Tags, filters, buttons, metadata: a row that may wrap",
+    "`gap` takes the spacing scale's names (default sm, 16px)",
+    "`align` places items across the row (default center; baseline for text of mixed sizes); `justify` along it (between pushes the ends apart)"
+  ],
+  "examples": [
+    "<Cluster gap=\"2xs\">{tags.map(t => <Tag key={t}>{t}</Tag>)}</Cluster>",
+    "<Cluster justify=\"between\"><Heading level={4}>Settings</Heading><Button>Save</Button></Cluster>"
+  ],
+  "design": [
+    "The same gap between items in a row and between rows"
+  ],
+  "props": [
+    {
+      "name": "gap",
+      "type": "'2xs' | 'xs' | 'sm' | 'md' | 'lg' | 'xl'",
+      "optional": true,
+      "defaultValue": "'sm'",
+      "description": "Space between children, across and between rows",
+      "configurable": true
+    },
+    {
+      "name": "align",
+      "type": "'start' | 'center' | 'end' | 'baseline' | 'stretch'",
+      "optional": true,
+      "defaultValue": "'center'",
+      "description": "Cross-axis alignment within a row",
+      "configurable": true
+    },
+    {
+      "name": "justify",
+      "type": "'start' | 'center' | 'end' | 'between'",
+      "optional": true,
+      "defaultValue": "'start'",
+      "description": "Main-axis distribution",
+      "configurable": true
+    },
+    {
+      "name": "as",
+      "type": "'div' | 'section' | 'ul' | 'ol' | 'nav' | 'header' | 'footer' | 'span'",
+      "optional": true,
+      "defaultValue": "'div'",
+      "description": "The element; ul/ol for a list, whose children are then your li",
+      "configurable": true
+    },
+    {
+      "name": "className",
+      "type": "string",
+      "optional": true,
+      "defaultValue": "undefined",
+      "description": "On the element. Set the gap with `gap`, not a gap-* class: cn doesn't merge the named spacing classes, so both would apply",
+      "configurable": true
+    },
+    {
+      "name": "children",
+      "type": "ReactNode",
+      "optional": true,
+      "defaultValue": "undefined",
+      "description": "The items",
+      "configurable": true
+    },
+    {
+      "name": "...rest",
+      "type": "HTMLAttributes<HTMLElement>",
+      "optional": true,
+      "defaultValue": "undefined",
+      "description": "Any other attribute (aria-label, data-*, id) goes on the element",
+      "configurable": true
+    }
+  ]
+}

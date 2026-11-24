@@ -1,0 +1,59 @@
+{
+  "name": "Stack",
+  "description": "Children one above the other, a step of the spacing scale apart (a flex column with a gap). Replaces hand-written space-y-* / flex flex-col gap-* wrappers.",
+  "category": "components",
+  "usage": [
+    "Vertical rhythm inside a card, a form, a dialog or a column body",
+    "`gap` takes the spacing scale's names: 2xs 8px, xs 12px, sm 16px, md 24px (default), lg 32px, xl 48px",
+    "Children stretch to the stack's width; give one `self-start` to keep its own width"
+  ],
+  "examples": [
+    "<Stack gap=\"sm\">\n  <Heading level={3}>Title</Heading>\n  <p>Body</p>\n</Stack>",
+    "<Stack as=\"ul\" gap=\"2xs\" aria-label=\"Cards\">{items.map(i => <li key={i.id}>…</li>)}</Stack>"
+  ],
+  "design": [
+    "A gap, never margins: a hidden or conditional child leaves no hole"
+  ],
+  "props": [
+    {
+      "name": "gap",
+      "type": "'2xs' | 'xs' | 'sm' | 'md' | 'lg' | 'xl'",
+      "optional": true,
+      "defaultValue": "'md'",
+      "description": "Space between children",
+      "configurable": true
+    },
+    {
+      "name": "as",
+      "type": "'div' | 'section' | 'ul' | 'ol' | 'nav' | 'header' | 'footer' | 'span'",
+      "optional": true,
+      "defaultValue": "'div'",
+      "description": "The element; ul/ol for a list, whose children are then your li",
+      "configurable": true
+    },
+    {
+      "name": "className",
+      "type": "string",
+      "optional": true,
+      "defaultValue": "undefined",
+      "description": "On the element. Set the gap with `gap`, not a gap-* class: cn doesn't merge the named spacing classes, so both would apply",
+      "configurable": true
+    },
+    {
+      "name": "children",
+      "type": "ReactNode",
+      "optional": true,
+      "defaultValue": "undefined",
+      "description": "The items",
+      "configurable": true
+    },
+    {
+      "name": "...rest",
+      "type": "HTMLAttributes<HTMLElement>",
+      "optional": true,
+      "defaultValue": "undefined",
+      "description": "Any other attribute (aria-label, data-*, id) goes on the element",
+      "configurable": true
+    }
+  ]
+}
