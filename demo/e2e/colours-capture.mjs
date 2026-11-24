@@ -42,7 +42,7 @@ const probe = page => page.evaluate(() => {
     uploaderDropzone: cs(q('image-uploader', '.border-dashed'), 'borderTopColor'),
     uploaderIcon: cs(q('image-uploader', '.border-dashed svg'), 'color'),
     mediaIcon: cs(q('media-card', 'svg'), 'color'),
-    surfaceCardHover: cs(q('surface-card', '[style*="box-shadow"], [style*="boxShadow"]') ?? q('surface-card', 'p')?.parentElement, 'boxShadow'),
+    surfaceCardHover: cs(q('surface-card', '[style*="box-shadow"], [style*="boxShadow"]') ?? q('surface-card', 'p.type-body')?.parentElement, 'boxShadow'),
     contentNavRule: cs(q('content-navigation', '.border-t'), 'borderTopColor'),
     adminError: cs(q('admin-error', 'p.type-body'), 'color'),
     gradientKeyframes: [...document.styleSheets].some(s => { try { return [...s.cssRules].some(r => r.type === CSSRule.KEYFRAMES_RULE && r.name === 'gradientMove'); } catch { return false; } }),
@@ -77,7 +77,7 @@ try {
 
     for (const piece of ['checkbox-radio', 'status-card', 'slider', 'image-uploader', 'media-card', 'content-navigation', 'admin-error', 'animated-name']) await step(`shot ${piece}`, () => shot(page, key, piece));
 
-    await step('hover surface', () => page.locator('[data-piece="surface-card"] p').hover({ timeout: 3000 }));
+    await step('hover surface', () => page.locator('[data-piece="surface-card"] p.type-body').hover({ timeout: 3000 }));
     await pause(300);
     n.hover = { surfaceCardHover: (await probe(page)).surfaceCardHover };
     await step('shot surface-card', () => shot(page, key, 'surface-card'));

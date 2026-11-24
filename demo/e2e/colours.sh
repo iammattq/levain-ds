@@ -1,7 +1,7 @@
 #!/bin/sh
 # T27's capture in one PC job: the pieces that named undefined colours or classes, before (the base ref's sources) and
 # after (this tree's), Sage and Cobalt Mono, light and dark.
-#   ringmaster heavy t27 --kind capture --on pc --out <out> sh demo/e2e/colours.sh <out> [before-ref]
+#   ringmaster heavy t27 --kind capture --on pc --out <abs-out> sh demo/e2e/colours.sh <abs-out> [before-ref]
 # before-ref: the commit whose ui-react and shared.css make "before" (default main; on the PC pass a SHA). Only the
 # non-test files under packages/ that differ from it are swapped; the demo section is this tree's in both runs. The
 # files are put back before "after" all the same.

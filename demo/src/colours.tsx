@@ -18,7 +18,9 @@ const COLUMNS: DataTableProps<Row, unknown>['columns'] = [
   { accessorKey: 'state', header: 'State' },
 ];
 
-const staticTheme = () => ({ theme: 'light' as const, setTheme: () => {}, themeIndex: 0, setThemeIndex: () => {}, saveThemePreference: () => {} });
+// one object for every render: SimpleAnimatedName's effect depends on it, and a new one each time loops
+const STATIC_THEME = { theme: 'light' as const, setTheme: () => {}, themeIndex: 0, setThemeIndex: () => {}, saveThemePreference: () => {} };
+const staticTheme = () => STATIC_THEME;
 
 const Piece = ({ name, children, className = '' }: { name: string; children: ReactNode; className?: string }) => (
   <div data-piece={name} className={'space-y-2xs rounded-[var(--radius-lg)] bg-[var(--color-surface-canvas)] p-sm ' + className}>
