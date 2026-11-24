@@ -3,6 +3,7 @@
 //   ringmaster heavy t16 --kind capture --on pc --out captures/T16 sh demo/e2e/stack.sh captures/T16 cardstack-capture.mjs
 // Writes <theme>-<mode>-<desktop|phone>-<state>.png (desktop: rest, mid, mid2, expanded; phone: rest, mid-levain, mid-board, expanded),
 // numbers.json (every card's box, levain's against the board's, in each state, and the largest difference), and
+// composite.png (levain above the board: desktop mid2 and phone mid, Sage light beside Cobalt Mono dark), and
 // recordings of the row scrolling and the pile stepping (video-desktop/, video-phone/; CARDSTACK_VIDEO=0 skips them).
 // Mid-gesture states hold both stacks at once with synthetic pointers (one pointerId each), so one shot shows both.
 import { createRequire } from 'node:module';
@@ -108,6 +109,8 @@ try {
           await hold(page, [s], -70, 'top');
           await pause(400);
           held[who] = await boxes(page, s);
+          // the held pile alone, for the composite
+          await page.locator(s).screenshot({ path: `${out}/${key}-mid-${who}-only.png` });
           await piles.screenshot({ path: `${out}/${key}-mid-${who}.png` });
           await release(page); await settled(page);
         }
@@ -162,6 +165,20 @@ try {
       }
       await ctx.close();
     }
+  }
+  // one image for the designer: levain above the board, desktop mid2 and phone mid, Sage light beside Cobalt Mono dark
+  {
+    const img = f => `data:image/png;base64,${fs.readFileSync(`${out}/${f}`).toString('base64')}`;
+    const col = (key, title) => `<div class="col"><h2>${title}</h2>
+      <h3>Desktop row, two and a half cards scrolled (levain above, the board's copy below)</h3><img class="d" src="${img(`${key}-desktop-mid2.png`)}">
+      <h3>Phone pile, top card held 70 px to the left</h3><div class="p"><figure><figcaption>levain</figcaption><img src="${img(`${key}-phone-mid-levain-only.png`)}"></figure><figure><figcaption>board's copy</figcaption><img src="${img(`${key}-phone-mid-board-only.png`)}"></figure></div></div>`;
+    const page = await browser.newPage({ viewport: { width: 2000, height: 800 } });
+    await page.setContent(`<style>body{margin:0;padding:24px;background:#888;font:16px system-ui,sans-serif;color:#111}.row{display:flex;gap:24px}.col{flex:1;background:#fff;padding:16px;border-radius:8px}
+      h2{margin:0 0 8px}h3{margin:16px 0 6px;font-size:14px;font-weight:500;color:#444}.d{width:100%}.p{display:flex;gap:16px}figure{margin:0;flex:1}figcaption{font-size:13px;color:#444}.p img{width:100%}</style>
+      <div class="row">${col('sage-light', 'Sage · light')}${col('cobalt-dark', 'Cobalt Mono · dark')}</div>`);
+    await page.evaluate(() => Promise.all([...document.images].map(i => i.decode())));
+    await page.screenshot({ path: `${out}/composite.png`, fullPage: true });
+    await page.close();
   }
 } finally {
   await browser.close();
