@@ -159,7 +159,8 @@ export function Menu({
               className={cn(
                 'px-2xs! py-0! text-left',
                 'hover:bg-[var(--color-state-hover)] focus-visible:bg-[var(--color-state-active)] focus-visible:text-[var(--color-text-default)] focus-visible:ring-0 focus-visible:ring-offset-0',
-                checked && 'font-semibold text-[var(--color-text-default)]',
+                // font-semibold! over the type step's own weight (type-label sets it, and tailwind-merge doesn't know it)
+                checked && 'font-semibold! text-[var(--color-text-default)]',
                 it.disabled &&
                   'cursor-not-allowed text-[var(--color-text-disabled)] hover:bg-transparent hover:text-[var(--color-text-disabled)]'
               )}
