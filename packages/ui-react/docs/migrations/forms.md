@@ -280,3 +280,222 @@ the text.
 - The chip's keyboard ring is `--color-border-focus` with offset 2.
 
 **Check:** open the editor, change a stop, the handler gets the whole gradient.
+
+## RadioButton
+
+**Find:** `rg -l '<RadioButton\b' src`; in tests `rg -n "RadioButton|radio" -g '*test*' src` and look for queries on
+the dot (`span` inside the circle, `querySelector`).
+
+No Change now or Deprecated items in app code. `onChange(value)` (this radio's value) is unchanged.
+
+**Change now (tests only, if they apply):** the dot is drawn from the input's `:checked` and its `span` sits beside the
+circle, not inside it (same place on screen). A test that looked for the dot inside the circle needs the new shape; the
+reliable check is `expect(radio).toBeChecked()`.
+
+**Notice:**
+- A keyboard focus ring (there was none). The ref reaches the `<input>`; `className` is on the root; unnamed props
+  (`aria-label`, `required`, `data-*`, handlers) reach the input (before, only eight named props did).
+- `id`, `checked`, `onChange` optional; `defaultChecked` added. Uncontrolled radios are native: give the group one
+  `name`, and the browser keeps the choice.
+- `size="sm"` labels in `type-label-sm` (was `type-label`): slightly smaller text.
+
+**Check:** a click selects; the arrows move within a `name` group; keyboard focus shows the ring.
+
+## Select
+
+**Find:** `rg -n '<Select\b' -A10 src | rg 'compact|touched|disabled|aria-describedby|inline'`.
+
+**Deprecated: `compact` → `size="xs"`.**
+
+```tsx
+// before
+<Select id="sort" label="Sort" compact value={sort} onChange={e => setSort(e.target.value)} options={options} />
+// after
+<Select id="sort" label="Sort" size="xs" value={sort} onChange={e => setSort(e.target.value)} options={options} />
+```
+
+**Notice:**
+- `touched` no longer defaults to `true`; it has no default. What shows is the same: an error shows unless
+  `touched={false}`.
+- A disabled Select with an error shows its helper instead, and is no longer `aria-invalid`.
+- `id` and `label` are optional; `value` optional with `defaultValue`. An app's `aria-describedby` is merged with
+  the Select's (it replaced it). In `inline` mode, an app's `aria-label` wins over the label.
+- `className` and `selectClassName` are merged with `cn`: on a conflict the app's class wins now.
+
+**Check:** choose an option, the handler gets the event; a Select with an error shows it.
+
+## SegmentedControl
+
+**Find:** `rg -l '<SegmentedControl\b' src`, then `rg -n -A10 '<SegmentedControl' <file>` and check each has a `label`
+or `aria-label`. In tests: `rg -n "aria-pressed|getAllByRole\('button'|getByRole\('button'" -g '*test*' src` in
+files that render one.
+
+**Change now (if it applies):**
+- **Name every SegmentedControl.** It is now a radio group. One with no `label` and no `aria-label` is announced as
+  only "radio group". Add a name:
+
+  ```tsx
+  // before
+  <SegmentedControl options={views} value={view} onChange={setView} />
+  // after
+  <SegmentedControl aria-label="Releases" options={views} value={view} onChange={setView} />
+  ```
+
+- **Tests that query buttons.** Options are `role="radio"` with `aria-checked` (were buttons with `aria-pressed`).
+
+  ```ts
+  // before
+  expect(screen.getByRole('button', { name: 'Grid' })).toHaveAttribute('aria-pressed', 'true');
+  // after
+  expect(screen.getByRole('radio', { name: 'Grid' })).toHaveAttribute('aria-checked', 'true');
+  ```
+
+  Queries by text (`getByText('Grid')`) still match.
+
+**Notice:**
+- Choosing the option that is already chosen no longer calls `onChange`. Code that used the repeat call (to toggle or
+  refresh) needs another trigger.
+- One Tab stop; the arrows move and select (skipping disabled options, wrapping), Home/End go to the ends. The focus
+  ring is inset.
+- The ref and `id` are on the radiogroup (the ref was on the outer wrapper). The label is a span the group names with
+  `aria-labelledby`.
+- `value` and `onChange` are optional; `defaultValue` added.
+
+**Check:** every SegmentedControl has a name; a click and the arrows change the value; tests pass.
+
+## Slider
+
+**Find:** `rg -l '<Slider\b' src`; `rg -n -A10 '<Slider' <file>` and read `label`, `aria-label`, `showInput`,
+`onMouseDown`/`onMouseUp`/`onTouchStart`/`onTouchEnd`, `value`. In tests: `rg -n "getByLabelText|aria-label" ` in
+files that render one.
+
+No Change now or Deprecated items. `onChange(value: number)` is unchanged.
+
+**Notice:**
+- `label` no longer also sets `aria-label`; the visible label names the range by `<label htmlFor>`. Queries by role
+  `slider` and by label text still match.
+- The number field (`showInput`) keeps what is typed and clamps on blur or Enter (it clamped per keystroke: typing 15
+  with min 20 jumped to 20 after the "1"). It is named "<label> value", or "Value". A value changed from outside
+  replaces what is being typed.
+- The app's `onMouseDown`, `onMouseUp`, `onTouchStart`, `onTouchEnd` now run (they were dropped).
+- The ref and unnamed props reach the range input; new `id`, `defaultValue`; `value` and `onChange` optional.
+  **`value={undefined}` now means uncontrolled.** A Slider fed from optional state that starts `undefined` and later
+  gets a number switches mode and warns in development: pass a number from the start (`value={opacity ?? 0}`).
+- No NaN fill when `min === max`.
+
+**Check:** drag, the arrows and (with `showInput`) typing reach the handler; no "changed from uncontrolled to
+controlled" warning in the console.
+
+## Switch
+
+**Find:** `rg -l '<Switch\b' src`; in tests and e2e `rg -n "role=\"checkbox\"|'checkbox'|type=checkbox" ` in files that
+render one.
+
+No Change now or Deprecated items. `onChange(checked: boolean)` is unchanged.
+
+**Notice:**
+- The input has `role="switch"` (it is still `input[type=checkbox]`). `getByRole('checkbox')` no longer finds it: use
+  `getByRole('switch')`. CSS or e2e selectors on `input[type=checkbox]` still match.
+- The ref reaches the input; unnamed props (`aria-label`, `name`, `data-*`) reach it. New: `defaultChecked`,
+  `className`; `checked`, `onChange`, `id` optional. It can be labelled from outside with `<label htmlFor={id}>`.
+- The focus ring shows for the keyboard only, in `--color-border-focus` (a mouse click showed a primary ring before).
+
+**Check:** a click and Space toggle; tests find it by role `switch`.
+
+## TagInput
+
+**Find:** `rg -n '<TagInput\b' -A12 src | rg 'selectedTags|compact|error|touched|onKeyDown'`; in tests
+`rg -n "getByRole\('textbox'" ` in files that render one.
+
+**Deprecated: `selectedTags` → `value`; `compact` → `size="xs"`.**
+
+```tsx
+// before
+<TagInput id="tags" label="Tags" availableTags={tags} selectedTags={ids} onChange={setIds} compact />
+// after
+<TagInput id="tags" label="Tags" availableTags={tags} value={ids} onChange={setIds} size="xs" />
+```
+
+**Change now (tests only, if they apply):** the text field is a `combobox` over a `listbox` of options (was a
+`textbox`). `getByRole('textbox')` no longer finds it: use `getByRole('combobox')`.
+
+**Notice:**
+- **An `error` shows at once**, unless `touched={false}` (it waited for `touched`). It is never shown while disabled.
+  The input now has `aria-invalid` and `aria-describedby`.
+- Suggestions take ArrowDown/ArrowUp; Enter adds the active one (with none active, the typed name, as before); Escape
+  closes the list and stops there, so a dialog around it stays open. The app's `onKeyDown` runs first;
+  `e.preventDefault()` there skips TagInput's keys.
+- `required` sets the native attribute while no tag is chosen. `placeholder` can be set.
+- A tag made by `onCreateTag` is added to the latest list, not the one from before the await.
+- `id`, `label`, `onChange` optional; `defaultValue` added; unnamed props reach the input; `className` merged with
+  `cn`.
+
+**Check:** add a tag by typing and by the arrows; remove one; the handler gets the whole id list.
+
+## TextArea
+
+**Find:** `rg -n '<TextArea\b' -A10 src | rg 'compact|touched|disabled|aria-describedby'`.
+
+**Deprecated: `compact` → `size="xs"`.**
+
+```tsx
+// before
+<TextArea id="prompt" label="Prompt" compact value={prompt} onChange={e => setPrompt(e.target.value)} />
+// after
+<TextArea id="prompt" label="Prompt" size="xs" value={prompt} onChange={e => setPrompt(e.target.value)} />
+```
+
+**Notice:**
+- `touched` no longer defaults to `true`; it has no default. What shows is the same: an error shows unless
+  `touched={false}`.
+- An error no longer shows while disabled; the helper shows instead.
+- `id` and `label` are optional. An app's `aria-describedby` is merged with the TextArea's (it replaced it).
+  `className` merged with `cn`.
+
+**Check:** type, the handler gets the event; a TextArea with an error shows it.
+
+## TextInput
+
+**Find:** `rg -n '<TextInput\b' -A12 src | rg 'compact|error|touched|validate|aria-describedby|inputClassName'`. For
+every TextInput with `error`, check whether it also passes `touched`.
+
+**Deprecated: `compact` → `size="xs"`.**
+
+```tsx
+// before
+<TextInput id="name" label="Name" compact value={name} onChange={e => setName(e.target.value)} />
+// after
+<TextInput id="name" label="Name" size="xs" value={name} onChange={e => setName(e.target.value)} />
+```
+
+**Notice:**
+- **An `error` passed without `touched` now shows at once** (`touched` defaulted to `false`, which hid it). This is
+  the intended fix for a server error that never showed. If an error should wait until the field is left, pass the
+  field's touched state: `touched={touched.name}`. A TextInput that already passes `touched` shows no change.
+- `validate`'s message shows after the field's first blur (or at once with `touched`). Before, it showed only with
+  `touched`. An app `error` wins over it.
+- `id`, `label`, `value`, `onChange` are optional; `defaultValue` added. An app's `aria-describedby` is merged with
+  the TextInput's (it replaced it). Unnamed props now spread before the TextInput's own.
+- `className` and `inputClassName` are merged with `cn`: on a conflict the app's class wins now.
+
+**Check:** each TextInput with an `error`: is showing it at once wanted? Type; the handler gets the event.
+
+---
+
+## Final checklist
+
+- [ ] Every one of the 16 the app uses has been through its section; the ones it doesn't use are listed as unused.
+- [ ] No deprecated name left: `rg -n -A12 '<(TextInput|TextArea|Select|ColorInput|GradientInput|TagInput)\b' src | rg '\bcompact\b'`,
+      `rg -n 'selectedTags|selectedDate|onDateSelect|onMinChange|onMaxChange|\bminValue=|\bmaxValue=' src` both empty
+      (a hit on another component is fine: read it).
+- [ ] Every SegmentedControl has a `label` or `aria-label`.
+- [ ] Every TextInput, TagInput, ColorInput, GradientInput and DateInput that passes `error` without `touched` has
+      been looked at: showing at once is wanted, or `touched` is passed.
+- [ ] Every controlled DateInput's handler accepts partial text (or the field is uncontrolled).
+- [ ] No ChatInput `onChange={setX}` storing the event; no ChatInput `className` meant for the bordered box.
+- [ ] Tests: no `getByRole('checkbox')` for a Switch, `'button'`/`aria-pressed` for SegmentedControl options,
+      `'textbox'` for TagInput, `{ name: 'Edit' }` for EditableText's pencil, or the RadioButton dot inside the circle.
+- [ ] A ColorInput ref, if any, is `HTMLInputElement`.
+- [ ] Typecheck clean; the test files of every changed file pass; no "changed from controlled to uncontrolled" (or
+      back) warning in the console on the screens with forms.
+- [ ] Your list of changes, per input, in Change now / Deprecated / Notice, with any Notice judged harmless and why.
