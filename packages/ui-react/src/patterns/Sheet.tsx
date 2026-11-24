@@ -16,9 +16,9 @@
  * A hairline under the head only while the body is scrolled (Q36): at rest nothing divides them; once words run up under
  * the head, the line marks the edge. Always 1 px, transparent at rest, so nothing shifts when it shows.
  */
-import { motion, useDragControls, useMotionValue, animate, type PanInfo } from 'framer-motion';
+import { animate, motion, useDragControls, useMotionValue, type MotionProps, type MotionStyle, type PanInfo } from 'framer-motion';
 import { motion as motionFor, recipe } from '@levain/tokens';
-import { useRef, useState, useSyncExternalStore, type PointerEvent as ReactPointerEvent, type ReactNode, type Ref } from 'react';
+import { forwardRef, useRef, useState, useSyncExternalStore, type PointerEvent as ReactPointerEvent, type ReactNode, type Ref } from 'react';
 
 /** Below Tailwind's `md` (48rem): the sheet's width. */
 export const PHONE_QUERY = '(max-width: 47.99rem)';
@@ -77,72 +77,104 @@ export interface SheetPanelProps {
   head: ReactNode;
   children: ReactNode;
   panelRef?: Ref<HTMLDivElement>;
-  /** The dialog's own attributes (role, aria-*, tabIndex) and extra classes. */
+  /** The dialog's accessible name. */
   label?: string;
+  /**
+   * False for a sheet behind the front in a stack: not a dialog, hidden from assistive technology, never dragged, its
+   * words hidden (they fade out as it steps back). Default true.
+   */
+  front?: boolean;
+  /** Its own motion (a stack's pile pose, its arrivals and exits) in place of the single sheet's rise and drop. */
+  motionProps?: Pick<MotionProps, 'initial' | 'animate' | 'exit' | 'variants' | 'transition'>;
+  /** Extra motion style (the pile's origin, its z-index). */
+  style?: MotionStyle;
+  /** Where it sits: docked to the bottom edge by default. */
+  place?: string;
+  /** Its surface: the elevated background and floating shadow by default. */
+  surface?: string;
+  /** Extra classes. */
   className?: string;
+  onAnimationComplete?: MotionProps['onAnimationComplete'];
+  [data: `data-${string}`]: unknown;
 }
 
+/**
+ * The hairline under the head while the body scrolls: light as the body's own dividers (--color-border-subtle), dark one
+ * step stronger (--color-border-default), where subtle is all but invisible on the elevated surface.
+ */
+export const SCROLLED_EDGE = 'border-[var(--color-border-subtle)] dark:border-[var(--color-border-default)]';
+
+const SURFACE = 'bg-[var(--color-surface-elevated)] shadow-[var(--elevation-3)]';
+
 /** A sheet's panel: handle, head, scrolling body. Must sit inside an AnimatePresence for its exit to play. */
-export function SheetPanel({ onDragClose, reduce, head, children, panelRef, label, className = '' }: SheetPanelProps) {
+export const SheetPanel = forwardRef<HTMLDivElement, SheetPanelProps>(function SheetPanel(
+  { onDragClose, reduce, head, children, panelRef, label, front = true, motionProps, style, place = 'absolute inset-x-0 bottom-0', surface = SURFACE, className = '', onAnimationComplete, ...data },
+  forwarded,
+) {
   const controls = useDragControls();
   const y = useMotionValue(0);
   const el = useRef<HTMLDivElement | null>(null);
   const [scrolled, setScrolled] = useState(false);
   const ref = (node: HTMLDivElement | null) => {
     el.current = node;
-    if (typeof panelRef === 'function') panelRef(node); else if (panelRef) (panelRef as { current: HTMLDivElement | null }).current = node;
+    for (const r of [panelRef, forwarded]) if (typeof r === 'function') r(node); else if (r) (r as { current: HTMLDivElement | null }).current = node;
   };
   // a drag from the handle or the head, never from a control in the head (its ✕ must stay a click)
   const startDrag = (e: ReactPointerEvent) => {
-    if ((e.target as Element).closest?.(INTERACTIVE)) return;
+    if (!front || (e.target as Element).closest?.(INTERACTIVE)) return;
     controls.start(e);
   };
   const end = (_: unknown, info: PanInfo) => {
     if (closesSheet(info.offset.y, info.velocity.y, el.current?.offsetHeight ?? 0)) onDragClose();
     else animate(y, 0, motionFor('sheetIn', reduce));
   };
+  // a sheet behind keeps its words in place but hidden, as the desktop pile does
+  const words = front ? { opacity: 1, transition: recipe.contentIn } : { opacity: 0, transition: recipe.contentOut };
   return (
     <motion.div
       ref={ref}
-      role="dialog"
-      aria-modal="true"
-      aria-label={label}
-      tabIndex={-1}
+      {...data}
+      role={front ? 'dialog' : undefined}
+      aria-modal={front ? 'true' : undefined}
+      aria-hidden={front ? undefined : true}
+      aria-label={front ? label : undefined}
+      tabIndex={front ? -1 : undefined}
       data-sheet
-      initial={enter(reduce)}
-      animate={shown(reduce)}
-      exit={leave(reduce)}
-      drag="y"
+      {...(motionProps ?? { initial: enter(reduce), animate: shown(reduce), exit: leave(reduce) })}
+      drag={front ? 'y' : false}
       dragControls={controls}
       dragListener={false}
       dragMomentum={false}
       dragConstraints={{ top: 0 }}
       dragElastic={{ top: 0, bottom: 1 }}
       onDragEnd={end}
-      style={{ y }}
-      onClick={e => e.stopPropagation()}
+      onAnimationComplete={onAnimationComplete}
+      style={{ y, ...style }}
+      onClick={front ? e => e.stopPropagation() : undefined}
       className={
         // the cap spelled out in full here, as Tailwind finds classes by reading the source
-        'absolute inset-x-0 bottom-0 flex max-h-[calc(100dvh-env(safe-area-inset-top,0px)-2rem)] flex-col overflow-hidden rounded-t-[var(--radius-2xl)] bg-[var(--color-surface-elevated)] shadow-[var(--elevation-3)] outline-none ' +
-        className
+        place + ' flex max-h-[calc(100dvh-env(safe-area-inset-top,0px)-2rem)] flex-col overflow-hidden rounded-t-[var(--radius-2xl)] outline-none ' + surface + ' ' + className
       }
     >
-      <div onPointerDown={startDrag} data-sheet-grab className="shrink-0 touch-none select-none pl-[env(safe-area-inset-left,0px)] pr-[env(safe-area-inset-right,0px)]">
+      <motion.div onPointerDown={startDrag} data-sheet-grab initial={false} animate={words}
+        className="shrink-0 touch-none select-none pl-[env(safe-area-inset-left,0px)] pr-[env(safe-area-inset-right,0px)]">
         <div data-sheet-handle aria-hidden className="flex justify-center pt-2xs pb-3xs">
           <span className="h-1 w-9 rounded-full bg-[var(--color-border-default)]" />
         </div>
         <div data-sheet-head data-scrolled={scrolled || undefined}
-          className={'border-b px-md pb-sm ' + (scrolled ? 'border-[var(--color-border-subtle)]' : 'border-transparent')}>
+          className={'border-b px-md pb-sm ' + (scrolled ? SCROLLED_EDGE : 'border-transparent')}>
           {head}
         </div>
-      </div>
-      <div
+      </motion.div>
+      <motion.div
         data-sheet-body
+        initial={false}
+        animate={words}
         onScroll={e => setScrolled(e.currentTarget.scrollTop > 0)}
         className="flex min-h-0 flex-col gap-sm overflow-y-auto overscroll-contain pt-3xs pb-[calc(var(--spacing-md)+env(safe-area-inset-bottom,0px))] pl-[calc(var(--spacing-md)+env(safe-area-inset-left,0px))] pr-[calc(var(--spacing-md)+env(safe-area-inset-right,0px))]"
       >
         {children}
-      </div>
+      </motion.div>
     </motion.div>
   );
-}
+});

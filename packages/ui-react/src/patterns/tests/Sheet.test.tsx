@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { StatusCard, StatusCardDialog } from '../StatusCard';
-import { closesSheet, PHONE_QUERY, SHEET_CLOSE, SHEET_MAX_HEIGHT } from '../Sheet';
+import { closesSheet, PHONE_QUERY, SCROLLED_EDGE, SHEET_CLOSE, SHEET_MAX_HEIGHT } from '../Sheet';
 
 /** matchMedia as a phone (below md) or a desktop; nothing else matches (so no Reduce Motion here). */
 let phone = true;
@@ -91,7 +91,7 @@ describe('StatusCardDialog below md: a bottom sheet', () => {
     expect(head.className).toContain('border-transparent');
     body.scrollTop = 120;
     fireEvent.scroll(body);
-    expect(head.className).toContain('border-[var(--color-border-subtle)]');
+    expect(head.className).toContain(SCROLLED_EDGE);
     expect(head).toHaveAttribute('data-scrolled');
     body.scrollTop = 0;
     fireEvent.scroll(body);

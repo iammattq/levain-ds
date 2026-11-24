@@ -3,7 +3,7 @@
 // the desktop dialog at 1440. Run on the PC through demo/e2e/stack.sh:
 //   ringmaster heavy t24 --kind capture --on pc --out <dir> sh demo/e2e/stack.sh <dir> sheet-capture.mjs
 // Writes <engine>-<mode>-<width>-<state>.png, numbers.json (each dialog's box against the viewport) and, with
-// SHEET_VIDEO=1, recordings of the phone sheet opening and closing (video-<engine>/).
+// SHEET_VIDEO=1, recordings (SHEET_REDUCE=1: under Reduce Motion) of the phone sheet opening and closing (video-<engine>/).
 // The phone is Playwright's iPhone 14 (390x844, touch, DPR 3). Neither headless engine has a notch, so the phone pages
 // fake one: every env(safe-area-inset-*) in the page's stylesheets is rewritten to the iPhone 14's insets (47 px top,
 // 34 px bottom), and the two bands are drawn over the page, faintly, so a shot shows what would sit under them.
@@ -73,10 +73,10 @@ for (const engine of engines) {
   const browser = await launch(engine);
   try {
     for (const mode of modes) {
-      for (const [width, height] of [[390, 844], [1440, 900]]) {
+      for (const [width, height] of [[390, 844], [1440, 900]].filter(([w]) => (process.env.SHEET_WIDTHS ?? '390,1440').split(',').includes(String(w)))) {
         const phone = width < 768;
         if (videoOnly && !phone) continue;
-        const ctx = await browser.newContext(phone ? { ...iphone, ...(videoOnly ? { recordVideo: { dir: `${out}/video-${engine}-${mode}`, size: { width, height } } } : {}) } : { viewport: { width, height } });
+        const ctx = await browser.newContext(phone ? { ...iphone, ...(process.env.SHEET_REDUCE === '1' ? { reducedMotion: 'reduce' } : {}), ...(videoOnly ? { recordVideo: { dir: `${out}/video-${engine}-${mode}${process.env.SHEET_REDUCE === '1' ? '-reduce' : ''}`, size: { width, height } } } : {}) } : { viewport: { width, height } });
         const page = await ctx.newPage();
         page.on('pageerror', e => errors.push(`${engine} ${mode} ${width}: ${e.message}`));
         const tag = `${engine}-${mode}-${width}`;
@@ -91,6 +91,19 @@ for (const engine of engines) {
           await page.getByRole('button', { name: 'Close' }).first().click(); await pause(1200);
           await card.click(); await pause(1200);
           await page.mouse.click(195, 30); await pause(1200);
+          // the handle: a short slow drag springs back; a long one closes; a quick short flick closes
+          const handle = async (dy, steps, stepMs) => {
+            const h = await page.locator('[data-sheet-handle]').boundingBox();
+            const x = h.x + h.width / 2, y = h.y + h.height / 2;
+            await page.mouse.move(x, y); await page.mouse.down();
+            for (let i = 1; i <= steps; i++) { await page.mouse.move(x, y + (dy * i) / steps); await pause(stepMs); }
+            await page.mouse.up();
+          };
+          await card.click(); await pause(1200);
+          await handle(90, 12, 40); await pause(1200);
+          await handle(320, 16, 30); await pause(1200);
+          await card.click(); await pause(1200);
+          await handle(70, 4, 12); await pause(1200);
           await ctx.close();
           continue;
         }
