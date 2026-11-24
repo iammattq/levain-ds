@@ -80,11 +80,11 @@ What's missing so far, from real use, is kept in [docs/GAPS.md](docs/GAPS.md).
 
 ## Using it
 
-**Install** from a tag. List both packages, pinned to the **same** tag (ui-react takes tokens as a peer dependency at its exact version, so pnpm warns if they drift):
+**Install** from a tag. List both packages, pinned to the **same** tag (ui-react takes tokens as a peer dependency at its exact version, so pnpm warns if they drift). Tags from the release after v0.6.0 onward carry one version across both packages; on older tags the two packages state versions that disagree, and pnpm warns about the peer even when both are pinned to the same tag:
 
 ```json
-"@levain/tokens": "git+https://github.com/iammattq/levain-ds.git#v0.1.0&path:packages/tokens",
-"@levain/ui-react": "git+https://github.com/iammattq/levain-ds.git#v0.1.0&path:packages/ui-react"
+"@levain/tokens": "git+https://github.com/iammattq/levain-ds.git#vX.Y.Z&path:packages/tokens",
+"@levain/ui-react": "git+https://github.com/iammattq/levain-ds.git#vX.Y.Z&path:packages/ui-react"
 ```
 
 Its peer dependencies are React 18 or 19, Tailwind CSS 4, lucide-react, framer-motion, sonner, @tanstack/react-table and react-dropzone.
@@ -153,6 +153,16 @@ const reduce = useReducedMotion();
 ```
 
 **Making themes.** Add an entry to `packages/tokens/src/data/baseThemesV2.ts` and run `pnpm --filter @levain/tokens generate-themes`. That rewrites `generated/` (the theme JSON and the Kotlin output).
+
+## Releasing
+
+The root and both packages carry one version, and ui-react's peer requirement on tokens is that same version, exact (apps install from git, where pnpm reads package.json as is, so a `workspace:` range would reach them unconverted and read as unmet). Before tagging a release, set it in all four places with one command, commit, then tag that commit:
+
+```sh
+node scripts/version.mjs set 0.7.0
+```
+
+CI runs `pnpm check:version`, which fails when the four disagree.
 
 ## Built with
 

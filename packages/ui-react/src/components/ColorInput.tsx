@@ -206,17 +206,19 @@ const ColorInput = forwardRef<HTMLButtonElement, ColorInputProps>(
       // Close on escape
       const handleEscape = (event: KeyboardEvent) => {
         if (event.key === 'Escape') {
+          // claimed, in the capture phase (below): a dialog around it leaves this Escape alone and stays open
+          event.preventDefault();
           setIsOpen(false);
           triggerRef.current?.focus();
         }
       };
 
       document.addEventListener('mousedown', handleClickOutside);
-      document.addEventListener('keydown', handleEscape);
+      document.addEventListener('keydown', handleEscape, true);
 
       return () => {
         document.removeEventListener('mousedown', handleClickOutside);
-        document.removeEventListener('keydown', handleEscape);
+        document.removeEventListener('keydown', handleEscape, true);
       };
     }, [isOpen]);
 

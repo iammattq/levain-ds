@@ -25,6 +25,9 @@ jobs:
           node-version: lts/*
           cache: pnpm
 
+      - name: One version (root, both packages, ui-react's tokens peer)
+        run: pnpm check:version
+
       - run: pnpm install --frozen-lockfile
 
       - name: Types (both packages)

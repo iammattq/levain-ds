@@ -24,6 +24,7 @@ import { forwardRef, useEffect, useLayoutEffect, useRef, useState, type MouseEve
 import { createPortal } from 'react-dom';
 import { contentIn, DIALOG_BODY, DIALOG_PANEL, DialogHead, morphId, useRadius, type StatusCardDialogProps } from './StatusCard';
 import { SheetPanel, SheetScrim, useIsPhone } from './Sheet';
+import { opener, useDialogFocus } from '../utils/useDialogFocus';
 
 /** One dialog in the stack: a StatusCardDialog's props, less its open and onClose (the stack's). */
 export type StatusCardStackDialog = Omit<StatusCardDialogProps, 'open' | 'onClose'>;
@@ -142,26 +143,24 @@ export function StatusCardDialogStack({ dialogs, onClose, cardId: givenCardId }:
   // re-run the focus effect, or focus would jump back to the panel mid-typing (D258).
   const onCloseRef = useRef(onClose);
   const frontRef = useRef(frontId);
-  useLayoutEffect(() => { onCloseRef.current = onClose; frontRef.current = frontId; });
+  // the last front, kept after the stack closes: focus goes back to its card (or the stack's) if that was the opener
+  const lastFront = useRef(frontId);
+  useLayoutEffect(() => { onCloseRef.current = onClose; frontRef.current = frontId; if (frontId !== undefined) lastFront.current = frontId; });
   const closeFront = () => { if (frontRef.current !== undefined) onCloseRef.current(frontRef.current); };
   const idsRef = useRef<string[]>([]);
   useLayoutEffect(() => { idsRef.current = dialogs.map(d => d.id); });
   const closeAll = () => { for (const id of idsRef.current) onCloseRef.current(id); };
 
   const panels = useRef(new Map<string, HTMLDivElement>());
-  // what had focus before the stack opened, read before the front's panel takes it (layout effects run first)
-  const before = useRef<HTMLElement | null>(null);
-  useLayoutEffect(() => { if (open) before.current = document.activeElement as HTMLElement | null; }, [open]);
+  // the shared dialog behaviour, held by the front panel: focus moved in, kept in (Tab wraps; the ones behind are
+  // inert) and given back to what had it before the stack opened; Escape closes the front when the stack is on top
+  useDialogFocus(open, () => (frontRef.current === undefined ? null : panels.current.get(frontRef.current)), closeFront,
+    () => { const c = cardId ?? lastFront.current; return c === undefined ? null : opener(morphId(c)); });
+  // a new front takes focus as it comes forward
   useEffect(() => {
     if (frontId === undefined) return;
     panels.current.get(frontId)?.focus();
   }, [frontId]);
-  useEffect(() => {
-    if (!open) return;
-    const key = (e: KeyboardEvent) => { if (e.key === 'Escape') closeFront(); };
-    window.addEventListener('keydown', key);
-    return () => { window.removeEventListener('keydown', key); before.current?.focus?.(); };
-  }, [open]);
 
   if (typeof document === 'undefined' || (!open && !leaving)) return null;
   const width = dialogs[0]?.width ?? '40rem';

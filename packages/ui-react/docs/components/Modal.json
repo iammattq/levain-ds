@@ -10,7 +10,7 @@
     "Provide modal content via the `children` render prop, which receives a `handleClose` function.",
     "Customize the modal's width using the `size` prop.",
     "Override default animations using the `motionProps` prop (Framer Motion).",
-    "Modal closes on Escape key press or by clicking the backdrop.",
+    "Modal closes on Escape key press (only the top dialog, when one is over another) or by clicking the backdrop.",
     "Uses React Portal to render at the document body level."
   ],
   "examples": [
@@ -31,10 +31,10 @@
     "Use the contextual menu for secondary actions related to the modal's content or context."
   ],
   "accessibility": [
-    "Focus is trapped within the modal when open.",
-    "Closes on Escape key press.",
+    "A modal dialog (`role=\"dialog\"`, `aria-modal`), named by its `title`, or by `label` when it has none.",
+    "Takes focus on open; Tab and Shift+Tab stay inside it; focus returns to what had it before on close (useDialogFocus, shared with every levain dialog).",
+    "Escape closes the menu if open, else the modal. With a dialog over another, only the top one answers Escape.",
     "Can be closed by clicking the backdrop overlay.",
-    "Uses appropriate ARIA roles (`dialog`, `modal`).",
     "Includes an accessible close button (visible or via Escape/backdrop).",
     "The contextual menu is keyboard accessible.",
     "If providing a custom `title` component, ensure it's accessible."
@@ -57,6 +57,12 @@
       "type": "string | React.ReactNode",
       "optional": true,
       "description": "Optional title displayed in the modal header."
+    },
+    {
+      "name": "label",
+      "type": "string",
+      "optional": true,
+      "description": "The dialog's accessible name when there is no `title` (a title names it)."
     },
     {
       "name": "menuOptions",

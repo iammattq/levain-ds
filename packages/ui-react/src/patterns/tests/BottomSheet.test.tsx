@@ -104,7 +104,7 @@ describe('BottomSheet', () => {
     open();
     fireEvent.click(screen.getByTestId('body'));
     expect(onClose).not.toHaveBeenCalled();
-    fireEvent.keyDown(window, { key: 'Escape' });
+    fireEvent.keyDown(document, { key: 'Escape' });
     open();
     fireEvent.click(document.querySelector('[data-sheet-scrim]')!);
     expect(onClose).toHaveBeenCalledTimes(2);
@@ -118,18 +118,18 @@ describe('BottomSheet', () => {
     expect(sheet()).toHaveFocus();
     const close = screen.getByRole('button', { name: 'Close' });
     const apply = screen.getByRole('button', { name: 'Apply' });
-    fireEvent.keyDown(window, { key: 'Tab' });
+    fireEvent.keyDown(document, { key: 'Tab' });
     expect(close).toHaveFocus();
     apply.focus();
-    fireEvent.keyDown(window, { key: 'Tab' });
+    fireEvent.keyDown(document, { key: 'Tab' });
     expect(close).toHaveFocus();
-    fireEvent.keyDown(window, { key: 'Tab', shiftKey: true });
+    fireEvent.keyDown(document, { key: 'Tab', shiftKey: true });
     expect(apply).toHaveFocus();
     // focus that slipped out comes back in
     trigger.focus();
-    fireEvent.keyDown(window, { key: 'Tab' });
+    fireEvent.keyDown(document, { key: 'Tab' });
     expect(close).toHaveFocus();
-    fireEvent.keyDown(window, { key: 'Escape' });
+    fireEvent.keyDown(document, { key: 'Escape' });
     expect(trigger).toHaveFocus();
   });
 
