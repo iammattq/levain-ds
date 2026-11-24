@@ -175,7 +175,8 @@ const sheetOpen = page => page.locator('[data-sheet]').count().then(n => n > 0);
   await openIt();
   await page.mouse.click(195, 60); await pause(1000);
   behaviour.scrimCloses = !(await sheetOpen(page));
-  await openIt();
+  // the filters fit at 844 px; the T50 words scroll
+  await page.locator('[data-demo="bottom-sheet-t50"]').click(); await page.waitForSelector('[data-sheet]'); await settled(page);
   await page.evaluate(() => { const b = document.querySelector('[data-sheet-body]'); b.scrollTop = 60; b.dispatchEvent(new Event('scroll')); });
   await pause(200);
   behaviour.hairlineWhileScrolled = await page.evaluate(() => document.querySelector('[data-sheet-head]').hasAttribute('data-scrolled'));
