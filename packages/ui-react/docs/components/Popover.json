@@ -120,7 +120,7 @@
       "type": "boolean",
       "optional": true,
       "defaultValue": "true",
-      "description": "Portal to the body above dialogs; false renders it beside the trigger, under it."
+      "description": "Portal to the body above dialogs (the default; use it everywhere else). false renders it beside the trigger, under it, but it is still position: fixed with viewport coordinates, so inside a transformed parent (a Modal, an animated container) it lands in the wrong place: use false only for a trigger in a static bar."
     },
     {
       "name": "className",
