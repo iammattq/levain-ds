@@ -156,16 +156,31 @@ describe('ImageCompare mode="slider"', () => {
       at(100);
     });
 
-    test('a touch moves it only as the finger moves, and stops on cancel (the page took a vertical scroll)', () => {
+    test('a touch takes the handle once it moves sideways, and stops on cancel', () => {
       const { container } = render(<ImageCompare mode="slider" images={BA} />);
       const frame = frameAt(container);
-      fireEvent.pointerDown(frame, { pointerId: 2, pointerType: 'touch', button: 0, clientX: 200 });
+      fireEvent.pointerDown(frame, { pointerId: 2, pointerType: 'touch', button: 0, clientX: 300, clientY: 100 });
       at(50);
-      fireEvent.pointerMove(frame, { pointerId: 2, clientX: 180 });
+      fireEvent.pointerMove(frame, { pointerId: 2, clientX: 296, clientY: 100 }); // inside the slop
+      at(50);
+      fireEvent.pointerMove(frame, { pointerId: 2, clientX: 180, clientY: 104 });
       at(20);
+      fireEvent.pointerMove(frame, { pointerId: 2, clientX: 200, clientY: 160 }); // taken: it follows x from here
+      at(25);
       fireEvent.pointerCancel(frame, { pointerId: 2 });
-      fireEvent.pointerMove(frame, { pointerId: 2, clientX: 400 });
-      at(20);
+      fireEvent.pointerMove(frame, { pointerId: 2, clientX: 400, clientY: 160 });
+      at(25);
+    });
+
+    test('a touch that moves down more than sideways (a page scroll) leaves the handle where it was', () => {
+      const { container } = render(<ImageCompare mode="slider" images={BA} />);
+      const frame = frameAt(container);
+      fireEvent.pointerDown(frame, { pointerId: 3, pointerType: 'touch', button: 0, clientX: 200, clientY: 200 });
+      fireEvent.pointerMove(frame, { pointerId: 3, clientX: 208, clientY: 180 });
+      fireEvent.pointerMove(frame, { pointerId: 3, clientX: 212, clientY: 120 });
+      at(50);
+      fireEvent.pointerCancel(frame, { pointerId: 3 });
+      at(50);
     });
   });
 

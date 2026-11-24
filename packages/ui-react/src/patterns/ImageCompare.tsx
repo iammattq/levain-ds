@@ -37,6 +37,8 @@ export interface ImageCompareProps {
 const KEY_STEP = 5;
 /** Space kept between the handle and a label before the label fades, in px. */
 const LABEL_GAP = 8;
+/** How far a touch moves sideways (and more than down) before it takes the handle, in px. */
+const TOUCH_SLOP = 6;
 
 const clamp = (n: number) => Math.min(100, Math.max(0, n));
 
@@ -66,7 +68,9 @@ function SliderCompare({ before, after, onBroken, className }: { before: ImageCo
   const frame = useRef<HTMLDivElement>(null);
   const beforeLabel = useRef<HTMLSpanElement>(null);
   const afterLabel = useRef<HTMLSpanElement>(null);
-  const drag = useRef<number | null>(null);
+  // The pointer dragging the handle, where it went down, and whether it has taken the gesture (a touch takes it only
+  // once it moves sideways more than down, so a vertical scroll that starts on the frame leaves the handle be).
+  const drag = useRef<{ id: number; x: number; y: number; engaged: boolean } | null>(null);
 
   useLayoutEffect(() => {
     const f = frame.current;
@@ -77,8 +81,9 @@ function SliderCompare({ before, after, onBroken, className }: { before: ImageCo
     };
     measure();
     if (typeof ResizeObserver === 'undefined') return;
+    // the labels too: their width changes when the web font arrives
     const ro = new ResizeObserver(measure);
-    ro.observe(f);
+    for (const el of [f, beforeLabel.current, afterLabel.current]) if (el) ro.observe(el);
     return () => ro.disconnect();
   }, []);
 
@@ -89,16 +94,24 @@ function SliderCompare({ before, after, onBroken, className }: { before: ImageCo
 
   const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     if (e.button !== 0) return;
-    drag.current = e.pointerId;
+    // A mouse or pen press jumps the handle there; a touch waits to move sideways, so a tap or a scroll leaves it be.
+    const engaged = e.pointerType !== 'touch';
+    drag.current = { id: e.pointerId, x: e.clientX, y: e.clientY, engaged };
     e.currentTarget.setPointerCapture?.(e.pointerId);
-    // A mouse or pen press jumps the handle there; a touch waits to move, so a tap or a vertical scroll leaves it be.
-    if (e.pointerType !== 'touch') moveTo(e.clientX);
+    if (engaged) moveTo(e.clientX);
   };
   const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (drag.current === e.pointerId) moveTo(e.clientX);
+    const d = drag.current;
+    if (!d || d.id !== e.pointerId) return;
+    if (!d.engaged) {
+      const dx = Math.abs(e.clientX - d.x), dy = Math.abs(e.clientY - d.y);
+      if (dx < TOUCH_SLOP || dx <= dy) return;
+      d.engaged = true;
+    }
+    moveTo(e.clientX);
   };
   const endDrag = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (drag.current === e.pointerId) drag.current = null;
+    if (drag.current?.id === e.pointerId) drag.current = null;
   };
 
   const onKeyDown = (e: React.KeyboardEvent) => {
