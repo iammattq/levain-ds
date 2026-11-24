@@ -1,6 +1,7 @@
 'use client';
 
-import React, { forwardRef, SelectHTMLAttributes } from 'react';
+import { forwardRef, SelectHTMLAttributes, useId } from 'react';
+import { cn } from '../utils/cn';
 import { inputSizeConfig, type InputSize } from '../utils/inputSizing';
 
 /** Size variants for Select */
@@ -17,25 +18,29 @@ export interface SelectOption {
   disabled?: boolean;
 }
 
+/**
+ * Select follows the form-input convention (docs/prop-conventions.json, formInputs): a native field, so `value` /
+ * `defaultValue` and the native `onChange(event)`; every prop it doesn't name goes to the <select>, as does the ref.
+ */
 export interface SelectProps extends Omit<
   SelectHTMLAttributes<HTMLSelectElement>,
   'className' | 'size'
 > {
-  /** Unique identifier for the select */
-  id: string;
-  /** Text label for the select field */
-  label: string;
+  /** The select's id; generated when left out */
+  id?: string;
+  /** Visible label (in `inline` mode, the select's aria-label). Without it, pass `aria-label` or `aria-labelledby` */
+  label?: string;
   /** Options to display in the dropdown */
   options: SelectOption[];
-  /** Error message to display (enables error state when provided) */
+  /** Error message; shown unless `touched` is false or the field is disabled */
   error?: string;
   /** Optional helper text shown below the select */
   helperText?: string;
-  /** Additional class name for the select container */
+  /** Additional class name for the root (merged with cn) */
   className?: string;
   /** Additional class name for the select element */
   selectClassName?: string;
-  /** Whether the field has been touched/blurred */
+  /** Leave out to show `error` at once; pass the field's touched state to hold it until the field is left */
   touched?: boolean;
   /** Whether the field is required */
   required?: boolean;
@@ -56,14 +61,14 @@ export interface SelectProps extends Omit<
 const Select = forwardRef<HTMLSelectElement, SelectProps>(
   (
     {
-      id,
+      id: idProp,
       label,
       options,
       error,
       helperText,
-      className = '',
-      selectClassName = '',
-      touched = true, // Default to true to show errors immediately if provided
+      className,
+      selectClassName,
+      touched,
       required = false,
       disabled = false,
       placeholder,
@@ -74,12 +79,14 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
     },
     ref
   ) => {
+    const autoId = useId();
+    const id = idProp ?? autoId;
     // Resolve size from explicit prop or deprecated compact boolean
     const effectiveSize: SelectSize = size ?? (compact ? 'xs' : 'md');
     const config = inputSizeConfig[effectiveSize];
 
-    // Determine if we should show an error
-    const showError = touched && !!error;
+    // An error shows when set, unless touched is false; while disabled the helper shows instead
+    const showError = !!error && touched !== false && !disabled;
 
     // Generate ids for associated elements
     const errorId = `${id}-error`;
@@ -93,16 +100,18 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
         : undefined;
 
     return (
-      <div className={`${inline ? 'inline-flex' : ''} ${className}`}>
+      <div className={cn(inline && 'inline-flex', className)}>
         {/* Visible label (hidden in inline mode, but still accessible via aria-label on select) */}
-        {!inline && (
+        {!inline && label && (
           <label
             htmlFor={id}
-            className={`${config.labelClass} mb-1 block ${
+            className={cn(
+              config.labelClass,
+              'mb-1 block',
               disabled
                 ? 'text-[var(--color-text-disabled)]'
                 : 'text-[var(--color-text-default)]'
-            }`}
+            )}
           >
             {label}{' '}
             {required && <span className="text-[var(--color-error)]">*</span>}
@@ -111,23 +120,34 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
 
         <div className="relative">
           <select
+            aria-label={inline ? label : undefined}
+            {...props}
             ref={ref}
             id={id}
             disabled={disabled}
-            aria-label={inline ? label : undefined}
-            {...props}
-            className={`block w-full appearance-none ${config.rounded} ${config.height} ${config.selectPadding} ${config.textClass} ${
-              disabled
-                ? 'cursor-not-allowed border-[var(--color-border-default)] bg-[var(--color-surface-canvas)] text-[var(--color-text-disabled)]'
-                : showError
-                  ? 'border-[var(--color-error)] bg-[var(--color-surface-section)] focus:border-[var(--color-error)] focus:ring-[var(--color-error)]'
-                  : 'border-[var(--color-border-subtle)] bg-[var(--color-surface-interactive)] focus:border-[var(--color-primary)] focus:ring-[var(--color-primary)]'
-            } border border-[var(--color-border-emphasis)] text-[var(--color-text-default)] transition-colors focus:ring-1 focus:outline-none ${selectClassName}`}
             aria-invalid={showError}
-            aria-describedby={descriptionId}
+            aria-describedby={
+              [descriptionId, props['aria-describedby']]
+                .filter(Boolean)
+                .join(' ') || undefined
+            }
             required={required}
+            // one border colour per state (before, two were set and the alphabet chose: disabled drew emphasis)
+            className={cn(
+              'block w-full appearance-none border transition-colors focus:ring-1 focus:outline-none',
+              config.rounded,
+              config.height,
+              config.selectPadding,
+              config.textClass,
+              disabled
+                ? 'cursor-not-allowed border-[var(--color-border-emphasis)] bg-[var(--color-surface-canvas)] text-[var(--color-text-disabled)]'
+                : showError
+                  ? 'border-[var(--color-error)] bg-[var(--color-surface-section)] text-[var(--color-text-default)] focus:border-[var(--color-error)] focus:ring-[var(--color-error)]'
+                  : 'border-[var(--color-border-subtle)] bg-[var(--color-surface-interactive)] text-[var(--color-text-default)] focus:border-[var(--color-primary)] focus:ring-[var(--color-primary)]',
+              selectClassName
+            )}
           >
-            {placeholder && (
+          {placeholder && (
               <option value="" disabled={required}>
                 {placeholder}
               </option>
@@ -164,19 +184,24 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
           </div>
         </div>
 
-        {/* Error message */}
-        {showError && !disabled && (
+        {showError && (
           <p
             id={errorId}
-            className={`${config.errorClass} mt-1 text-[var(--color-error)]`}
+            className={cn(config.errorClass, 'mt-1 text-[var(--color-error)]')}
           >
             {error}
           </p>
         )}
 
-        {/* Helper text - only show if no error is displayed */}
-        {(!showError || disabled) && helperText && (
-          <p id={helperId} className={`${config.helperClass} mt-1`}>
+        {!showError && helperText && (
+          <p
+            id={helperId}
+            className={cn(
+              config.helperClass,
+              'mt-1',
+              disabled && 'text-[var(--color-text-disabled)]'
+            )}
+          >
             {helperText}
           </p>
         )}
