@@ -3,6 +3,7 @@
 // components take, so the same section renders before and after.
 import { SegmentedControl, Slider, Switch, TextArea } from '@levain/ui-react';
 import { useState } from 'react';
+import { Forms2Demo } from './forms2';
 import { FormsPart4 } from './formsPart4';
 
 export function FormsDemo({ Section }: { Section: (p: { title: string; note: string; children: React.ReactNode }) => React.ReactElement }) {
@@ -41,6 +42,7 @@ export function FormsDemo({ Section }: { Section: (p: { title: string; note: str
         </div>
         <FormsPart4 />
       </div>
+      <Forms2Demo />
     </Section>
   );
 }
