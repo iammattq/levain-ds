@@ -4,6 +4,109 @@
   "description": "Governance rules for consistent prop naming across design system components and patterns",
   "version": "1.0.0",
   "rules": {
+    "formInputs": {
+      "description": "The one convention for form inputs (T35, Q-t35). Every form input follows it; the per-component doc JSON lists the sizes it draws and any deprecated alias. Where the inputs disagreed (T35 survey of the 16), each point says which way the majority and the newer components (Popover, Menu, Drawer) went.",
+      "appliesTo": [
+        "TextInput",
+        "TextArea",
+        "Select",
+        "ChatInput",
+        "DateInput",
+        "Checkbox",
+        "RadioButton",
+        "Switch",
+        "Slider",
+        "DualSlider",
+        "SegmentedControl",
+        "ColorInput",
+        "GradientInput",
+        "TagInput",
+        "Calendar",
+        "EditableText"
+      ],
+      "points": {
+        "valueAndChange": {
+          "rules": [
+            "The value prop is `value` (`checked` for a boolean control); the change callback is `onChange`.",
+            "Native text fields (one native <input>/<textarea>/<select> that takes typed text, and pass native attributes through: TextInput, TextArea, Select, ChatInput, DateInput) keep the native `onChange(event: ChangeEvent)`.",
+            "Every other input calls `onChange(value)`: value first, the whole new value (Switch/Checkbox: the boolean; Slider: the number; DualSlider: [min, max]; TagInput: the id list; Calendar: the Date). Nothing after it is required reading.",
+            "A callback that fires once per commit rather than on each change is named for the commit (`onSave`, `onSubmit`) and is in addition to, not instead of, `onChange`.",
+            "Older names (`selectedDate`/`onDateSelect`, `selectedTags`, `minValue`/`maxValue`/`onMinChange`/`onMaxChange`) move to `value`/`onChange`, the old name kept as a deprecated alias for one release."
+          ],
+          "rationale": "The native fields keep the native signature because it is the native prop: `e.target` code and form libraries' register() rely on it, and all five text fields already do it. Value-first everywhere else is the majority (10 of 16) and what the newer components do (Menu `onSelect(value)`, Popover `onOpenChange(open)`).",
+          "today": "value-first 10, event 5 (exactly the native text fields); split already matched this rule, so no input changes its signature in T35."
+        },
+        "controlledAndUncontrolled": {
+          "rules": [
+            "Controlled when `value` (or `checked`) is given; uncontrolled when it is left out, starting from `defaultValue` (`defaultChecked`).",
+            "`onChange` fires in both modes. In controlled mode the input shows only what `value` says; in uncontrolled mode it keeps its own state.",
+            "An input does not switch mode during its life. Use the shared `useControlled` hook (src/utils/useControlled.ts); native text fields get this from the native element."
+          ],
+          "rationale": "The newer components settle it: Popover and Menu take `open` or `defaultOpen` and keep their own state only when `open` is left out. Today none of the 16 supports uncontrolled use except TextArea, by accident of spreading native props."
+        },
+        "errorAndTouched": {
+          "rules": [
+            "`error?: string` is the message. It shows when it is set, `touched` is not `false`, and the input is not disabled.",
+            "`touched?: boolean` has no default: leave it out and an error the app passes shows at once; pass the field's touched state to hold the error until the field is left.",
+            "An input with its own `validate` shows that message only after its first blur (or when `touched` is true).",
+            "A shown error sets `aria-invalid` on the native element and `aria-describedby` to the message (`${id}-error`); it replaces `helperText` (`${id}-helper`). While disabled, the helper shows instead.",
+            "Inputs that take a typed value (the text fields, DateInput, ColorInput, GradientInput, TagInput) carry `label`, `helperText`, `error`, `touched`. Choice controls (Checkbox, RadioButton, Switch, SegmentedControl, the sliders) carry `label` and, where they show one, `helperText`; they add `error` when a real use needs it."
+          ],
+          "rationale": "Against the majority (5 of 7 default `touched` to false): an error the app chose to pass should not be hidden by a default. Hiding it already loses a server error in the portfolio (TagManagement's TextInput), and TextArea and Select, which the board relies on, show it. Callers who pass `touched` see no change either way.",
+          "today": "default false: TextInput, DateInput, ColorInput, GradientInput, TagInput; default true: TextArea, Select."
+        },
+        "size": {
+          "rules": [
+            "`size` takes names from the one scale `'2xs' | 'xs' | 'sm' | 'md' | 'lg'` (utils/inputSizing.ts, Button, MenuItem), default `'md'`.",
+            "Each input draws the subset that makes sense for it and lists it in its doc JSON; a name keeps the scale's label type (2xs: type-label-compact; xs, sm: type-label-sm; md, lg: type-label).",
+            "`compact` is a deprecated alias for `size=\"xs\"`; `size` wins when both are given."
+          ],
+          "rationale": "The five-step scale is what TextInput, Select, ColorInput and GradientInput already use and Button and SegmentedControl draw from; `compact` was its earlier form (four inputs still take it)."
+        },
+        "ref": {
+          "rules": [
+            "forwardRef to the native element that holds the value and takes focus: the <input>, <textarea> or <select>.",
+            "A group (SegmentedControl, a set of RadioButtons) forwards to the element with the group role (radiogroup).",
+            "An input with no native field (GradientInput, Calendar, EditableText at rest) forwards to its focusable root. ColorInput forwards to its text field."
+          ],
+          "rationale": "focus(), scrolling to a field and form-library registration need the native element. Today 7 of 16 forward, 4 of those to a wrapper or trigger; the newer MenuItem forwards to its own element."
+        },
+        "disabled": {
+          "rules": [
+            "`disabled` sets the native `disabled` on the control (every option of a group); no callback fires while disabled.",
+            "The label and helper use --color-text-disabled, or the component's existing opacity-50; the cursor is not-allowed.",
+            "An option's own `disabled` adds to the group's."
+          ],
+          "rationale": "The native attribute takes the control out of the tab order and form submission for free; all inputs that have `disabled` already set it (DualSlider has none and gains it)."
+        },
+        "idLabelAria": {
+          "rules": [
+            "`id` is optional, with the `useId()` fallback (idProps). It goes on the native element.",
+            "`label` is optional. A native field's visible label is a <label htmlFor>; a group's is an element the group names with `aria-labelledby` (a <label for> a <div> labels nothing).",
+            "Without a visible label, pass `aria-label` or `aria-labelledby`; they reach the native element (or the group).",
+            "Props the input does not name (name, aria-*, data-*, onBlur, onFocus, onKeyDown, autoFocus, form…) pass through to the native element, not the wrapper.",
+            "`className` is on the root, merged with cn() so the app's class wins; inner parts take slot classNames (classNameProps)."
+          ],
+          "rationale": "The idProps rule already said `id` is optional; 11 inputs required it anyway. Passthrough to the native element is what the text fields do and what lets an app name a control whose label sits elsewhere (the board's notification Switch)."
+        },
+        "keyboardAndFocus": {
+          "rules": [
+            "Keys are the native element's, or the WAI-ARIA pattern for the role: checkbox and switch toggle on Space; a range moves with the arrows, Home, End, PageUp and PageDown; a single-choice group (radiogroup) is one Tab stop, the arrows move and select (skipping disabled options, wrapping), Home and End go to the ends.",
+            "A switch-like control has role=\"switch\"; a single-choice group has role=\"radiogroup\" with role=\"radio\" options and aria-checked.",
+            "Text fields show focus on any focus: `focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]` (error state: --color-error).",
+            "Every other control shows a keyboard ring: `focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface-canvas)]`.",
+            "Typed entry is never rewritten while it is typed: a value out of range is held as typed and clamped on blur or Enter."
+          ],
+          "rationale": "Keyboard is part of every component (T29). A text field has a caret, so focus shows however it came; other controls show the ring only for the keyboard, as MenuItem and Slider do (focus-visible, --color-border-focus)."
+        },
+        "deprecation": {
+          "rules": [
+            "A renamed or removed prop keeps working for one release as a deprecated alias: `/** @deprecated use x */` in the type and \"deprecated\" in the doc JSON.",
+            "Every change an app must make is listed, per component, in the task report's Upgrading list."
+          ]
+        }
+      }
+    },
     "booleanProps": {
       "description": "Boolean prop naming conventions",
       "rules": [
@@ -54,14 +157,26 @@
         "slots": {
           "description": "Inner element styling using semantic names",
           "examples": [
-            { "prop": "labelClassName", "use": "Label element in form inputs" },
-            { "prop": "valueClassName", "use": "Value display element" },
+            {
+              "prop": "labelClassName",
+              "use": "Label element in form inputs"
+            },
+            {
+              "prop": "valueClassName",
+              "use": "Value display element"
+            },
             {
               "prop": "inputClassName",
               "use": "Text input element (when semantic name = element)"
             },
-            { "prop": "imageClassName", "use": "Image element in cards" },
-            { "prop": "trackClassName", "use": "Slider track element" }
+            {
+              "prop": "imageClassName",
+              "use": "Image element in cards"
+            },
+            {
+              "prop": "trackClassName",
+              "use": "Slider track element"
+            }
           ],
           "avoid": [
             {
@@ -75,8 +190,7 @@
     "onChangeSignatures": {
       "description": "Event handler signature conventions",
       "rules": [
-        "Text-based inputs use (event: ChangeEvent) => void for access to event object",
-        "Selection controls use (value: T) => void for cleaner API",
+        "See formInputs.points.valueAndChange: native text fields use (event: ChangeEvent) => void; every other input uses (value: T) => void",
         "Document which pattern each component uses in its JSON spec"
       ],
       "patterns": {
@@ -85,9 +199,9 @@
           "components": [
             "TextInput",
             "TextArea",
-            "DateInput",
             "Select",
-            "ColorInput"
+            "ChatInput",
+            "DateInput"
           ],
           "rationale": "Preserves access to event object for cursor position, validation, key handling"
         },
@@ -100,8 +214,10 @@
             "Checkbox",
             "SegmentedControl",
             "RadioButton",
+            "ColorInput",
+            "GradientInput",
             "TagInput",
-            "TokenSelect"
+            "Calendar"
           ],
           "rationale": "Cleaner API for selection controls where only the value matters"
         }
@@ -110,7 +226,7 @@
     "sizeProps": {
       "description": "Size prop conventions",
       "rules": [
-        "Base set is 'sm' | 'md' | 'lg' with 'md' as default",
+        "Base scale is '2xs' | 'xs' | 'sm' | 'md' | 'lg' with 'md' as default; each component draws a subset (formInputs.points.size)",
         "Component-specific extensions allowed ('xs', 'xl', 'icon', 'custom')",
         "Sizes are relative to component type, not absolute measurements",
         "Document size meanings in component JSON spec"
@@ -212,7 +328,7 @@
           "name": "touched",
           "type": "boolean",
           "optional": true,
-          "description": "Controls when errors display"
+          "description": "Holds an error until the field is left when false; leave out to show the error at once (formInputs.points.errorAndTouched)"
         },
         {
           "name": "required",
@@ -240,9 +356,9 @@
         }
       ],
       "rules": [
-        "All form inputs should support these props where applicable",
+        "All form inputs should support these props where applicable (formInputs.points.errorAndTouched says which)",
         "error takes precedence over helperText",
-        "touched controls error visibility (don't show errors until touched)"
+        "An error shows when set unless touched is false; an input's own validate waits for its first blur"
       ]
     },
     "interactiveProps": {
@@ -260,7 +376,11 @@
           "optional": true,
           "default": false
         },
-        { "name": "className", "type": "string", "optional": true }
+        {
+          "name": "className",
+          "type": "string",
+          "optional": true
+        }
       ],
       "rules": [
         "All interactive components should support disabled",
@@ -296,7 +416,8 @@
       "onChange: document signature in JSON spec",
       "size: use base set, extend only if needed",
       "Form inputs: include standard validation props",
-      "Interactive: include disabled, consider loading"
+      "Interactive: include disabled, consider loading",
+      "Form inputs: follow formInputs (value/onChange, controlled or uncontrolled, error/touched, size scale, ref to the native element, passthrough, keyboard and focus ring)"
     ]
   }
 }
