@@ -48,7 +48,7 @@ const SliderLabel = React.forwardRef<HTMLSpanElement, { side: 'left' | 'right'; 
       aria-hidden="true"
       data-image-compare-label={side}
       className={cn(
-        'type-caption pointer-events-none absolute top-xs rounded-full bg-[var(--color-surface-elevated)] px-2xs py-3xs text-[var(--color-text-default)] shadow-[var(--elevation-1)] transition-opacity duration-150',
+        'type-caption pointer-events-none absolute top-xs rounded-full bg-[var(--color-surface-elevated)] px-2xs py-3xs text-[var(--color-text-default)] shadow-[var(--elevation-1)] transition-opacity duration-150 motion-reduce:transition-none',
         side === 'left' ? 'left-xs' : 'right-xs',
         covered ? 'opacity-0' : 'opacity-100'
       )}

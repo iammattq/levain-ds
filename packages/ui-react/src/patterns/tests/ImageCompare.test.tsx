@@ -67,3 +67,157 @@ describe('ImageCompare', () => {
     expect(screen.getByRole('img', { name: 'Target' })).toBeInTheDocument();
   });
 });
+
+describe('ImageCompare mode="slider"', () => {
+  const BA = [
+    { label: 'Before', src: '/compare/before.png', href: '/full/before.png' },
+    { label: 'After', src: '/compare/after.png' },
+  ];
+  const after = () => screen.getByRole('img', { name: 'After' });
+  const handle = () => screen.getByRole('slider');
+  const at = (n: number) => {
+    expect(handle()).toHaveAttribute('aria-valuenow', String(n));
+    expect(handle().style.left).toBe(`${n}%`);
+    expect(after().style.clipPath).toBe(`inset(0 0 0 ${n}%)`);
+  };
+
+  test('the two images in one frame: before in flow, after over it, fitted and top-aligned; no links', () => {
+    const { container } = render(<ImageCompare mode="slider" images={BA} />);
+    const frame = container.querySelector('[data-image-compare-slider]')!;
+    expect(frame).toHaveClass('relative', 'overflow-hidden', 'touch-pan-y', 'select-none');
+    expect(screen.getByRole('img', { name: 'Before' })).toHaveClass('w-full', 'h-auto');
+    expect(screen.getByRole('img', { name: 'Before' })).not.toHaveClass('absolute');
+    expect(after()).toHaveClass('absolute', 'inset-0', 'object-contain', 'object-top');
+    expect(screen.queryAllByRole('link')).toHaveLength(0);
+  });
+
+  test('the handle starts at 50% and is a named slider with its value', () => {
+    render(<ImageCompare mode="slider" images={BA} />);
+    at(50);
+    expect(handle()).toHaveAccessibleName('Before and After');
+    expect(handle()).toHaveAttribute('aria-valuemin', '0');
+    expect(handle()).toHaveAttribute('aria-valuemax', '100');
+    expect(handle()).toHaveAttribute('aria-valuetext', 'Before 50%, After 50%');
+    expect(handle()).toHaveAttribute('tabindex', '0');
+  });
+
+  test('arrow keys move it 5%, Home and End to the ends, clamped', () => {
+    render(<ImageCompare mode="slider" images={BA} />);
+    fireEvent.keyDown(handle(), { key: 'ArrowRight' });
+    at(55);
+    fireEvent.keyDown(handle(), { key: 'ArrowUp' });
+    at(60);
+    fireEvent.keyDown(handle(), { key: 'ArrowLeft' });
+    fireEvent.keyDown(handle(), { key: 'ArrowDown' });
+    at(50);
+    fireEvent.keyDown(handle(), { key: 'Home' });
+    at(0);
+    fireEvent.keyDown(handle(), { key: 'ArrowLeft' });
+    at(0);
+    fireEvent.keyDown(handle(), { key: 'End' });
+    at(100);
+    fireEvent.keyDown(handle(), { key: 'ArrowRight' });
+    at(100);
+    expect(handle()).toHaveAttribute('aria-valuetext', 'Before 100%, After 0%');
+  });
+
+  describe('dragging', () => {
+    // jsdom 20 has no PointerEvent; React's pointer handlers need one carrying pointerId and pointerType
+    class FakePointerEvent extends MouseEvent {
+      pointerId: number;
+      pointerType: string;
+      constructor(type: string, init: PointerEventInit = {}) {
+        super(type, init);
+        this.pointerId = init.pointerId ?? 1;
+        this.pointerType = init.pointerType ?? 'mouse';
+      }
+    }
+    const realPointerEvent = (window as { PointerEvent?: unknown }).PointerEvent;
+    beforeAll(() => { (window as { PointerEvent?: unknown }).PointerEvent = FakePointerEvent; });
+    afterAll(() => { (window as { PointerEvent?: unknown }).PointerEvent = realPointerEvent; });
+
+    const frameAt = (container: HTMLElement) => {
+      const frame = container.querySelector('[data-image-compare-slider]') as HTMLElement;
+      frame.getBoundingClientRect = () => ({ left: 100, width: 400, top: 0, height: 300, right: 500, bottom: 300, x: 100, y: 0, toJSON: () => ({}) });
+      return frame;
+    };
+
+    test('a mouse press jumps the handle to the point and a drag follows it, clamped to the frame', () => {
+      const { container } = render(<ImageCompare mode="slider" images={BA} />);
+      const frame = frameAt(container);
+      fireEvent.pointerDown(frame, { pointerId: 1, pointerType: 'mouse', button: 0, clientX: 200 });
+      at(25);
+      fireEvent.pointerMove(frame, { pointerId: 1, clientX: 400 });
+      at(75);
+      fireEvent.pointerMove(frame, { pointerId: 1, clientX: 900 });
+      at(100);
+      fireEvent.pointerUp(frame, { pointerId: 1 });
+      fireEvent.pointerMove(frame, { pointerId: 1, clientX: 200 });
+      at(100);
+    });
+
+    test('a touch moves it only as the finger moves, and stops on cancel (the page took a vertical scroll)', () => {
+      const { container } = render(<ImageCompare mode="slider" images={BA} />);
+      const frame = frameAt(container);
+      fireEvent.pointerDown(frame, { pointerId: 2, pointerType: 'touch', button: 0, clientX: 200 });
+      at(50);
+      fireEvent.pointerMove(frame, { pointerId: 2, clientX: 180 });
+      at(20);
+      fireEvent.pointerCancel(frame, { pointerId: 2 });
+      fireEvent.pointerMove(frame, { pointerId: 2, clientX: 400 });
+      at(20);
+    });
+  });
+
+  test('each label sits in its top corner and fades while the handle is over it', () => {
+    const sizes = jest.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(400);
+    const left = jest.spyOn(HTMLElement.prototype, 'offsetLeft', 'get').mockImplementation(function (this: HTMLElement) {
+      return this.dataset.imageCompareLabel === 'right' ? 330 : 8;
+    });
+    const width = jest.spyOn(HTMLElement.prototype, 'offsetWidth', 'get').mockReturnValue(60);
+    try {
+      const { container } = render(<ImageCompare mode="slider" images={BA} />);
+      const label = (side: string) => container.querySelector(`[data-image-compare-label="${side}"]`)!;
+      expect(label('left')).toHaveTextContent('Before');
+      expect(label('left')).toHaveClass('left-xs', 'top-xs');
+      expect(label('right')).toHaveTextContent('After');
+      expect(label('right')).toHaveClass('right-xs', 'top-xs');
+      expect(label('left')).toHaveAttribute('aria-hidden', 'true');
+      expect(label('left')).toHaveClass('opacity-100');
+      expect(label('right')).toHaveClass('opacity-100');
+      // the before chip ends at 68 px: the handle at 15% (60 px) is over it
+      fireEvent.keyDown(handle(), { key: 'Home' });
+      for (let i = 0; i < 3; i++) fireEvent.keyDown(handle(), { key: 'ArrowRight' });
+      expect(label('left')).toHaveClass('opacity-0');
+      expect(label('right')).toHaveClass('opacity-100');
+      // at 20% (80 px) it is clear again
+      fireEvent.keyDown(handle(), { key: 'ArrowRight' });
+      expect(label('left')).toHaveClass('opacity-100');
+      // the after chip starts at 330 px: the handle at 85% (340 px) is over it
+      fireEvent.keyDown(handle(), { key: 'End' });
+      for (let i = 0; i < 3; i++) fireEvent.keyDown(handle(), { key: 'ArrowLeft' });
+      expect(label('right')).toHaveClass('opacity-0');
+      expect(label('left')).toHaveClass('opacity-100');
+    } finally {
+      sizes.mockRestore();
+      left.mockRestore();
+      width.mockRestore();
+    }
+  });
+
+  test('a broken image falls back to side by side, with the broken one as text', () => {
+    render(<ImageCompare mode="slider" images={BA} />);
+    fireEvent.error(after());
+    expect(screen.queryByRole('slider')).toBeNull();
+    // remounted side by side; the after image fails again there and shows as text
+    fireEvent.error(screen.getByRole('img', { name: 'After' }));
+    expect(screen.getByText('After: /compare/after.png')).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'Before' })).toBeInTheDocument();
+  });
+
+  test('fewer than two images render side by side', () => {
+    render(<ImageCompare mode="slider" images={[BA[0]]} />);
+    expect(screen.queryByRole('slider')).toBeNull();
+    expect(screen.getByRole('link')).toHaveAttribute('href', '/full/before.png');
+  });
+});
