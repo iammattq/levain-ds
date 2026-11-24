@@ -276,7 +276,7 @@ const ColorInput = forwardRef<HTMLInputElement, ColorInputProps>(
     return (
       <div className={cn('flex flex-col', className)}>
         {/* Label */}
-        {label && (
+        {label !== undefined && (
           <label
             htmlFor={id}
             className={`${config.labelClass} mb-1 block ${disabled ? 'text-[var(--color-text-disabled)]' : 'text-[var(--color-text-default)]'}`}

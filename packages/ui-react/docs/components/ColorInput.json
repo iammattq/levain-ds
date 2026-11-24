@@ -1,109 +1,135 @@
 {
   "name": "ColorInput",
-  "description": "A component combining a visual color chip with a text input for selecting and displaying color values (typically hex codes). Provides both visual (color chip) and text input methods for color selection. Clicking the color chip opens the native browser color picker. Text input allows manual entry/pasting of hex color codes.",
+  "description": "A color chip beside a text field for choosing a color as a hex string. Clicking the chip opens a picker (saturation square, hue and optional alpha, hex field) in a popover; the text field takes typed or pasted hex codes.",
   "category": "components",
   "usage": [
-    "Use for selecting or inputting color values, primarily in hex format.",
-    "Click the color chip to use the browser's native color picker.",
-    "Type or paste directly into the text input.",
-    "Supports error states, helper text, and validation similar to TextInput."
+    "Follows the form-input convention (docs/prop-conventions.json, formInputs).",
+    "Use for selecting or inputting color values in hex format.",
+    "onChange(hex) is called with the new color, value first: upper-case, with # added, whether typed or picked",
+    "Controlled with value, or uncontrolled with defaultValue",
+    "Pass alpha and onAlphaChange to show the alpha slider",
+    "The hex check (and your validate) shows after the first blur; an error the app passes shows at once unless touched is false",
+    "The ref goes to the text field; unnamed props (name, aria-*, data-*, onFocus…) go to it too"
   ],
   "examples": [
-    "```tsx\nimport { ColorInput } from '@/lib/designsystem';\nimport { useState } from 'react';\n\nexport default function ColorPickerExample() {\n  const [color, setColor] = useState('#5C62D6');\n\n  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {\n    setColor(event.target.value);\n  };\n\n  return (\n    <ColorInput\n      id=\"base-color\"\n      label=\"Base Color\"\n      value={color}\n      onChange={handleChange}\n      helperText=\"Select the primary base color for the theme.\"\n      required\n    />\n  );\n}\n```"
+    "```tsx\nimport { ColorInput } from '@/lib/designsystem';\nimport { useState } from 'react';\n\nexport default function ColorPickerExample() {\n  const [color, setColor] = useState('#5C62D6');\n\n  return (\n    <ColorInput\n      label=\"Base Color\"\n      value={color}\n      onChange={setColor}\n      helperText=\"Select the primary base color for the theme.\"\n      required\n    />\n  );\n}\n```"
   ],
   "design": [
-    "The component wraps a clickable color chip (button) and a text input.",
-    "A hidden `<input type=\"color\">` is used to trigger the browser's color picker.",
-    "The `onChange` handler receives a standard `ChangeEvent` from the text input, even when the color picker initiates the change, for consistency.",
-    "Styling aims to visually merge the chip and text input, resembling the `TextInput` component but with the prepended chip.",
+    "The component pairs a color chip (button) and a text input, visually merged like TextInput with a prepended chip.",
+    "The picker opens in a portalled popover beside the chip, on whichever side has room.",
+    "Sizes from the input scale ('2xs' to 'lg', utils/inputSizing.ts), default 'md'; compact is the deprecated alias for 'xs'",
+    "The text field shows focus with a 1px var(--color-primary) ring (var(--color-error) in error); the chip a keyboard ring, 2px var(--color-border-focus) offset 2px on var(--color-surface-canvas)",
     "Uses design system tokens for borders, focus rings, text colors, and error states."
   ],
   "accessibility": [
-    "The text input is the primary focusable element.",
-    "The color chip button should ideally have an accessible label if its purpose isn't clear from context (though visually paired with the input helps).",
-    "Label and helper/error text are associated with the input using standard techniques.",
-    "Focus states and error states use appropriate visual indicators."
+    "The text field is named by its label (htmlFor/id), or by aria-label / aria-labelledby passed through",
+    "The chip is a button named 'Choose <label> color', with aria-expanded and aria-haspopup=\"dialog\"; the picker is a role=\"dialog\" and Escape closes it, returning focus to the chip",
+    "A shown error sets aria-invalid on the text field and aria-describedby to the message (merged with any aria-describedby passed in)",
+    "disabled sets the native disabled on the field and the chip"
   ],
   "props": [
     {
       "name": "id",
       "type": "string",
-      "optional": false,
-      "description": "Unique identifier for the input.",
+      "optional": true,
+      "defaultValue": null,
+      "description": "The text field's id; generated with useId() when left out",
       "configurable": false
     },
     {
       "name": "label",
       "type": "string",
-      "optional": false,
-      "description": "Text label displayed above the input."
+      "optional": true,
+      "defaultValue": null,
+      "description": "Visible label. Without it, pass aria-label or aria-labelledby"
     },
     {
       "name": "value",
       "type": "string",
-      "optional": false,
-      "description": "Current color value (expects hex format)."
+      "optional": true,
+      "defaultValue": null,
+      "description": "Controlled: the color, a hex string such as #RRGGBB. Leave out for uncontrolled"
+    },
+    {
+      "name": "defaultValue",
+      "type": "string",
+      "optional": true,
+      "defaultValue": "''",
+      "description": "Uncontrolled: the color at first",
+      "configurable": false
     },
     {
       "name": "onChange",
-      "type": "(event: ChangeEvent<HTMLInputElement>) => void",
-      "optional": false,
-      "description": "Function called when value changes (from text input or color picker).",
+      "type": "(value: string) => void",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Called with the new color (upper-case hex, # added), typed or picked",
       "configurable": false
+    },
+    {
+      "name": "alpha",
+      "type": "number",
+      "optional": true,
+      "defaultValue": "100",
+      "description": "Current alpha (0-100); used when the alpha slider shows"
+    },
+    {
+      "name": "onAlphaChange",
+      "type": "(alpha: number) => void",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Called when the alpha changes; passing it shows the alpha slider",
+      "configurable": false
+    },
+    {
+      "name": "hideAlpha",
+      "type": "boolean",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Hide the alpha slider; defaults to true unless onAlphaChange is given"
     },
     {
       "name": "error",
       "type": "string",
       "optional": true,
-      "description": "Error message to display (takes precedence over internal validation)."
+      "defaultValue": null,
+      "description": "The app's error message: shows at once unless touched is false; replaces the helper text"
     },
     {
       "name": "validate",
       "type": "(value: string) => string | null | undefined",
       "optional": true,
-      "description": "Custom validation function called on value change.",
+      "defaultValue": null,
+      "description": "Your own check, after the hex check; its message shows after the first blur, or when touched is true",
       "configurable": false
     },
     {
       "name": "helperText",
       "type": "string",
       "optional": true,
+      "defaultValue": null,
       "description": "Text displayed below the input when not in an error state."
-    },
-    {
-      "name": "className",
-      "type": "string",
-      "optional": true,
-      "defaultValue": "''",
-      "description": "CSS classes for the **outer container** div."
-    },
-    {
-      "name": "inputClassName",
-      "type": "string",
-      "optional": true,
-      "defaultValue": "''",
-      "description": "CSS classes specifically for the text `<input>` element."
-    },
-    {
-      "name": "chipClassName",
-      "type": "string",
-      "optional": true,
-      "defaultValue": "''",
-      "description": "CSS classes specifically for the color chip `<button>` element."
     },
     {
       "name": "touched",
       "type": "boolean",
       "optional": true,
-      "defaultValue": "false",
-      "description": "Set to true to enable validation error display (usually after blur)."
+      "defaultValue": null,
+      "description": "Leave out to show an error the app passes at once; pass the field's touched state to hold it until the field is left. false hides errors"
     },
     {
-      "name": "onBlur",
-      "type": "(event: React.FocusEvent<HTMLInputElement>) => void",
+      "name": "size",
+      "type": "'2xs' | 'xs' | 'sm' | 'md' | 'lg'",
       "optional": true,
-      "description": "Function called when the text input loses focus.",
-      "configurable": false
+      "defaultValue": "'md'",
+      "description": "Size from the input scale"
+    },
+    {
+      "name": "compact",
+      "type": "boolean",
+      "optional": true,
+      "defaultValue": "false",
+      "description": "Deprecated: use size=\"xs\". size wins when both are given"
     },
     {
       "name": "required",
@@ -117,14 +143,52 @@
       "type": "boolean",
       "optional": true,
       "defaultValue": "false",
-      "description": "Disables the input and color chip."
+      "description": "The field and the chip natively disabled; nothing fires"
     },
     {
-      "name": "compact",
-      "type": "boolean",
+      "name": "onBlur",
+      "type": "(event: React.FocusEvent<HTMLInputElement>) => void",
       "optional": true,
-      "defaultValue": "false",
-      "description": "Uses compact sizing with smaller typography (type-label-sm, type-body-sm) and dimensions (h-7 chip and input vs h-10). Matches TextInput compact mode."
+      "defaultValue": null,
+      "description": "Called when the text field loses focus",
+      "configurable": false
+    },
+    {
+      "name": "className",
+      "type": "string",
+      "optional": true,
+      "defaultValue": null,
+      "description": "CSS classes for the outer container, merged with cn() so yours win"
+    },
+    {
+      "name": "inputClassName",
+      "type": "string",
+      "optional": true,
+      "defaultValue": "''",
+      "description": "CSS classes for the text <input>"
+    },
+    {
+      "name": "chipClassName",
+      "type": "string",
+      "optional": true,
+      "defaultValue": "''",
+      "description": "CSS classes for the color chip <button>"
+    },
+    {
+      "name": "ref",
+      "type": "Ref<HTMLInputElement>",
+      "optional": true,
+      "defaultValue": null,
+      "description": "The text field",
+      "configurable": false
+    },
+    {
+      "name": "...rest",
+      "type": "InputHTMLAttributes",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Every other prop (name, aria-*, data-*, onFocus…) goes to the text field",
+      "configurable": false
     }
   ]
 }

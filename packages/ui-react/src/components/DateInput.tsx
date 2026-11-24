@@ -325,7 +325,7 @@ const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
     return (
       <div className={cn('relative flex flex-col', className)}>
         {/* Label */}
-        {label && (
+        {label !== undefined && (
           <label
             htmlFor={id}
             className={cn(

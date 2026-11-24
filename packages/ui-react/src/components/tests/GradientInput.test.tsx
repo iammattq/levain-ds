@@ -154,3 +154,14 @@ describe('GradientInput: form-input convention', () => {
     expect(chip.className).toContain('focus-visible:ring-offset-[var(--color-surface-canvas)]');
   });
 });
+
+// label="" (the portfolio's ButtonStudio) keeps its blank label line, as before T54: no layout shift
+test.each([
+  ['GradientInput', () => render(<GradientInput label="" value={value as never} />)],
+])('%s: label="" still renders its label element; no label prop renders none', (_n, r) => {
+  const { container, unmount } = r();
+  expect(container.querySelector('label')).not.toBeNull();
+  unmount();
+  const { container: bare } = render(<GradientInput aria-label="Fill" value={value as never} />);
+  expect(bare.querySelector('label')).toBeNull();
+});
