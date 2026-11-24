@@ -19,6 +19,7 @@ The first consumer outside the portfolio was a web board for running a team of c
 - **SortableGroup keys must be unique across the whole group.** SortableList's layoutId is group-wide, so two lists with an item key in common (D14 in both) share a layoutId and a click doesn't open the card. Not documented; the consumer prefixes keys per list (`levain:D14`, `board:D14`).
 - **Tooltip / Toggletip.** Hover delay, focus, tap, Escape, collision placement, portal. The consumer built one by hand on its switcher's surface recipe, on `--color-surface-component`, because dark info and success miss 4.5:1 on the elevated surface.
 - **Checkbox renders unchecked boxes near-black in light themes.** It styles with `--color-surface-2` and `--color-border`; found in T10's demo.
+- **ProgressBar hides its number from what contains it.** The visible `valueLabel` is `aria-hidden`; the meter keeps the number only as `aria-valuetext`, which a container's read-out leaves out. On the Ringmaster board's alarm card (Chromium aria snapshot) a hand-made bar read `meter "PM context"` then `320k of 350k`; with ProgressBar xs, only `meter "PM context"`. Wants an option to leave `valueLabel` exposed. The board adds a visually hidden copy of the text beside the bar (found in Ringmaster T55).
 
 ### Phone patterns
 - **Swipeable column strip.** One column a screen wide, swiped with snap, with pills to jump; while a card is held, resting at either edge slides the strip one column on a spring. Built in the consumer on top of `SortableGroup`'s `onDragMove`.
