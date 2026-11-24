@@ -430,10 +430,7 @@ const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
                 style={calendarStyles}
                 className="rounded-md border border-[var(--color-border-emphasis)] bg-[var(--color-surface-section)] shadow-xl"
               >
-                <Calendar
-                  selectedDate={calendarDate}
-                  onDateSelect={handleDateSelect}
-                />
+                <Calendar value={calendarDate} onChange={handleDateSelect} />
               </div>,
               document.body
             )}

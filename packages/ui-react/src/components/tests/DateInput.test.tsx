@@ -10,11 +10,11 @@ jest.mock('../../utils/cn', () => ({
 // Mock Calendar component
 jest.mock('../Calendar', () => {
   return function MockCalendar({
-    selectedDate,
-    onDateSelect,
+    value: selectedDate,
+    onChange: onDateSelect,
   }: {
-    selectedDate: Date;
-    onDateSelect: (date: Date) => void;
+    value: Date;
+    onChange: (date: Date) => void;
   }) {
     return (
       <div data-testid="mock-calendar">

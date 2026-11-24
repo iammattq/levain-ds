@@ -1,17 +1,46 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '../utils/cn';
+import { useControlled } from '../utils/useControlled';
 import { Button } from './Button';
 
-export interface CalendarProps {
-  /** Date that should be selected/highlighted in the calendar */
-  selectedDate: Date;
-  /** Function called when a date is selected */
-  onDateSelect: (date: Date) => void;
+/**
+ * Calendar follows the form-input convention (docs/prop-conventions.json, formInputs): `value` / `defaultValue` (a
+ * Date, or null for none) and `onChange(date)`. It has no native field, so the ref, the `id` and every prop it doesn't
+ * name go to its root, a named `role="group"`. The days are a WAI-ARIA date grid: one Tab stop, the arrows move by day
+ * and week, Home and End go to the week's ends, PageUp and PageDown by month (with Shift, by year), Enter or Space
+ * picks.
+ */
+export interface CalendarProps extends Omit<
+  React.HTMLAttributes<HTMLDivElement>,
+  'onChange' | 'defaultValue' | 'className'
+> {
+  /** The root's id; generated when left out */
+  id?: string;
+  /** Controlled: the chosen date (null for none). Leave out for uncontrolled */
+  value?: Date | null;
+  /** Uncontrolled: the chosen date at first (default none) */
+  defaultValue?: Date | null;
+  /** The picked date, at local midnight */
+  onChange?: (date: Date) => void;
+  /** Disabled: every button natively disabled; nothing fires */
+  disabled?: boolean;
   /** Additional class name for the calendar container */
   className?: string;
+  /** @deprecated use `value` */
+  selectedDate?: Date;
+  /** @deprecated use `onChange` */
+  onDateSelect?: (date: Date) => void;
 }
 
 const MONTHS = [
@@ -41,38 +70,105 @@ const generateYearOptions = (): number[] => {
   return years;
 };
 
-const Calendar = ({
-  selectedDate,
-  onDateSelect,
-  className = '',
-}: CalendarProps) => {
+const midnight = (d: Date) =>
+  new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0);
+const sameDay = (a: Date | null | undefined, b: Date | null | undefined) =>
+  !!a &&
+  !!b &&
+  a.getFullYear() === b.getFullYear() &&
+  a.getMonth() === b.getMonth() &&
+  a.getDate() === b.getDate();
+const dayKey = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+/** The same day `months` months on, kept inside the month (Jan 31 + 1 month: Feb 28 or 29) */
+const addMonths = (d: Date, months: number) => {
+  const first = new Date(d.getFullYear(), d.getMonth() + months, 1);
+  const last = new Date(first.getFullYear(), first.getMonth() + 1, 0).getDate();
+  return new Date(first.getFullYear(), first.getMonth(), Math.min(d.getDate(), last));
+};
+const addDays = (d: Date, days: number) =>
+  new Date(d.getFullYear(), d.getMonth(), d.getDate() + days);
+
+// Generate array of dates for the calendar grid: 6 weeks from the Sunday on or before the 1st
+const generateCalendarDays = (year: number, month: number): Date[] => {
+  const firstDayOfMonth = new Date(year, month, 1);
+  const days: Date[] = [];
+  for (let i = 0; i < 42; i++) {
+    days.push(new Date(year, month, 1 - firstDayOfMonth.getDay() + i));
+  }
+  return days;
+};
+
+const Calendar = forwardRef<HTMLDivElement, CalendarProps>(function Calendar(
+  {
+    id: idProp,
+    value: valueProp,
+    defaultValue = null,
+    onChange,
+    disabled = false,
+    className,
+    selectedDate: legacyDate,
+    onDateSelect,
+    ...props
+  },
+  ref
+) {
+  const autoId = useId();
+  const id = idProp ?? autoId;
   const today = new Date();
+  const [selectedDate, setSelected] = useControlled<Date | null>(
+    valueProp !== undefined ? valueProp : legacyDate,
+    defaultValue,
+    undefined,
+    'Calendar'
+  );
   // Use selectedDate if provided, otherwise default to today's date for initial state
-  const initialDate = selectedDate ?? new Date();
+  const initialDate = selectedDate ?? today;
   const [currentMonth, setCurrentMonth] = useState(initialDate.getMonth());
   const [currentYear, setCurrentYear] = useState(initialDate.getFullYear());
   const [showMonthSelector, setShowMonthSelector] = useState(false);
   const [showYearSelector, setShowYearSelector] = useState(false);
-  const [calendarDays, setCalendarDays] = useState<Date[]>([]);
   const [animation, setAnimation] = useState<'slideIn' | 'slideOut' | null>(
     null
   );
+  // The day that holds the grid's one Tab stop, and whether the keyboard just moved it (then it takes focus)
+  const [focusDay, setFocusDay] = useState<Date | null>(null);
+  const keyboardMove = useRef(false);
+  const gridRef = useRef<HTMLDivElement>(null);
   const yearSelectorRef = useRef<HTMLDivElement>(null);
   const selectedYearRef = useRef<HTMLButtonElement>(null);
 
-  // Update calendar when month/year changes
+  // Every timer goes through `later` and is cleared on unmount (A3: five were never cleared)
+  const timers = useRef(new Set<ReturnType<typeof setTimeout>>());
+  const later = useCallback((fn: () => void, ms: number) => {
+    const t = setTimeout(() => {
+      timers.current.delete(t);
+      fn();
+    }, ms);
+    timers.current.add(t);
+  }, []);
   useEffect(() => {
-    const days = generateCalendarDays(currentYear, currentMonth);
-    setCalendarDays(days);
-  }, [currentMonth, currentYear]);
+    const pending = timers.current;
+    return () => {
+      pending.forEach(clearTimeout);
+      pending.clear();
+    };
+  }, []);
 
-  // Update current view when selected date changes
+  const calendarDays = useMemo(
+    () => generateCalendarDays(currentYear, currentMonth),
+    [currentMonth, currentYear]
+  );
+
+  // Show the chosen date's month when the chosen date changes: by its day, not the Date object, so a parent that
+  // re-renders with a new Date for the same day doesn't snap the view back (A3)
+  const selectedKey = selectedDate ? dayKey(selectedDate) : null;
   useEffect(() => {
     if (selectedDate) {
       setCurrentMonth(selectedDate.getMonth());
       setCurrentYear(selectedDate.getFullYear());
     }
-  }, [selectedDate]);
+  }, [selectedKey]);
 
   // Scroll to the selected year when year selector opens
   useEffect(() => {
@@ -85,33 +181,14 @@ const Calendar = ({
       yearSelectorRef.current.scrollTop = 0;
 
       // Wait until animation is complete before scrolling to selected year
-      setTimeout(() => {
+      later(() => {
         selectedYearRef.current?.scrollIntoView({
           behavior: 'auto',
           block: 'center',
         });
       }, 350); // Wait for animation to complete plus a little buffer
     }
-  }, [showYearSelector]);
-
-  // Generate array of dates for the calendar grid
-  const generateCalendarDays = (year: number, month: number): Date[] => {
-    const days: Date[] = [];
-    const firstDayOfMonth = new Date(year, month, 1);
-
-    // Get the first day to show (might be from previous month)
-    const firstDayToShow = new Date(firstDayOfMonth);
-    firstDayToShow.setDate(firstDayToShow.getDate() - firstDayOfMonth.getDay());
-
-    // Generate 6 weeks (42 days) to ensure we have enough days
-    for (let i = 0; i < 42; i++) {
-      const day = new Date(firstDayToShow);
-      day.setDate(day.getDate() + i);
-      days.push(day);
-    }
-
-    return days;
-  };
+  }, [showYearSelector, later]);
 
   const handlePrevMonth = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -147,7 +224,7 @@ const Calendar = ({
     setAnimation('slideOut');
 
     // Wait for animation to complete
-    setTimeout(() => {
+    later(() => {
       setCurrentMonth(monthIndex);
       setShowMonthSelector(false);
       setAnimation(null);
@@ -162,7 +239,7 @@ const Calendar = ({
     setAnimation('slideOut');
 
     // Wait for animation to complete
-    setTimeout(() => {
+    later(() => {
       setCurrentYear(year);
       setShowYearSelector(false);
       setAnimation(null);
@@ -178,7 +255,7 @@ const Calendar = ({
       setAnimation('slideOut');
 
       // Wait for animation to complete
-      setTimeout(() => {
+      later(() => {
         setShowMonthSelector(false);
         setAnimation(null);
       }, 300);
@@ -198,7 +275,7 @@ const Calendar = ({
       setAnimation('slideOut');
 
       // Wait for animation to complete
-      setTimeout(() => {
+      later(() => {
         setShowYearSelector(false);
         setAnimation(null);
       }, 300);
@@ -210,20 +287,72 @@ const Calendar = ({
   };
 
   const handleDateSelect = (date: Date) => {
-    // First, reset the time portion to midnight exactly in the local timezone
-    const localDate = new Date(
-      date.getFullYear(),
-      date.getMonth(),
-      date.getDate(),
-      0,
-      0,
-      0,
-      0
-    );
-
-    // Pass the date to the parent component directly
-    onDateSelect(localDate);
+    if (disabled) return;
+    // Midnight in the local timezone
+    const localDate = midnight(date);
+    setSelected(localDate);
+    setFocusDay(localDate);
+    onChange?.(localDate);
+    onDateSelect?.(localDate);
   };
+
+  // The day with the grid's Tab stop: the one the keyboard is on, else the chosen day, else today, else the 1st, of
+  // the month on view
+  const inView = (d: Date | null) =>
+    !!d && d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+  const tabDay = inView(focusDay)
+    ? focusDay!
+    : inView(selectedDate)
+      ? selectedDate!
+      : inView(today)
+        ? today
+        : new Date(currentYear, currentMonth, 1);
+
+  // Arrow keys and the rest of the date-grid keys: move the Tab stop, change the month on view when it leaves it
+  const handleGridKeyDown = (e: React.KeyboardEvent, date: Date) => {
+    let next: Date | null = null;
+    switch (e.key) {
+      case 'ArrowLeft':
+        next = addDays(date, -1);
+        break;
+      case 'ArrowRight':
+        next = addDays(date, 1);
+        break;
+      case 'ArrowUp':
+        next = addDays(date, -7);
+        break;
+      case 'ArrowDown':
+        next = addDays(date, 7);
+        break;
+      case 'Home':
+        next = addDays(date, -date.getDay());
+        break;
+      case 'End':
+        next = addDays(date, 6 - date.getDay());
+        break;
+      case 'PageUp':
+        next = addMonths(date, e.shiftKey ? -12 : -1);
+        break;
+      case 'PageDown':
+        next = addMonths(date, e.shiftKey ? 12 : 1);
+        break;
+    }
+    if (!next) return;
+    e.preventDefault();
+    keyboardMove.current = true;
+    setFocusDay(next);
+    setCurrentMonth(next.getMonth());
+    setCurrentYear(next.getFullYear());
+  };
+
+  // After a keyboard move, the new day takes focus
+  useEffect(() => {
+    if (!keyboardMove.current || !focusDay) return;
+    keyboardMove.current = false;
+    gridRef.current
+      ?.querySelector<HTMLButtonElement>(`[data-day="${dayKey(focusDay)}"]`)
+      ?.focus();
+  }, [focusDay, currentMonth, currentYear]);
 
   const isToday = (date: Date): boolean => {
     return (
@@ -233,31 +362,7 @@ const Calendar = ({
     );
   };
 
-  const isSelected = (date: Date): boolean => {
-    // Calculate date components for both dates
-    const dateComponents = {
-      year: date.getFullYear(),
-      month: date.getMonth(),
-      day: date.getDate(),
-    };
-
-    const selectedComponents = selectedDate
-      ? {
-          year: selectedDate.getFullYear(),
-          month: selectedDate.getMonth(),
-          day: selectedDate.getDate(),
-        }
-      : null;
-
-    // Check if date components match (ignoring time)
-    const isMatch =
-      selectedDate &&
-      dateComponents.day === selectedComponents?.day &&
-      dateComponents.month === selectedComponents?.month &&
-      dateComponents.year === selectedComponents?.year;
-
-    return isMatch;
-  };
+  const isSelected = (date: Date): boolean => sameDay(date, selectedDate);
 
   const isCurrentMonth = (date: Date): boolean => {
     return date.getMonth() === currentMonth;
@@ -273,8 +378,18 @@ const Calendar = ({
     return '';
   };
 
+  const weeks = [0, 1, 2, 3, 4, 5].map((w) =>
+    calendarDays.slice(w * 7, w * 7 + 7)
+  );
+
   return (
     <div
+      aria-label={props['aria-labelledby'] ? undefined : 'Calendar'}
+      {...props}
+      ref={ref}
+      id={id}
+      role="group"
+      aria-disabled={disabled || undefined}
       className={cn(
         'relative w-[320px] overflow-hidden p-4 text-[var(--color-text-default)]',
         className
@@ -287,7 +402,7 @@ const Calendar = ({
           variant="ghost"
           size="icon"
           onClick={handlePrevMonth}
-          disabled={showMonthSelector || showYearSelector}
+          disabled={disabled || showMonthSelector || showYearSelector}
           aria-label="Previous month"
           Icon={ChevronLeft}
           iconOnly
@@ -301,6 +416,7 @@ const Calendar = ({
             variant="ghost"
             size="sm"
             onClick={toggleMonthSelector}
+            disabled={disabled}
             className="type-label"
           >
             {MONTHS[currentMonth]}
@@ -311,6 +427,7 @@ const Calendar = ({
             variant="ghost"
             size="sm"
             onClick={toggleYearSelector}
+            disabled={disabled}
             className="type-label"
           >
             {currentYear}
@@ -322,7 +439,7 @@ const Calendar = ({
           variant="ghost"
           size="icon"
           onClick={handleNextMonth}
-          disabled={showMonthSelector || showYearSelector}
+          disabled={disabled || showMonthSelector || showYearSelector}
           aria-label="Next month"
           Icon={ChevronRight}
           iconOnly
@@ -423,37 +540,50 @@ const Calendar = ({
         ))}
       </div>
 
-      {/* Calendar Grid */}
-      <div className="grid grid-cols-7 gap-1">
-        {calendarDays.map((date, index) => (
-          <Button
-            key={index}
-            variant={isSelected(date) ? 'primary' : 'ghost'}
-            size="sm"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              handleDateSelect(date);
-            }}
-            className={cn(
-              'h-8 min-w-0 p-0',
-              !isSelected(date) &&
-                (isCurrentMonth(date)
-                  ? 'text-[var(--color-text-default)]'
-                  : 'text-[var(--color-text-disabled)]'),
-              isToday(date) && !isSelected(date)
-                ? 'border border-[var(--color-primary)]'
-                : ''
-            )}
-            disabled={!isCurrentMonth(date)}
-            aria-label={`${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`}
-          >
-            {date.getDate()}
-          </Button>
+      {/* Calendar Grid: a WAI-ARIA date grid; the rows are display:contents, so the 7-column layout is unchanged */}
+      <div
+        ref={gridRef}
+        role="grid"
+        aria-label={`${MONTHS[currentMonth]} ${currentYear}`}
+        className="grid grid-cols-7 gap-1"
+      >
+        {weeks.map((week, w) => (
+          <div key={w} role="row" className="contents">
+            {week.map((date) => (
+              <div key={dayKey(date)} role="gridcell" className="contents" aria-selected={isSelected(date) || undefined}>
+                <Button
+                  variant={isSelected(date) ? 'primary' : 'ghost'}
+                  size="sm"
+                  data-day={dayKey(date)}
+                  tabIndex={sameDay(date, tabDay) ? 0 : -1}
+                  onKeyDown={(e) => handleGridKeyDown(e, date)}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleDateSelect(date);
+                  }}
+                  className={cn(
+                    'h-8 min-w-0 p-0',
+                    !isSelected(date) &&
+                      (isCurrentMonth(date)
+                        ? 'text-[var(--color-text-default)]'
+                        : 'text-[var(--color-text-disabled)]'),
+                    isToday(date) && !isSelected(date)
+                      ? 'border border-[var(--color-primary)]'
+                      : ''
+                  )}
+                  disabled={disabled || !isCurrentMonth(date)}
+                  aria-label={dayKey(date)}
+                >
+                  {date.getDate()}
+                </Button>
+              </div>
+            ))}
+          </div>
         ))}
       </div>
     </div>
   );
-};
+});
 
 export default Calendar;
