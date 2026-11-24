@@ -80,11 +80,11 @@ What's missing so far, from real use, is kept in [docs/GAPS.md](docs/GAPS.md).
 
 ## Using it
 
-**Install** from a tag. List both packages, pinned to the **same** tag (ui-react takes tokens as a peer dependency at its exact version, so pnpm warns if they drift):
+**Install** from a tag. List both packages, pinned to the **same** tag (ui-react takes tokens as a peer dependency at its exact version, so pnpm warns if they drift). Tags from the release after v0.6.0 onward carry one version across both packages; on older tags the two packages state versions that disagree, and pnpm warns about the peer even when both are pinned to the same tag:
 
 ```json
-"@levain/tokens": "git+https://github.com/iammattq/levain-ds.git#v0.6.0&path:packages/tokens",
-"@levain/ui-react": "git+https://github.com/iammattq/levain-ds.git#v0.6.0&path:packages/ui-react"
+"@levain/tokens": "git+https://github.com/iammattq/levain-ds.git#vX.Y.Z&path:packages/tokens",
+"@levain/ui-react": "git+https://github.com/iammattq/levain-ds.git#vX.Y.Z&path:packages/ui-react"
 ```
 
 Its peer dependencies are React 18 or 19, Tailwind CSS 4, lucide-react, framer-motion, sonner, @tanstack/react-table and react-dropzone.
