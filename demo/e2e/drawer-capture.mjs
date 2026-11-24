@@ -3,8 +3,10 @@
 //   node drawer-capture.mjs <base-url> <out>
 // Chromium at 390x844 (Playwright's iPhone 14: touch, DPR 3, the iPhone 14's insets faked in, 47 px top and 34 px
 // bottom, the bands drawn faintly) and 1024x768 (desktop, no insets), in Sage (theme 0) and Cobalt Mono (theme 7), light
-// and dark. For each: closed, a mid-slide series as it opens (the page's clock paused and stepped, so each frame is at a
-// known time), open, and open under Reduce Motion. Measures the panel (box, transform, surface, radius, padding, role
+// and dark. For each: closed, a mid-slide series as it opens (Chrome's screencast, every painted frame, four picked
+// evenly through the slide and labelled by ms after the tap; the panel's x logged each frame in the page), open, and
+// open under Reduce Motion. (Playwright's fake clock left the demo blank, so the slide runs in real time.)
+// Measures the panel (box, transform, surface, radius, padding, role
 // and name) in each. Then the behaviour, in the browser at 390: focus in, Tab kept inside, Escape and focus back, the
 // scrim closes, a short swipe springs back, a long swipe and a flick close, the page doesn't scroll under it; and under
 // Reduce Motion it is in place on the first frame and gone on the next.
@@ -37,8 +39,8 @@ const fakeInsets = (page, insets) => page.evaluate(insets => {
 }, insets);
 
 const COMBOS = [['sage', 0, 'light'], ['sage', 0, 'dark'], ['cobalt', 7, 'light'], ['cobalt', 7, 'dark']];
-/** ms after the click, for the mid-slide series (sheetIn is 460 ms) */
-const MID = [40, 90, 150, 240];
+/** How many mid-slide frames to keep (sheetIn is 460 ms) */
+const MID = 4;
 
 const probe = page => page.evaluate(() => {
   const d = document.querySelector('[data-drawer]');
@@ -66,7 +68,6 @@ const page0 = async (ctxOpts, insets, query, key) => {
   const ctx = await browser.newContext(ctxOpts);
   const page = await ctx.newPage();
   page.on('pageerror', e => errors.push(`${key}: ${e.message}`));
-  await page.clock.install();
   await page.goto(`${base}${query}`, { waitUntil: 'networkidle' });
   await page.evaluate(() => document.fonts.ready);
   if (insets) await fakeInsets(page, insets);
@@ -84,17 +85,35 @@ for (const [width, opts, insets] of WIDTHS) {
     const { ctx, page } = await page0(opts, insets, `?only=drawer&theme=${theme}&mode=${mode}`, key);
     await settled(page);
     await shoot(page, `${key}-closed`); shots[key].push(['closed', `${key}-closed`]);
-    // the clock paused, then stepped: each frame of the slide at a known time after the tap
-    await page.clock.pauseAt(Date.now() + 60_000);
-    // a plain DOM click: Playwright's actionability checks wait on frames, and the frames are paused
-    await page.evaluate(() => document.querySelector('[data-demo="drawer-open"]').click());
-    let at = 0;
-    for (const ms of MID) {
-      await page.clock.runFor(ms - at); at = ms;
-      await shoot(page, `${key}-mid${ms}`); shots[key].push([`+${ms} ms`, `${key}-mid${ms}`]);
+    // every painted frame while it slides in, and the panel's x each animation frame
+    const cdp = await ctx.newCDPSession(page);
+    const frames = [];
+    cdp.on('Page.screencastFrame', f => { frames.push({ t: f.metadata.timestamp * 1000, data: f.data }); cdp.send('Page.screencastFrameAck', { sessionId: f.sessionId }).catch(() => {}); });
+    await cdp.send('Page.startScreencast', { format: 'png', everyNthFrame: 1 });
+    await pause(300);
+    const t0 = await page.evaluate(() => {
+      window.__xs = [];
+      const t0 = Date.now();
+      const log = () => { const d = document.querySelector('[data-drawer]'); if (d) { const t = getComputedStyle(d).transform; window.__xs.push([Date.now() - t0, t === 'none' ? 0 : new DOMMatrix(t).m41]); } if (Date.now() - t0 < 900) requestAnimationFrame(log); };
+      document.querySelector('[data-demo="drawer-open"]').click();
+      requestAnimationFrame(log);
+      return t0;
+    });
+    await pause(1000);
+    await cdp.send('Page.stopScreencast');
+    const xs = await page.evaluate(() => window.__xs);
+    numbers[`${key}-slide`] = xs;
+    // the frames painted mid-slide: after the tap, up to the last logged x under -1 px
+    const moving = xs.filter(([, x]) => x < -1);
+    const end = moving.length ? moving[moving.length - 1][0] : 0;
+    const mid = frames.filter(f => f.t - t0 > 0 && f.t - t0 <= end + 8);
+    const pick = mid.length <= MID ? mid : Array.from({ length: MID }, (_, i) => mid[Math.round((i * (mid.length - 1)) / (MID - 1))]);
+    for (const f of pick) {
+      const ms = Math.round(f.t - t0);
+      fs.writeFileSync(`${out}/${key}-mid${ms}.png`, Buffer.from(f.data, 'base64'));
+      shots[key].push([`+${ms} ms`, `${key}-mid${ms}`]);
     }
-    await page.clock.runFor(2000);
-    await page.clock.resume();
+    numbers[`${key}-midFrames`] = { painted: frames.length, mid: mid.length, kept: pick.map(f => Math.round(f.t - t0)) };
     await settled(page);
     await shoot(page, `${key}-open`); shots[key].push(['open', `${key}-open`]);
     await ctx.close();
@@ -177,11 +196,14 @@ const behaves = Object.entries(behaviour).every(([k, v]) => k === 'name' ? v ===
 fs.writeFileSync(`${out}/behaviour.json`, JSON.stringify({ behaves, behaviour }, null, 2));
 console.log(`behaviour ${behaves ? 'OK' : 'FAILED'}: ${JSON.stringify(behaviour)}`);
 
-// the slide's frames really are mid-slide: x rising from about -width toward 0
+// the slide really slides: x logged from below 0 rising to 0, never back
 const slides = {};
-for (const key of Object.keys(shots)) slides[key] = MID.map(ms => Math.round(numbers[`${key}-mid${ms}`]?.panel?.tx ?? NaN));
-const slides_ok = Object.values(slides).every(xs => xs.every((x, i) => x < 0 && (i === 0 || x > xs[i - 1])));
-console.log(`slide x by frame ${slides_ok ? 'OK' : 'ODD'}: ${JSON.stringify(slides)}`);
+for (const key of Object.keys(shots)) {
+  const xs = numbers[`${key}-slide`].map(([, x]) => x);
+  slides[key] = { first: Math.round(xs[0]), last: Math.round(xs[xs.length - 1]), frames: xs.length, rising: xs.every((x, i) => i === 0 || x >= xs[i - 1] - 0.5), midShots: numbers[`${key}-midFrames`].kept.length };
+}
+const slides_ok = Object.values(slides).every(s => s.first < -100 && s.last === 0 && s.rising && s.midShots >= 2);
+console.log(`slide ${slides_ok ? 'OK' : 'ODD'}: ${JSON.stringify(slides)}`);
 
 // composite.png: a row per width and combo
 const sheet = await browser.newPage({ viewport: { width: 1800, height: 600 } });
