@@ -1,9 +1,17 @@
 'use client';
 
-import React, { useState, useRef, useEffect, useCallback, useId } from 'react';
+import React, {
+  forwardRef,
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+  useId,
+} from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { HelpCircle } from 'lucide-react';
 import { cn } from '../utils/cn';
+import { useControlled } from '../utils/useControlled';
 
 // Container variants for size
 const containerVariants = cva('', {
@@ -65,13 +73,38 @@ const trackVariants = cva(
   }
 );
 
-export interface SliderProps extends VariantProps<typeof containerVariants> {
+/**
+ * Slider follows the form-input convention (docs/prop-conventions.json, formInputs): `value` / `defaultValue` and
+ * `onChange(value)`; a native range input (arrows, Home, End, PageUp, PageDown), which takes the ref, the `id` and every
+ * prop the Slider doesn't name (aria-label, name, data-*…).
+ */
+export interface SliderProps
+  extends
+    VariantProps<typeof containerVariants>,
+    Omit<
+      React.InputHTMLAttributes<HTMLInputElement>,
+      | 'type'
+      | 'size'
+      | 'value'
+      | 'defaultValue'
+      | 'onChange'
+      | 'min'
+      | 'max'
+      | 'step'
+      | 'className'
+    > {
+  /** The range input's id; generated when left out */
+  id?: string;
+  /** Visible label. Without it, pass `aria-label` or `aria-labelledby` */
   label?: string;
-  value: number;
+  /** Controlled: the value. Leave out for uncontrolled */
+  value?: number;
+  /** Uncontrolled: the value at first (default `min`) */
+  defaultValue?: number;
   min: number;
   max: number;
   step?: number;
-  onChange: (value: number) => void;
+  onChange?: (value: number) => void;
   className?: string;
   labelClassName?: string;
   valueClassName?: string;
@@ -98,35 +131,58 @@ export interface SliderProps extends VariantProps<typeof containerVariants> {
  * A single slider input component with customizable styling.
  * Supports two sizes: 'sm' (compact) and 'md' (default).
  */
-export default function Slider({
-  label,
-  value,
-  min,
-  max,
-  step = 1,
-  onChange,
-  className,
-  labelClassName,
-  valueClassName,
-  sliderClassName,
-  showValue = true,
-  valueFormatter = (val) => val.toString(),
-  showTooltip = false,
-  showMinMax = false,
-  helperText,
-  disabled = false,
-  size = 'md',
-  labelTooltip,
-  showInput = false,
-  inputWidth,
-}: SliderProps) {
-  const id = useId();
-  const sliderRef = useRef<HTMLInputElement>(null);
+const Slider = forwardRef<HTMLInputElement, SliderProps>(function Slider(
+  {
+    id: idProp,
+    label,
+    value: valueProp,
+    defaultValue,
+    min,
+    max,
+    step = 1,
+    onChange,
+    className,
+    labelClassName,
+    valueClassName,
+    sliderClassName,
+    showValue = true,
+    valueFormatter = (val) => val.toString(),
+    showTooltip = false,
+    showMinMax = false,
+    helperText,
+    disabled = false,
+    size = 'md',
+    labelTooltip,
+    showInput = false,
+    inputWidth,
+    ...props
+  }: SliderProps,
+  ref
+) {
+  const autoId = useId();
+  const id = idProp ?? autoId;
+  const [value, setValue] = useControlled(
+    valueProp,
+    defaultValue ?? min,
+    onChange
+  );
+  const sliderRef = useRef<HTMLInputElement | null>(null);
+  const setSliderRef = useCallback(
+    (el: HTMLInputElement | null) => {
+      sliderRef.current = el;
+      if (typeof ref === 'function') ref(el);
+      else if (ref) ref.current = el;
+    },
+    [ref]
+  );
   const [isHovering, setIsHovering] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  // What is being typed in the number field: held as typed, clamped on blur or Enter (A3: it clamped each keystroke,
+  // so 15 could not be typed when the minimum is 10)
+  const [draft, setDraft] = useState<string | null>(null);
 
   // Calculate percentage for filled track and tooltip positioning
-  const percentage = ((value - min) / (max - min)) * 100;
+  const percentage = max === min ? 0 : ((value - min) / (max - min)) * 100;
 
   // Update CSS custom property for filled track
   useEffect(() => {
@@ -141,27 +197,35 @@ export default function Slider({
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       if (!disabled) {
-        onChange(parseFloat(e.target.value));
+        setValue(parseFloat(e.target.value));
       }
     },
-    [onChange, disabled]
+    [setValue, disabled]
   );
 
   const handleMouseDown = useCallback(() => setIsDragging(true), []);
   const handleMouseUp = useCallback(() => setIsDragging(false), []);
 
+  // Typing: the field keeps the text as typed; a number in range goes out at once, one out of range waits for commit
   const handleInputChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       if (disabled) return;
-      const newValue = parseFloat(e.target.value);
-      if (!isNaN(newValue)) {
-        // Clamp value to min/max range
-        const clampedValue = Math.min(max, Math.max(min, newValue));
-        onChange(clampedValue);
-      }
+      setDraft(e.target.value);
+      const typed = parseFloat(e.target.value);
+      if (!isNaN(typed) && typed >= min && typed <= max) setValue(typed);
     },
-    [onChange, disabled, min, max]
+    [setValue, disabled, min, max]
   );
+
+  // Blur or Enter: clamp what was typed into range and show the value again
+  const commitInput = useCallback(() => {
+    if (draft === null) return;
+    const typed = parseFloat(draft);
+    setDraft(null);
+    if (isNaN(typed)) return;
+    const clamped = Math.min(max, Math.max(min, typed));
+    if (clamped !== value) setValue(clamped);
+  }, [draft, min, max, value, setValue]);
 
   // Add global mouseup listener to catch drag end outside element
   useEffect(() => {
@@ -222,8 +286,12 @@ export default function Slider({
           {showInput ? (
             <input
               type="number"
-              value={value}
+              value={draft ?? value}
               onChange={handleInputChange}
+              onBlur={commitInput}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') commitInput();
+              }}
               min={min}
               max={max}
               step={step}
@@ -237,7 +305,7 @@ export default function Slider({
                 valueClassName
               )}
               style={inputWidth ? { width: inputWidth } : undefined}
-              aria-label={`${label} value`}
+              aria-label={label ? `${label} value` : 'Value'}
             />
           ) : (
             showValue && (
@@ -270,7 +338,8 @@ export default function Slider({
         )}
 
         <input
-          ref={sliderRef}
+          {...props}
+          ref={setSliderRef}
           id={id}
           type="range"
           min={min}
@@ -292,7 +361,6 @@ export default function Slider({
             disabled && 'cursor-not-allowed opacity-50',
             sliderClassName
           )}
-          aria-label={label}
           aria-valuemin={min}
           aria-valuemax={max}
           aria-valuenow={value}
@@ -320,4 +388,6 @@ export default function Slider({
       )}
     </div>
   );
-}
+});
+
+export default Slider;

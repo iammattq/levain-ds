@@ -46,8 +46,13 @@ describe('Slider Component', () => {
       '[&::-moz-range-thumb]:w-4'
     );
     rerender(<Slider {...defaultProps} size="sm" />);
-    expect(screen.getByRole('slider')).toHaveClass('[&::-webkit-slider-thumb]:h-3.5', '[&::-moz-range-thumb]:w-3.5');
-    expect(screen.getByRole('slider')).not.toHaveClass('[&::-webkit-slider-thumb]:h-4');
+    expect(screen.getByRole('slider')).toHaveClass(
+      '[&::-webkit-slider-thumb]:h-3.5',
+      '[&::-moz-range-thumb]:w-3.5'
+    );
+    expect(screen.getByRole('slider')).not.toHaveClass(
+      '[&::-webkit-slider-thumb]:h-4'
+    );
   });
 
   // Test label rendering
@@ -245,7 +250,8 @@ describe('Slider Component', () => {
     expect(sliderInput).toHaveAttribute('aria-valuemax', '100');
     expect(sliderInput).toHaveAttribute('aria-valuenow', '50');
     expect(sliderInput).toHaveAttribute('aria-valuetext', '50%');
-    expect(sliderInput).toHaveAttribute('aria-label', 'Volume');
+    // named by its <label>, not a duplicate aria-label (which would shut out the app's own)
+    expect(sliderInput).toHaveAccessibleName('Volume');
   });
 
   // Test labelTooltip
@@ -268,5 +274,166 @@ describe('Slider Component', () => {
     render(<Slider {...defaultProps} label="Brightness" />);
 
     expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+  });
+});
+
+// The form-input convention (docs/prop-conventions.json, formInputs), point by point, and the T26 A3 fix (T35)
+describe('Slider: form-input convention', () => {
+  const field = () => screen.getByRole('spinbutton') as HTMLInputElement;
+
+  test('typing is not clamped per keystroke (A3): 15 can be typed when the minimum is 10', () => {
+    const onChange = jest.fn();
+    render(
+      <Slider
+        label="Size"
+        min={10}
+        max={100}
+        value={50}
+        onChange={onChange}
+        showInput
+      />
+    );
+    fireEvent.change(field(), { target: { value: '1' } });
+    expect(field().value).toBe('1');
+    expect(onChange).not.toHaveBeenCalled();
+    fireEvent.change(field(), { target: { value: '15' } });
+    expect(onChange).toHaveBeenLastCalledWith(15);
+  });
+
+  test('an out-of-range entry is clamped on blur, and on Enter', () => {
+    const onChange = jest.fn();
+    const { rerender } = render(
+      <Slider
+        label="Size"
+        min={10}
+        max={100}
+        value={50}
+        onChange={onChange}
+        showInput
+      />
+    );
+    fireEvent.change(field(), { target: { value: '3' } });
+    fireEvent.blur(field());
+    expect(onChange).toHaveBeenLastCalledWith(10);
+    rerender(
+      <Slider
+        label="Size"
+        min={10}
+        max={100}
+        value={10}
+        onChange={onChange}
+        showInput
+      />
+    );
+    expect(field().value).toBe('10');
+    fireEvent.change(field(), { target: { value: '500' } });
+    fireEvent.keyDown(field(), { key: 'Enter' });
+    expect(onChange).toHaveBeenLastCalledWith(100);
+  });
+
+  test('a cleared field goes back to the value on blur, with no onChange', () => {
+    const onChange = jest.fn();
+    render(
+      <Slider
+        label="Size"
+        min={0}
+        max={10}
+        value={4}
+        onChange={onChange}
+        showInput
+      />
+    );
+    fireEvent.change(field(), { target: { value: '' } });
+    fireEvent.blur(field());
+    expect(onChange).not.toHaveBeenCalled();
+    expect(field().value).toBe('4');
+  });
+
+  test('the number field is named without a label', () => {
+    render(<Slider min={0} max={10} value={4} aria-label="Size" showInput />);
+    expect(
+      screen.getByRole('spinbutton', { name: 'Value' })
+    ).toBeInTheDocument();
+  });
+
+  test('value and change: onChange(number), value first', () => {
+    const onChange = jest.fn();
+    render(<Slider label="V" min={0} max={10} value={2} onChange={onChange} />);
+    fireEvent.change(screen.getByRole('slider'), { target: { value: '7' } });
+    expect(onChange).toHaveBeenCalledWith(7);
+  });
+
+  test('uncontrolled: defaultValue (else min), then its own state', () => {
+    const onChange = jest.fn();
+    const { unmount } = render(
+      <Slider label="V" min={0} max={10} defaultValue={3} onChange={onChange} />
+    );
+    const s = screen.getByRole('slider') as HTMLInputElement;
+    expect(s.value).toBe('3');
+    fireEvent.change(s, { target: { value: '8' } });
+    expect(s.value).toBe('8');
+    expect(screen.getByText('8')).toBeInTheDocument();
+    expect(onChange).toHaveBeenCalledWith(8);
+    unmount();
+    render(<Slider label="V" min={2} max={10} />);
+    expect((screen.getByRole('slider') as HTMLInputElement).value).toBe('2');
+  });
+
+  test('ref: the native range input', () => {
+    const ref = React.createRef<HTMLInputElement>();
+    render(<Slider ref={ref} label="V" min={0} max={10} value={2} />);
+    expect(ref.current).toBe(screen.getByRole('slider'));
+    expect(ref.current?.type).toBe('range'); // arrows, Home, End, PageUp/Down are the browser's
+  });
+
+  test('id: given or generated, on the range; the label names it', () => {
+    const { unmount } = render(
+      <Slider id="vol" label="Volume" min={0} max={10} value={2} />
+    );
+    expect(screen.getByRole('slider', { name: 'Volume' })).toHaveAttribute(
+      'id',
+      'vol'
+    );
+    unmount();
+    render(<Slider label="Volume" min={0} max={10} value={2} />);
+    expect(screen.getByRole('slider', { name: 'Volume' }).id).toBeTruthy();
+  });
+
+  test('passthrough: aria-label, name and data-* reach the range input', () => {
+    render(
+      <Slider
+        aria-label="Workers"
+        name="w"
+        data-x="1"
+        min={0}
+        max={10}
+        value={2}
+        showValue={false}
+      />
+    );
+    const s = screen.getByRole('slider', { name: 'Workers' });
+    expect(s).toHaveAttribute('name', 'w');
+    expect(s).toHaveAttribute('data-x', '1');
+  });
+
+  test('disabled: native disabled on the range and the number field', () => {
+    render(<Slider label="V" min={0} max={10} value={2} disabled showInput />);
+    expect(screen.getByRole('slider')).toBeDisabled();
+    expect(field()).toBeDisabled();
+  });
+
+  test('focus: the keyboard ring on the range (focus-visible, border-focus)', () => {
+    render(<Slider label="V" min={0} max={10} value={2} />);
+    expect(screen.getByRole('slider')).toHaveClass(
+      'focus-visible:ring-2',
+      'focus-visible:ring-[var(--color-border-focus)]'
+    );
+  });
+
+  test('min equal to max does not draw NaN', () => {
+    render(<Slider label="V" min={5} max={5} value={5} />);
+    expect(
+      screen.getByRole('slider').style.getPropertyValue('--slider-percentage')
+    ).toBe('0%');
   });
 });

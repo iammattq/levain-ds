@@ -95,6 +95,7 @@
             "A switch-like control has role=\"switch\"; a single-choice group has role=\"radiogroup\" with role=\"radio\" options and aria-checked.",
             "Text fields show focus on any focus: `focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]` (error state: --color-error).",
             "Every other control shows a keyboard ring: `focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface-canvas)]`.",
+            "Inside a group that clips its options (SegmentedControl), the same ring is inset (`focus-visible:ring-inset`, no offset) so it is not cut off.",
             "Typed entry is never rewritten while it is typed: a value out of range is held as typed and clamped on blur or Enter."
           ],
           "rationale": "Keyboard is part of every component (T29). A text field has a caret, so focus shows however it came; other controls show the ring only for the keyboard, as MenuItem and Slider do (focus-visible, --color-border-focus)."
