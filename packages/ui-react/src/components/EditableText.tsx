@@ -7,20 +7,36 @@ import React, {
   forwardRef,
   KeyboardEvent,
   useCallback,
+  useId,
 } from 'react';
 import { cn } from '../utils/cn';
+import { useControlled } from '../utils/useControlled';
 import { Pencil, Check, X } from 'lucide-react';
 import { Button } from './Button';
 import TextInput from './TextInput';
 
-export interface EditableTextProps extends React.HTMLAttributes<HTMLDivElement> {
-  /** Text value to display/edit */
-  value: string;
-  /** Function called when the text value is updated and saved */
-  onSave: (value: string) => void;
+/**
+ * EditableText follows the form-input convention (docs/prop-conventions.json, formInputs) as an input with no native
+ * field at rest: `value` / `defaultValue` is the saved text, and `onChange(value)` and `onSave(value)` both fire when an
+ * edit is saved (the draft while typing stays inside). The root is focusable at rest and takes the ref, the `id` and
+ * every prop it doesn't name; double-click, Enter or F2 on it (or the edit icon) starts editing; in the field Enter
+ * saves and Escape cancels, and focus goes back to the root. No `error`: no use needs one yet.
+ */
+export interface EditableTextProps extends Omit<
+  React.HTMLAttributes<HTMLDivElement>,
+  'onChange' | 'defaultValue'
+> {
+  /** The saved text (controlled); leave out to let it keep its own */
+  value?: string;
+  /** The text at first, when `value` is left out */
+  defaultValue?: string;
+  /** Called with the new text when an edit is saved */
+  onChange?: (value: string) => void;
+  /** Called with the new text when an edit is saved (the commit; fires with `onChange`) */
+  onSave?: (value: string) => void;
   /** Whether to show the pencil icon beside the text */
   showEditIcon?: boolean;
-  /** Additional class name for the container */
+  /** Additional class name for the root */
   className?: string;
   /** Additional class name for the input element */
   inputClassName?: string;
@@ -30,28 +46,45 @@ export interface EditableTextProps extends React.HTMLAttributes<HTMLDivElement> 
   disabled?: boolean;
 }
 
-/**
- * EditableText component - display text that turns into an input when double-clicked or when the edit icon is clicked
- */
 const EditableText = forwardRef<HTMLDivElement, EditableTextProps>(
   (
     {
-      value,
+      id: idProp,
+      value: valueProp,
+      defaultValue = '',
+      onChange,
       onSave,
       showEditIcon = false,
-      className = '',
-      inputClassName = '',
+      className,
+      inputClassName,
       placeholder = 'Enter text...',
       disabled = false,
+      onKeyDown,
       ...props
     },
     ref
   ) => {
+    const autoId = useId();
+    const id = idProp ?? autoId;
+    const [value, setValue] = useControlled(
+      valueProp,
+      defaultValue,
+      onChange,
+      'EditableText'
+    );
     const [isEditing, setIsEditing] = useState(false);
     const [inputValue, setInputValue] = useState(value);
-    const textRef = useRef<HTMLSpanElement>(null);
+    const rootRef = useRef<HTMLDivElement | null>(null);
     const measureRef = useRef<HTMLSpanElement>(null);
     const [inputWidth, setInputWidth] = useState<number | undefined>(undefined);
+    // focus goes back to the root when an edit ends from inside the field
+    const refocus = useRef(false);
+
+    const setRef = (node: HTMLDivElement | null) => {
+      rootRef.current = node;
+      if (typeof ref === 'function') ref(node);
+      else if (ref) ref.current = node;
+    };
 
     // Memoize calculateTextWidth as it depends on placeholder prop
     const calculateTextWidth = useCallback(
@@ -80,15 +113,16 @@ const EditableText = forwardRef<HTMLDivElement, EditableTextProps>(
       }
     }, [isEditing, updateWidth]);
 
-    // Update input value when value prop changes (if not editing)
     useEffect(() => {
-      if (!isEditing) {
-        setInputValue(value);
+      if (!isEditing && refocus.current) {
+        refocus.current = false;
+        rootRef.current?.focus();
       }
-    }, [value, isEditing]);
+    }, [isEditing]);
 
     const handleStartEdit = () => {
       if (disabled) return;
+      setInputValue(value);
       setIsEditing(true);
     };
 
@@ -98,18 +132,29 @@ const EditableText = forwardRef<HTMLDivElement, EditableTextProps>(
       updateWidth();
     };
 
-    const handleSave = () => {
-      onSave(inputValue);
+    const endEdit = () => {
+      refocus.current =
+        !!rootRef.current?.contains(document.activeElement) ||
+        document.activeElement === document.body;
       setIsEditing(false);
+    };
+
+    const handleSave = () => {
+      setValue(inputValue);
+      onSave?.(inputValue);
+      endEdit();
     };
 
     const handleCancel = () => {
       setInputValue(value);
-      setIsEditing(false);
+      endEdit();
     };
 
-    const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    const handleInputKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+      // an Enter that ends an IME composition picks the characters; it doesn't save
+      if (e.nativeEvent.isComposing) return;
       if (e.key === 'Enter') {
+        e.preventDefault();
         handleSave();
       } else if (e.key === 'Escape') {
         // claimed: a dialog around it leaves this Escape alone and stays open
@@ -118,15 +163,30 @@ const EditableText = forwardRef<HTMLDivElement, EditableTextProps>(
       }
     };
 
+    // at rest, Enter or F2 on the root starts editing (not from the edit button inside it)
+    const handleRootKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+      onKeyDown?.(e);
+      if (e.defaultPrevented || isEditing || e.target !== e.currentTarget)
+        return;
+      if (e.key === 'Enter' || e.key === 'F2') {
+        e.preventDefault();
+        handleStartEdit();
+      }
+    };
+
     return (
       <div
-        ref={ref}
+        ref={setRef}
+        id={id}
+        tabIndex={!isEditing && !disabled ? 0 : undefined}
+        aria-disabled={disabled || undefined}
         className={cn(
-          'group inline-flex items-center',
+          'group inline-flex items-center rounded-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface-canvas)]',
           disabled ? 'cursor-not-allowed opacity-70' : 'cursor-text',
           className
         )}
         {...props}
+        onKeyDown={handleRootKeyDown}
       >
         {/* Invisible span used for measuring text width */}
         <span
@@ -141,11 +201,12 @@ const EditableText = forwardRef<HTMLDivElement, EditableTextProps>(
         {isEditing ? (
           <div className="inline-flex items-center gap-1 rounded-md bg-[var(--color-surface-card)]">
             <TextInput
-              id={`editable-text-${Math.random().toString(36).substring(2, 9)}`}
-              label=""
+              id={`${id}-input`}
+              label={props['aria-label'] ?? 'Edit text'}
+              hideLabel
               value={inputValue}
               onChange={handleInputChange}
-              onKeyDown={handleKeyDown}
+              onKeyDown={handleInputKeyDown}
               placeholder={placeholder}
               style={{ width: `${inputWidth}px` }}
               helperText=""
@@ -179,11 +240,7 @@ const EditableText = forwardRef<HTMLDivElement, EditableTextProps>(
           </div>
         ) : (
           <>
-            <span
-              ref={textRef}
-              className="inline-block"
-              onDoubleClick={handleStartEdit}
-            >
+            <span className="inline-block" onDoubleClick={handleStartEdit}>
               {value || placeholder}
             </span>
             {showEditIcon && !disabled && (
@@ -191,7 +248,7 @@ const EditableText = forwardRef<HTMLDivElement, EditableTextProps>(
                 onClick={handleStartEdit}
                 variant="ghost"
                 size="icon"
-                className="ml-1 h-8 w-8 p-1 text-[var(--color-text-default)] opacity-0 transition-opacity group-hover:opacity-100"
+                className="ml-1 h-8 w-8 p-1 text-[var(--color-text-default)] opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
                 aria-label="Edit"
                 Icon={Pencil}
                 iconOnly
