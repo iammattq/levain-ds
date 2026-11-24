@@ -164,8 +164,8 @@ function SliderCompare({ before, after, onBroken, className }: { before: ImageCo
         style={{ left: `${pos}%` }}
         className="group absolute inset-y-0 w-0 outline-none"
       >
-        <span className="absolute inset-y-0 -left-px w-0.5 bg-[var(--color-surface-elevated)] shadow-[var(--elevation-1)]" />
-        <span className="absolute left-0 top-1/2 flex size-8 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-[var(--color-border-default)] bg-[var(--color-surface-elevated)] text-[var(--color-text-default)] shadow-[var(--elevation-2)] group-focus-visible:ring-2 group-focus-visible:ring-[var(--color-border-focus)] group-focus-visible:ring-offset-2">
+        <span className="absolute inset-y-0 -left-px w-0.5 bg-[var(--color-text-default)] shadow-[var(--elevation-1)]" />
+        <span className="absolute left-0 top-1/2 flex size-8 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-[var(--color-border-emphasis)] bg-[var(--color-surface-elevated)] text-[var(--color-text-default)] shadow-[var(--elevation-2)] group-focus-visible:ring-2 group-focus-visible:ring-[var(--color-border-focus)] group-focus-visible:ring-offset-2">
           <GripVertical size={16} aria-hidden="true" />
         </span>
       </div>
