@@ -1,12 +1,13 @@
 {
   "name": "levain-ds",
-  "version": "0.2.3",
+  "version": "0.6.0",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@10.27.0",
   "description": "levain DS: design tokens and React components. TypeScript source; consumers transpile it (smoke/ builds it as one would).",
   "scripts": {
-    "test": "pnpm --filter './packages/*' test",
+    "test": "node --test scripts/version.test.mjs && pnpm --filter './packages/*' test",
+    "check:version": "node scripts/version.mjs check",
     "check:types": "tsc --noEmit -p packages/tokens && tsc --noEmit -p packages/ui-react && tsc --noEmit -p packages/ui-react/tsconfig.browser.json",
     "build": "pnpm --filter @levain/smoke --filter @levain/demo build"
   },
