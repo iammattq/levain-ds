@@ -67,28 +67,40 @@ for (const [name, theme, m] of COMBOS) {
     const fp = r.panels.flip;
     if (fp.panel) check(key, fp.panel.y + fp.panel.h <= fp.trigger.y, 'flipped panel overlaps its trigger');
 
-    // levain's behaviour, in the browser
-    const t = trig('levain');
-    const state = () => page.evaluate(t => {
-      const tr = document.querySelector(t), p = document.querySelector('[data-popover] [role="dialog"]');
-      return { open: !!p, expanded: tr.getAttribute('aria-expanded'), controls: tr.getAttribute('aria-controls'), panelId: p?.id ?? null, focusInPanel: !!p?.contains(document.activeElement), focusOnTrigger: document.activeElement === tr };
-    }, t);
-    const beh = (r.behaviour = {});
-    await page.click(t); await pause(700);
-    beh.opened = await state();
-    check(key, beh.opened.open && beh.opened.expanded === 'true' && beh.opened.controls === beh.opened.panelId && beh.opened.focusInPanel, `open: ${JSON.stringify(beh.opened)}`);
-    await page.keyboard.press('Escape'); await pause(700);
-    beh.escape = await state();
-    check(key, !beh.escape.open && beh.escape.expanded === 'false' && beh.escape.focusOnTrigger, `Escape: ${JSON.stringify(beh.escape)}`);
-    await page.click(t); await pause(700);
-    await page.mouse.click(5, (device.viewport.height / 2) | 0); await pause(700);
-    beh.outside = await state();
-    check(key, !beh.outside.open && beh.outside.focusOnTrigger, `press outside: ${JSON.stringify(beh.outside)}`);
-    await page.click(t); await pause(700);
-    for (let i = 0; i < 6 && (await state()).open; i++) { await page.keyboard.press('Tab'); await pause(150); }
-    await pause(600);
-    beh.tabOut = await state();
-    check(key, !beh.tabOut.open && beh.tabOut.focusOnTrigger, `Tab out: ${JSON.stringify(beh.tabOut)}`);
+    // the behaviour, in the browser: levain's, and the board copy's beside it (the same checks; the board is the bar)
+    r.behaviour = {};
+    for (const who of ['levain', 'board']) {
+      const t = trig(who), ps = who === 'board' ? '[data-pool-menu] [role="dialog"]' : '[data-popover] [role="dialog"]';
+      const state = () => page.evaluate(([t, ps]) => {
+        const tr = document.querySelector(t), p = document.querySelector(ps), a = document.activeElement;
+        return { open: !!p, expanded: tr.getAttribute('aria-expanded'), controls: tr.getAttribute('aria-controls'), panelId: p?.id ?? null, focusInPanel: !!p?.contains(a), focusOnTrigger: a === tr,
+          active: a ? `${a.tagName.toLowerCase()}${a.className && typeof a.className === 'string' ? '.' + a.className.split(' ')[0] : ''}${a.getAttribute('aria-label') ? '[' + a.getAttribute('aria-label') + ']' : ''}` : null };
+      }, [t, ps]);
+      const beh = (r.behaviour[who] = {});
+      const strict = who === 'levain';
+      await page.click(t); await pause(700);
+      beh.opened = await state();
+      if (strict) check(key, beh.opened.open && beh.opened.expanded === 'true' && beh.opened.controls === beh.opened.panelId && beh.opened.focusInPanel, `open: ${JSON.stringify(beh.opened)}`);
+      await page.keyboard.press('Escape'); await pause(700);
+      beh.escape = await state();
+      if (strict) check(key, !beh.escape.open && beh.escape.expanded === 'false' && beh.escape.focusOnTrigger, `Escape: ${JSON.stringify(beh.escape)}`);
+      await page.click(t); await pause(700);
+      await page.mouse.click(5, (device.viewport.height / 2) | 0); await pause(700);
+      beh.outside = await state();
+      await page.click(t); await pause(700);
+      beh.tabs = [];
+      for (let i = 0; i < 6 && (await state()).expanded === 'true'; i++) { await page.keyboard.press('Tab'); await pause(150); beh.tabs.push((await state()).active); }
+      await pause(600);
+      beh.tabOut = await state();
+      if (strict) {
+        check(key, !beh.outside.open, `press outside left it open`);
+        check(key, !beh.tabOut.open, `Tab out left it open`);
+      }
+    }
+    const L = r.behaviour.levain, B = r.behaviour.board;
+    // after a press outside or a Tab out, focus lands where the board's does
+    check(key, L.outside.focusOnTrigger === B.outside.focusOnTrigger, `press outside: focus ${L.outside.active}, the board's ${B.outside.active}`);
+    check(key, L.tabOut.focusOnTrigger === B.tabOut.focusOnTrigger, `Tab out: focus ${L.tabOut.active}, the board's ${B.tabOut.active}`);
     await ctx.close();
   }
 }
