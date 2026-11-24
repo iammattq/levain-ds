@@ -56,7 +56,7 @@ const card = (children: ReactNode) => (
 export function CommandDemo({ Section }: { Section: (p: { title: string; note: string; children: ReactNode }) => ReactNode }) {
   return (
     <Section title="CommandBlock beside the board's run-item commands" note="Left: a copy of the board's markup (items.tsx). Right: levain's CommandBlock, with CommandBlockCopyAll in the same button row. Press a Copy: levain's icon turns to a check for a moment.">
-      <div className="grid grid-cols-1 gap-x-md gap-y-sm sm:grid-cols-[8rem_1fr_1fr]" data-demo="command">
+      <div className="grid grid-cols-1 gap-x-md gap-y-sm sm:grid-cols-[8rem_minmax(0,1fr)_minmax(0,1fr)]" data-demo="command">
         <span className="hidden sm:block" />
         <span className="type-label text-[var(--color-text-muted)]">Board</span>
         <span className="type-label text-[var(--color-text-muted)]">levain CommandBlock</span>

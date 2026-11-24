@@ -7,7 +7,6 @@ The first consumer outside the portfolio was a web board for running a team of c
 ## Open
 
 ### Components and patterns
-- **Copyable command block.** A block of one or more shell commands, each with a copy button and a "copy all". Built by hand from the `type-code` class plus an icon-only Button. Wanted anywhere developer-facing.
 - **Side-by-side image compare.** Two images labelled (for example "This build" and "Target"), side by side on wide screens and stacked on narrow ones, each opening full size. Built by hand.
 - **Board column and layout primitives.** A column with a header, count and scrolling body; stack and cluster layouts. Composed from Card and Tailwind each time.
 - **Timeline is career-specific.** Its props are `company` and `roles`, and it hard-codes a "History" heading, so a release history couldn't reuse it. Wants a general timeline (date, title, body) with the career version built on top.
@@ -33,6 +32,7 @@ The first consumer outside the portfolio was a web board for running a team of c
 - **No sunken surface token.** Nothing is darker than the page: in Cobalt Mono light every surface token is lighter than the canvas (#f2f2f2; section #f6f6f6, card #f9f9f9, component #fcfcfc). The consumer's light-mode columns use `--color-border-subtle` (#e4e4e4) as a background instead.
 
 ## Closed
+- **Copyable command block.** One or more shell commands, each with a copy button, and a "copy all"; built by hand from `type-code` and an icon-only Button. Closed by `CommandBlock` (T4): the board's run-item list exactly (an ordered list on the section surface, wrapping only at spaces, a ghost Copy per command), and `CommandBlockCopyAll`, rendered only past one command, for the caller to place in its own button row. A copy that worked turns the icon to a check for 1.5 s and says so politely to screen readers; without a clipboard nothing happens and nothing throws.
 - **Safe-area padding** for the notch and home indicator, as a token or utility. Closed in T12: `--safe-top|right|bottom|left` (each `env(safe-area-inset-*, 0px)`) and the utilities `pt-safe` to `p-safe`, plus `pb-safe-md` and the like for a spacing step plus the inset. The bottom sheet uses them, with the same computed padding as before.
 - **Bottom sheet.** On a phone the board's StatusCard dialogs were taller than the screen, and the look-and-decide pair had no phone form. Closed in T24: below md, StatusCardDialog and StatusCardDialogStack open as bottom sheets (handle, swipe down to close, scrolling body under a fixed title, clear of the safe-area insets), and the pair keeps the pile peeking above, Next/Back, close-all and Reduce Motion. No snap heights (Q34): a dialog does not need them. The general sheet stays internal for now.
 - **No caution (amber) status hue.** The consumer hand-picks its own amber (light #975d04), which misses 4.5:1 on darker light surfaces (4.25:1 on #e4e4e4); it falls back to the text colour for words there and keeps amber only for small pips. Closed by `--color-caution-fg` (T18) and, in Cobalt Mono, a true ochre apart from error (T21): 4.5:1 text on every surface, light and dark.
