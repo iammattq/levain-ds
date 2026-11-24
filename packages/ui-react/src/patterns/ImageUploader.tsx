@@ -91,25 +91,23 @@ export default function ImageUploader({
     onImagesUploadedRef.current = onImagesUploaded;
   }, [onImagesUploaded]);
 
-  // Initialize with initial images
+  // Take a new starting list when its contents change, and only then: a parent
+  // passing the same images again must not undo the user's uploads and removals.
+  const initialKey = JSON.stringify(
+    initialImages.filter((img) => img && img.trim() !== '')
+  );
+  const lastInitialKey = useRef(initialKey);
+  const uploadedImagesRef = useRef(uploadedImages);
+  uploadedImagesRef.current = uploadedImages;
   useEffect(() => {
-    if (initialImages.length > 0) {
-      // Filter out empty strings
-      const validImages = initialImages.filter(
-        (img) => img && img.trim() !== ''
-      );
-      if (JSON.stringify(validImages) !== JSON.stringify(uploadedImages)) {
-        setUploadedImages(validImages);
-        // Only call onImagesUploaded if we're actually changing the images
-        if (
-          validImages.some((img) => !uploadedImages.includes(img)) ||
-          uploadedImages.some((img) => !validImages.includes(img))
-        ) {
-          onImagesUploaded(validImages);
-        }
-      }
-    }
-  }, [initialImages, onImagesUploaded, uploadedImages]);
+    if (initialKey === lastInitialKey.current) return;
+    lastInitialKey.current = initialKey;
+    const validImages: string[] = JSON.parse(initialKey);
+    if (validImages.length === 0) return;
+    if (JSON.stringify(validImages) === JSON.stringify(uploadedImagesRef.current)) return;
+    setUploadedImages(validImages);
+    onImagesUploadedRef.current(validImages);
+  }, [initialKey]);
 
   const onDrop = useCallback(
     async (acceptedFiles: File[]) => {
