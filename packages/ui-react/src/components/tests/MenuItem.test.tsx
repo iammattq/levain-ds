@@ -272,4 +272,29 @@ describe('MenuItem', () => {
       '-1'
     );
   });
+
+  it('with onClick and trailing it stays a <button>, the trailing content inside it, and a click on it is the row\'s', async () => {
+    const onClick = jest.fn();
+    render(
+      <MenuItem onClick={onClick} trailing={<span data-testid="end">end</span>}>
+        Row
+      </MenuItem>
+    );
+    const row = screen.getByRole('button', { name: /Row/ });
+    expect(row.tagName).toBe('BUTTON');
+    expect(row).toContainElement(screen.getByTestId('end'));
+    await userEvent.click(screen.getByTestId('end'));
+    expect(onClick).toHaveBeenCalledTimes(1);
+  });
+
+  it('without trailing there is no extra span (one more child only when trailing is given)', () => {
+    const { rerender } = render(<MenuItem onClick={() => {}}>Row</MenuItem>);
+    const plain = screen.getByRole('button').children.length;
+    rerender(<MenuItem onClick={() => {}} trailing={null}>Row</MenuItem>);
+    expect(screen.getByRole('button').children.length).toBe(plain);
+    rerender(<MenuItem onClick={() => {}} trailing={<span data-testid="end" />}>Row</MenuItem>);
+    const withTrailing = screen.getByRole('button');
+    expect(withTrailing.children.length).toBe(plain + 1);
+    expect(withTrailing.lastElementChild).toContainElement(screen.getByTestId('end'));
+  });
 });

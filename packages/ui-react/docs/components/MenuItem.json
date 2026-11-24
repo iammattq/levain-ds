@@ -66,6 +66,13 @@
       "description": "Content slot on the right, such as action buttons. Clicks are isolated from the item's own onClick, and its presence keeps the row a <div> so buttons are not nested."
     },
     {
+      "name": "trailing",
+      "type": "React.ReactNode",
+      "optional": true,
+      "configurable": false,
+      "description": "Content at the row's end that is part of the row (a status mark, a check): a click on it is the row's click and the item stays a <button>. Not for controls of its own; its colour follows the row's. Menu uses it for each row's end and check."
+    },
+    {
       "name": "isActive",
       "type": "boolean",
       "optional": true,

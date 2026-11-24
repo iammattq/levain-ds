@@ -46,6 +46,11 @@
   },
   {
     "category": "Components",
+    "name": "Menu",
+    "description": "List of choices that opens from a button, the chosen one checked, with arrow keys, Home/End and Enter"
+  },
+  {
+    "category": "Components",
     "name": "Toaster",
     "description": "Notification system for displaying alerts and messages"
   },
