@@ -217,15 +217,33 @@ describe('dark mode set-up through applyTheme', () => {
       expect(env.colour(CANVAS)).toBe(lightSurface);
     });
 
-    it('saved system: the class follows a later system change', async () => {
+    it('saved system: the class and the colours follow a later system change (D2)', async () => {
       const env = installFakeDom(false);
       env.storage.theme = 'system';
       const { manager } = await loadModules();
 
       await manager.applyTheme(0);
-      env.setSystemDark(true);
+      expect(env.colour(CANVAS)).toBe(lightSurface);
 
+      env.setSystemDark(true);
       expect(env.classes.has('dark')).toBe(true);
+      expect(env.colour(CANVAS)).toBe(darkSurface);
+
+      env.setSystemDark(false);
+      expect(env.classes.has('dark')).toBe(false);
+      expect(env.colour(CANVAS)).toBe(lightSurface);
+    });
+
+    it('saved system: a user theme follows a system change too (D2)', async () => {
+      const env = installFakeDom(true);
+      env.storage.theme = 'system';
+      const { manager } = await loadModules();
+
+      await manager.applyUserTheme({ name: 'Mine', primary: '#5860fe', accent: '#d946ef' }, 'mine');
+      expect(env.colour(CANVAS)).toBe(darkSurface);
+
+      env.setSystemDark(false);
+      expect(env.colour(CANVAS)).toBe(lightSurface);
     });
   });
 

@@ -50,8 +50,10 @@ export function applyModeClass(theme: ThemeMode): void {
     systemListenerAdded = true;
     media.addEventListener('change', (e) => {
       // Read the saved mode at change time: it may have been set since.
+      // The colours follow the class: both modes are in the theme CSS behind .dark (T32, D2).
       if (getTheme() === 'system') {
         document.documentElement.classList.toggle('dark', e.matches);
+        document.body?.setAttribute('data-theme-mode', e.matches ? 'dark' : 'light');
       }
     });
   }
