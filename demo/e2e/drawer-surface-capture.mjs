@@ -5,7 +5,8 @@
 // the bands drawn faintly, as T36's capture). For Sage (theme 0) and Cobalt Mono (theme 7), light and dark, and each
 // surface (?open=menu: elevated, ?open=canvas: canvas): the page loads at 390x700 (a short viewport, as with Safari's
 // toolbar out) with the drawer open, it's shot; then the viewport grows to 390x844 under the open drawer (the toolbar
-// collapsing) and it's shot again. No headless engine has iOS's toolbar, so this checks the panel follows the viewport
+// collapsing) and is measured again. Headless WebKit doesn't repaint a shot after a resize, so the 844 shot is a fresh
+// page at 844, checked to measure the same as the grown one. No headless engine has iOS's toolbar, so this checks the panel follows the viewport
 // and fills it, and is never shorter than 100lvh; it can't show iOS's own short fixed viewport.
 // Measured each time: the overlay, scrim and panel boxes, the viewport, 100lvh, the panel's background and shadow; and
 // pixels sampled from the shot inside the panel near its right edge and on the dimmed page just past it, with their
@@ -73,27 +74,30 @@ const checks = [], errors = [], numbers = {}, shots = {};
 const check = (name, ok, data) => { checks.push({ name, ok: !!ok, data }); console.log(`${ok ? 'PASS' : 'FAIL'} ${name}${data === undefined ? '' : ' ' + JSON.stringify(data)}`); };
 const near = (a, b) => Math.abs(a - b) < 1;
 
-for (const [name, theme, mode] of COMBOS) for (const [surface, open] of SURFACES) {
-  const key = `${name}-${mode}-${surface}`;
-  const ctx = await browser.newContext(iphone);
+const load = async (key, url, height) => {
+  const ctx = await browser.newContext({ ...iphone, viewport: { width: W, height } });
   const page = await ctx.newPage();
   page.on('pageerror', e => errors.push(`${key}: ${e.message}`));
-  await page.goto(`${base}?theme=${theme}&mode=${mode}&only=drawer&open=${open}`, { waitUntil: 'networkidle' });
+  await page.goto(url, { waitUntil: 'networkidle' });
   await pause(600);
   await fakeInsets(page);
   await settled(page);
+  return { ctx, page };
+};
+
+for (const [name, theme, mode] of COMBOS) for (const [surface, open] of SURFACES) {
+  const key = `${name}-${mode}-${surface}`;
+  const url = `${base}?theme=${theme}&mode=${mode}&only=drawer&open=${open}`;
+  const { ctx, page } = await load(key, url, SHORT);
   shots[key] = [];
   for (const [state, h] of [['short', SHORT], ['full', FULL]]) {
-    if (h !== SHORT) {
-      await page.setViewportSize({ width: W, height: h });
-      // headless WebKit kept the old frame's paint after a resize: nudge a repaint, two frames
-      await page.evaluate(() => new Promise(r => { document.body.style.outline = '0 solid transparent'; requestAnimationFrame(() => requestAnimationFrame(() => { document.body.style.outline = ''; requestAnimationFrame(r); })); }));
-      await settled(page);
-    }
-    const file = `${out}/${key}-${state}.png`;
-    // fullPage clipped to the viewport: headless WebKit's plain shot kept the pre-resize paint (the bottom left white)
-    await page.screenshot({ path: file, fullPage: true, clip: { x: 0, y: 0, width: W, height: h } });
+    if (h !== SHORT) { await page.setViewportSize({ width: W, height: h }); await settled(page); }
     const n = await probe(page);
+    // the boxes are measured on the grown page; headless WebKit doesn't repaint a screenshot after setViewportSize (the
+    // grown strip came out white, then black), so the full shot is a fresh page at 844 with the drawer open on load
+    const file = `${out}/${key}-${state}.png`;
+    if (h === SHORT) await page.screenshot({ path: file });
+    else { const fresh = await load(key, url, h); await fresh.page.screenshot({ path: file }); n.fresh = await probe(fresh.page); await fresh.ctx.close(); }
     const y = n.panel.h * 0.7, edge = n.panel.x + n.panel.w;
     // the edge at 70 % down; and the panel's own colour just above the faked home-bar band, in the shot itself
     // rim: the panel's last device pixel column (the canvas surface's hairline lands there)
@@ -101,6 +105,7 @@ for (const [name, theme, mode] of COMBOS) for (const [surface, open] of SURFACES
     n.edge = { inside, rim, past, far, foot, contrastPast: ratio(inside, past), contrastFar: ratio(inside, far), rimPast: ratio(rim, past), rimInside: ratio(rim, inside) };
     numbers[`${key}-${state}`] = n;
     shots[key].push([`${state} (${n.viewport.h})`, file]);
+    if (n.fresh) check(`${key}-${state}: the fresh page at ${h} measures the same`, near(n.fresh.panel.h, n.panel.h) && near(n.fresh.scrim.h, n.scrim.h), { grown: n.panel.h, fresh: n.fresh.panel.h });
     check(`${key}-${state}: overlay, scrim and panel run the viewport's full height`, near(n.overlay.y, 0) && near(n.overlay.h, n.viewport.h) && near(n.scrim.h, n.overlay.h) && near(n.panel.y, 0) && near(n.panel.h, n.overlay.h), { vp: n.viewport.h, overlay: n.overlay.h, scrim: n.scrim.h, panel: n.panel.h });
     check(`${key}-${state}: never shorter than 100lvh`, n.overlay.h >= n.lvh - 1 && n.panel.h >= n.lvh - 1, { lvh: n.lvh, panel: n.panel.h });
     check(`${key}-${state}: the shot shows the panel down to the home bar`, foot.every((v, i) => Math.abs(v - inside[i]) <= 2), { inside, foot });
