@@ -25,6 +25,9 @@ The first consumer outside the portfolio was a web board for running a team of c
 - **No image viewer / lightbox.** A full image over an open dialog, fit to the screen, pinch-zoom, closing back to the dialog. The board puts the image inside `Modal` (found in Ringmaster T111).
 - **Modal has no dark-scrim or bare-content variant.** Modal always draws its card (surface, border, padding, a head for the ✕) over a light blur, and takes no className, so an image can't sit on a dark scrim. The board's viewer shows the image in a card on the blur, which departs from its brief; a dark scrim needs a levain change (found in Ringmaster T111).
 - **SortableList can't be switched off.** No `disabled` prop: on a coarse pointer every item shows a grip and lifts on a long press. The board's phone drops SortableGroup and SortableList and renders plain lists instead (found in Ringmaster T118).
+- **Column has no head inset.** No prop or token for the head's side inset, so a head can't line its icon and action up with its cards' edges. The board overrides the head padding by className (found in Ringmaster T135).
+- **CardStack's head inset is fixed.** Its head uses `px-3xs`, which the board overrides so the head lines up with the cards (found in Ringmaster T135).
+- **Column's container surface and padding aren't exported.** A container that should match a column (the board's Your work) has to copy them; the board keeps its own COLUMN_BOX and COLUMN_PAD constants (found in Ringmaster T135).
 
 ### Foundations
 - **Portals render unstyled without the theme on `<body>`.** Dialogs portal to `<body>`, so the theme's look classes have to be on `<body>` too, or they render unstyled. The consumer adds them by hand.
