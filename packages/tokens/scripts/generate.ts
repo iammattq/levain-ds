@@ -20,6 +20,7 @@ import { baseTypography } from '../src/data/baseTypography';
 import { themeGeneratorV2 } from '../src/generator/generator';
 import { typographyGeneratorV2 } from '../src/generator/typography/generator';
 import { generateKotlinFile } from './generators/kotlin';
+import { themesCSS } from '../src/core/themeCss';
 import type { GeneratedThemeV2 } from '../src/generator/types';
 
 // Get current file's directory when using ES modules
@@ -104,6 +105,10 @@ if (!fs.existsSync(outputDir)) {
 const themesOutputFile = path.join(outputDir, 'themesV2.json');
 fs.writeFileSync(themesOutputFile, JSON.stringify(themesV2, null, 2));
 
+// Write the themes as plain CSS (T32): every base theme, light and dark, scoped by data-levain-theme
+const cssOutputFile = path.join(outputDir, 'themes.css');
+fs.writeFileSync(cssOutputFile, themesCSS(themesV2));
+
 // Write typography file
 const typographyOutputFile = path.join(outputDir, 'typographyV2.json');
 fs.writeFileSync(typographyOutputFile, JSON.stringify(typographyV2, null, 2));
@@ -120,6 +125,7 @@ const typoFileSizeKB = (typoFileSize / 1024).toFixed(1);
 console.log('');
 console.log(`Generated ${themeCount} V2 theme(s)`);
 console.log(`  Output: ${themesOutputFile} (${themesFileSizeKB} KB)`);
+console.log(`  CSS: ${cssOutputFile} (${(fs.statSync(cssOutputFile).size / 1024).toFixed(1)} KB)`);
 console.log('');
 console.log(`Generated ${typoCount} typography preset(s)`);
 console.log(`  Output: ${typographyOutputFile} (${typoFileSizeKB} KB)`);
