@@ -55,6 +55,8 @@ const scrollTo = jest.fn(function (this: HTMLElement, o: ScrollToOptions) { this
 beforeAll(() => {
   Object.defineProperty(HTMLElement.prototype, 'clientWidth', { configurable: true, get() { return W; } });
   (HTMLElement.prototype as { scrollTo: unknown }).scrollTo = scrollTo;
+  // the strip spans the screen, as on a phone
+  jest.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(() => ({ left: 0, right: W, top: 0, bottom: 600, width: W, height: 600, x: 0, y: 0, toJSON: () => ({}) }));
   window.innerWidth = W;
 });
 afterAll(() => {
@@ -78,12 +80,18 @@ describe('snapIndex and edgeSide', () => {
     expect(snapIndex(-50, W, 4)).toBe(0);
     expect(snapIndex(100, 0, 4)).toBe(0);
   });
-  it('the edge zones are edge px wide at each side of the screen', () => {
-    expect(edgeSide(0, W, 56)).toBe('left');
-    expect(edgeSide(55, W, 56)).toBe('left');
-    expect(edgeSide(56, W, 56)).toBeNull();
-    expect(edgeSide(W - 56, W, 56)).toBeNull();
-    expect(edgeSide(W - 55, W, 56)).toBe('right');
+  it('the edge zones are edge px wide inside each side of the strip, and past it', () => {
+    expect(edgeSide(0, 0, W, 56)).toBe('left');
+    expect(edgeSide(55, 0, W, 56)).toBe('left');
+    expect(edgeSide(56, 0, W, 56)).toBeNull();
+    expect(edgeSide(W - 56, 0, W, 56)).toBeNull();
+    expect(edgeSide(W - 55, 0, W, 56)).toBe('right');
+    // a strip from 100 to 490 in a wider window
+    expect(edgeSide(20, 100, 490, 56)).toBe('left');
+    expect(edgeSide(150, 100, 490, 56)).toBe('left');
+    expect(edgeSide(160, 100, 490, 56)).toBeNull();
+    expect(edgeSide(440, 100, 490, 56)).toBe('right');
+    expect(edgeSide(900, 100, 490, 56)).toBe('right');
   });
   it('the defaults are the board\'s: 56 px, 500 ms, 600 ms', () => {
     expect([COLUMN_STRIP_EDGE, COLUMN_STRIP_DWELL, COLUMN_STRIP_REPEAT]).toEqual([56, 500, 600]);
@@ -113,6 +121,23 @@ describe('the strip and its pills', () => {
     swipeTo(W * 2);
     expect(pill('In progress')).toHaveAttribute('aria-current', 'true');
     expect(on.mock.calls).toEqual([['Queued'], ['In progress']]);
+  });
+
+  it('the strip never scrolls up and down: it is as tall as the column in view, the others clipped to it', () => {
+    const tall = jest.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockReturnValue(300);
+    render(<Harness />);
+    expect(strip().style.height).toBe('300px');
+    const col = (k: string) => document.querySelector(`[data-column="${k}"]`) as HTMLElement;
+    expect(col('Ideas').style.maxHeight).toBe('');
+    expect(col('Queued').style.maxHeight).toBe('300px');
+    expect(col('Queued').style.overflow).toBe('hidden');
+    swipeTo(W);
+    expect(col('Queued').style.maxHeight).toBe('');
+    expect(col('Ideas').style.maxHeight).toBe('300px');
+    tall.mockRestore();
+    strip().scrollTop = 40;
+    fireEvent.scroll(strip());
+    expect(strip().scrollTop).toBe(0);
   });
 
   it('a pill jumps there smoothly', () => {
@@ -187,6 +212,8 @@ describe('a held card', () => {
     await flush(COLUMN_STRIP_DWELL);
     await finishSlides();
     drop();
+    // the transform is off in the same frame as the scroll (not on framer's next): snapped under it, the strip lands off
+    expect((document.querySelector('[data-rail]') as HTMLElement).style.transform).toBe('none');
     await flush(20);
     expect(railValue.get()).toBe(0);
     expect(strip().scrollLeft).toBe(W);
@@ -285,6 +312,22 @@ describe('a held card', () => {
     await finishSlides();
     await flush(300);
     expect(pill('In progress')).toHaveAttribute('aria-current', 'true');
+  });
+
+  it('in a strip narrower than the window, the zones and the cue are at the strip\'s edges', async () => {
+    render(<Harness />);
+    const own = jest.spyOn(strip(), 'getBoundingClientRect').mockReturnValue({ left: 100, right: 100 + W, top: 0, bottom: 600, width: W, height: 600, x: 100, y: 0, toJSON: () => ({}) });
+    window.innerWidth = 1000;
+    try {
+      lift();
+      at(W - 10); // inside the strip, not at its edge
+      expect(cue()).toBeNull();
+      at(100 + W - 10);
+      expect(cue()).toHaveAttribute('data-page-cue', 'right');
+      expect((cue() as HTMLElement).style.right).toBe(`${1000 - 100 - W}px`);
+      await flush(COLUMN_STRIP_DWELL);
+      expect(pill('Queued')).toHaveAttribute('aria-current', 'true');
+    } finally { own.mockRestore(); window.innerWidth = W; }
   });
 
   it('a move without a lifted card does nothing', async () => {

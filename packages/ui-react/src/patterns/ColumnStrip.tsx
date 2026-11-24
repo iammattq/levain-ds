@@ -6,7 +6,7 @@
  * strip is as tall as the column in view, so the page scrolls it as one.
  *
  * Paging a held card, as an iPhone's home screen pages a held icon (Ringmaster D226, D228): while a SortableGroup card
- * is in the hand, resting at either screen edge (`edge` px) pages one column after `dwell` ms, then every `repeat` ms
+ * is in the hand, resting at either edge of the strip (`edge` px; on a phone, the screen's) pages one column after `dwell` ms, then every `repeat` ms
  * while the finger stays; moving off the edge stops it. A glow at that edge builds over the dwell. Paging stays within
  * `pageable`. While a card is held the strip never scrolls: the columns move by a transform (iOS froze scrolling a strip
  * under a held touch), and on drop the transform is swapped for the same scroll position in one frame. A page slides on
@@ -75,9 +75,9 @@ export function snapIndex(scrollLeft: number, width: number, count: number): num
   return Math.max(0, Math.min(count - 1, Math.round(scrollLeft / width)));
 }
 
-/** Which edge zone x is in, for a screen `width` wide with zones `edge` px wide. */
-export function edgeSide(x: number, width: number, edge: number): 'left' | 'right' | null {
-  return x < edge ? 'left' : x > width - edge ? 'right' : null;
+/** Which edge zone x is in, for a strip from `left` to `right` with zones `edge` px wide (past an edge counts as in it). */
+export function edgeSide(x: number, left: number, right: number, edge: number): 'left' | 'right' | null {
+  return x < left + edge ? 'left' : x > right - edge ? 'right' : null;
 }
 
 type Handlers = ColumnStripDrag;
@@ -107,6 +107,7 @@ export function ColumnStrip({
   const reduce = !!useReducedMotion();
   const indexOf = (key: string | undefined) => Math.max(0, columns.findIndex(c => c.key === key));
   const strip = useRef<HTMLDivElement>(null);
+  const rail = useRef<HTMLDivElement>(null);
   const railX = useMotionValue(0);
   const sliding = useRef<AnimationPlaybackControls | null>(null);
   const slide = motionFor({ ...recipe.sheetIn, duration: duration.arrival / 1000 }, reduce);
@@ -137,7 +138,12 @@ export function ColumnStrip({
   useEffect(() => {
     const el = strip.current;
     if (!el) return;
-    const on = () => { if (!held.current.on) setAt(snapIndex(el.scrollLeft, el.clientWidth, count.current)); };
+    const on = () => {
+      // the strip never scrolls up and down (each column is its own height); WebKit's autoscroll under a held mouse
+      // would scroll it once it shrinks to a shorter column, cutting off the column's top
+      if (el.scrollTop) el.scrollTop = 0;
+      if (!held.current.on) setAt(snapIndex(el.scrollLeft, el.clientWidth, count.current));
+    };
     el.addEventListener('scroll', on, { passive: true });
     return () => el.removeEventListener('scroll', on);
   }, []);
@@ -172,7 +178,7 @@ export function ColumnStrip({
 
   // ---- a held card ----
   const held = useRef({ on: false, base: 0, shift: 0 });
-  const [cue, setCue] = useState<{ side: Side; wait: number; n: number } | null>(null);
+  const [cue, setCue] = useState<{ side: Side; wait: number; n: number; inset: number } | null>(null);
   const zone = useRef<{ side: Side | null; timer: number }>({ side: null, timer: 0 });
   const reach = useRef<string[] | undefined>(pageable);
   reach.current = pageable;
@@ -207,9 +213,11 @@ export function ColumnStrip({
       sliding.current?.stop();
       sliding.current = null;
       if (held.current.shift) {
-        // one frame: the transform off and the same place as a scroll position
+        // one frame: the transform off and the same place as a scroll position. framer paints the jump on its next
+        // frame, so the transform comes off here too: scrolled and snapped under the old one, the strip lands a column off
         el.style.scrollBehavior = 'auto';
         railX.jump(0);
+        if (rail.current) rail.current.style.transform = 'none';
         el.scrollLeft = held.current.base + held.current.shift;
         el.style.scrollBehavior = '';
       }
@@ -217,15 +225,19 @@ export function ColumnStrip({
       held.current = { on: false, base: el.scrollLeft, shift: 0 };
     },
     onDragMove(x) {
-      if (!held.current.on) return;
-      const side = edgeSide(x, window.innerWidth, times.current.edge);
+      const el = strip.current;
+      if (!held.current.on || !el) return;
+      const r = el.getBoundingClientRect();
+      const side = edgeSide(x, r.left, r.right, times.current.edge);
       if (side === zone.current.side) return;
       leave();
       if (!side) return;
       const next = () => atRef.current + (side === 'left' ? -1 : 1);
       if (!mayReach(next())) return; // nowhere to page to
+      // the cue sits at the strip's edge (on a phone, the screen's)
+      const inset = Math.max(0, side === 'left' ? r.left : window.innerWidth - r.right);
       const arm = (wait: number) => {
-        setCue(c => ({ side, wait, n: (c?.n ?? 0) + 1 }));
+        setCue(c => ({ side, wait, n: (c?.n ?? 0) + 1, inset }));
         zone.current = {
           side,
           timer: window.setTimeout(() => {
@@ -279,13 +291,16 @@ export function ColumnStrip({
         style={{ height }}
         className="flex snap-x snap-mandatory overflow-x-auto overflow-y-hidden [scrollbar-width:none]"
       >
-        <motion.div data-rail="" style={{ x: railX }} className="flex w-full items-start">
+        <motion.div ref={rail} data-rail="" style={{ x: railX }} className="flex w-full items-start">
           {columns.map((c, i) => (
             <section
               key={c.key}
               ref={el => { pageEls.current[i] = el; }}
               aria-label={typeof c.label === 'string' ? c.label : undefined}
               data-column={c.key}
+              // the columns out of view are clipped to the strip's height (it clips them there anyway), so the strip
+              // has nothing to scroll up and down into
+              style={i === at || height === undefined ? undefined : { maxHeight: height, overflow: 'hidden' }}
               className="w-full shrink-0 snap-start"
             >
               {c.content}
@@ -299,13 +314,14 @@ export function ColumnStrip({
           key={cue.n}
           aria-hidden
           data-page-cue={cue.side}
+          style={{ [cue.side]: cue.inset }}
           initial={{ opacity: reduce ? 1 : 0 }}
           animate={{ opacity: 1 }}
           // motion: continuous indicator (a progress over the dwell, its length the dwell's)
           transition={{ duration: reduce ? 0 : cue.wait / 1000, ease: 'linear' }}
           className={cn(
             'pointer-events-none fixed inset-y-0 z-[55] w-6 to-transparent from-[color-mix(in_srgb,var(--color-text-link)_45%,transparent)]',
-            cue.side === 'left' ? 'left-0 bg-gradient-to-r' : 'right-0 bg-gradient-to-l',
+            cue.side === 'left' ? 'bg-gradient-to-r' : 'bg-gradient-to-l',
           )}
         />
       )}

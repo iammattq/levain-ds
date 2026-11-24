@@ -1,6 +1,6 @@
 {
   "name": "ColumnStrip",
-  "description": "On a phone: columns a screen wide in a strip swiped with snap, under a row of pills (label and count) that follow the swipe and jump to a column on a tap. While a SortableGroup card is held, resting at either screen edge pages the strip one column after a dwell, then on a repeat, by a transform (never a scroll), restored to the same scroll position on drop.",
+  "description": "On a phone: columns a screen wide in a strip swiped with snap, under a row of pills (label and count) that follow the swipe and jump to a column on a tap. While a SortableGroup card is held, resting at either edge of the strip (on a phone, the screen's) pages the strip one column after a dwell, then on a repeat, by a transform (never a scroll), restored to the same scroll position on drop.",
   "category": "patterns",
   "usage": [
     "Wire it to the SortableGroup around it with useColumnStrip(): pass the hook's onDragChange and onDragMove to the group and the hook's object to the strip as `drag`",
@@ -15,7 +15,8 @@
     "The strip is as tall as the column in view, so the page scrolls it as one",
     "A page slides on recipe.sheetIn's easing at duration.arrival (620 ms): easing out, no overshoot (like the iPhone's home screen)",
     "The cue: a 24 px glow of --color-text-link at the paging edge, building linearly over the dwell",
-    "Defaults: edge 56 px, dwell 500 ms, repeat 600 ms"
+    "Defaults: edge 56 px, dwell 500 ms, repeat 600 ms",
+    "Only the column in view sets the strip's height; the others are clipped to it, so the strip never scrolls up and down"
   ],
   "accessibility": [
     "The pills are buttons in a nav (label `label`, default \"Columns\"); the current one has aria-current=true",
@@ -76,7 +77,7 @@
       "type": "number",
       "optional": true,
       "defaultValue": "56",
-      "description": "Each edge zone's width, px",
+      "description": "Each edge zone's width, px, inside the strip's left and right edges (past an edge counts as in it)",
       "configurable": true
     },
     {

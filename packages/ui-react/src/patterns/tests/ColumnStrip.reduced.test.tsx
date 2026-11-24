@@ -15,6 +15,8 @@ beforeAll(() => {
   });
   Object.defineProperty(HTMLElement.prototype, 'clientWidth', { configurable: true, get() { return W; } });
   (HTMLElement.prototype as { scrollTo: unknown }).scrollTo = scrollTo;
+  // the strip spans the screen, as on a phone
+  jest.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(() => ({ left: 0, right: W, top: 0, bottom: 600, width: W, height: 600, x: 0, y: 0, toJSON: () => ({}) }));
   window.innerWidth = W;
 });
 afterAll(() => {

@@ -1,6 +1,6 @@
 // levain DS's motion, density and drag, on one page. Every timing here comes from @levain/tokens.
 // ?density=condensed starts condensed; ?mode=light starts light; ?theme=7 starts on Cobalt Mono.
-// ?only=progress, ?only=decide, ?only=time, ?only=count or ?only=sheet shows only that section (for captures).
+// ?only=progress, ?only=decide, ?only=time, ?only=count, ?only=sheet or ?only=strip shows only that section (for captures).
 import '@fontsource/open-sans/400.css';
 import '@fontsource/open-sans/600.css';
 import '@fontsource/oswald/400.css';
@@ -14,6 +14,7 @@ import { createRoot } from 'react-dom/client';
 import { CountDemo } from './count';
 import { DecideDemo } from './decide';
 import { ProgressDemo } from './progress';
+import { StripDemo } from './strip';
 import { RelativeTimeDemo } from './relativeTime';
 import { SheetDemo } from './sheet';
 
@@ -249,11 +250,12 @@ function App() {
         </div>
         <SegmentedControl id="density" size="sm" value={density} onChange={setDensity} options={[{ label: 'Comfortable', value: 'comfortable' }, { label: 'Condensed', value: 'condensed' }]} />
       </header>
-      {q.get('only') === 'progress' ? <ProgressDemo Section={Section} /> : q.get('only') === 'decide' ? <DecideDemo Section={Section} /> : q.get('only') === 'time' ? <RelativeTimeDemo Section={Section} /> : q.get('only') === 'count' ? <CountDemo Section={Section} /> : q.get('only') === 'sheet' ? <SheetDemo Section={Section} /> : <>
+      {q.get('only') === 'progress' ? <ProgressDemo Section={Section} /> : q.get('only') === 'decide' ? <DecideDemo Section={Section} /> : q.get('only') === 'time' ? <RelativeTimeDemo Section={Section} /> : q.get('only') === 'count' ? <CountDemo Section={Section} /> : q.get('only') === 'sheet' ? <SheetDemo Section={Section} /> : q.get('only') === 'strip' ? <StripDemo Section={Section} /> : <>
       <DragDemo />
       <DecideDemo Section={Section} />
       <StackDemo />
       <SheetDemo Section={Section} />
+      <StripDemo Section={Section} />
       <ProgressDemo Section={Section} />
       <RelativeTimeDemo Section={Section} />
       <CountDemo Section={Section} />
