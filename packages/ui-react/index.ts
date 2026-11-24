@@ -250,3 +250,5 @@ export { StatusCard, StatusCardDialog, StatusMarkers, morphId } from './src/patt
 export type { StatusCardProps, StatusCardDialogProps, StatusMarker, StatusTone } from './src/patterns/StatusCard';
 export { StatusCardDialogStack } from './src/patterns/StatusCardDialogStack';
 export type { StatusCardDialogStackProps, StatusCardStackDialog } from './src/patterns/StatusCardDialogStack';
+export { ColumnStrip, useColumnStrip, snapIndex, edgeSide, COLUMN_STRIP_EDGE, COLUMN_STRIP_DWELL, COLUMN_STRIP_REPEAT } from './src/patterns/ColumnStrip';
+export type { ColumnStripProps, ColumnStripDrag, StripColumn } from './src/patterns/ColumnStrip';
