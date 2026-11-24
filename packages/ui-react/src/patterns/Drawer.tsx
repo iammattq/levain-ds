@@ -5,7 +5,7 @@
  *
  * BottomSheet's feel, turned on its side: the same scrim (its tap closes), the same focus behaviour (useDialogFocus:
  * focus moved in, kept in, given back on close; Escape from the top dialog only, unless a widget inside claimed it), the
- * same surface, its far corners rounded (--radius-2xl) and its near ones square against the edge. It slides in on
+ * same surface (or, with surface="canvas", the darker canvas one), its far corners rounded (--radius-2xl) and its near ones square against the edge. It slides in on
  * recipe.sheetIn and out on recipe.sheetOut; under Reduce Motion it appears and goes at once. The page under it doesn't
  * scroll while it's open. Its contents sit inside the safe-area insets and scroll inside it.
  *
@@ -29,6 +29,8 @@ export interface DrawerProps {
   label: string;
   /** The edge it slides from. Only the left, for now. */
   side?: 'left';
+  /** Its background: the elevated surface (default), or the darker canvas surface (T51). Both keep elevation-3. */
+  surface?: 'elevated' | 'canvas';
   /** The contents: they scroll inside the drawer. */
   children: ReactNode;
 }
@@ -62,7 +64,13 @@ function useScrollLock(on: boolean) {
   }, [on]);
 }
 
-export function Drawer({ open, onClose, label, children }: DrawerProps) {
+/** The panel's background per `surface`, spelled out so Tailwind finds both. */
+const SURFACE = {
+  elevated: 'bg-[var(--color-surface-elevated)]',
+  canvas: 'bg-[var(--color-surface-canvas)]',
+} as const;
+
+export function Drawer({ open, onClose, label, surface = 'elevated', children }: DrawerProps) {
   const reduce = useReducedMotion();
   const panel = useRef<HTMLDivElement>(null);
   const x = useMotionValue(0);
@@ -92,6 +100,7 @@ export function Drawer({ open, onClose, label, children }: DrawerProps) {
             tabIndex={-1}
             data-drawer
             data-side="left"
+            data-surface={surface}
             initial={reduce ? false : { x: '-100%' }}
             animate={{ x: 0, transition: motionFor('sheetIn', reduce) }}
             exit={{ x: reduce ? 0 : '-100%', transition: motionFor('sheetOut', reduce) }}
@@ -105,7 +114,7 @@ export function Drawer({ open, onClose, label, children }: DrawerProps) {
             onDragEnd={end}
             style={{ x }}
             onClick={e => e.stopPropagation()}
-            className="absolute inset-y-0 left-0 flex w-[min(20rem,85vw)] touch-pan-y touch-pinch-zoom flex-col overflow-hidden rounded-r-[var(--radius-2xl)] bg-[var(--color-surface-elevated)] shadow-[var(--elevation-3)] outline-none"
+            className={`absolute inset-y-0 left-0 flex w-[min(20rem,85vw)] touch-pan-y touch-pinch-zoom flex-col overflow-hidden rounded-r-[var(--radius-2xl)] ${SURFACE[surface]} shadow-[var(--elevation-3)] outline-none`}
           >
             <div data-drawer-body className="flex min-h-0 flex-1 flex-col gap-sm overflow-y-auto overscroll-contain pt-safe-md pb-safe-md pl-safe-md pr-md">
               {children}

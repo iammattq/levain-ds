@@ -20,12 +20,12 @@ afterAll(() => {
   delete (HTMLElement.prototype as { offsetWidth?: number }).offsetWidth;
 });
 
-function Demo({ onClose, inner }: { onClose?: () => void; inner?: React.ReactNode }) {
+function Demo({ onClose, inner, surface }: { onClose?: () => void; inner?: React.ReactNode; surface?: 'elevated' | 'canvas' }) {
   const [open, setOpen] = useState(false);
   return (
     <>
       <button type="button" onClick={() => setOpen(true)}>Menu</button>
-      <Drawer open={open} label="Main menu" onClose={() => { onClose?.(); setOpen(false); }}>
+      <Drawer open={open} label="Main menu" surface={surface} onClose={() => { onClose?.(); setOpen(false); }}>
         <a href="#releases">Releases</a>
         <p data-testid="body">Version 1.2.3</p>
         {inner}
@@ -66,6 +66,25 @@ describe('Drawer', () => {
     expect(d.style.transform).toMatch(/translateX\(-(100|9\d(\.\d+)?)%\)/);
     await user.keyboard('{Escape}');
     await gone();
+  });
+
+  it('on the elevated surface by default; surface="canvas" puts it on the canvas surface, the shadow kept (T51)', async () => {
+    const user = userEvent.setup();
+    const { unmount } = render(<Demo />);
+    await user.click(screen.getByRole('button', { name: 'Menu' }));
+    let cls = drawer().className.split(' ');
+    expect(drawer()).toHaveAttribute('data-surface', 'elevated');
+    expect(cls).toContain('bg-[var(--color-surface-elevated)]');
+    expect(cls).not.toContain('bg-[var(--color-surface-canvas)]');
+    expect(cls).toContain('shadow-[var(--elevation-3)]');
+    unmount();
+    render(<Demo surface="canvas" />);
+    await user.click(screen.getByRole('button', { name: 'Menu' }));
+    cls = drawer().className.split(' ');
+    expect(drawer()).toHaveAttribute('data-surface', 'canvas');
+    expect(cls).toContain('bg-[var(--color-surface-canvas)]');
+    expect(cls).not.toContain('bg-[var(--color-surface-elevated)]');
+    expect(cls).toContain('shadow-[var(--elevation-3)]');
   });
 
   it('the contents scroll inside it, inside the safe-area insets', async () => {
