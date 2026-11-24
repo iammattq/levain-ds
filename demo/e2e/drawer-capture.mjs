@@ -67,7 +67,8 @@ const numbers = {}, errors = [], shots = {};
 const page0 = async (ctxOpts, insets, query, key) => {
   const ctx = await browser.newContext(ctxOpts);
   const page = await ctx.newPage();
-  page.on('pageerror', e => errors.push(`${key}: ${e.message}`));
+  page.on('pageerror', e => { errors.push(`${key}: ${e.message}`); console.log(`pageerror ${key}: ${e.message}`); });
+  page.on('console', m => { if (m.type() === 'error') console.log(`console ${key}: ${m.text().slice(0, 600)}`); });
   await page.goto(`${base}${query}`, { waitUntil: 'networkidle' });
   await page.evaluate(() => document.fonts.ready);
   if (insets) await fakeInsets(page, insets);
