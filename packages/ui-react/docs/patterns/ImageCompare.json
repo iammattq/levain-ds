@@ -17,8 +17,8 @@
     "Images sit on --color-surface-section with the subtle border (--color-border-subtle) and --radius-md; each keeps its own aspect ratio, top-aligned, never cropped",
     "Slider: the frame takes the before image's aspect ratio; the after image lies over it, fitted with object-fit contain and top-aligned, clipped at the handle (clip-path inset from the left)",
     "Slider handle: a 2px line in --color-text-default (dark on light, light on dark, so it reads over the screenshot) with elevation-1, and a 32px round grip (GripVertical) on --color-surface-elevated with --color-border-emphasis and elevation-2; it starts at 50%",
-    "Slider labels: chips in the top corners (before left, after right), type-caption on --color-surface-elevated, each fading out (150ms, none under Reduce Motion) while the handle is over it",
-    "Slider drag: anywhere on the frame. A mouse or pen press jumps the handle to the point; a touch moves it as the finger moves. touch-action pan-y: a sideways swipe moves the handle and never scrolls the page sideways, a vertical swipe still scrolls the page"
+    "Slider labels: chips in the top corners (before left, after right), type-caption in --color-text-inverted on --color-surface-inverted (dark on a light theme, light on a dark one, so they read on any screenshot), each fading out (150ms, none under Reduce Motion) while the handle is over it",
+    "Slider drag: anywhere on the frame. A mouse or pen press jumps the handle to the point; a touch takes the handle only once it has moved more than 6 px sideways, and more sideways than down, then the handle follows the finger; a touch that moves down first is left to the page. touch-action pan-y: a sideways swipe moves the handle and never scrolls the page sideways, a vertical swipe still scrolls the page"
   ],
   "accessibility": [
     "Side by side: each image's label is its alt text and caption; each link has a title saying it opens in a new tab",

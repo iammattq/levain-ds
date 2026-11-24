@@ -4,6 +4,12 @@
 #   ringmaster heavy t40 --kind capture --on pc --out <out> sh demo/e2e/slider.sh <out> [<pair-dir>]
 # <pair-dir> (relative to demo/public, default image-compare/t40) holds before-<theme>-<mode>.png and
 # after-<theme>-<mode>.png; missing, the demo's own pair is used.
+# The default pair dir and captures/ are gitignored, so heavy's snapshot (git add -A) leaves them out. To send a private
+# pair to the PC without staging it, force-add it to a throwaway index that heavy's snapshot starts from:
+#   cp $(git rev-parse --git-path index) /tmp/t40-index
+#   GIT_INDEX_FILE=/tmp/t40-index git add -f demo/public/image-compare/t40
+#   GIT_INDEX_FILE=/tmp/t40-index ringmaster heavy t40 --kind capture --on pc --out <out> sh demo/e2e/slider.sh <out>
+# The real index is never touched; delete the pair and /tmp/t40-index afterwards.
 set -eu
 out=${1:-captures/T40}
 pair=${2:-image-compare/t40}

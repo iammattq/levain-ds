@@ -50,7 +50,7 @@ const SliderLabel = React.forwardRef<HTMLSpanElement, { side: 'left' | 'right'; 
       aria-hidden="true"
       data-image-compare-label={side}
       className={cn(
-        'type-caption pointer-events-none absolute top-xs rounded-full bg-[var(--color-surface-elevated)] px-2xs py-3xs text-[var(--color-text-default)] shadow-[var(--elevation-1)] transition-opacity duration-150 motion-reduce:transition-none',
+        'type-caption pointer-events-none absolute top-xs rounded-full bg-[var(--color-surface-inverted)] px-2xs py-3xs text-[var(--color-text-inverted)] shadow-[var(--elevation-1)] transition-opacity duration-150 motion-reduce:transition-none',
         side === 'left' ? 'left-xs' : 'right-xs',
         covered ? 'opacity-0' : 'opacity-100'
       )}
@@ -61,7 +61,7 @@ const SliderLabel = React.forwardRef<HTMLSpanElement, { side: 'left' | 'right'; 
 );
 SliderLabel.displayName = 'SliderLabel';
 
-function SliderCompare({ before, after, onBroken, className }: { before: ImageCompareImage; after: ImageCompareImage; onBroken: () => void; className?: string }) {
+function SliderCompare({ before, after, onBroken, className }: { before: ImageCompareImage; after: ImageCompareImage; onBroken: (src: string) => void; className?: string }) {
   const [pos, setPos] = useState(50);
   // The frame's width and each label's box, measured, so a label fades only while the handle is over it.
   const [box, setBox] = useState({ w: 0, beforeEnd: 0, afterStart: 0 });
@@ -134,17 +134,18 @@ function SliderCompare({ before, after, onBroken, className }: { before: ImageCo
       onPointerMove={onPointerMove}
       onPointerUp={endDrag}
       onPointerCancel={endDrag}
+      onLostPointerCapture={endDrag}
       className={cn(
         'relative cursor-ew-resize touch-pan-y select-none overflow-hidden rounded-[var(--radius-md)] border border-[var(--color-border-subtle)] bg-[var(--color-surface-section)]',
         className
       )}
     >
-      <img src={before.src} alt={before.label} draggable={false} onError={onBroken} className="block h-auto w-full" />
+      <img src={before.src} alt={before.label} draggable={false} onError={() => onBroken(before.src)} className="block h-auto w-full" />
       <img
         src={after.src}
         alt={after.label}
         draggable={false}
-        onError={onBroken}
+        onError={() => onBroken(after.src)}
         data-image-compare-after=""
         style={{ clipPath: `inset(0 0 0 ${pos}%)` }}
         className="absolute inset-0 block h-full w-full object-contain object-top"
@@ -195,10 +196,11 @@ function CompareImage({ label, src, href = src }: ImageCompareImage) {
 }
 
 export function ImageCompare({ images, mode = 'side-by-side', className }: ImageCompareProps) {
-  const [sliderBroken, setSliderBroken] = useState(false);
-  if (mode === 'slider' && images.length >= 2 && !sliderBroken) {
+  // the srcs that failed in the slider: a new pair gets the slider back
+  const [brokenSrcs, setBrokenSrcs] = useState<string[]>([]);
+  if (mode === 'slider' && images.length >= 2 && !brokenSrcs.includes(images[0].src) && !brokenSrcs.includes(images[1].src)) {
     const [before, after] = images;
-    return <SliderCompare key={`${before.src}|${after.src}`} before={before} after={after} onBroken={() => setSliderBroken(true)} className={className} />;
+    return <SliderCompare key={`${before.src}|${after.src}`} before={before} after={after} onBroken={src => setBrokenSrcs(b => (b.includes(src) ? b : [...b, src]))} className={className} />;
   }
   return (
     <div className={cn('grid grid-cols-1 items-start gap-md', images.length > 1 && 'md:grid-cols-2', className)}>

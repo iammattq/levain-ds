@@ -172,6 +172,16 @@ describe('ImageCompare mode="slider"', () => {
       at(25);
     });
 
+    test('losing pointer capture ends the drag', () => {
+      const { container } = render(<ImageCompare mode="slider" images={BA} />);
+      const frame = frameAt(container);
+      fireEvent.pointerDown(frame, { pointerId: 4, pointerType: 'mouse', button: 0, clientX: 200 });
+      at(25);
+      fireEvent(frame, new FakePointerEvent('lostpointercapture', { pointerId: 4, bubbles: true }));
+      fireEvent.pointerMove(frame, { pointerId: 4, clientX: 400 });
+      at(25);
+    });
+
     test('a touch that moves down more than sideways (a page scroll) leaves the handle where it was', () => {
       const { container } = render(<ImageCompare mode="slider" images={BA} />);
       const frame = frameAt(container);
@@ -228,6 +238,23 @@ describe('ImageCompare mode="slider"', () => {
     fireEvent.error(screen.getByRole('img', { name: 'After' }));
     expect(screen.getByText('After: /compare/after.png')).toBeInTheDocument();
     expect(screen.getByRole('img', { name: 'Before' })).toBeInTheDocument();
+  });
+
+  test('a new pair after a broken one gets the slider back', () => {
+    const { rerender } = render(<ImageCompare mode="slider" images={BA} />);
+    fireEvent.error(after());
+    expect(screen.queryByRole('slider')).toBeNull();
+    rerender(<ImageCompare mode="slider" images={[BA[0], { label: 'After', src: '/compare/after-2.png' }]} />);
+    expect(screen.getByRole('slider')).toBeInTheDocument();
+    rerender(<ImageCompare mode="slider" images={BA} />);
+    expect(screen.queryByRole('slider')).toBeNull();
+  });
+
+  test('the chips are on the inverted surface, in the inverted text colour', () => {
+    const { container } = render(<ImageCompare mode="slider" images={BA} />);
+    for (const side of ['left', 'right']) {
+      expect(container.querySelector(`[data-image-compare-label="${side}"]`)).toHaveClass('bg-[var(--color-surface-inverted)]', 'text-[var(--color-text-inverted)]');
+    }
   });
 
   test('fewer than two images render side by side', () => {
