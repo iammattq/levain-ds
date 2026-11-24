@@ -83,7 +83,10 @@ describe('StatusCardDialog below md: a bottom sheet', () => {
     expect(grab.className).toContain('shrink-0');
     expect(body).toContainElement(screen.getByTestId('body'));
     expect(body.className).toContain('overflow-y-auto');
-    expect(body.className).toContain('env(safe-area-inset-bottom,0px)');
+    // the safe-area utilities (shared.css), not hand-written env(): their output is tested in src/tests/safeArea.test.ts
+    for (const c of ['pb-safe-md', 'px-safe-md']) expect(body.className.split(' ')).toContain(c);
+    expect(grab.className.split(' ')).toContain('px-safe');
+    expect(sheet().outerHTML).not.toContain('env(');
   });
 
   it('a hairline under the head only while the body is scrolled', () => {

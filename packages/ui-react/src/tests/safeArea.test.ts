@@ -19,10 +19,12 @@ const build = async (classes: string[]) => {
   return compiler.build(classes);
 };
 
-/** The declarations in the rule for `.<name>`, whitespace collapsed. */
+/** The declarations in the rule for `.<name>` (Tailwind escapes the brackets in its selector), whitespace collapsed. */
 const rule = (css: string, name: string) => {
-  const found = css.match(new RegExp(`\\.${name.replace(/[-[\]]/g, '\\$&')}\\s*\\{([^}]*)\\}`));
-  return found ? found[1].replace(/\s+/g, ' ').trim() : null;
+  for (const [, selector, body] of css.matchAll(/^\.(\S+)\s*\{([^}]*)\}/gm)) {
+    if (selector.replace(/\\/g, '') === name) return body.replace(/\s+/g, ' ').trim();
+  }
+  return null;
 };
 
 describe('safe-area vars', () => {
@@ -78,5 +80,40 @@ describe('safe-area utilities', () => {
     const css = await build(['pb-safe-nope', 'pb-safe-7']);
     expect(rule(css, 'pb-safe-nope')).toBeNull();
     expect(rule(css, 'pb-safe-7')).toBeNull();
+  });
+});
+
+describe("Sheet's spelling (T24 to T12)", () => {
+  /** Every declaration the classes build, with each --safe-* var replaced by the env() it holds. */
+  const resolved = async (classes: string[]) => {
+    const css = await build(classes);
+    const decls = classes.map(c => {
+      const found = rule(css, c);
+      if (!found) throw new Error(`no rule for ${c}`);
+      return found;
+    }).join(' ');
+    return decls
+      .replace(/var\(--safe-(top|right|bottom|left)\)/g, 'env(safe-area-inset-$1, 0px)')
+      .replace(/env\(safe-area-inset-(\w+),\s*0px\)/g, 'env(safe-area-inset-$1, 0px)')
+      .replace(/\s+/g, ' ');
+  };
+
+  it('the body pads exactly as the hand-written env() did', async () => {
+    const before = await resolved([
+      'pb-[calc(var(--spacing-md)+env(safe-area-inset-bottom,0px))]',
+      'pl-[calc(var(--spacing-md)+env(safe-area-inset-left,0px))]',
+      'pr-[calc(var(--spacing-md)+env(safe-area-inset-right,0px))]',
+    ]);
+    expect(await resolved(['pb-safe-md', 'px-safe-md'])).toBe(before);
+  });
+
+  it('the head pads exactly as the hand-written env() did', async () => {
+    const before = await resolved(['pl-[env(safe-area-inset-left,0px)]', 'pr-[env(safe-area-inset-right,0px)]']);
+    expect(await resolved(['px-safe'])).toBe(before);
+  });
+
+  it('the cap is the same height', async () => {
+    const before = await resolved(['max-h-[calc(100dvh-env(safe-area-inset-top,0px)-2rem)]']);
+    expect(await resolved(['max-h-[calc(100dvh-var(--safe-top)-2rem)]'])).toBe(before);
   });
 });
