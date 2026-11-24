@@ -17,6 +17,8 @@ import { cn } from '../utils/cn';
  * caller gives the height (a fixed height, or a flex or grid parent with a bounded height). Without `scroll` the column
  * is as tall as its cards and the page scrolls it.
  *
+ * In the scrolling body the cards keep their height (they don't shrink to fit).
+ *
  * Drag and drop is the caller's: put a SortableList in the children.
  */
 export interface ColumnProps {
@@ -50,16 +52,16 @@ export function Column({ title, count, icon, marks, action, scroll, children, cl
         className,
       )}
     >
-      <header data-column-head="" className="mx-xs flex h-8 shrink-0 items-center gap-2xs px-md text-sm font-medium">
+      <header data-column-head="" className="mx-xs flex h-8 shrink-0 items-center gap-2xs px-md text-sm/[1.5] font-medium">
         {icon}
-        <h2 className="m-0 text-sm font-medium">{title}</h2>
+        <h2 className="m-0 text-sm/[1.5] font-medium">{title}</h2>
         {typeof count === 'number' ? <CountBadge count={count} /> : count}
         {marks}
         {action && <span className="ml-auto flex items-center">{action}</span>}
       </header>
       <div
         data-column-body=""
-        className={cn('flex flex-col gap-md px-xs pb-xs pt-[calc(var(--spacing-3xs)+4px)]', scroll && 'min-h-0 flex-1 overflow-y-auto overscroll-contain')}
+        className={cn('flex flex-col gap-md px-xs pb-xs pt-[calc(var(--spacing-3xs)+4px)]', scroll && 'min-h-0 flex-1 overflow-y-auto overscroll-contain *:shrink-0')}
       >
         {children}
       </div>

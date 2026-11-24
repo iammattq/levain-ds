@@ -26,9 +26,9 @@ describe('Column', () => {
     );
   });
 
-  it("the header is the board's: 32 px, 14 px medium, its items 8 px apart, inset to the cards' text", () => {
+  it("the header is the board's: 32 px, 14 px medium on a 1.5 line, its items 8 px apart, inset to the cards' text", () => {
     const { head } = parts(render(<Column title="Ideas" />).container);
-    expect(head).toHaveClass('flex', 'h-8', 'shrink-0', 'items-center', 'gap-2xs', 'mx-xs', 'px-md', 'text-sm', 'font-medium');
+    expect(head).toHaveClass('flex', 'h-8', 'shrink-0', 'items-center', 'gap-2xs', 'mx-xs', 'px-md', 'text-sm/[1.5]', 'font-medium');
   });
 
   it('the body spaces its children 24 px apart, inside the column inset', () => {
@@ -87,11 +87,11 @@ describe('Column', () => {
     expect(body).not.toHaveClass('overflow-y-auto');
   });
 
-  it('scroll: the column fills its given height and the body scrolls under a header that stays put', () => {
+  it('scroll: the column fills its given height, the cards keep their height, and the body scrolls under a header that stays put', () => {
     const { col, head, body } = parts(render(<Column title="Ideas" scroll />).container);
     expect(col).toHaveAttribute('data-scroll');
     expect(col).toHaveClass('h-full', 'min-h-0', 'overflow-hidden');
-    expect(body).toHaveClass('min-h-0', 'flex-1', 'overflow-y-auto', 'overscroll-contain');
+    expect(body).toHaveClass('min-h-0', 'flex-1', 'overflow-y-auto', 'overscroll-contain', '*:shrink-0');
     expect(head).toHaveClass('shrink-0');
     expect(head).not.toHaveClass('overflow-y-auto');
     expect(body.contains(head)).toBe(false);
