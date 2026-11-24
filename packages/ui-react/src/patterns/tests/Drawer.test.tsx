@@ -68,7 +68,7 @@ describe('Drawer', () => {
     await gone();
   });
 
-  it('on the elevated surface by default; surface="canvas" puts it on the canvas surface, the shadow kept (T51)', async () => {
+  it('on the elevated surface by default; surface="canvas" puts it on the canvas surface with a hairline edge, the shadow kept (T51)', async () => {
     const user = userEvent.setup();
     const { unmount } = render(<Demo />);
     await user.click(screen.getByRole('button', { name: 'Menu' }));
@@ -77,6 +77,7 @@ describe('Drawer', () => {
     expect(cls).toContain('bg-[var(--color-surface-elevated)]');
     expect(cls).not.toContain('bg-[var(--color-surface-canvas)]');
     expect(cls).toContain('shadow-[var(--elevation-3)]');
+    expect(cls).not.toContain('border-r');
     unmount();
     render(<Demo surface="canvas" />);
     await user.click(screen.getByRole('button', { name: 'Menu' }));
@@ -85,6 +86,8 @@ describe('Drawer', () => {
     expect(cls).toContain('bg-[var(--color-surface-canvas)]');
     expect(cls).not.toContain('bg-[var(--color-surface-elevated)]');
     expect(cls).toContain('shadow-[var(--elevation-3)]');
+    // the open edge's hairline: lost in dark mode without it
+    for (const c of ['border-r', 'border-[var(--color-border-subtle)]', 'dark:border-[var(--color-border-default)]']) expect(cls).toContain(c);
   });
 
   it('the overlay is never shorter than the largest viewport, and the scrim and panel fill it top to bottom (T51)', async () => {

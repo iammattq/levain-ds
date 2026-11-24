@@ -30,7 +30,7 @@ export interface DrawerProps {
   label: string;
   /** The edge it slides from. Only the left, for now. */
   side?: 'left';
-  /** Its background: the elevated surface (default), or the darker canvas surface (T51). Both keep elevation-3. */
+  /** Its background: the elevated surface (default), or the darker canvas surface with a hairline on its open edge (T51). Both keep elevation-3. */
   surface?: 'elevated' | 'canvas';
   /** The contents: they scroll inside the drawer. */
   children: ReactNode;
@@ -65,10 +65,14 @@ function useScrollLock(on: boolean) {
   }, [on]);
 }
 
-/** The panel's background per `surface`, spelled out so Tailwind finds both. */
+/**
+ * The panel's background per `surface`, spelled out so Tailwind finds both. Canvas adds a hairline on its open edge
+ * (T51): in dark mode the canvas is as dark as the dimmed page and elevation-3's shadow is black on black, so the edge
+ * was lost (contrast 1.02-1.08 in the capture). Light: border-subtle; dark: border-default, as SCROLLED_EDGE.
+ */
 const SURFACE = {
   elevated: 'bg-[var(--color-surface-elevated)]',
-  canvas: 'bg-[var(--color-surface-canvas)]',
+  canvas: 'bg-[var(--color-surface-canvas)] border-r border-[var(--color-border-subtle)] dark:border-[var(--color-border-default)]',
 } as const;
 
 export function Drawer({ open, onClose, label, surface = 'elevated', children }: DrawerProps) {

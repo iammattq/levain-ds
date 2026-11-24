@@ -9,7 +9,7 @@
 // and fills it, and is never shorter than 100lvh; it can't show iOS's own short fixed viewport.
 // Measured each time: the overlay, scrim and panel boxes, the viewport, 100lvh, the panel's background and shadow; and
 // pixels sampled from the shot inside the panel near its right edge and on the dimmed page just past it, with their
-// contrast ratio. Writes <combo>-<surface>-<short|full>.png, numbers.json and composite.png; exits 1 on a failed check.
+// contrast ratio, and the panel's colour just above the home bar (the shot really shows it full height). Writes <combo>-<surface>-<short|full>.png, numbers.json and composite.png; exits 1 on a failed check.
 import { createRequire } from 'node:module';
 import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
@@ -84,17 +84,24 @@ for (const [name, theme, mode] of COMBOS) for (const [surface, open] of SURFACES
   await settled(page);
   shots[key] = [];
   for (const [state, h] of [['short', SHORT], ['full', FULL]]) {
-    if (h !== SHORT) { await page.setViewportSize({ width: W, height: h }); await settled(page); }
+    if (h !== SHORT) {
+      await page.setViewportSize({ width: W, height: h });
+      // headless WebKit kept the old frame's paint after a resize: nudge a repaint, two frames
+      await page.evaluate(() => new Promise(r => { document.body.style.outline = '0 solid transparent'; requestAnimationFrame(() => requestAnimationFrame(() => { document.body.style.outline = ''; requestAnimationFrame(r); })); }));
+      await settled(page);
+    }
     const file = `${out}/${key}-${state}.png`;
     await page.screenshot({ path: file });
     const n = await probe(page);
     const y = n.panel.h * 0.7, edge = n.panel.x + n.panel.w;
-    const [inside, past, far] = await pixels(file, [[(edge - 6) * DPR, y * DPR], [(edge + 4) * DPR, y * DPR], [(edge + 40) * DPR, y * DPR]]);
-    n.edge = { inside, past, far, contrastPast: ratio(inside, past), contrastFar: ratio(inside, far) };
+    // the edge at 70 % down; and the panel's own colour just above the faked home-bar band, in the shot itself
+    const [inside, past, far, foot] = await pixels(file, [[(edge - 6) * DPR, y * DPR], [(edge + 4) * DPR, y * DPR], [(edge + 40) * DPR, y * DPR], [(edge - 30) * DPR, (n.viewport.h - INSETS.bottom - 4) * DPR]]);
+    n.edge = { inside, past, far, foot, contrastPast: ratio(inside, past), contrastFar: ratio(inside, far) };
     numbers[`${key}-${state}`] = n;
     shots[key].push([`${state} (${n.viewport.h})`, file]);
     check(`${key}-${state}: overlay, scrim and panel run the viewport's full height`, near(n.overlay.y, 0) && near(n.overlay.h, n.viewport.h) && near(n.scrim.h, n.overlay.h) && near(n.panel.y, 0) && near(n.panel.h, n.overlay.h), { vp: n.viewport.h, overlay: n.overlay.h, scrim: n.scrim.h, panel: n.panel.h });
     check(`${key}-${state}: never shorter than 100lvh`, n.overlay.h >= n.lvh - 1 && n.panel.h >= n.lvh - 1, { lvh: n.lvh, panel: n.panel.h });
+    check(`${key}-${state}: the shot shows the panel down to the home bar`, foot.every((v, i) => Math.abs(v - inside[i]) <= 2), { inside, foot });
     check(`${key}-${state}: on its surface`, n.surface === surface, { bg: n.bg, edge: n.edge });
   }
   await ctx.close();
@@ -110,6 +117,7 @@ const rows = COMBOS.map(([name, , mode]) => {
   return `<div class="row"><b>${name === 'cobalt' ? 'Cobalt Mono' : 'Sage'} ${mode}</b>${cells.join('')}</div>`;
 }).join('');
 await sheet.setContent(`<style>body{margin:0;padding:16px;background:#ccc;font:13px system-ui}.row{display:flex;gap:12px;align-items:flex-start;margin-bottom:16px}.row b{width:110px;flex:none}figure{margin:0}figcaption{height:20px}img{display:block;width:240px}</style>${rows}`);
+await sheet.evaluate(() => Promise.all([...document.images].map(i => i.decode())));
 await sheet.screenshot({ path: `${out}/composite.png`, fullPage: true });
 await browser.close();
 fs.writeFileSync(`${out}/numbers.json`, JSON.stringify({ engine: 'webkit', numbers, checks, errors }, null, 2));
