@@ -2,7 +2,11 @@
 // T24: StatusCardDialog and StatusCardDialogStack on a phone (390x844) in WebKit and Chromium, light and dark, beside
 // the desktop dialog at 1440. Run on the PC through demo/e2e/stack.sh:
 //   ringmaster heavy t24 --kind capture --on pc --out <dir> sh demo/e2e/stack.sh <dir> sheet-capture.mjs
-// Writes <engine>-<mode>-<width>-<state>.png and numbers.json (each dialog's box against the viewport).
+// Writes <engine>-<mode>-<width>-<state>.png, numbers.json (each dialog's box against the viewport) and, with
+// SHEET_VIDEO=1, recordings of the phone sheet opening and closing (video-<engine>/).
+// The phone is Playwright's iPhone 14 (390x844, touch, DPR 3). Neither headless engine has a notch, so the phone pages
+// fake one: every env(safe-area-inset-*) in the page's stylesheets is rewritten to the iPhone 14's insets (47 px top,
+// 34 px bottom), and the two bands are drawn over the page, faintly, so a shot shows what would sit under them.
 import { createRequire } from 'node:module';
 import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
@@ -43,8 +47,26 @@ const probe = page => page.evaluate(() => {
     overflowsViewport: dialog ? dialog.getBoundingClientRect().bottom > innerHeight + 0.5 : null,
     scroller: scroller ? { tag: scroller.tagName, cls: String(scroller.className).slice(0, 80), scrollHeight: scroller.scrollHeight, clientHeight: scroller.clientHeight } : null,
     focusInDialog: !!dialog?.contains(document.activeElement),
+    head: box(dialog?.querySelector('[data-sheet-grab]')),
+    body: (b => b && { ...box(b), scrollTop: b.scrollTop, scrollHeight: b.scrollHeight, clientHeight: b.clientHeight })(dialog?.querySelector('[data-sheet-body]')),
+    lastButton: box([...(dialog?.querySelectorAll('[data-sheet-body] button') ?? [])].pop()),
+    ownWords: box(dialog?.querySelector('[data-demo="sheet-own-words"]')),
   };
 });
+
+const INSETS = { top: 47, bottom: 34, left: 0, right: 0 };
+// the descriptor's viewport is 390x664 (Safari's bars); the board runs full screen (its screenshot), so 390x844
+const iphone = { ...(({ defaultBrowserType, ...d }) => d)(pw.devices['iPhone 14']), viewport: { width: 390, height: 844 } };
+const fakeInsets = page => page.evaluate(insets => {
+  for (const s of document.querySelectorAll('style')) s.textContent = s.textContent.replace(/env\(safe-area-inset-(top|bottom|left|right)(,[^)]*)?\)/g, (_, k) => insets[k] + 'px');
+  for (const [k, css] of [['top', 'top:0'], ['bottom', 'bottom:0']]) {
+    const band = document.createElement('div');
+    band.dataset.fakeInset = k;
+    band.style.cssText = `position:fixed;left:0;right:0;${css};height:${insets[k]}px;background:rgba(255,0,80,.18);z-index:2147483647;pointer-events:none`;
+    document.documentElement.appendChild(band);
+  }
+}, INSETS);
+const videoOnly = process.env.SHEET_VIDEO === '1';
 
 const numbers = {}, errors = [];
 for (const engine of engines) {
@@ -53,17 +75,30 @@ for (const engine of engines) {
     for (const mode of modes) {
       for (const [width, height] of [[390, 844], [1440, 900]]) {
         const phone = width < 768;
-        const ctx = await browser.newContext({ viewport: { width, height }, deviceScaleFactor: phone ? 3 : 1, hasTouch: phone, isMobile: phone && engine === 'chromium' });
+        if (videoOnly && !phone) continue;
+        const ctx = await browser.newContext(phone ? { ...iphone, ...(videoOnly ? { recordVideo: { dir: `${out}/video-${engine}-${mode}`, size: { width, height } } } : {}) } : { viewport: { width, height } });
         const page = await ctx.newPage();
         page.on('pageerror', e => errors.push(`${engine} ${mode} ${width}: ${e.message}`));
         const tag = `${engine}-${mode}-${width}`;
         await page.goto(base + `?theme=7&mode=${mode}&only=sheet`, { waitUntil: 'networkidle' });
         await pause(600);
+        if (phone) await fakeInsets(page);
+        if (videoOnly) {
+          // open, scroll the body, close with the ✕; open again, close with a tap on the scrim
+          const card = page.getByText('T50: restart words that fit').first();
+          await card.click(); await pause(1200);
+          await page.evaluate(() => { const b = document.querySelector('[data-sheet-body]'); b?.scrollTo({ top: b.scrollHeight, behavior: 'smooth' }); }); await pause(1200);
+          await page.getByRole('button', { name: 'Close' }).first().click(); await pause(1200);
+          await card.click(); await pause(1200);
+          await page.mouse.click(195, 30); await pause(1200);
+          await ctx.close();
+          continue;
+        }
         // the single dialog: open from its card, then its bottom
         await page.getByText('T50: restart words that fit').first().click(); await pause(900); await settled(page);
         await page.screenshot({ path: `${out}/${tag}-single.png` });
         numbers[`${tag}-single`] = await probe(page);
-        await page.evaluate(() => { const d = document.querySelector('[role="dialog"]'); for (let e = d.querySelector('[data-demo="sheet-own-words"]'); e; e = e.parentElement) if (e.scrollHeight > e.clientHeight + 1) e.scrollTop = e.scrollHeight; d.querySelector('[data-demo="sheet-own-words"]')?.scrollIntoView({ block: 'end' }); });
+        await page.evaluate(() => { const d = document.querySelector('[role="dialog"]'); for (let e = d.querySelector('[data-demo="sheet-own-words"]'); e; e = e.parentElement) if (e.scrollHeight > e.clientHeight + 1) e.scrollTop = e.scrollHeight; });
         await pause(400);
         await page.screenshot({ path: `${out}/${tag}-single-end.png` });
         numbers[`${tag}-single-end`] = await probe(page);
@@ -80,6 +115,6 @@ for (const engine of engines) {
     }
   } finally { await browser.close(); }
 }
-fs.writeFileSync(`${out}/numbers.json`, JSON.stringify({ numbers, errors }, null, 2));
+fs.writeFileSync(`${out}/${videoOnly ? "video-" : ""}numbers.json`, JSON.stringify({ numbers, errors }, null, 2));
 console.log(JSON.stringify({ numbers, errors }, null, 2));
 if (errors.length) process.exit(1);

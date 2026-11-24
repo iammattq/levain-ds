@@ -10,6 +10,9 @@
  * grows into the dialog on recipe.morph and collapses back on recipe.collapse; nothing fades in over a dimmed page.
  * While open, the card's slot keeps its size so the list doesn't jump. The dialog's content fades in once the shape
  * has room (recipe.contentIn) and leaves ahead of it (recipe.contentOut).
+ *
+ * Below `md` the dialog is a bottom sheet instead (Sheet.tsx): it rises from the bottom edge over a scrim and the card
+ * stays where it is.
  */
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { duration, motion as motionFor } from '@levain/tokens';
@@ -17,6 +20,7 @@ import type { LucideIcon } from 'lucide-react';
 import { X } from 'lucide-react';
 import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode, type SyntheticEvent } from 'react';
 import { createPortal } from 'react-dom';
+import { SheetPanel, SheetScrim, useIsPhone } from './Sheet';
 
 export type StatusTone = 'default' | 'accent' | 'info' | 'caution' | 'success' | 'error' | 'muted';
 
@@ -124,10 +128,12 @@ export function Face({ number, kind, title, markers }: Pick<StatusCardProps, 'nu
 export function StatusCard({ id, number, kind, title, markers, accent, open = false, onOpen, children, actions, className = '' }: StatusCardProps) {
   const reduce = useReducedMotion();
   const radius = useRadius();
+  const phone = useIsPhone();
   const slot = useRef<HTMLDivElement>(null);
   const [height, setHeight] = useState<number>();
   useLayoutEffect(() => { if (!open && slot.current) setHeight(slot.current.offsetHeight); });
-  if (open) return <div style={{ height }} aria-hidden className={className} />;
+  // on a phone the dialog rises from the bottom as a sheet, so the card stays where it is
+  if (open && !phone) return <div style={{ height }} aria-hidden className={className} />;
   return (
     <motion.div
       ref={slot}
@@ -187,6 +193,7 @@ export interface StatusCardDialogProps extends Pick<StatusCardProps, 'id' | 'num
 
 export function StatusCardDialog({ id, open, onClose, number, kind, title, markers, children, width = '40rem' }: StatusCardDialogProps) {
   const reduce = useReducedMotion();
+  const phone = useIsPhone();
   const radius = useRadius('--radius-2xl');
   const panel = useRef<HTMLDivElement>(null);
   // The latest onClose, read through a ref: a consumer passing a fresh inline onClose on every render must not re-run
@@ -202,6 +209,20 @@ export function StatusCardDialog({ id, open, onClose, number, kind, title, marke
     return () => { window.removeEventListener('keydown', key); prev?.focus?.(); };
   }, [open]);
   if (typeof document === 'undefined') return null;
+  if (phone) return createPortal(
+    <AnimatePresence>
+      {open && (
+        <div className="fixed inset-0 z-50" onClick={onClose} data-sheet-overlay>
+          <SheetScrim reduce={reduce} />
+          <SheetPanel panelRef={panel} reduce={reduce} onDragClose={onClose} label={typeof title === 'string' ? title : undefined}
+            head={<DialogHead number={number} kind={kind} title={title} markers={markers} onClose={onClose} />}>
+            {children}
+          </SheetPanel>
+        </div>
+      )}
+    </AnimatePresence>,
+    document.body,
+  );
   return createPortal(
     <AnimatePresence>
       {open && (
