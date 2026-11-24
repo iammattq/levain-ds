@@ -77,13 +77,16 @@ export function useDialogFocus(open: boolean, container: Container, onEscape: ()
     };
     window.addEventListener('keydown', key);
     const prev = before.current;
+    // returnTo as it was at open: a caller that clears the dialog's id as it closes (open ? item.id : '') still finds
+    // the card that opened it
+    const back = returnToRef.current;
     return () => {
       window.removeEventListener('keydown', key);
       const i = layers.indexOf(me);
       if (i >= 0) layers.splice(i, 1);
       // the opener may have left in the very commit that opened the dialog (focus fell to the body) or since
       const gone = !prev || !prev.isConnected || prev === document.body;
-      (gone ? returnToRef.current?.() ?? prev : prev)?.focus?.();
+      (gone ? back?.() ?? returnToRef.current?.() ?? prev : prev)?.focus?.();
     };
   }, [open]);
 }

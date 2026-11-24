@@ -31,6 +31,19 @@ function Single() {
   );
 }
 
+/** As a board does it: one dialog for the column, its id the open card's, cleared as it closes. */
+function Column() {
+  const [open, setOpen] = useState<string | null>(null);
+  return (
+    <>
+      {['T4', 'T5'].map(id => <StatusCard key={id} id={id} number={id} title={'Card ' + id} open={open === id} onOpen={() => setOpen(id)} />)}
+      <StatusCardDialog id={open ?? ''} number={open ?? ''} title={'Card ' + open} open={!!open} onClose={() => setOpen(null)}>
+        <button type="button">Send</button>
+      </StatusCardDialog>
+    </>
+  );
+}
+
 function Pair() {
   const [open, setOpen] = useState<string[]>([]);
   const dialogs = [LOOK, DECIDE].filter(d => open.includes(d.id));
@@ -89,6 +102,14 @@ describe('StatusCardDialog focus', () => {
     expect(archive).toHaveFocus();
     await user.keyboard('{Escape}');
     await waitFor(() => expect(card('Strip or arc')).toHaveFocus());
+  });
+
+  it('focus goes back to the card even when the dialog\'s id is cleared as it closes', async () => {
+    const user = userEvent.setup();
+    render(<Column />);
+    await user.click(card('Card T5'));
+    await user.keyboard('{Escape}');
+    await waitFor(() => expect(card('Card T5')).toHaveFocus());
   });
 });
 
