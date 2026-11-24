@@ -31,7 +31,7 @@ check('TagInput: ArrowDown sets aria-activedescendant', !!active, active);
 await shot('taginput-active');
 const firstOption = (await page.getByRole('option').first().textContent())?.trim();
 await tags.press('Enter');
-check(`TagInput: Enter adds the active option (${firstOption})`, (await page.getByRole('button', { name: `Remove ${firstOption} tag` }).count()) === 1, null);
+check(`TagInput: Enter adds the active option (${firstOption})`, (await tags.locator('xpath=..').getByRole('button', { name: `Remove ${firstOption} tag` }).count()) === 1, null);
 await tags.pressSequentially('r');
 await tags.press('Escape');
 check('TagInput: Escape closes the suggestions', (await page.getByRole('listbox').count()) === 0 && (await tags.getAttribute('aria-expanded')) === 'false', null);
