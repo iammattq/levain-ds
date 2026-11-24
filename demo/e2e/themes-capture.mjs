@@ -93,6 +93,10 @@ for (const [index, t] of themes) for (const mode of MODES) {
     const vals = {};
     for (const side of Object.keys(SIDES)) {
       const { ctx, page } = await open(side, `theme=${index}&mode=${mode}`, { width });
+      // Stop animations for the shot: animate-pulse (TimelineList's current dot) runs under reduced motion too, and
+      // the first run caught it at different points of its fade (1-2 levels on two dots, in 27 of 32 pairs).
+      await page.addStyleTag({ content: '*, *::before, *::after { animation: none !important; transition: none !important; }' });
+      await page.waitForTimeout(200);
       await page.screenshot({ path: `${out}/${side}-${key}.png`, fullPage: true });
       vals[side] = await readVars(page);
       if (side === 'after' && width === 1280) {
