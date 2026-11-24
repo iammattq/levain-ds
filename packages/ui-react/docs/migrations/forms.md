@@ -7,9 +7,20 @@ internals.
 
 ## How to use this
 
-1. **Find the import.** `rg -n "from '@levain/ui-react|from '@portfolio/ui-react" src | rg -o '\b[A-Z][A-Za-z]+\b' | sort | uniq -c`
-   lists the components the app imports. Keep the 16 below; skip the rest. A file can import under another name
-   (`import { Switch as Toggle }`); `rg -n " as [A-Z]" src | rg ui-react` finds those.
+1. **Find the import.** This counts the files that import each component, multi-line imports included (put the
+   app's own package name in place of `portfolio` if it has a copy):
+
+   ```sh
+   rg -U -o --no-filename "import \{[^}]*\} from '@(levain|portfolio)/ui-react'" src | rg -o '\b[A-Z][A-Za-z]+\b' | sort | uniq -c
+   ```
+
+   Keep the 16 below; skip the rest. Three ways a use hides from the `<Name` greps below:
+   - an import under another name (`import { Switch as Toggle }`): `rg -n ' as [A-Z]' src`, then grep the new name;
+   - a registry or preview that renders `<Component {...props} />` from a name (a design-system page):
+     `rg -l '<Component\b' src` finds the files; read the props each case passes. The alias greps in the
+     checklist (`selectedTags`, `onDateSelect`, `onMinChange`…) find these too;
+   - a local component with the same name (`components/.../TagInput.tsx`, or a game's own `Select`): check the
+     import of every file you edit.
 2. **Go input by input, in the order below** (alphabetical; no input's change depends on another's). For each one the
    app uses, run its grep, read every hit, and sort what you find into the three kinds:
    - **Change now**: without an edit, something the app relies on breaks (a behaviour, a test query, a type).
@@ -20,6 +31,12 @@ internals.
 3. **Edit the Change now and Deprecated hits.** Change nothing else: no "while I'm here" moves to new props.
 4. **Check after each input** with its Check line, then once at the end with the checklist at the bottom: typecheck,
    the test files you touched (`jest --maxWorkers=2 <files>` or the app's equivalent), and the screens named.
+   **Snapshot tests change.** Every input's markup changed (roles, ids, classes, wrappers), so a snapshot of a screen
+   that holds a form input (`toMatchSnapshot()` of `container`, of `innerHTML` or a hash of it, or of a field list a
+   helper builds) fails. Find them with `rg -l 'toMatchSnapshot|toMatchInlineSnapshot' src` and keep those whose
+   screen renders one of the 16. Read the diff before `-u`: it should show only the changes this guide names (for
+   example `aria-pressed` options becoming `role="radio"`). A helper that reads `aria-pressed` or `role="checkbox"`
+   to describe a control needs the new attribute, not only a new snapshot.
 5. **Write down what you changed and what you left**, per input, in the same three kinds. A Notice you judged harmless
    goes in the list too, with why.
 
@@ -301,34 +318,13 @@ reliable check is `expect(radio).toBeChecked()`.
 
 **Check:** a click selects; the arrows move within a `name` group; keyboard focus shows the ring.
 
-## Select
-
-**Find:** `rg -n '<Select\b' -A10 src | rg 'compact|touched|disabled|aria-describedby|inline'`.
-
-**Deprecated: `compact` → `size="xs"`.**
-
-```tsx
-// before
-<Select id="sort" label="Sort" compact value={sort} onChange={e => setSort(e.target.value)} options={options} />
-// after
-<Select id="sort" label="Sort" size="xs" value={sort} onChange={e => setSort(e.target.value)} options={options} />
-```
-
-**Notice:**
-- `touched` no longer defaults to `true`; it has no default. What shows is the same: an error shows unless
-  `touched={false}`.
-- A disabled Select with an error shows its helper instead, and is no longer `aria-invalid`.
-- `id` and `label` are optional; `value` optional with `defaultValue`. An app's `aria-describedby` is merged with
-  the Select's (it replaced it). In `inline` mode, an app's `aria-label` wins over the label.
-- `className` and `selectClassName` are merged with `cn`: on a conflict the app's class wins now.
-
-**Check:** choose an option, the handler gets the event; a Select with an error shows it.
-
 ## SegmentedControl
 
-**Find:** `rg -l '<SegmentedControl\b' src`, then `rg -n -A10 '<SegmentedControl' <file>` and check each has a `label`
-or `aria-label`. In tests: `rg -n "aria-pressed|getAllByRole\('button'|getByRole\('button'" -g '*test*' src` in
-files that render one.
+**Find:** `rg -n '<SegmentedControl\b' src`, then read each tag to its `/>`: one with no `label`, `aria-label` or
+`aria-labelledby` needs a name (an `id` alone names nothing). Apps often have many: the portfolio has 14 unnamed out of
+41. In tests, search every test file, not only those that import it (a test of a screen renders it indirectly):
+`rg -n "aria-pressed" -g '*test*' -g '*spec*' src`, then keep the hits whose button is a SegmentedControl option
+(its text is one of an `options` label).
 
 **Change now (if it applies):**
 - **Name every SegmentedControl.** It is now a radio group. One with no `label` and no `aria-label` is announced as
@@ -363,6 +359,29 @@ files that render one.
 
 **Check:** every SegmentedControl has a name; a click and the arrows change the value; tests pass.
 
+## Select
+
+**Find:** `rg -n '<Select\b' -A10 src | rg 'compact|touched|disabled|aria-describedby|inline'`.
+
+**Deprecated: `compact` → `size="xs"`.**
+
+```tsx
+// before
+<Select id="sort" label="Sort" compact value={sort} onChange={e => setSort(e.target.value)} options={options} />
+// after
+<Select id="sort" label="Sort" size="xs" value={sort} onChange={e => setSort(e.target.value)} options={options} />
+```
+
+**Notice:**
+- `touched` no longer defaults to `true`; it has no default. What shows is the same: an error shows unless
+  `touched={false}`.
+- A disabled Select with an error shows its helper instead, and is no longer `aria-invalid`.
+- `id` and `label` are optional; `value` optional with `defaultValue`. An app's `aria-describedby` is merged with
+  the Select's (it replaced it). In `inline` mode, an app's `aria-label` wins over the label.
+- `className` and `selectClassName` are merged with `cn`: on a conflict the app's class wins now.
+
+**Check:** choose an option, the handler gets the event; a Select with an error shows it.
+
 ## Slider
 
 **Find:** `rg -l '<Slider\b' src`; `rg -n -A10 '<Slider' <file>` and read `label`, `aria-label`, `showInput`,
@@ -388,8 +407,8 @@ controlled" warning in the console.
 
 ## Switch
 
-**Find:** `rg -l '<Switch\b' src`; in tests and e2e `rg -n "role=\"checkbox\"|'checkbox'|type=checkbox" ` in files that
-render one.
+**Find:** `rg -l '<Switch\b' src`; in all tests and e2e `rg -n "role=\"checkbox\"|'checkbox'|type=checkbox" -g '*test*' -g '*spec*' -g '*e2e*' src`,
+then keep the hits that are a Switch.
 
 No Change now or Deprecated items. `onChange(checked: boolean)` is unchanged.
 
@@ -489,6 +508,8 @@ every TextInput with `error`, check whether it also passes `touched`.
       `rg -n 'selectedTags|selectedDate|onDateSelect|onMinChange|onMaxChange|\bminValue=|\bmaxValue=' src` both empty
       (a hit on another component is fine: read it).
 - [ ] Every SegmentedControl has a `label` or `aria-label`.
+- [ ] Snapshot tests of screens with form inputs reviewed and updated; helpers that read `aria-pressed` or
+      `role="checkbox"` updated.
 - [ ] Every TextInput, TagInput, ColorInput, GradientInput and DateInput that passes `error` without `touched` has
       been looked at: showing at once is wanted, or `touched` is passed.
 - [ ] Every controlled DateInput's handler accepts partial text (or the field is uncontrolled).
