@@ -244,3 +244,31 @@ describe('CardStack row', () => {
     expect(screen.queryByRole('list')).not.toBeInTheDocument();
   });
 });
+
+describe('CardStack layoutId and motion', () => {
+  const ownWidth = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'clientWidth');
+  beforeAll(() => { Object.defineProperty(HTMLElement.prototype, 'clientWidth', { configurable: true, get() { return this.hasAttribute('data-stack-row') ? 1054 : 0; } }); });
+  afterAll(() => { if (ownWidth) Object.defineProperty(HTMLElement.prototype, 'clientWidth', ownWidth); });
+
+  it('each card carries the caller\'s layoutId for its key (a dialog morphs from it)', () => {
+    for (const variant of ['row', 'pile'] as const) {
+      const layoutId = jest.fn((k: string) => 'm-' + k);
+      const { unmount } = render(<Stack variant={variant} items={cards('a', 'b')} layoutId={layoutId} />);
+      expect(new Set(layoutId.mock.calls.map(c => c[0]))).toEqual(new Set(['a', 'b']));
+      unmount();
+    }
+  });
+
+  it('the row follows a scroll through the spring: a frame later a card is on its way, not there', async () => {
+    render(<Stack variant="row" items={cards('a', 'b', 'c', 'd', 'e', 'f')} />);
+    const g = rowGeometry(1054, 232);
+    const slotOf = (id: string) => document.querySelector(`[data-stack-card="${id}"]`)!.parentElement as HTMLElement;
+    const x = (id: string) => Number(/translateX\((-?[\d.]+)px\)/.exec(slotOf(id).style.transform)?.[1] ?? 0);
+    await frame();
+    expect(x('b')).toBeCloseTo(g.left + g.STEP);
+    act(() => { document.querySelector('[data-stack-row]')!.dispatchEvent(new WheelEvent('wheel', { deltaX: g.STEP, bubbles: true, cancelable: true })); });
+    await frame(30);
+    expect(x('b')).toBeLessThan(g.left + g.STEP);
+    expect(x('b')).toBeGreaterThan(g.left + 1);
+  });
+});
