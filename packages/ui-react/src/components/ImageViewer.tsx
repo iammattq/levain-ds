@@ -142,7 +142,7 @@ export function ImageViewer(props: ImageViewerProps) {
 
 type Pointer = { x: number; y: number };
 type Gesture =
-  | { kind: 'press'; id: number; x0: number; y0: number; z0: Zoom; t0: number; moved: boolean; onContent: boolean }
+  | { kind: 'press'; id: number; x0: number; y0: number; z0: Zoom; t0: number; moved: boolean; onContent: boolean; handle?: boolean }
   | { kind: 'pinch'; d0: number; m0: ZoomPoint; z0: Zoom };
 
 /** The viewer's contents, mounted while it's open: a fresh one (at rest) each time it opens. */
@@ -207,8 +207,8 @@ function Stage(props: ImageViewerProps & { reduce: boolean }) {
     const pa = at(a.x, a.y), pb = at(b.x, b.y);
     gesture.current = { kind: 'pinch', d0: Math.hypot(pb.x - pa.x, pb.y - pa.y) || 1, m0: { x: (pa.x + pb.x) / 2, y: (pa.y + pb.y) / 2 }, z0: zoomRef.current };
   };
-  const startPress = (id: number, p: Pointer, onContent: boolean, moved: boolean) => {
-    gesture.current = { kind: 'press', id, x0: p.x, y0: p.y, z0: zoomRef.current, t0: Date.now(), moved, onContent };
+  const startPress = (id: number, p: Pointer, onContent: boolean, moved: boolean, handle = false) => {
+    gesture.current = { kind: 'press', id, x0: p.x, y0: p.y, z0: zoomRef.current, t0: Date.now(), moved, onContent, handle };
   };
 
   const onPointerDown = (e: PointerEvent<HTMLDivElement>) => {
@@ -223,7 +223,8 @@ function Stage(props: ImageViewerProps & { reduce: boolean }) {
       swallowClick.current = true;
       for (const id of pointers.current.keys()) surface.current?.setPointerCapture?.(id);
     } else {
-      startPress(e.pointerId, { x: e.clientX, y: e.clientY }, !!target.closest(CONTENT), false);
+      // a finger alone on the pair's handle drags the handle (counted here, so a second finger makes a pinch)
+      startPress(e.pointerId, { x: e.clientX, y: e.clientY }, !!target.closest(CONTENT), false, !!target.closest('[role="slider"]'));
     }
   };
 
@@ -241,7 +242,7 @@ function Stage(props: ImageViewerProps & { reduce: boolean }) {
       set(zoomAt(g.z0, (g.z0.scale * d) / g.d0, g.m0, box, { x: (pa.x + pb.x) / 2, y: (pa.y + pb.y) / 2 }), false);
       return;
     }
-    if (g.id !== e.pointerId) return;
+    if (g.id !== e.pointerId || g.handle) return;
     const dx = e.clientX - g.x0, dy = e.clientY - g.y0;
     if (!g.moved && Math.hypot(dx, dy) > ZOOM.slop) {
       g.moved = true;

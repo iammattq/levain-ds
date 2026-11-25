@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useLayoutEffect, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { GripVertical } from 'lucide-react';
 import { cn } from '../utils/cn';
 
@@ -242,19 +242,30 @@ function ZoomedSlider({ before, after, onBroken, className, zoom }: { before: Im
   const pos = sw > 0 ? clamp(((handleX - L) / sw) * 100) : 50;
   const placeAt = (x: number) => { if (W > 0) setHx(Math.min(vis.r, Math.max(vis.l, x)) / W); };
 
+  // The handle's events reach the viewer, which counts every finger (one alone on the handle is the handle's, not a
+  // pan). A second finger down anywhere ends the handle's drag, so a pinch with one finger on the handle zooms. The
+  // fingers are counted at the window, where a pointer captured elsewhere still ends.
+  useEffect(() => {
+    const down = new Set<number>();
+    const onDown = (e: PointerEvent) => {
+      down.add(e.pointerId);
+      if (down.size > 1) drag.current = null;
+    };
+    const onEnd = (e: PointerEvent) => void down.delete(e.pointerId);
+    const kinds = [['pointerdown', onDown], ['pointerup', onEnd], ['pointercancel', onEnd]] as const;
+    for (const [k, f] of kinds) window.addEventListener(k, f, true);
+    return () => { for (const [k, f] of kinds) window.removeEventListener(k, f, true); };
+  }, []);
   const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    e.stopPropagation(); // the handle's, not the viewer's pan
     if (e.button !== 0) return;
     drag.current = e.pointerId;
     e.currentTarget.setPointerCapture?.(e.pointerId);
   };
   const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    e.stopPropagation();
     if (drag.current !== e.pointerId) return;
     placeAt(e.clientX - frame.current!.getBoundingClientRect().left);
   };
   const endDrag = (e: React.PointerEvent<HTMLDivElement>) => {
-    e.stopPropagation();
     if (drag.current === e.pointerId) drag.current = null;
   };
   const onKeyDown = (e: React.KeyboardEvent) => {

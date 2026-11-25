@@ -3,7 +3,8 @@
 // (theme 0) and Cobalt Mono (theme 7), light and dark. Run on the PC through demo/e2e/viewer.sh:
 //   node viewer-capture.mjs <base-url> <out>
 // Shots per theme, mode and width (<theme>-<mode>-<width>-<state>.png, the whole screen):
-//   single-rest, single-zoom, pair-rest, pair-zoom, dialog-single-zoom (over the open Modal), dialog-pair-rest.
+//   single-rest, single-zoom, pair-rest, pair-zoom, dialog-single-zoom (over the open Modal), dialog-pair-rest; at 390
+//   also pair-pinch-on-handle (one finger on the handle, one on the image: the pair zooms, the handle stays).
 // Zoom at 390 is a real two-finger pinch (single) and double tap (pair), CDP touch points through the pointer events;
 // at 1280 the wheel (single) and the + key (pair). Checks (exit 1 on a failure), in numbers.json:
 //   at rest the image is inside the 16 px inset and centred; the scrim has no backdrop-filter; zoomed, scale > 1, the
@@ -108,6 +109,19 @@ for (const [name, theme, mode] of COMBOS) for (const size of [390, 1280]) {
   // the pair
   await thumb('Before and after').click();
   await shot('pair-rest', atRest('pair-rest'));
+  if (touch) {
+    // a pinch with one finger on the handle (at the screen's centre) and one on the image zooms the pair; the handle
+    // stays where it was on screen
+    const was = numbers[`${key}-pair-rest`].handle.left;
+    await t.pinch(W / 2 + 40, H / 2, 40, 110);
+    await shot('pair-pinch-on-handle', n => {
+      zoomed('pair-pinch-on-handle')(n);
+      if (n.handle.left !== was) fail(`pair-pinch-on-handle: the handle moved ${was} -> ${n.handle.left}`);
+    });
+    await close();
+    await thumb('Before and after').click();
+    await wait(450);
+  }
   if (touch) { const n = numbers[`${key}-pair-rest`]; const x = (n.rect.l + n.rect.r) / 2 - 50, y = n.rect.t + n.rect.h * 0.3; await t.tap(x, y); await wait(60); await t.tap(x, y); }
   else { await page.keyboard.press('+'); await page.keyboard.press('+'); }
   await shot('pair-zoom', zoomed('pair-zoom'));

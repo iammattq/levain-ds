@@ -294,6 +294,43 @@ describe('ImageViewer', () => {
       at(2, 50, 0);
     });
 
+    test('pointercancel during a press: no tap, no close', () => {
+      openPage();
+      // a press cancelled on the scrim (the browser took it): no click follows, and the viewer stays
+      down(surface(), 1, 200, 50);
+      fireEvent.pointerCancel(surface(), { pointerId: 1 });
+      expect(isOpen()).toBe(true);
+      // a cancelled press on the image is no first tap: one tap after it doesn't toggle the zoom
+      down(image(), 1, 240, 400);
+      fireEvent.pointerCancel(image(), { pointerId: 1 });
+      tap(image(), 240, 400);
+      at(1);
+      expect(isOpen()).toBe(true);
+    });
+
+    test('pointercancel during a pinch: the zoom holds and the finger left down pans', () => {
+      openPage();
+      pinch([150, 400], [250, 400], [100, 400], [300, 400], false); // 2x, both still down
+      fireEvent.pointerCancel(image(), { pointerId: 2 });
+      at(2);
+      move(image(), 1, 150, 400); // finger 1 from 100 to 150
+      at(2, 50, 0);
+      up(image(), 1, 150, 400);
+      fireEvent.click(surface());
+      expect(isOpen()).toBe(true);
+    });
+
+    test('a third finger down, then one of the first two lifted: the pinch carries on with no jump', () => {
+      openPage();
+      pinch([150, 400], [250, 400], [100, 400], [300, 400], false); // 2x, fingers at 100 and 300
+      down(image(), 3, 200, 500);
+      at(2);
+      up(image(), 1, 100, 400);
+      at(2); // fingers 2 (300, 400) and 3 (200, 500) now pinch, from where they are
+      move(image(), 3, 100, 600); // twice as far from finger 2
+      expect(transform()).toMatch(/scale\(4\)$/);
+    });
+
     test('double tap on the image toggles 1x and 2.5x around the tap, eased', () => {
       openPage();
       tap(image(), 240, 400); // 40 right of the centre
@@ -466,6 +503,21 @@ describe('ImageViewer', () => {
       up(handle(), 1, 260, 400);
       fireEvent.click(handle());
       expect(layer().style.transform).toBe('translate(0px, 0px) scale(1.5)');
+      expect(isOpen()).toBe(true);
+    });
+
+    test('one finger on the handle and one on the image pinch: the pair zooms and the handle stays put', () => {
+      openPage(true);
+      const before = screen.getByRole('img', { name: 'Before' });
+      down(handle(), 1, 200, 400);
+      down(before, 2, 300, 400);
+      move(handle(), 1, 150, 400); // 100 apart to 200: 2x
+      move(before, 2, 350, 400);
+      expect(layer().style.transform).toMatch(/scale\(2\)$/);
+      expect(handle().style.left).toBe('200px'); // the finger that started on it no longer drags it
+      up(handle(), 1, 150, 400);
+      up(before, 2, 350, 400);
+      fireEvent.click(surface());
       expect(isOpen()).toBe(true);
     });
 
