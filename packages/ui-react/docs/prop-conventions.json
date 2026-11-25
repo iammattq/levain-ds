@@ -50,7 +50,9 @@
             "`touched?: boolean` has no default: leave it out and an error the app passes shows at once; pass the field's touched state to hold the error until the field is left.",
             "An input with its own `validate` shows that message only after its first blur (or when `touched` is true).",
             "A shown error sets `aria-invalid` on the native element and `aria-describedby` to the message (`${id}-error`); it replaces `helperText` (`${id}-helper`). While disabled, the helper shows instead.",
-            "Inputs that take a typed value (the text fields, DateInput, ColorInput, GradientInput, TagInput) carry `label`, `helperText`, `error`, `touched`. Choice controls (Checkbox, RadioButton, Switch, SegmentedControl, the sliders) carry `label` and, where they show one, `helperText`; they add `error` when a real use needs it."
+            "Inputs that take a typed value (the text fields including ChatInput, DateInput, ColorInput, GradientInput, TagInput) carry `label`, `helperText`, `error`, `touched`. Choice controls (Checkbox, RadioButton, Switch, SegmentedControl, the sliders) carry `label` and, where they show one, `helperText` (today only Slider does); they add `error` when a real use needs it.",
+            "Calendar and EditableText carry none of `error`, `touched` or `helperText` (Calendar has `label`; EditableText names its field with `aria-label`): no use needs one yet, so each is added when a real use asks for it.",
+            "EditableText is not a per-keystroke input: `onChange(value)` fires with `onSave` when an edit is saved (Enter, or the Save button), and the draft typed before that stays internal. Blur neither saves nor cancels."
           ],
           "rationale": "Against the majority (5 of 7 default `touched` to false): an error the app chose to pass should not be hidden by a default. Hiding it already loses a server error in the portfolio (TagManagement's TextInput), and TextArea and Select, which the board relies on, show it. Callers who pass `touched` see no change either way.",
           "today": "default false: TextInput, DateInput, ColorInput, GradientInput, TagInput; default true: TextArea, Select."
@@ -67,7 +69,7 @@
           "rules": [
             "forwardRef to the native element that holds the value and takes focus: the <input>, <textarea> or <select>.",
             "A group (SegmentedControl, a set of RadioButtons) forwards to the element with the group role (radiogroup).",
-            "An input with no native field (GradientInput, Calendar, EditableText at rest) forwards to its focusable root. ColorInput forwards to its text field."
+            "An input with no native field (GradientInput, EditableText at rest) forwards to its focusable root. ColorInput forwards to its text field. A date grid (Calendar) forwards to its named role=\"group\" root (keyboardAndFocus)."
           ],
           "rationale": "focus(), scrolling to a field and form-library registration need the native element. Today 7 of 16 forward, 4 of those to a wrapper or trigger; the newer MenuItem forwards to its own element."
         },
@@ -92,6 +94,7 @@
         "keyboardAndFocus": {
           "rules": [
             "Keys are the native element's, or the WAI-ARIA pattern for the role: checkbox and switch toggle on Space; a range moves with the arrows, Home, End, PageUp and PageDown; a single-choice group (radiogroup) is one Tab stop, the arrows move and select (skipping disabled options, wrapping), Home and End go to the ends.",
+            "A date picker (Calendar) is the WAI-ARIA date grid: a role=\"grid\" of role=\"row\"s (the weekday header a row of role=\"columnheader\"s, each day a role=\"gridcell\" holding a button), one Tab stop (in the month on view: the day the keyboard was last on, else the selected day, else today, else the 1st); the arrows move by day and week, Home and End go to the week's ends, PageUp and PageDown move by month (with Shift, by year), Enter or Space picks. The ref, the `id` and the label's name go on its root, a role=\"group\" named by `label` or `aria-label` (the grid's cells are not one native field). This follows the WAI-ARIA date picker dialog example, as the radiogroup rule follows its own pattern.",
             "A switch-like control has role=\"switch\"; a single-choice group has role=\"radiogroup\" with role=\"radio\" options and aria-checked.",
             "Text fields show focus on any focus: `focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]` (error state: --color-error).",
             "Every other control shows a keyboard ring: `focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface-canvas)]`.",
