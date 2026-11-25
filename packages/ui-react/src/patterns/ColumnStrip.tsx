@@ -142,19 +142,22 @@ export function ColumnStrip({
   // none, as on iOS 18). iOS WebKit drops a pending mandatory snap if the snap container or its areas change size, or
   // the scroll position is written, during momentum, and leaves the strip resting between columns.
   const [settled, setSettled] = useState(at);
+  const settleNow = useRef<() => void>(() => {});
   const count = useRef(columns.length);
   count.current = columns.length;
   useEffect(() => {
     const el = strip.current;
     if (!el) return;
     let touching = false;
+    // a touch since the strip last settled: until it settles again, its momentum may still be running
+    let swiped = false;
     let quiet = 0;
     const ends = 'onscrollend' in el;
     const onPage = () => Math.abs(el.scrollLeft - snapIndex(el.scrollLeft, el.clientWidth, count.current) * el.clientWidth) <= 1;
     // the strip never scrolls up and down (each column is its own height); WebKit's autoscroll under a held mouse
     // would scroll it once it shrinks to a shorter column, cutting off the column's top. Put back only at rest (no
-    // touch, on a page): a write mid-swipe would drop the snap
-    const level = () => { if (el.scrollTop && !touching && onPage()) el.scrollTop = 0; };
+    // touch since the last settle, on a page): a write mid-swipe or mid-momentum would drop the snap
+    const level = () => { if (el.scrollTop && !touching && !swiped && onPage()) el.scrollTop = 0; };
     let nudged = false;
     const settle = () => {
       window.clearTimeout(quiet);
@@ -170,6 +173,7 @@ export function ColumnStrip({
         return;
       }
       nudged = false;
+      swiped = false;
       level();
       const i = snapIndex(el.scrollLeft, el.clientWidth, count.current);
       setAt(i);
@@ -182,11 +186,13 @@ export function ColumnStrip({
       setAt(snapIndex(el.scrollLeft, el.clientWidth, count.current));
       if (!ends) { window.clearTimeout(quiet); quiet = window.setTimeout(settle, COLUMN_STRIP_QUIET); }
     };
-    const down = (e: TouchEvent) => { touching = e.touches.length > 0; };
+    // a new swipe may start during the backstop's own scroll: it gets its own backstop
+    const down = (e: TouchEvent) => { touching = e.touches.length > 0; swiped = true; nudged = false; };
     const up = (e: TouchEvent) => {
       touching = e.touches.length > 0;
       if (!touching) { window.clearTimeout(quiet); quiet = window.setTimeout(settle, COLUMN_STRIP_QUIET); }
     };
+    settleNow.current = settle;
     // only listened to (passive): the browser scrolls the swipe itself
     el.addEventListener('scroll', on, { passive: true });
     el.addEventListener('scrollend', settle);
@@ -195,6 +201,7 @@ export function ColumnStrip({
     el.addEventListener('touchcancel', up, { passive: true });
     return () => {
       window.clearTimeout(quiet);
+      settleNow.current = () => {};
       el.removeEventListener('scroll', on);
       el.removeEventListener('scrollend', settle);
       el.removeEventListener('touchstart', down);
@@ -280,6 +287,8 @@ export function ColumnStrip({
       }
       el.style.scrollSnapType = '';
       held.current = { on: false, base: el.scrollLeft, shift: 0 };
+      // a settle that came while the card was held was skipped: settle now, so the height catches up with the pills
+      settleNow.current();
     },
     onDragMove(x) {
       const el = strip.current;

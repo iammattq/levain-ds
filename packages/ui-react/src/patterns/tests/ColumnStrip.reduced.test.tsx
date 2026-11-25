@@ -1,5 +1,5 @@
 // Reduce Motion: its own file, as framer reads the system setting once per module registry.
-import React from 'react';
+import React, { useState } from 'react';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { ColumnStrip, COLUMN_STRIP_DWELL, useColumnStrip, type ColumnStripDrag } from '../ColumnStrip';
@@ -47,6 +47,32 @@ it('the backstop scrolls to the nearest column at once', () => {
   act(() => { jest.advanceTimersByTime(120); });
   expect(scrollTo).toHaveBeenCalledWith({ left: W, behavior: 'auto' });
   jest.useRealTimers();
+});
+
+it('a pill tap and a controlled current jump at once and settle there, with no backstop', () => {
+  jest.useFakeTimers();
+  scrollTo.mockClear();
+  const tall = jest.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockImplementation(function (this: HTMLElement) {
+    const k = this.dataset.column;
+    return k ? (columns.findIndex(c => c.key === k) + 1) * 100 : 0;
+  });
+  function Controlled() {
+    const [k, setK] = useState('Ideas');
+    return <><button onClick={() => setK('Ideas')}>external</button><ColumnStrip columns={columns} current={k} onCurrentChange={setK} /></>;
+  }
+  try {
+    render(<Controlled />);
+    const strip = document.querySelector('[data-strip]') as HTMLElement;
+    fireEvent.click(screen.getByRole('button', { name: 'Queued' }));
+    fireEvent.scroll(strip);
+    act(() => { jest.advanceTimersByTime(120); });
+    expect(strip.style.height).toBe('200px');
+    fireEvent.click(screen.getByText('external'));
+    fireEvent.scroll(strip);
+    act(() => { jest.advanceTimersByTime(120); });
+    expect(strip.style.height).toBe('100px');
+    expect(scrollTo.mock.calls).toEqual([[{ left: W, behavior: 'auto' }], [{ left: 0, behavior: 'auto' }]]);
+  } finally { tall.mockRestore(); jest.useRealTimers(); }
 });
 
 it('a held card pages without a slide, and the cue shows at full strength', async () => {

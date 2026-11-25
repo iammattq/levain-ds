@@ -253,6 +253,8 @@ describe('a swipe comes to rest (T60: iOS drops a snap if the strip changes mid-
     swipeTo(W); // on a page, but a finger is down
     expect(strip().scrollTop).toBe(40);
     touch('touchEnd', 0);
+    swipeTo(W * 2); // the momentum after the finger lifts, passing a page: still no write
+    expect(strip().scrollTop).toBe(40);
     flush(COLUMN_STRIP_QUIET);
     expect(strip().scrollTop).toBe(0);
     // at rest, WebKit's autoscroll under a held mouse: put back at once
@@ -300,6 +302,85 @@ describe('a swipe comes to rest (T60: iOS drops a snap if the strip changes mid-
     flush(COLUMN_STRIP_QUIET);
     expect(scrollTo).toHaveBeenCalledTimes(1);
     expect(strip().style.height).toBe('200px');
+  });
+
+  it('a new swipe during the backstop\'s scroll gets its own backstop (a quick double swipe)', () => {
+    render(<Harness />);
+    scrollTo.mockImplementationOnce(() => {}); // the backstop's smooth scroll is still on its way
+    swipeTo(W * 0.8);
+    flush(COLUMN_STRIP_QUIET);
+    expect(scrollTo).toHaveBeenCalledTimes(1);
+    touch('touchStart', 1);
+    swipeTo(W * 1.3);
+    touch('touchEnd', 0);
+    flush(COLUMN_STRIP_QUIET);
+    expect(scrollTo).toHaveBeenCalledTimes(2);
+    expect(scrollTo).toHaveBeenLastCalledWith({ left: W, behavior: 'smooth' });
+  });
+
+  it('a settle skipped while a card was held happens on the drop, even with no page', () => {
+    render(<Harness />);
+    swipeTo(W); // the pills move; the height waits
+    act(() => drag.onDragChange(true));
+    flush(COLUMN_STRIP_QUIET); // the quiet timer fires while held: skipped
+    rest(); // and a scrollend: skipped too
+    expect(strip().style.height).toBe('100px');
+    act(() => drag.onDragChange(false));
+    expect(strip().style.height).toBe('200px');
+    expect(col('Queued').style.maxHeight).toBe('');
+  });
+
+  it('a pill tap and a controlled current settle on the column they go to', () => {
+    function Controlled() {
+      const [k, setK] = useState('Ideas');
+      return <><button onClick={() => setK('Review')}>external</button><Harness current={k} onCurrentChange={setK} /></>;
+    }
+    render(<Controlled />);
+    fireEvent.click(pill('In progress'));
+    fireEvent.scroll(strip()); // the smooth scroll's events (the mock jumps there)
+    flush(COLUMN_STRIP_QUIET);
+    expect(strip().style.height).toBe('300px');
+    expect(pill('In progress')).toHaveAttribute('aria-current', 'true');
+    fireEvent.click(screen.getByText('external'));
+    fireEvent.scroll(strip());
+    flush(COLUMN_STRIP_QUIET);
+    expect(strip().style.height).toBe('400px');
+    expect(col('Review').style.maxHeight).toBe('');
+    expect(scrollTo).toHaveBeenCalledTimes(2); // no backstop: both landed on a page
+  });
+
+  it('the touch listeners are passive and never preventDefault; all listeners and the timer go on unmount', () => {
+    const added: [EventTarget, string, unknown, unknown][] = [];
+    const removed: [EventTarget, string, unknown][] = [];
+    const realAdd = EventTarget.prototype.addEventListener;
+    const realRemove = EventTarget.prototype.removeEventListener;
+    EventTarget.prototype.addEventListener = function (this: EventTarget, t: string, f: EventListenerOrEventListenerObject | null, o?: boolean | AddEventListenerOptions) {
+      added.push([this, t, f, o]);
+      return realAdd.call(this, t, f, o);
+    };
+    EventTarget.prototype.removeEventListener = function (this: EventTarget, t: string, f: EventListenerOrEventListenerObject | null, o?: boolean | EventListenerOptions) {
+      removed.push([this, t, f]);
+      return realRemove.call(this, t, f, o);
+    };
+    try {
+      const { unmount } = render(<Harness />);
+      const el = strip();
+      const mine = added.filter(a => a[0] === el);
+      expect(mine.map(a => a[1]).sort()).toEqual(['scroll', 'scrollend', 'touchcancel', 'touchend', 'touchstart']);
+      for (const t of ['touchstart', 'touchend', 'touchcancel']) expect(mine.find(a => a[1] === t)![3]).toEqual({ passive: true });
+      expect(fireEvent.touchStart(el, { touches: [{ clientX: 0, clientY: 0 }] })).toBe(true); // not prevented
+      expect(fireEvent.touchEnd(el, { touches: [] })).toBe(true);
+      flush(COLUMN_STRIP_QUIET); // the touchEnd's own settle
+      const before = jest.getTimerCount();
+      swipeTo(W * 0.6); // a quiet timer pending
+      expect(jest.getTimerCount()).toBe(before + 1);
+      unmount();
+      for (const [, t, f] of mine) expect(removed.some(r => r[0] === el && r[1] === t && r[2] === f)).toBe(true);
+      expect(jest.getTimerCount()).toBe(before); // the quiet timer is cleared
+    } finally {
+      EventTarget.prototype.addEventListener = realAdd;
+      EventTarget.prototype.removeEventListener = realRemove;
+    }
   });
 
   it('a held card\'s page moves the height at once (no native scroll in play)', async () => {
