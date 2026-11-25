@@ -3,7 +3,8 @@
 /**
  * ColumnStrip (T11): on a phone, columns a screen wide in a strip swiped with snap, with a row of pills (label and
  * count) above that follow the swipe and jump to a column on a tap (smoothly, or at once under Reduce Motion). The
- * strip is as tall as the column in view, so the page scrolls it as one.
+ * strip is as tall as the column in view, or the space it's given if more (the root in a flex column), so the page
+ * scrolls it as one.
  *
  * Paging a held card, as an iPhone's home screen pages a held icon (Ringmaster D226, D228): while a SortableGroup card
  * is in the hand, resting at either edge of the strip (`edge` px; on a phone, the screen's) pages one column after `dwell` ms, then every `repeat` ms
@@ -291,7 +292,7 @@ export function ColumnStrip({
         ref={strip}
         data-strip=""
         style={{ height }}
-        className="flex snap-x snap-mandatory overflow-x-auto overflow-y-hidden [scrollbar-width:none]"
+        className="grow flex snap-x snap-mandatory overflow-x-auto overflow-y-hidden [scrollbar-width:none]"
       >
         <motion.div ref={rail} data-rail="" style={{ x: railX }} className="flex w-full items-start">
           {columns.map((c, i) => (
