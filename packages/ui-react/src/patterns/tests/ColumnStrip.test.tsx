@@ -140,6 +140,11 @@ describe('the strip and its pills', () => {
     expect(strip().scrollTop).toBe(0);
   });
 
+  it('the strip grows to fill a flex-column parent taller than the column in view', () => {
+    render(<div className="flex flex-col" style={{ height: 800 }}><Harness className="flex flex-col grow" /></div>);
+    expect(strip()).toHaveClass('grow');
+  });
+
   it('a pill jumps there smoothly', () => {
     render(<Harness />);
     fireEvent.click(pill('In progress'));
