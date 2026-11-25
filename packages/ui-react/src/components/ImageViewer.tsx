@@ -5,8 +5,9 @@
  * while the page stays put.
  *
  * Built on `Modal scrim="solid" bare` (opaque, so nothing of the page shows behind the image: T63; no backdrop blur: a
- * full-screen fixed blur over a zoomed page turned the iPhone app white, Ringmaster T169): Modal brings the dialog, the focus trap and its return, top-only Escape and the portal,
- * so opened over a dialog it sits on top and closing goes back to it. The image is fitted inside the safe-area insets
+ * full-screen fixed blur over a zoomed page turned the iPhone app white, Ringmaster T169): Modal brings the dialog,
+ * the focus trap and its return, top-only Escape and the portal, so opened over a dialog it sits on top and closing goes
+ * back to it. The image is fitted inside the safe-area insets
  * (1rem at least) and centred; a ✕ sits top right. A tap outside the image, the ✕ or Escape closes.
  *
  * Zoom, on one surface with `touch-action: none` (every touch on it is the viewer's: the page never pinches through),

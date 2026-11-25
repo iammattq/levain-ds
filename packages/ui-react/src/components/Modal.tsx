@@ -26,9 +26,10 @@ interface ModalProps {
   motionProps?: MotionProps;
   size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | 'full';
   /**
-   * The layer behind the dialog. 'blur' (default): a light gradient with a backdrop blur. 'dark' (T61): a solid dark
-   * scrim with no backdrop-filter, `--color-surface-0` (the surface ramp's darkest step, near black in both modes) at 90 %.
-   * 'solid' (T63): the same colour fully opaque, no backdrop-filter, so nothing of the page shows (ImageViewer).
+   * The layer behind the dialog. 'blur' (default): a light gradient with a backdrop blur. 'dark' (T61): a dark scrim at
+   * 90 % with no backdrop-filter, `--color-surface-0` (the surface ramp's darkest step, near black in both modes); the
+   * page still shows faintly. 'solid' (T63): the same colour fully opaque, no backdrop-filter, so nothing of the page
+   * shows (ImageViewer).
    */
   scrim?: 'blur' | 'dark' | 'solid';
   /**
