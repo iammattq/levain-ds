@@ -67,7 +67,7 @@ export const Notice = forwardRef<HTMLDivElement, NoticeProps>(function Notice(
         className,
       )}
     >
-      <div data-notice-body="" className="flex min-w-0 flex-[1_1_12rem] items-start gap-2xs py-3xs">
+      <div data-notice-body="" className="flex min-w-0 flex-[1_1_12rem] items-start gap-2xs">
         {icon && (
           <span aria-hidden="true" data-notice-icon="" className="flex shrink-0 self-center">
             {icon}
