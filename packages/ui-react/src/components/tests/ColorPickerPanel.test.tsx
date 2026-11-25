@@ -381,4 +381,25 @@ describe('ColorPickerPanel Component', () => {
     const error = screen.getByTestId('hex-error');
     expect(second.getAttribute('aria-describedby')).toBe(error.id);
   });
+
+  // T54 (A3): onChange was called inside a setHsv updater, which StrictMode runs twice
+  test('a saturation pick or drag calls onChange once each, in StrictMode', () => {
+    const onChange = jest.fn();
+    render(
+      <React.StrictMode>
+        <ColorPickerPanel value={{ hex: '#FF0000', alpha: 100 }} onChange={onChange} />
+      </React.StrictMode>
+    );
+    const square = screen.getByTestId('saturation-square');
+    jest.spyOn(square, 'getBoundingClientRect').mockReturnValue({
+      left: 0, top: 0, width: 200, height: 160, right: 200, bottom: 160, x: 0, y: 0, toJSON: () => {},
+    });
+    fireEvent.mouseDown(square, { clientX: 100, clientY: 80 });
+    expect(onChange).toHaveBeenCalledTimes(1);
+    fireEvent.mouseMove(window, { clientX: 200, clientY: 0 });
+    expect(onChange).toHaveBeenCalledTimes(2);
+    // the drag keeps the hue: full saturation and value of red
+    expect(onChange.mock.calls[1][0].hex.toUpperCase()).toBe('#FF0000');
+    fireEvent.mouseUp(window);
+  });
 });

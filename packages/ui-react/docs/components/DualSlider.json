@@ -3,46 +3,74 @@
   "description": "A dual-handle slider component for selecting a range with minimum and maximum values",
   "category": "components",
   "usage": [
-    "Use for selecting a range between two values (e.g., price ranges, date ranges)",
-    "Provide clear labels to indicate what the range controls",
-    "Use minLabel and maxLabel to differentiate between the two sliders",
-    "Consider using valueFormatter to display the range in a user-friendly format",
-    "Ensure minValue cannot exceed maxValue through external validation if needed"
+    "Follows the form-input convention (docs/prop-conventions.json, formInputs).",
+    "Use for selecting a range between two values (e.g., price ranges, year ranges)",
+    "value and onChange carry the whole range, [min, max]; leave value out and use defaultValue for uncontrolled",
+    "Provide a label (it names the group), or aria-label / aria-labelledby",
+    "Use minLabel and maxLabel to name the two ends",
+    "Use valueFormatter to display the range in a user-friendly format",
+    "minValue/maxValue/onMinChange/onMaxChange are deprecated aliases for value/onChange; they still work for one release"
   ],
   "examples": [
-    "import { DualSlider } from '@/lib/designsystem';\nimport { useState } from 'react';\n\nfunction MyComponent() {\n  const [minPrice, setMinPrice] = useState(10);\n  const [maxPrice, setMaxPrice] = useState(50);\n\n  return (\n    <DualSlider\n      label=\"Price Range\"\n      minValue={minPrice}\n      maxValue={maxPrice}\n      min={0}\n      max={100}\n      onMinChange={setMinPrice}\n      onMaxChange={setMaxPrice}\n    />\n  );\n}",
-    "<DualSlider\n  label=\"Date Range\"\n  minValue={startYear}\n  maxValue={endYear}\n  min={1900}\n  max={2023}\n  onMinChange={setStartYear}\n  onMaxChange={setEndYear}\n  minLabel=\"From\"\n  maxLabel=\"To\"\n  valueFormatter={(min, max) => `${min} to ${max}`}\n/>"
+    "import { DualSlider } from '@/lib/designsystem';\nimport { useState } from 'react';\n\nfunction MyComponent() {\n  const [price, setPrice] = useState<[number, number]>([10, 50]);\n\n  return (\n    <DualSlider\n      label=\"Price Range\"\n      value={price}\n      min={0}\n      max={100}\n      onChange={setPrice}\n    />\n  );\n}",
+    "<DualSlider\n  label=\"Date Range\"\n  defaultValue={[1950, 2000]}\n  min={1900}\n  max={2023}\n  onChange={([from, to]) => setFilter({ from, to })}\n  minLabel=\"From\"\n  maxLabel=\"To\"\n  valueFormatter={(min, max) => `${min} to ${max}`}\n  size=\"sm\"\n/>"
   ],
   "design": [
     "Slider track uses var(--color-surface-1) for consistent theming",
     "Slider thumb/active area uses var(--color-primary) accent color",
     "Text uses var(--color-text-default) for label and var(--color-text-muted) for value and slider labels",
     "Two sliders are displayed in a grid-cols-2 layout with gap-4",
-    "Each slider has its own label (minLabel/maxLabel) displayed in xs text above it",
-    "Default height is h-2 (0.5rem) with rounded-lg corners"
+    "Default height is h-2 (0.5rem) with rounded-lg corners",
+    "Each end has its own caption (minLabel/maxLabel), a <label> for its range",
+    "Size 'sm' has an h-1.5 track and type-label-sm captions; 'md' (default) h-2 and type-caption",
+    "Keyboard ring: 2px var(--color-border-focus), offset 2px on var(--color-surface-canvas)",
+    "Disabled: opacity-50, not-allowed cursor, labels in var(--color-text-disabled)"
   ],
-  "accessibility": [],
+  "accessibility": [
+    "A role=\"group\" named by the label (aria-labelledby), or by aria-label / aria-labelledby passed through",
+    "Two native input[type=range], each named by its caption (minLabel / maxLabel): the arrows step, Home and End go to the ends, PageUp and PageDown take larger steps",
+    "disabled sets the native disabled on both ranges",
+    "Focus-visible ring for keyboard users"
+  ],
   "props": [
+    {
+      "name": "id",
+      "type": "string",
+      "optional": true,
+      "defaultValue": null,
+      "description": "The group's id; generated with useId() when left out. The ranges are `${id}-min` and `${id}-max`",
+      "configurable": false
+    },
     {
       "name": "label",
       "type": "string",
       "optional": true,
       "defaultValue": null,
-      "description": "Optional label text displayed above the slider pair"
+      "description": "Visible label, naming the group. Without it, pass aria-label or aria-labelledby"
     },
     {
-      "name": "minValue",
-      "type": "number",
-      "optional": false,
+      "name": "value",
+      "type": "[number, number]",
+      "optional": true,
       "defaultValue": null,
-      "description": "Current minimum value (required)"
+      "description": "Controlled: the range, [min, max]. Leave out for uncontrolled",
+      "configurable": false
     },
     {
-      "name": "maxValue",
-      "type": "number",
-      "optional": false,
+      "name": "defaultValue",
+      "type": "[number, number]",
+      "optional": true,
       "defaultValue": null,
-      "description": "Current maximum value (required)"
+      "description": "Uncontrolled: the range at first (default [min, max])",
+      "configurable": false
+    },
+    {
+      "name": "onChange",
+      "type": "(value: [number, number]) => void",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Called with the whole new range, whichever end moved",
+      "configurable": false
     },
     {
       "name": "min",
@@ -66,18 +94,18 @@
       "description": "Step increment for value changes"
     },
     {
-      "name": "onMinChange",
-      "type": "(value: number) => void",
-      "optional": false,
-      "defaultValue": null,
-      "description": "Minimum value change handler called when the min slider value changes (required)"
+      "name": "size",
+      "type": "'sm' | 'md'",
+      "optional": true,
+      "defaultValue": "'md'",
+      "description": "Size: 'sm' (compact) or 'md'"
     },
     {
-      "name": "onMaxChange",
-      "type": "(value: number) => void",
-      "optional": false,
-      "defaultValue": null,
-      "description": "Maximum value change handler called when the max slider value changes (required)"
+      "name": "disabled",
+      "type": "boolean",
+      "optional": true,
+      "defaultValue": "false",
+      "description": "Both ranges natively disabled; nothing fires"
     },
     {
       "name": "className",
@@ -134,6 +162,52 @@
       "optional": true,
       "defaultValue": "\"Max\"",
       "description": "Label for the maximum slider"
+    },
+    {
+      "name": "minValue",
+      "type": "number",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Deprecated: use value={[min, max]}"
+    },
+    {
+      "name": "maxValue",
+      "type": "number",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Deprecated: use value={[min, max]}"
+    },
+    {
+      "name": "onMinChange",
+      "type": "(value: number) => void",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Deprecated: use onChange([min, max])",
+      "configurable": false
+    },
+    {
+      "name": "onMaxChange",
+      "type": "(value: number) => void",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Deprecated: use onChange([min, max])",
+      "configurable": false
+    },
+    {
+      "name": "ref",
+      "type": "Ref<HTMLDivElement>",
+      "optional": true,
+      "defaultValue": null,
+      "description": "The role=\"group\" element",
+      "configurable": false
+    },
+    {
+      "name": "...rest",
+      "type": "HTMLAttributes<HTMLDivElement>",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Every other prop (aria-label, data-*…) goes to the group",
+      "configurable": false
     }
   ]
 }

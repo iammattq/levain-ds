@@ -7,6 +7,7 @@ import React, {
   useEffect,
   useLayoutEffect,
   useCallback,
+  useId,
 } from 'react';
 import { createPortal } from 'react-dom';
 import { cn } from '../utils/cn';
@@ -14,20 +15,40 @@ import { besideTrigger } from '../utils/besideTrigger';
 import GradientEditor, { gradientToCss } from '../patterns/GradientEditor';
 import type { GradientValue } from '../patterns/GradientEditor';
 import { inputSizeConfig, type InputSize } from '../utils/inputSizing';
+import { useControlled } from '../utils/useControlled';
 
 /** Size variants for GradientInput */
 export type GradientInputSize = InputSize;
 
-export interface GradientInputProps {
-  /** Unique identifier for the input */
-  id: string;
-  /** Text label for the input field */
-  label: string;
-  /** Current gradient value */
-  value: GradientValue;
-  /** Function called when the gradient value changes */
-  onChange: (value: GradientValue) => void;
-  /** Optional: Error message to display */
+/** The gradient an uncontrolled GradientInput starts from when no `defaultValue` is given: black to white, left to right */
+const DEFAULT_GRADIENT: GradientValue = {
+  angle: 90,
+  stops: [
+    { position: 0, color: { hex: '#000000', alpha: 100 } },
+    { position: 100, color: { hex: '#FFFFFF', alpha: 100 } },
+  ],
+};
+
+/**
+ * GradientInput follows the form-input convention (docs/prop-conventions.json, formInputs): `value` / `defaultValue`
+ * and `onChange(gradient)`, value first. It has no native field, so the ref, the `id` and every prop it doesn't name
+ * (aria-*, data-*, onFocus, onKeyDown…) go to its focusable root, the chip that opens the editor.
+ */
+export interface GradientInputProps extends Omit<
+  React.ButtonHTMLAttributes<HTMLButtonElement>,
+  'value' | 'defaultValue' | 'onChange' | 'className' | 'id' | 'type'
+> {
+  /** The chip's id; generated when left out */
+  id?: string;
+  /** Visible label. Without it, pass `aria-label` or `aria-labelledby` */
+  label?: string;
+  /** Controlled: the gradient. Leave out for uncontrolled */
+  value?: GradientValue;
+  /** Uncontrolled: the gradient at first (default black to white at 90°) */
+  defaultValue?: GradientValue;
+  /** The whole new gradient */
+  onChange?: (value: GradientValue) => void;
+  /** The app's error message: shows at once unless `touched` is false */
   error?: string;
   /** Optional helper text shown below the input */
   helperText?: string;
@@ -35,7 +56,7 @@ export interface GradientInputProps {
   className?: string;
   /** Additional class name for the gradient chip element */
   chipClassName?: string;
-  /** Whether the field has been touched/blurred (controls validation visibility) */
+  /** Leave out to show the app's error at once; pass the field's touched state to hold it until the field is left */
   touched?: boolean;
   /** Whether the field is required */
   required?: boolean;
@@ -58,15 +79,16 @@ export interface GradientInputProps {
 const GradientInput = forwardRef<HTMLButtonElement, GradientInputProps>(
   (
     {
-      id,
+      id: idProp,
       label,
-      value,
+      value: valueProp,
+      defaultValue = DEFAULT_GRADIENT,
       onChange,
       error,
       helperText,
-      className = '',
+      className,
       chipClassName = '',
-      touched = false,
+      touched,
       required = false,
       disabled = false,
       size,
@@ -74,9 +96,21 @@ const GradientInput = forwardRef<HTMLButtonElement, GradientInputProps>(
       minStops = 2,
       maxStops = 10,
       lockedHue,
+      'aria-describedby': describedBy,
+      'aria-label': ariaLabel,
+      onClick,
+      ...props
     },
     ref
   ) => {
+    const autoId = useId();
+    const id = idProp ?? autoId;
+    const [value, setValue] = useControlled(
+      valueProp,
+      defaultValue,
+      onChange,
+      'GradientInput'
+    );
     // Handle deprecated compact prop - size takes precedence
     const effectiveSize: GradientInputSize = size ?? (compact ? 'xs' : 'md');
     const config = inputSizeConfig[effectiveSize];
@@ -101,14 +135,18 @@ const GradientInput = forwardRef<HTMLButtonElement, GradientInputProps>(
       [ref]
     );
 
-    const showError = touched && !!error;
+    // Errors (Q-touched): the app's shows at once unless touched is false; never while disabled
+    const showError = !disabled && touched !== false && !!error;
     const errorId = `${id}-error`;
     const helperId = `${id}-helper`;
-    const descriptionId = showError
-      ? errorId
-      : helperText
-        ? helperId
-        : undefined;
+    const descriptionId =
+      [describedBy, showError ? errorId : helperText ? helperId : undefined]
+        .filter(Boolean)
+        .join(' ') || undefined;
+
+    const change = (next: GradientValue) => {
+      if (!disabled) setValue(next);
+    };
 
     // Generate display text for the input
     const displayText = `${value.angle}°, ${value.stops.length} stops`;
@@ -209,22 +247,29 @@ const GradientInput = forwardRef<HTMLButtonElement, GradientInputProps>(
     return (
       <div className={cn('flex flex-col', className)}>
         {/* Label */}
-        <label
-          htmlFor={id}
-          className={`${config.labelClass} mb-1 block ${disabled ? 'text-[var(--color-text-disabled)]' : 'text-[var(--color-text-default)]'}`}
-        >
-          {label}{' '}
-          {required && <span className="text-[var(--color-error)]">*</span>}
-        </label>
+        {label !== undefined && (
+          <label
+            htmlFor={id}
+            className={`${config.labelClass} mb-1 block ${disabled ? 'text-[var(--color-text-disabled)]' : 'text-[var(--color-text-default)]'}`}
+          >
+            {label}{' '}
+            {required && <span className="text-[var(--color-error)]">*</span>}
+          </label>
+        )}
 
         {/* Input Group (Gradient Chip + Text Display) */}
         <div className="flex items-center">
           {/* Gradient Chip Button */}
           <button
+            {...props}
             ref={setRefs}
             type="button"
             id={id}
-            onClick={handleChipClick}
+            onClick={(e) => {
+              // the app's onClick first; it can keep the editor shut with preventDefault()
+              onClick?.(e);
+              if (!e.defaultPrevented) handleChipClick();
+            }}
             disabled={disabled}
             aria-expanded={isOpen}
             aria-haspopup="dialog"
@@ -235,7 +280,7 @@ const GradientInput = forwardRef<HTMLButtonElement, GradientInputProps>(
               config.chipSize,
               disabled
                 ? 'cursor-not-allowed border-[var(--color-border-subtle)]'
-                : 'border-[var(--color-border-default)] focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-1',
+                : 'border-[var(--color-border-default)] focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface-canvas)]',
               showError && !disabled
                 ? 'border-[var(--color-error)]'
                 : 'border-[var(--color-border-default)]',
@@ -244,7 +289,14 @@ const GradientInput = forwardRef<HTMLButtonElement, GradientInputProps>(
             style={{
               background: disabled ? 'transparent' : gradientCss,
             }}
-            aria-label={`Edit ${label} gradient`}
+            aria-label={
+              ariaLabel ??
+              (props['aria-labelledby']
+                ? undefined
+                : label
+                  ? `Edit ${label} gradient`
+                  : 'Edit gradient')
+            }
           />
 
           {/* Text Display */}
@@ -271,7 +323,7 @@ const GradientInput = forwardRef<HTMLButtonElement, GradientInputProps>(
         </div>
 
         {/* Error Message */}
-        {showError && !disabled && (
+        {showError && (
           <p
             id={errorId}
             className={`${config.errorClass} mt-1 text-[var(--color-error)]`}
@@ -297,7 +349,7 @@ const GradientInput = forwardRef<HTMLButtonElement, GradientInputProps>(
             <div
               ref={popoverRef}
               role="dialog"
-              aria-label={`Edit ${label}`}
+              aria-label={label ? `Edit ${label}` : 'Edit gradient'}
               className="fixed z-[9999] rounded-lg border border-[var(--color-border-default)] bg-[var(--color-surface-card)] p-3 shadow-lg"
               style={{
                 // Initial values - useLayoutEffect sets actual position via direct DOM manipulation
@@ -307,7 +359,7 @@ const GradientInput = forwardRef<HTMLButtonElement, GradientInputProps>(
             >
               <GradientEditor
                 value={value}
-                onChange={onChange}
+                onChange={change}
                 minStops={minStops}
                 maxStops={maxStops}
                 onSelectionChange={setHasColorPicker}

@@ -33,7 +33,6 @@ Footer manifest
 GradientCard manifest
 GradientEditor doc
 GradientEditor manifest
-GradientInput doc
 GradientInput manifest
 Icons doc
 Image doc
