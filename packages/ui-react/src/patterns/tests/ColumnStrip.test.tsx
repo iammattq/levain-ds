@@ -5,6 +5,7 @@ import {
   ColumnStrip,
   COLUMN_STRIP_DWELL,
   COLUMN_STRIP_EDGE,
+  COLUMN_STRIP_QUIET,
   COLUMN_STRIP_REPEAT,
   edgeSide,
   snapIndex,
@@ -69,6 +70,8 @@ function swipeTo(left: number) {
   strip().scrollLeft = left;
   fireEvent.scroll(strip());
 }
+const rest = () => fireEvent(strip(), new Event('scrollend'));
+const col = (k: string) => document.querySelector(`[data-column="${k}"]`) as HTMLElement;
 
 describe('snapIndex and edgeSide', () => {
   it('rests on the nearest whole column, within the columns', () => {
@@ -127,11 +130,11 @@ describe('the strip and its pills', () => {
     const tall = jest.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockReturnValue(300);
     render(<Harness />);
     expect(strip().style.height).toBe('300px');
-    const col = (k: string) => document.querySelector(`[data-column="${k}"]`) as HTMLElement;
     expect(col('Ideas').style.maxHeight).toBe('');
     expect(col('Queued').style.maxHeight).toBe('300px');
     expect(col('Queued').style.overflow).toBe('hidden');
     swipeTo(W);
+    rest();
     expect(col('Queued').style.maxHeight).toBe('');
     expect(col('Ideas').style.maxHeight).toBe('300px');
     tall.mockRestore();
@@ -170,6 +173,106 @@ describe('the strip and its pills', () => {
   it('pillsEnd sits in the pills\' row', () => {
     render(<Harness pillsEnd={<button>Add</button>} />);
     expect(document.querySelector('[data-pills]')).toContainElement(screen.getByRole('button', { name: 'Add' }));
+  });
+});
+
+describe('a swipe comes to rest (T60: iOS drops a snap if the strip changes mid-momentum)', () => {
+  beforeEach(() => jest.useFakeTimers());
+  afterEach(() => jest.useRealTimers());
+  const flush = (ms: number) => act(() => { jest.advanceTimersByTime(ms); });
+  const touch = (type: 'touchStart' | 'touchEnd', fingers: number) =>
+    fireEvent[type](strip(), { touches: Array.from({ length: fingers }, () => ({ clientX: 0, clientY: 0 })) });
+  // each column its own height: Ideas 100, Queued 200, ...
+  let tall: jest.SpyInstance;
+  beforeEach(() => {
+    tall = jest.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockImplementation(function (this: HTMLElement) {
+      const k = this.dataset.column;
+      return k ? (columns.findIndex(c => c.key === k) + 1) * 100 : 0;
+    });
+  });
+  afterEach(() => tall.mockRestore());
+
+  describe('where there is scrollend', () => {
+    beforeAll(() => { (HTMLElement.prototype as { onscrollend?: unknown }).onscrollend = null; });
+    afterAll(() => { delete (HTMLElement.prototype as { onscrollend?: unknown }).onscrollend; });
+
+    it('mid-swipe the pills follow, but the height and the clip wait for scrollend', () => {
+      render(<Harness />);
+      expect(strip().style.height).toBe('100px');
+      swipeTo(W * 0.7);
+      swipeTo(W * 0.95);
+      expect(pill('Queued')).toHaveAttribute('aria-current', 'true');
+      expect(strip().style.height).toBe('100px');
+      expect(col('Ideas').style.maxHeight).toBe('');
+      expect(col('Queued').style.maxHeight).toBe('100px');
+      // no quiet timer where scrollend comes: a pause mid-momentum changes nothing
+      flush(COLUMN_STRIP_QUIET * 5);
+      expect(strip().style.height).toBe('100px');
+      swipeTo(W);
+      rest();
+      expect(strip().style.height).toBe('200px');
+      expect(col('Queued').style.maxHeight).toBe('');
+      expect(col('Ideas').style.maxHeight).toBe('200px');
+    });
+  });
+
+  describe('where there is none (iOS 18)', () => {
+    it('the height and the clip move after QUIET ms without a scroll', () => {
+      render(<Harness />);
+      swipeTo(W * 0.6);
+      expect(pill('Queued')).toHaveAttribute('aria-current', 'true');
+      flush(COLUMN_STRIP_QUIET - 20);
+      swipeTo(W); // still moving: the wait starts again
+      flush(COLUMN_STRIP_QUIET - 1);
+      expect(strip().style.height).toBe('100px');
+      expect(col('Queued').style.maxHeight).toBe('100px');
+      flush(1);
+      expect(strip().style.height).toBe('200px');
+      expect(col('Queued').style.maxHeight).toBe('');
+      expect(col('Ideas').style.maxHeight).toBe('200px');
+    });
+
+    it('a finger still on the strip holds the settle until it lifts', () => {
+      render(<Harness />);
+      touch('touchStart', 1);
+      swipeTo(W);
+      flush(COLUMN_STRIP_QUIET * 3);
+      expect(strip().style.height).toBe('100px');
+      touch('touchEnd', 0);
+      flush(COLUMN_STRIP_QUIET);
+      expect(strip().style.height).toBe('200px');
+    });
+  });
+
+  it('no scrollTop write mid-swipe: off a page, or under a finger; at rest it is put back', () => {
+    render(<Harness />);
+    strip().scrollTop = 40;
+    swipeTo(W * 0.5); // momentum, between columns
+    expect(strip().scrollTop).toBe(40);
+    touch('touchStart', 1);
+    swipeTo(W); // on a page, but a finger is down
+    expect(strip().scrollTop).toBe(40);
+    touch('touchEnd', 0);
+    flush(COLUMN_STRIP_QUIET);
+    expect(strip().scrollTop).toBe(0);
+    // at rest, WebKit's autoscroll under a held mouse: put back at once
+    strip().scrollTop = 30;
+    fireEvent.scroll(strip());
+    expect(strip().scrollTop).toBe(0);
+  });
+
+  it('a held card\'s page moves the height at once (no native scroll in play)', async () => {
+    render(<Harness />);
+    act(() => drag.onDragChange(true));
+    act(() => drag.onDragMove(W - 10, 300));
+    await act(async () => { jest.advanceTimersByTime(COLUMN_STRIP_DWELL); });
+    expect(strip().style.height).toBe('200px');
+    expect(col('Queued').style.maxHeight).toBe('');
+    await finishSlides();
+    act(() => drag.onDragChange(false));
+    flush(COLUMN_STRIP_QUIET);
+    expect(strip().scrollLeft).toBe(W);
+    expect(strip().style.height).toBe('200px');
   });
 });
 
