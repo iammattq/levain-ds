@@ -36,6 +36,11 @@
   },
   {
     "category": "Components",
+    "name": "ImageViewer",
+    "description": "An image or a before/after pair full screen on a dark scrim, pinch- and wheel-zoomed by the image while the page stays put"
+  },
+  {
+    "category": "Components",
     "name": "Popover",
     "description": "Panel anchored to a trigger that grows out of it, flips for room, closes on Escape or a press outside"
   },

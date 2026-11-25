@@ -266,3 +266,47 @@ describe('ImageCompare mode="slider"', () => {
     expect(screen.getByRole('link')).toHaveAttribute('href', '/full/before.png');
   });
 });
+
+// T61: the slider in ImageViewer (its `zoom`); the zoom math and gestures are tested with the viewer (ImageViewer.test)
+describe('ImageCompare mode="slider" zoom (ImageViewer\'s)', () => {
+  const BA = [
+    { label: 'Before', src: '/compare/before.png' },
+    { label: 'After', src: '/compare/after.png' },
+  ];
+
+  test('fills its parent with no frame of its own; every touch is the viewer\'s', () => {
+    const { container } = render(<ImageCompare images={BA} mode="slider" zoom={{ scale: 1, x: 0, y: 0 }} />);
+    const frame = container.querySelector('[data-image-compare-slider]') as HTMLElement;
+    expect(frame).toHaveClass('absolute', 'inset-0', 'touch-none', 'overflow-hidden');
+    expect(frame).not.toHaveClass('border', 'rounded-[var(--radius-md)]', 'bg-[var(--color-surface-section)]', 'touch-pan-y', 'cursor-ew-resize');
+  });
+
+  test('both images in one layer, transformed by the zoom; the handle and labels outside it', () => {
+    const { container } = render(<ImageCompare images={BA} mode="slider" zoom={{ scale: 2, x: 30, y: -10, ease: '1s linear' }} />);
+    const layer = container.querySelector('[data-image-viewer-content]') as HTMLElement;
+    expect(layer.style.transform).toBe('translate(30px, -10px) scale(2)');
+    expect(layer.style.transition).toBe('transform 1s linear');
+    expect(layer.querySelectorAll('img')).toHaveLength(2);
+    expect(screen.getByRole('img', { name: 'After' }).style.transition).toBe('clip-path 1s linear');
+    expect(layer).not.toContainElement(screen.getByRole('slider'));
+    for (const l of container.querySelectorAll('[data-image-compare-label]')) expect(layer).not.toContainElement(l as HTMLElement);
+  });
+
+  test('the labels sit at the bottom corners (the viewer\'s ✕ takes the top right)', () => {
+    const { container } = render(<ImageCompare images={BA} mode="slider" zoom={{ scale: 1, x: 0, y: 0 }} />);
+    const [b, a] = container.querySelectorAll<HTMLElement>('[data-image-compare-label]');
+    expect(b).toHaveClass('left-[calc(max(var(--edge-x),var(--safe-left))+var(--spacing-xs))]');
+    expect(a).toHaveClass('right-[calc(max(var(--edge-x),var(--safe-right))+var(--spacing-xs))]');
+    for (const l of container.querySelectorAll<HTMLElement>('[data-image-compare-label]')) {
+      expect(l).toHaveClass('bottom-[calc(max(var(--edge-b),var(--safe-bottom))+var(--spacing-xs))]');
+      expect(l).not.toHaveClass('top-xs');
+    }
+  });
+
+  test('no zoom: the framed slider as before', () => {
+    const { container } = render(<ImageCompare images={BA} mode="slider" />);
+    const frame = container.querySelector('[data-image-compare-slider]') as HTMLElement;
+    expect(frame).toHaveClass('relative', 'border', 'touch-pan-y', 'cursor-ew-resize');
+    expect(container.querySelector('[data-image-viewer-content]')).toBeNull();
+  });
+});

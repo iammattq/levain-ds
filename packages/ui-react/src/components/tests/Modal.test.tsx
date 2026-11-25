@@ -279,3 +279,63 @@ describe('Modal as a dialog', () => {
     expect(screen.getByRole('button', { name: 'Open' })).toHaveFocus();
   });
 });
+
+// T61: the dark scrim and the bare panel, for ImageViewer; the default look unchanged
+describe('Modal scrim and bare', () => {
+  const open = (props = {}) =>
+    render(
+      <Modal isOpen onClose={jest.fn()} label="Image" {...props}>
+        {() => <img alt="Shot" src="/shot.png" />}
+      </Modal>
+    );
+  const scrim = () => document.querySelector('[data-modal-scrim]') as HTMLElement;
+  const panel = () => screen.getByRole('dialog');
+
+  test('default: the light gradient with the backdrop blur, the card, the padded overlay', () => {
+    open();
+    expect(scrim()).toHaveAttribute('data-modal-scrim', 'blur');
+    expect(scrim().className).toBe(
+      'fixed inset-0 bg-linear-to-b from-[var(--color-surface-inverted)]/10 to-[var(--color-accent)]/10 backdrop-blur-sm'
+    );
+    expect(panel()).toHaveClass('rounded-lg', 'border', 'bg-[var(--color-surface-card)]', 'shadow-xl', 'max-w-md');
+    expect(panel()).not.toHaveAttribute('data-bare');
+    expect(panel().parentElement).toHaveClass('p-4', 'md:p-6', 'items-center', 'justify-center');
+    expect(screen.getByAltText('Shot').parentElement).toHaveClass('p-4', 'md:p-6');
+  });
+
+  test('scrim="blur" is the default, spelled out', () => {
+    open({ scrim: 'blur' });
+    expect(scrim().className).toContain('backdrop-blur-sm');
+  });
+
+  test('scrim="dark": a solid surface-0 scrim at 90 %, no backdrop-filter, no gradient', () => {
+    open({ scrim: 'dark' });
+    expect(scrim()).toHaveAttribute('data-modal-scrim', 'dark');
+    expect(scrim().className).toBe('fixed inset-0 bg-[var(--color-surface-0)]/90');
+    expect(scrim().className).not.toMatch(/blur|backdrop|gradient|linear/);
+    // the card is still there without bare
+    expect(panel()).toHaveClass('bg-[var(--color-surface-card)]');
+  });
+
+  test('bare: no card, no padding; the panel fills the screen and the children sit straight in it', () => {
+    open({ scrim: 'dark', bare: true, size: 'sm' });
+    expect(panel()).toHaveAttribute('data-bare', 'true');
+    expect(panel().className).toBe('relative h-full w-full outline-none');
+    expect(panel().parentElement!.className).toBe('fixed inset-0 flex');
+    expect(screen.getByAltText('Shot').parentElement).toBe(panel());
+    expect(screen.queryByRole('button', { name: 'Close modal' })).toBeNull();
+  });
+
+  test('bare with a title still draws the head', () => {
+    open({ bare: true, title: 'Shot' });
+    expect(screen.getByRole('button', { name: 'Close modal' })).toBeInTheDocument();
+  });
+
+  test('bare keeps the dialog: named, Escape closes', () => {
+    const onClose = jest.fn();
+    open({ scrim: 'dark', bare: true, onClose });
+    expect(screen.getByRole('dialog', { name: 'Image' })).toHaveAttribute('aria-modal', 'true');
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+});

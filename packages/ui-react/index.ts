@@ -40,6 +40,8 @@ export type {
 export { Toaster } from './src/components/Toaster';
 export { Modal } from './src/components/Modal';
 export type { ModalMenuOption } from './src/components/Modal';
+export { ImageViewer } from './src/components/ImageViewer';
+export type { ImageViewerProps } from './src/components/ImageViewer';
 export { Popover, anchorPopup } from './src/components/Popover';
 export type { PopoverProps, PopoverTriggerProps, AnchorOptions, Anchored } from './src/components/Popover';
 export { Tooltip } from './src/components/Tooltip';
@@ -278,4 +280,4 @@ export type { ColumnStripProps, ColumnStripDrag, StripColumn } from './src/patte
 export { Column } from './src/patterns/Column';
 export type { ColumnProps } from './src/patterns/Column';
 export { ImageCompare } from './src/patterns/ImageCompare';
-export type { ImageCompareProps, ImageCompareImage } from './src/patterns/ImageCompare';
+export type { ImageCompareProps, ImageCompareImage, ImageCompareZoom } from './src/patterns/ImageCompare';
