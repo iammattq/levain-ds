@@ -11,7 +11,8 @@ base=${2:-fda9753}
 root=$(cd "$(dirname "$0")/../.." && pwd)
 case "$out" in /*) ;; *) out="$root/$out" ;; esac
 cd "$root"
-files="TextArea Switch Slider SegmentedControl"
+# FORMS_FILES: the components to put back at <base> for "before" (T55: FORMS_FILES="TagInput EditableText ChatInput")
+files=${FORMS_FILES:-TextArea Switch Slider SegmentedControl}
 git cat-file -e "$base^{commit}" 2>/dev/null || { echo "forms.sh: base $base is not in this checkout"; exit 1; }
 pnpm install --frozen-lockfile --silent
 pw=${PW_DIR:-$HOME/.cache/levain-pw}
@@ -31,3 +32,5 @@ PW_DIR="$pw" node demo/e2e/forms-capture.mjs "http://localhost:$port/" "$out" be
 restore
 sleep 2
 PW_DIR="$pw" node demo/e2e/forms-capture.mjs "http://localhost:$port/" "$out" after
+# FORMS_CHECKS: a further browser check script, run after the capture as <script> <url> <out> (T55: forms4-checks.mjs)
+[ -z "${FORMS_CHECKS:-}" ] || PW_DIR="$pw" node "$FORMS_CHECKS" "http://localhost:$port/" "$out"

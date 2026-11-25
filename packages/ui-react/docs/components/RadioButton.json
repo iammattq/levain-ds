@@ -3,17 +3,19 @@
   "description": "The RadioButton component provides a customizable radio input control that allows users to select one option from a group.",
   "category": "components",
   "usage": [
-    "Three size options: small, medium, and large",
+    "Follows the form-input convention (docs/prop-conventions.json, formInputs).",
+    "Controlled with `checked` and `onChange(value)` (this radio's value, when it becomes the chosen one); or uncontrolled with `defaultChecked`, where the browser keeps the group's choice and onChange still fires.",
+    "Radios sharing a `name` are one native group: one Tab stop, the arrows move and select (skipping disabled radios, wrapping).",
+    "Three size options: small, medium, and large; the label takes the scale's type (sm: type-label-sm; md, lg: type-label)",
     "Support for both text and component labels",
-    "Disabled state",
-    "Animated state transitions",
-    "Accessible with keyboard navigation"
+    "Disabled state"
   ],
   "examples": [
     "import { RadioButton } from '@/lib/designsystem';\n\nfunction MyComponent() {\n  const [selectedValue, setSelectedValue] = useState('option1');\n\n  return (\n    <div>\n      <RadioButton\n        id=\"option1\"\n        name=\"options\"\n        value=\"option1\"\n        checked={selectedValue === 'option1'}\n        onChange={setSelectedValue}\n        label=\"Option 1\"\n      />\n      <RadioButton\n        id=\"option2\"\n        name=\"options\"\n        value=\"option2\"\n        checked={selectedValue === 'option2'}\n        onChange={setSelectedValue}\n        label=\"Option 2\"\n      />\n    </div>\n  );\n}",
     "<RadioButton\n  id=\"small-radio\"\n  name=\"size-example\"\n  value=\"small\"\n  checked={selected === 'small'}\n  onChange={handleChange}\n  size=\"sm\"\n  label=\"Small\"\n/>\n\n<RadioButton\n  id=\"medium-radio\"\n  name=\"size-example\"\n  value=\"medium\"\n  checked={selected === 'medium'}\n  onChange={handleChange}\n  size=\"md\"\n  label=\"Medium\"\n/>\n\n<RadioButton\n  id=\"large-radio\"\n  name=\"size-example\"\n  value=\"large\"\n  checked={selected === 'large'}\n  onChange={handleChange}\n  size=\"lg\"\n  label=\"Large\"\n/>",
     "<RadioButton\n  id=\"disabled-radio\"\n  name=\"disabled-example\"\n  value=\"disabled\"\n  checked={true}\n  onChange={() => {}}\n  disabled={true}\n  label=\"Disabled option\"\n/>",
-    "<RadioButton\n  id=\"complex-label\"\n  name=\"complex-example\"\n  value=\"complex\"\n  checked={selected === 'complex'}\n  onChange={handleChange}\n  label={\n    <div>\n      <span className=\"font-bold\">Complex Label</span>\n      <p className=\"text-xs text-gray-500\">With additional description</p>\n    </div>\n  }\n/>"
+    "<RadioButton\n  id=\"complex-label\"\n  name=\"complex-example\"\n  value=\"complex\"\n  checked={selected === 'complex'}\n  onChange={handleChange}\n  label={\n    <div>\n      <span className=\"font-bold\">Complex Label</span>\n      <p className=\"text-xs text-gray-500\">With additional description</p>\n    </div>\n  }\n/>",
+    "// uncontrolled group\n<RadioButton name=\"often\" value=\"daily\" label=\"Daily\" onChange={save} />\n<RadioButton name=\"often\" value=\"weekly\" label=\"Weekly\" defaultChecked onChange={save} />"
   ],
   "design": [
     "The RadioButton component uses CSS variables for theming:",
@@ -22,49 +24,60 @@
     "Border (checked): var(--color-accent)",
     "Background (checked): var(--color-accent)/10",
     "Dot color: var(--color-accent)",
-    "Label text: var(--color-text-default)"
+    "Label text: var(--color-text-default)",
+    "The ring and dot are drawn from the input's :checked (peer-checked), so an uncontrolled radio unchecked by a sibling redraws without React state",
+    "Focus ring: keyboard only (focus-visible), 2px var(--color-border-focus) with offset"
   ],
   "accessibility": [
-    "Uses a standard radio input (visually hidden) for native keyboard navigation",
-    "Maintains proper focus states",
-    "Labels are properly associated with inputs using htmlFor",
-    "Disabled state is properly conveyed"
+    "Uses a standard radio input (visually hidden) for native keyboard navigation within its name group",
+    "Keyboard focus ring on the circle (peer-focus-visible, --color-border-focus with offset)",
+    "Labels are associated with inputs using htmlFor; the id is generated when left out",
+    "Disabled sets the native disabled attribute"
   ],
   "props": [
     {
       "name": "id",
       "type": "string",
-      "optional": false,
+      "optional": true,
       "defaultValue": null,
-      "description": "Unique identifier for the input (required)"
+      "description": "The input's id; generated with useId() when left out"
     },
     {
       "name": "name",
       "type": "string",
       "optional": false,
       "defaultValue": null,
-      "description": "Group name for the radio buttons (required)"
+      "description": "Group name; radios sharing it are one group (required)"
     },
     {
       "name": "value",
       "type": "string",
       "optional": false,
       "defaultValue": null,
-      "description": "Value of the radio button (required)"
+      "description": "This radio's value, passed to onChange when it is chosen (required)"
     },
     {
       "name": "checked",
       "type": "boolean",
-      "optional": false,
+      "optional": true,
       "defaultValue": null,
-      "description": "Whether the radio is checked (required)"
+      "description": "Controlled: whether this radio is the chosen one. Leave out for uncontrolled",
+      "configurable": true
+    },
+    {
+      "name": "defaultChecked",
+      "type": "boolean",
+      "optional": true,
+      "defaultValue": "false",
+      "description": "Uncontrolled: chosen at first (the browser keeps the choice)",
+      "configurable": false
     },
     {
       "name": "onChange",
       "type": "(value: string) => void",
-      "optional": false,
+      "optional": true,
       "defaultValue": null,
-      "description": "Callback when selection changes (required)"
+      "description": "Called with this radio's value when it becomes the chosen one, in both modes"
     },
     {
       "name": "label",
@@ -84,8 +97,32 @@
       "name": "size",
       "type": "'sm' | 'md' | 'lg'",
       "optional": true,
-      "defaultValue": "md",
+      "defaultValue": "'md'",
       "description": "Size of the radio button"
+    },
+    {
+      "name": "className",
+      "type": "string",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Classes for the root label (merged with cn)",
+      "configurable": false
+    },
+    {
+      "name": "ref",
+      "type": "Ref<HTMLInputElement>",
+      "optional": true,
+      "defaultValue": null,
+      "description": "The native input",
+      "configurable": false
+    },
+    {
+      "name": "...rest",
+      "type": "InputHTMLAttributes",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Every other prop (aria-label, required, data-*, onFocus, onBlur…) goes to the input",
+      "configurable": false
     }
   ]
 }

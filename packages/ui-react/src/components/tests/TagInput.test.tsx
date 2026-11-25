@@ -44,7 +44,7 @@ describe('TagInput Component', () => {
     expect(screen.getByText('Skills')).toBeInTheDocument();
 
     // Check for the input field
-    const input = screen.getByRole('textbox');
+    const input = screen.getByRole('combobox');
     expect(input).toBeInTheDocument();
     expect(input).toHaveAttribute('id', 'test-tag-input');
   });
@@ -79,7 +79,7 @@ describe('TagInput Component', () => {
     render(<TagInput {...defaultProps} />);
 
     // Focus the input and type
-    const input = screen.getByRole('textbox');
+    const input = screen.getByRole('combobox');
     fireEvent.focus(input);
     fireEvent.change(input, { target: { value: 'Type' } });
 
@@ -95,7 +95,7 @@ describe('TagInput Component', () => {
     render(<TagInput {...defaultProps} />);
 
     // Focus the input and type to get suggestions
-    const input = screen.getByRole('textbox');
+    const input = screen.getByRole('combobox');
     fireEvent.focus(input);
     fireEvent.change(input, { target: { value: 'Type' } });
 
@@ -115,7 +115,7 @@ describe('TagInput Component', () => {
     render(<TagInput {...defaultProps} />);
 
     // Focus the input and type an exact match
-    const input = screen.getByRole('textbox');
+    const input = screen.getByRole('combobox');
     fireEvent.focus(input);
     fireEvent.change(input, { target: { value: 'CSS' } });
 
@@ -150,7 +150,7 @@ describe('TagInput Component', () => {
     render(<TagInput {...defaultProps} onCreateTag={onCreateTag} />);
 
     // Focus the input and type a non-existing tag
-    const input = screen.getByRole('textbox');
+    const input = screen.getByRole('combobox');
     fireEvent.focus(input);
     fireEvent.change(input, { target: { value: 'NewTag' } });
 
@@ -184,7 +184,7 @@ describe('TagInput Component', () => {
     render(<TagInput {...defaultProps} onCreateTag={onCreateTag} />);
 
     // Focus the input and type a non-existing tag
-    const input = screen.getByRole('textbox');
+    const input = screen.getByRole('combobox');
     fireEvent.focus(input);
     fireEvent.change(input, { target: { value: 'AnotherTag' } });
 
@@ -236,7 +236,7 @@ describe('TagInput Component', () => {
     expect(screen.getByText('Loading tags...')).toBeInTheDocument();
 
     // Input should be disabled
-    const input = screen.getByRole('textbox');
+    const input = screen.getByRole('combobox');
     expect(input).toBeDisabled();
   });
 
@@ -264,7 +264,7 @@ describe('TagInput Component', () => {
     render(<TagInput {...defaultProps} onCreateTag={onCreateTag} />);
 
     // Focus the input and type a non-existing tag
-    const input = screen.getByRole('textbox');
+    const input = screen.getByRole('combobox');
     fireEvent.focus(input);
     fireEvent.change(input, { target: { value: 'FailingTag' } });
 
@@ -295,5 +295,176 @@ describe('TagInput Component', () => {
     expect(ref.current).not.toBeNull();
     expect(ref.current?.tagName.toLowerCase()).toBe('input');
     expect(ref.current?.id).toBe('test-tag-input');
+  });
+});
+
+// The form-input convention (docs/prop-conventions.json, formInputs), point by point, and the T26 A3 fix (T55)
+describe('TagInput: form-input convention', () => {
+  const tags = [
+    { id: 'r', name: 'React' },
+    { id: 'rs', name: 'Rust' },
+    { id: 'ru', name: 'Ruby' },
+    { id: 'c', name: 'CSS' },
+  ];
+
+  test('value and change: controlled value, onChange(ids) value-first; the field shows only value', () => {
+    const onChange = jest.fn();
+    render(<TagInput label="Skills" availableTags={tags} value={['r']} onChange={onChange} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Remove React tag' }));
+    expect(onChange).toHaveBeenCalledWith([]);
+    expect(screen.getByText('React')).toBeInTheDocument();
+  });
+
+  test('selectedTags: the deprecated alias still selects', () => {
+    render(<TagInput label="Skills" availableTags={tags} selectedTags={['c']} onChange={() => {}} />);
+    expect(screen.getByText('CSS')).toBeInTheDocument();
+  });
+
+  test('uncontrolled: defaultValue, the input keeps its own list and still calls onChange', () => {
+    const onChange = jest.fn();
+    render(<TagInput label="Skills" availableTags={tags} defaultValue={['r']} onChange={onChange} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Remove React tag' }));
+    expect(onChange).toHaveBeenCalledWith([]);
+    expect(screen.queryByText('React')).not.toBeInTheDocument();
+  });
+
+  test('error: shown when touched is left out, with aria-invalid and the description', () => {
+    render(<TagInput label="Skills" availableTags={tags} error="Pick one" />);
+    expect(screen.getByText('Pick one')).toBeInTheDocument();
+    const box = screen.getByRole('combobox');
+    expect(box).toHaveAttribute('aria-invalid', 'true');
+    expect(box).toHaveAccessibleDescription('Pick one');
+  });
+
+  test('error: touched={false} holds it; disabled shows the helper instead', () => {
+    const { rerender } = render(<TagInput label="S" availableTags={tags} error="Bad" touched={false} />);
+    expect(screen.queryByText('Bad')).not.toBeInTheDocument();
+    rerender(<TagInput label="S" availableTags={tags} error="Bad" disabled helperText="Help" />);
+    expect(screen.queryByText('Bad')).not.toBeInTheDocument();
+    expect(screen.getByRole('combobox')).toHaveAttribute('aria-invalid', 'false');
+    expect(screen.getByRole('combobox')).toHaveAccessibleDescription('Help');
+  });
+
+  test('size: xs draws the compact type; compact is its deprecated alias; size wins', () => {
+    const { rerender } = render(<TagInput label="N" availableTags={tags} size="xs" />);
+    expect(screen.getByText('N')).toHaveClass('type-label-sm');
+    rerender(<TagInput label="N" availableTags={tags} compact />);
+    expect(screen.getByText('N')).toHaveClass('type-label-sm');
+    rerender(<TagInput label="N" availableTags={tags} compact size="md" />);
+    expect(screen.getByText('N')).toHaveClass('type-label');
+  });
+
+  test('ref: the native input', () => {
+    const ref = React.createRef<HTMLInputElement>();
+    render(<TagInput ref={ref} label="N" availableTags={tags} />);
+    expect(ref.current).toBe(screen.getByRole('combobox'));
+  });
+
+  test('disabled: native disabled on the field and every remove button; nothing fires', () => {
+    const onChange = jest.fn();
+    render(<TagInput label="N" availableTags={tags} value={['r']} onChange={onChange} disabled />);
+    expect(screen.getByRole('combobox')).toBeDisabled();
+    const remove = screen.getByRole('button', { name: 'Remove React tag' });
+    expect(remove).toBeDisabled();
+    fireEvent.click(remove);
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  test('id: optional, generated, and the label still names the field', () => {
+    render(<TagInput label="Skills" availableTags={tags} />);
+    expect(screen.getByLabelText('Skills').id).toBeTruthy();
+  });
+
+  test('label: optional; aria-label and other unnamed props reach the input', () => {
+    const onBlur = jest.fn();
+    render(<TagInput aria-label="Topics" name="t" data-x="1" onBlur={onBlur} availableTags={tags} />);
+    const box = screen.getByRole('combobox', { name: 'Topics' });
+    expect(box).toHaveAttribute('name', 't');
+    expect(box).toHaveAttribute('data-x', '1');
+    fireEvent.blur(box);
+    expect(onBlur).toHaveBeenCalled();
+    expect(document.querySelector('label')).toBeNull();
+  });
+
+  test("className: merged with cn on the root; the app's class wins", () => {
+    const { container } = render(<TagInput label="N" availableTags={tags} className="space-y-4 mt-2" />);
+    expect(container.firstChild).toHaveClass('space-y-4', 'mt-2');
+    expect(container.firstChild).not.toHaveClass('space-y-2');
+  });
+
+  test('focus: a text field shows focus however it came; in error the ring is the error colour', () => {
+    const { container, rerender } = render(<TagInput label="N" availableTags={tags} />);
+    fireEvent.focus(screen.getByRole('combobox'));
+    const box = () => container.querySelector('.rounded-md.border') as HTMLElement;
+    expect(box()).toHaveClass('ring-1', 'ring-[var(--color-primary)]');
+    rerender(<TagInput label="N" availableTags={tags} error="Bad" />);
+    expect(box()).toHaveClass('ring-1', 'ring-[var(--color-error)]', 'border-[var(--color-error)]');
+  });
+
+  // A3: suggestions were mouse-only (TagInput.tsx:311-314)
+  test('A3: ArrowDown/ArrowUp move through the suggestions (wrapping) and Enter adds the active one', () => {
+    const onChange = jest.fn();
+    render(<TagInput label="Skills" availableTags={tags} value={[]} onChange={onChange} />);
+    const box = screen.getByRole('combobox');
+    fireEvent.focus(box);
+    fireEvent.change(box, { target: { value: 'r' } });
+    expect(box).toHaveAttribute('aria-expanded', 'true');
+    const options = screen.getAllByRole('option');
+    expect(options.map((o) => o.textContent)).toEqual(['React', 'Rust', 'Ruby']);
+    expect(box).not.toHaveAttribute('aria-activedescendant');
+    fireEvent.keyDown(box, { key: 'ArrowDown' });
+    expect(box).toHaveAttribute('aria-activedescendant', options[0].id);
+    expect(options[0]).toHaveAttribute('aria-selected', 'true');
+    fireEvent.keyDown(box, { key: 'ArrowUp' }); // wraps to the last
+    expect(box).toHaveAttribute('aria-activedescendant', options[2].id);
+    fireEvent.keyDown(box, { key: 'ArrowDown' }); // wraps to the first
+    fireEvent.keyDown(box, { key: 'ArrowDown' });
+    fireEvent.keyDown(box, { key: 'Enter' });
+    expect(onChange).toHaveBeenCalledWith(['rs']);
+  });
+
+  test('A3: Escape closes the suggestions and is claimed; a second Escape is left to a dialog', () => {
+    render(<TagInput label="Skills" availableTags={tags} />);
+    const box = screen.getByRole('combobox');
+    fireEvent.focus(box);
+    fireEvent.change(box, { target: { value: 'r' } });
+    expect(screen.getByRole('listbox')).toBeInTheDocument();
+    expect(fireEvent.keyDown(box, { key: 'Escape' })).toBe(false); // default prevented
+    expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
+    expect(box).toHaveAttribute('aria-expanded', 'false');
+    expect(fireEvent.keyDown(box, { key: 'Escape' })).toBe(true);
+    fireEvent.keyDown(box, { key: 'ArrowDown' }); // opens again
+    expect(screen.getByRole('listbox')).toBeInTheDocument();
+  });
+
+  test("the app's onKeyDown runs too; preventDefault there skips ours", () => {
+    const onChange = jest.fn();
+    const onKeyDown = jest.fn((e: React.KeyboardEvent) => { if (e.key === 'Enter') e.preventDefault(); });
+    render(<TagInput label="S" availableTags={tags} value={[]} onChange={onChange} onKeyDown={onKeyDown} />);
+    const box = screen.getByRole('combobox');
+    fireEvent.change(box, { target: { value: 'React' } });
+    fireEvent.keyDown(box, { key: 'Enter' });
+    expect(onKeyDown).toHaveBeenCalled();
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  test('an Enter that ends an IME composition (isComposing, or keyCode 229) adds nothing', () => {
+    const onChange = jest.fn();
+    render(<TagInput label="S" availableTags={tags} value={[]} onChange={onChange} />);
+    const box = screen.getByRole('combobox');
+    fireEvent.change(box, { target: { value: 'React' } });
+    fireEvent.keyDown(box, { key: 'Enter', isComposing: true });
+    fireEvent.keyDown(box, { key: 'Enter', keyCode: 229 });
+    expect(onChange).not.toHaveBeenCalled();
+    fireEvent.keyDown(box, { key: 'Enter' });
+    expect(onChange).toHaveBeenCalledWith(['r']);
+  });
+
+  test('a callback ref is called once, not again on a rerender', () => {
+    const ref = jest.fn();
+    const { rerender } = render(<TagInput ref={ref} label="S" availableTags={tags} value={[]} />);
+    rerender(<TagInput ref={ref} label="S" availableTags={tags} value={['r']} />);
+    expect(ref).toHaveBeenCalledTimes(1);
+    expect(ref).toHaveBeenCalledWith(screen.getByRole('combobox'));
   });
 });

@@ -3,7 +3,9 @@
 // components take, so the same section renders before and after.
 import { SegmentedControl, Slider, Switch, TextArea } from '@levain/ui-react';
 import { useState } from 'react';
+import { Forms2Demo } from './forms2';
 import { FormsPart3 } from './forms3';
+import { FormsPart4 } from './formsPart4';
 
 export function FormsDemo({ Section }: { Section: (p: { title: string; note: string; children: React.ReactNode }) => React.ReactElement }) {
   const [text, setText] = useState('A comment, two rows tall.');
@@ -16,7 +18,7 @@ export function FormsDemo({ Section }: { Section: (p: { title: string; note: str
   const [size, setSize] = useState('md');
 
   return (
-    <Section title="Form inputs" note="TextArea, Switch, Slider and SegmentedControl, as the board uses them, under one convention (T35).">
+    <Section title="Form inputs" note="TextArea, Switch, Slider and SegmentedControl, as the board uses them, under one convention (T35); TagInput, EditableText and ChatInput (T55).">
       <div data-demo="forms" className="grid max-w-[40rem] gap-md p-2xs">
         <TextArea id="forms-comment" label="Comment" rows={2} value={text} onChange={e => setText(e.target.value)} helperText="Cmd+Enter sends it." />
         <TextArea id="forms-response" label="Response" rows={2} value={long} onChange={e => setLong(e.target.value)} error="This response is 2,140 characters; the most is 2,000." textareaClassName="type-body-sm" />
@@ -39,7 +41,9 @@ export function FormsDemo({ Section }: { Section: (p: { title: string; note: str
           <SegmentedControl id="forms-size" label="Size" value={size} onChange={setSize}
             options={[{ label: 'Small', value: 'sm' }, { label: 'Medium', value: 'md' }, { label: 'Large', value: 'lg', disabled: true }]} />
         </div>
+        <FormsPart4 />
       </div>
+      <Forms2Demo />
       <FormsPart3 />
     </Section>
   );
