@@ -1,0 +1,80 @@
+{
+  "name": "Skeleton",
+  "description": "A placeholder shape while content loads (a text line, a box or a circle) on the section surface, pulsing softly; still under Reduce Motion. Shapes only: no data or list logic.",
+  "category": "components",
+  "usage": [
+    "Use while a list or grid loads, drawn in the layout the content will take, so the page doesn't jump when it arrives",
+    "line for a heading or a line of text (set width and height to the text's), block for a photo or card (size it with height or an aspect class), circle for an avatar",
+    "Wrap the shapes in one SkeletonGroup naming what loads (\"Loading photos\"), and replace the group with the content when it arrives",
+    "The shapes take className and style for layout (a grid cell, aspect-square); their surface, corners and pulse are the component's",
+    "For a wait with no layout to stand in for (a button's action, a whole page), use Loader"
+  ],
+  "examples": [
+    "// the portfolio photo explorer's loading state\n<SkeletonGroup label=\"Loading photos\" className=\"space-y-8\">\n  {groups.map(i => (\n    <div key={i} className=\"space-y-3\">\n      <Skeleton shape=\"line\" width=\"8rem\" height=\"1.5rem\" />\n      <div className=\"grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6\">\n        {photos.map(j => <Skeleton key={j} className=\"aspect-square\" />)}\n      </div>\n    </div>\n  ))}\n</SkeletonGroup>",
+    "// a row with an avatar and two lines\n<div className=\"flex items-center gap-sm\">\n  <Skeleton shape=\"circle\" width={40} />\n  <div className=\"flex-1 space-y-2xs\">\n    <Skeleton shape=\"line\" width=\"60%\" />\n    <Skeleton shape=\"line\" width=\"40%\" />\n  </div>\n</div>"
+  ],
+  "design": [
+    "Surface --color-surface-section in every shape",
+    "Corners: line --radius-sm (4px), block --radius-lg (8px), circle --radius-full",
+    "Sizes: line 100% wide and 1em tall unless set; block 100% wide, its height the caller's; circle 2.5rem unless set, height following width. Numbers are px",
+    "Pulse: opacity 1 → 0.5 → 1 every 2s, forever, on ease.springOut (the portfolio explorer's 2s pulse; a continuous indicator, so outside the motion size scale). Every shape mounted together pulses together",
+    "Reduce Motion: no pulse, full opacity"
+  ],
+  "accessibility": [
+    "Every shape is aria-hidden: an empty box means nothing read aloud",
+    "SkeletonGroup carries the one thing a screen reader hears: a visually hidden role=\"status\" line, its label (\"Loading\" by default), so a reader who reaches the region hears what is loading instead of nothing",
+    "No aria-busy: most screen readers say nothing for it, an aria-busy ancestor can hold a live region's announcement back, and the group is replaced rather than un-busied when the content arrives. Announcing the arrival (\"24 photos\") is the page's, in its own live region"
+  ],
+  "props": [
+    {
+      "name": "shape",
+      "type": "'line' | 'block' | 'circle'",
+      "optional": true,
+      "defaultValue": "block",
+      "description": "line: a text line. block: a box (photo, card). circle: an avatar.",
+      "configurable": true
+    },
+    {
+      "name": "width",
+      "type": "number | string",
+      "optional": true,
+      "description": "px when a number, else any CSS length. Defaults: 100% (line, block), 2.5rem (circle).",
+      "configurable": true
+    },
+    {
+      "name": "height",
+      "type": "number | string",
+      "optional": true,
+      "description": "px when a number, else any CSS length. Defaults: 1em (line), none (block: size it or give it an aspect class), the width (circle).",
+      "configurable": true
+    },
+    {
+      "name": "className",
+      "type": "string",
+      "optional": true,
+      "description": "Layout classes added to the shape's own (aspect-square, a grid placement).",
+      "configurable": false
+    }
+  ],
+  "subcomponents": [
+    {
+      "name": "SkeletonGroup",
+      "description": "The loading region: a div around the shapes (className for their layout) with a visually hidden role=\"status\" line naming what loads.",
+      "props": [
+        {
+          "name": "label",
+          "type": "string",
+          "optional": true,
+          "defaultValue": "Loading",
+          "description": "What is loading, read by screen readers in place of the shapes."
+        },
+        {
+          "name": "children",
+          "type": "ReactNode",
+          "optional": false,
+          "description": "The shapes, in the layout the content will take."
+        }
+      ]
+    }
+  ]
+}

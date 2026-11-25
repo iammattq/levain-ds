@@ -25,6 +25,16 @@ interface ModalProps {
   children: (handleClose: () => void) => React.ReactNode;
   motionProps?: MotionProps;
   size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | 'full';
+  /**
+   * The layer behind the dialog. 'blur' (default): a light gradient with a backdrop blur. 'dark' (T61): a solid dark
+   * scrim with no backdrop-filter, `--color-surface-0` (the surface ramp's darkest step, near black in both modes) at 90 %.
+   */
+  scrim?: 'blur' | 'dark';
+  /**
+   * No card (T61): no surface, border, radius, shadow or padding, and the panel fills the screen (`size` is ignored), so
+   * the children lay themselves out straight on the scrim. A `title` or `menuOptions` still draws the head.
+   */
+  bare?: boolean;
 }
 
 export function Modal({
@@ -36,6 +46,8 @@ export function Modal({
   children,
   motionProps,
   size = 'md',
+  scrim = 'blur',
+  bare = false,
 }: ModalProps) {
   const overlayRef = useRef<HTMLDivElement>(null);
   const [showMenu, setShowMenu] = useState(false);
@@ -114,9 +126,15 @@ export function Modal({
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-50 overflow-y-auto">
-          {/* Backdrop with blur effect */}
+          {/* The scrim: a light blur (default), or solid dark with no backdrop-filter (a full-screen fixed blur is heavy on
+              iOS, worst with the page zoomed: Ringmaster T169) */}
           <motion.div
-            className="fixed inset-0 bg-linear-to-b from-[var(--color-surface-inverted)]/10 to-[var(--color-accent)]/10 backdrop-blur-sm"
+            data-modal-scrim={scrim}
+            className={
+              scrim === 'dark'
+                ? 'fixed inset-0 bg-[var(--color-surface-0)]/90'
+                : 'fixed inset-0 bg-linear-to-b from-[var(--color-surface-inverted)]/10 to-[var(--color-accent)]/10 backdrop-blur-sm'
+            }
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -124,7 +142,7 @@ export function Modal({
           />
 
           <div
-            className="fixed inset-0 flex items-center justify-center p-4 md:p-6"
+            className={bare ? 'fixed inset-0 flex' : 'fixed inset-0 flex items-center justify-center p-4 md:p-6'}
             ref={overlayRef}
             onClick={handleOverlayClick}
           >
@@ -135,7 +153,12 @@ export function Modal({
               aria-labelledby={title ? titleId : undefined}
               aria-label={title ? undefined : label}
               tabIndex={-1}
-              className={`w-full outline-none rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-surface-card)] shadow-xl ${sizeClasses[size]} overflow-hidden`}
+              data-bare={bare || undefined}
+              className={
+                bare
+                  ? 'relative h-full w-full outline-none'
+                  : `w-full outline-none rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-surface-card)] shadow-xl ${sizeClasses[size]} overflow-hidden`
+              }
               {...finalMotionProps}
             >
               {(title || (menuOptions && menuOptions.length > 0)) && (
@@ -204,9 +227,13 @@ export function Modal({
                 </div>
               )}
 
-              <div className="p-4 pt-0 pb-4 md:p-6 md:pt-0 md:pb-6">
-                {children(onClose)}
-              </div>
+              {bare ? (
+                children(onClose)
+              ) : (
+                <div className="p-4 pt-0 pb-4 md:p-6 md:pt-0 md:pb-6">
+                  {children(onClose)}
+                </div>
+              )}
             </motion.div>
           </div>
         </div>

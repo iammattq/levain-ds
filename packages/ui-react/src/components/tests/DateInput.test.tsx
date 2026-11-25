@@ -7,15 +7,18 @@ jest.mock('../../utils/cn', () => ({
   cn: (...classes: string[]) => classes.filter(Boolean).join(' '),
 }));
 
-// Mock Calendar component
+// Mock Calendar component; the focus tests set mockRealCalendar to use the real one
+let mockRealCalendar = false;
 jest.mock('../Calendar', () => {
+  const RealCalendar = jest.requireActual('../Calendar').default;
   return function MockCalendar({
-    selectedDate,
-    onDateSelect,
+    value: selectedDate,
+    onChange: onDateSelect,
   }: {
-    selectedDate: Date;
-    onDateSelect: (date: Date) => void;
+    value: Date;
+    onChange: (date: Date) => void;
   }) {
+    if (mockRealCalendar) return <RealCalendar value={selectedDate} onChange={onDateSelect} />;
     return (
       <div data-testid="mock-calendar">
         <div>Selected: {selectedDate.toISOString().split('T')[0]}</div>
@@ -133,7 +136,9 @@ describe('DateInput Component', () => {
 
   // Test selecting date from calendar
   test('selects date from calendar and calls onChange', () => {
-    render(<DateInput {...defaultProps} />);
+    // controlled: the field goes back to value after the event, so read target.value inside the handler
+    const onChange = jest.fn((e: React.ChangeEvent<HTMLInputElement>) => e.target.value);
+    render(<DateInput {...defaultProps} onChange={onChange} />);
 
     // Open the calendar
     const calendarButton = screen.getByRole('button');
@@ -144,9 +149,8 @@ describe('DateInput Component', () => {
     fireEvent.click(selectDateButton);
 
     // onChange should be called with the new date
-    expect(defaultProps.onChange).toHaveBeenCalledTimes(1);
-    const event = defaultProps.onChange.mock.calls[0][0];
-    expect(event.target.value).toBe('2023-05-15');
+    expect(onChange).toHaveBeenCalledTimes(1);
+    expect(onChange).toHaveReturnedWith('2023-05-15');
 
     // Calendar should close after selection
     expect(screen.queryByTestId('mock-calendar')).not.toBeInTheDocument();
@@ -154,7 +158,8 @@ describe('DateInput Component', () => {
 
   // Test onChange callback from text input
   test('calls onChange when text input value changes', () => {
-    render(<DateInput {...defaultProps} />);
+    const onChange = jest.fn((e: React.ChangeEvent<HTMLInputElement>) => e.target.value);
+    render(<DateInput {...defaultProps} onChange={onChange} />);
 
     const textInput = screen.getByRole('textbox');
 
@@ -162,14 +167,13 @@ describe('DateInput Component', () => {
     fireEvent.change(textInput, { target: { value: '2023-06-01' } });
 
     // onChange should be called
-    expect(defaultProps.onChange).toHaveBeenCalledTimes(1);
-    const event = defaultProps.onChange.mock.calls[0][0];
-    expect(event.target.value).toBe('2023-06-01');
+    expect(onChange).toHaveBeenCalledTimes(1);
+    expect(onChange).toHaveReturnedWith('2023-06-01');
   });
 
   // Test input masking logic
   test('applies date format masking when typing digits', () => {
-    const onChange = jest.fn();
+    const onChange = jest.fn((e: React.ChangeEvent<HTMLInputElement>) => e.target.value);
     render(<DateInput {...defaultProps} value="" onChange={onChange} />);
 
     const textInput = screen.getByRole('textbox');
@@ -179,13 +183,12 @@ describe('DateInput Component', () => {
 
     // Should add formatting (YYYY-MM-DD)
     expect(onChange).toHaveBeenCalledTimes(1);
-    const event = onChange.mock.calls[0][0];
-    expect(event.target.value).toBe('2023-05-10');
+    expect(onChange).toHaveReturnedWith('2023-05-10');
   });
 
   // Test date validation - valid format
   test('validates date format correctly', async () => {
-    const { getByRole } = render(<DateInput {...defaultProps} value="" />);
+    const { getByRole } = render(<DateInput {...defaultProps} value={undefined} defaultValue="" />);
     const textInput = getByRole('textbox');
 
     // Enter an invalid format (mm/dd/yyyy instead of yyyy-mm-dd)
@@ -209,7 +212,7 @@ describe('DateInput Component', () => {
 
   // Test date validation - valid date
   test('validates date validity correctly', async () => {
-    const { getByRole } = render(<DateInput {...defaultProps} value="" />);
+    const { getByRole } = render(<DateInput {...defaultProps} value={undefined} defaultValue="" />);
     const textInput = getByRole('textbox');
 
     // Enter a date with invalid month (13)
@@ -253,7 +256,8 @@ describe('DateInput Component', () => {
     const { getByRole } = render(
       <DateInput
         {...defaultProps}
-        value="2024-05-10"
+        value={undefined}
+        defaultValue="2024-05-10"
         validate={customValidate}
         touched={true}
       />
@@ -354,21 +358,13 @@ describe('DateInput Component', () => {
     expect(onBlurMock).toHaveBeenCalledTimes(1);
   });
 
-  // Test empty value handling
-  test('handles empty value correctly on blur', () => {
-    render(<DateInput {...defaultProps} value="" />);
-
-    // Input should be empty initially
+  // Blur no longer sends a made-up onChange('') (A3: synthetic events); clearing the field already sent one
+  test('blur on an empty field sends no onChange', () => {
+    render(<DateInput {...defaultProps} value={undefined} defaultValue="" />);
     const textInput = screen.getByRole('textbox');
     expect(textInput).toHaveValue('');
-
-    // Blur the input
     fireEvent.blur(textInput);
-
-    // onChange should be called with empty string
-    expect(defaultProps.onChange).toHaveBeenCalledTimes(1);
-    const event = defaultProps.onChange.mock.calls[0][0];
-    expect(event.target.value).toBe('');
+    expect(defaultProps.onChange).not.toHaveBeenCalled();
   });
 
   // Test custom class names
@@ -424,5 +420,198 @@ describe('DateInput Component', () => {
     expect(ref.current?.tagName.toLowerCase()).toBe('input');
     expect(ref.current?.id).toBe('test-date');
     expect(ref.current?.type).toBe('text');
+  });
+});
+
+// The form-input convention (docs/prop-conventions.json, formInputs), point by point, and the T26 A3 item (T54)
+describe('DateInput: form-input convention', () => {
+  const field = () => screen.getByRole('textbox') as HTMLInputElement;
+
+  test('typing: onChange gets the real ChangeEvent from the input, target.value masked (A3)', () => {
+    const onChange = jest.fn((e: React.ChangeEvent<HTMLInputElement>) => e.target.value);
+    render(<DateInput label="Due" value="" onChange={onChange} />);
+    fireEvent.change(field(), { target: { value: '20230510' } });
+    const event = onChange.mock.calls[0][0];
+    expect(event.target).toBe(field());
+    expect(onChange).toHaveReturnedWith('2023-05-10');
+    expect(event.type).toBe('change');
+    expect(typeof event.preventDefault).toBe('function');
+    expect(event.nativeEvent).toBeInstanceOf(Event);
+  });
+
+  test('a calendar pick: onChange gets the same real event, target.value the picked date (A3)', () => {
+    const onChange = jest.fn((e: React.ChangeEvent<HTMLInputElement>) => e.target.value);
+    render(<DateInput label="Due" value="2023-04-20" onChange={onChange} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Choose Due date' }));
+    fireEvent.click(screen.getByTestId('select-date-button'));
+    expect(onChange).toHaveBeenCalledTimes(1);
+    const event = onChange.mock.calls[0][0];
+    expect(event.target).toBe(field());
+    expect(event.target.id).toBe(field().id);
+    expect(onChange).toHaveReturnedWith('2023-05-15');
+    expect(event.nativeEvent).toBeInstanceOf(Event);
+  });
+
+  test('an app reading e.target.value from a form handler sees the same value both ways', () => {
+    const seen: string[] = [];
+    render(<DateInput label="Due" defaultValue="" onChange={(e) => seen.push(e.target.value)} />);
+    fireEvent.change(field(), { target: { value: '2024-01-02' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Choose Due date' }));
+    fireEvent.click(screen.getByTestId('select-date-button'));
+    expect(seen).toEqual(['2024-01-02', '2023-05-15']);
+  });
+
+  test('controlled: the field shows value, always; a parent that rejects or resets an edit wins', () => {
+    // a parent that takes only complete dates
+    function OnlyComplete() {
+      const [v, setV] = React.useState('2023-04-20');
+      return (
+        <>
+          <DateInput label="Due" value={v} onChange={(e) => /^\d{4}-\d{2}-\d{2}$/.test(e.target.value) && setV(e.target.value)} />
+          <button type="button" onClick={() => setV('2000-01-01')}>Reset</button>
+        </>
+      );
+    }
+    render(<OnlyComplete />);
+    fireEvent.change(field(), { target: { value: '2023-0' } });
+    expect(field().value).toBe('2023-04-20'); // rejected: value wins
+    fireEvent.change(field(), { target: { value: '20240305' } });
+    expect(field().value).toBe('2024-03-05'); // accepted, as masked
+    fireEvent.click(screen.getByRole('button', { name: 'Reset' }));
+    expect(field().value).toBe('2000-01-01');
+    // a parent that ignores every change: the field never moves, even for a calendar pick
+    const onChange = jest.fn();
+    render(<DateInput label="Fixed" value="2023-04-20" onChange={onChange} />);
+    const fixed = screen.getAllByRole('textbox')[1] as HTMLInputElement;
+    fireEvent.change(fixed, { target: { value: '1999-09-09' } });
+    expect(fixed.value).toBe('2023-04-20');
+    fireEvent.click(screen.getByRole('button', { name: 'Choose Fixed date' }));
+    fireEvent.click(screen.getByTestId('select-date-button'));
+    expect(onChange).toHaveBeenLastCalledWith(expect.objectContaining({ target: fixed }));
+    expect(fixed.value).toBe('2023-04-20');
+  });
+
+  test('uncontrolled: defaultValue, then its own state', () => {
+    const onChange = jest.fn();
+    render(<DateInput label="Due" defaultValue="2023-01-01" onChange={onChange} />);
+    expect(field().value).toBe('2023-01-01');
+    fireEvent.change(field(), { target: { value: '20240305' } });
+    expect(field().value).toBe('2024-03-05');
+    expect(onChange).toHaveBeenCalledTimes(1);
+    render(<DateInput label="Other" />);
+    expect(screen.getAllByRole('textbox')[1]).toHaveValue('');
+  });
+
+  test('an app error shows at once (Q-touched), unless touched is false or disabled', () => {
+    const { rerender } = render(<DateInput label="Due" value="" onChange={() => {}} error="Too late" />);
+    expect(screen.getByText('Too late')).toBeInTheDocument();
+    expect(field()).toHaveAttribute('aria-invalid', 'true');
+    expect(field()).toHaveAttribute('aria-describedby', `${field().id}-error`);
+    rerender(<DateInput label="Due" value="" onChange={() => {}} error="Too late" touched={false} />);
+    expect(screen.queryByText('Too late')).not.toBeInTheDocument();
+    rerender(<DateInput label="Due" value="" onChange={() => {}} error="Too late" helperText="Help" disabled />);
+    expect(screen.queryByText('Too late')).not.toBeInTheDocument();
+    expect(screen.getByText('Help')).toBeInTheDocument();
+  });
+
+  test('its own format check waits for the first blur', () => {
+    render(<DateInput label="Due" defaultValue="" />);
+    fireEvent.change(field(), { target: { value: '2023-13-01' } });
+    expect(screen.queryByText('Please enter a valid date in YYYY-MM-DD format')).not.toBeInTheDocument();
+    fireEvent.blur(field());
+    expect(screen.getByText('Please enter a valid date in YYYY-MM-DD format')).toBeInTheDocument();
+  });
+
+  test('size: the input scale; md is the old look', () => {
+    const { rerender } = render(<DateInput label="Due" defaultValue="" />);
+    expect(field()).toHaveClass('h-10', 'px-3');
+    expect(screen.getByRole('button')).toHaveClass('h-10', 'w-10');
+    rerender(<DateInput label="Due" defaultValue="" size="xs" />);
+    expect(field()).toHaveClass('h-7', 'px-2');
+    expect(screen.getByRole('button')).toHaveClass('h-7', 'w-7');
+    expect(screen.getByText('Due')).toHaveClass('type-label-sm');
+  });
+
+  test('disabled: native, the calendar does not open, typing sends nothing', () => {
+    const onChange = jest.fn();
+    render(<DateInput label="Due" defaultValue="" disabled onChange={onChange} />);
+    expect(field()).toBeDisabled();
+    expect(screen.getByRole('button')).toBeDisabled();
+    fireEvent.click(screen.getByRole('button'));
+    expect(screen.queryByTestId('mock-calendar')).not.toBeInTheDocument();
+    fireEvent.change(field(), { target: { value: '2024-01-01' } });
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  test('id is optional (useId), label optional; aria-* and other props reach the input', () => {
+    render(<DateInput aria-label="Start" name="start" data-x="1" aria-describedby="note" helperText="Help" />);
+    const input = screen.getByRole('textbox', { name: 'Start' });
+    expect(input.id).not.toBe('');
+    expect(input).toHaveAttribute('name', 'start');
+    expect(input).toHaveAttribute('data-x', '1');
+    expect(input).toHaveAttribute('aria-describedby', `note ${input.id}-helper`);
+    expect(screen.getByRole('button', { name: 'Choose date' })).toBeInTheDocument();
+  });
+
+  test('className goes on the root; the calendar button shows the keyboard ring', () => {
+    const { container } = render(<DateInput label="Due" defaultValue="" className="mt-4" />);
+    expect(container.firstChild).toHaveClass('mt-4');
+    const button = screen.getByRole('button');
+    expect(button.className).toContain('focus-visible:ring-[var(--color-border-focus)]');
+    expect(button.className).toContain('focus-visible:ring-offset-2');
+  });
+
+  test('Escape closes the calendar and puts focus back on its button', () => {
+    render(<DateInput label="Due" defaultValue="" />);
+    const button = screen.getByRole('button', { name: 'Choose Due date' });
+    fireEvent.click(button);
+    expect(button).toHaveAttribute('aria-expanded', 'true');
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(screen.queryByTestId('mock-calendar')).not.toBeInTheDocument();
+    expect(button).toHaveFocus();
+  });
+});
+
+// The calendar popup by keyboard, with the real Calendar (T54 review)
+describe('DateInput: the calendar by keyboard (real Calendar)', () => {
+  beforeAll(() => {
+    mockRealCalendar = true;
+  });
+  afterAll(() => {
+    mockRealCalendar = false;
+  });
+
+  test('opening moves focus to the chosen day, the grid\'s one Tab stop', () => {
+    render(<DateInput label="Due" defaultValue="2026-03-14" />);
+    fireEvent.click(screen.getByRole('button', { name: 'Choose Due date' }));
+    const grid = screen.getByRole('grid', { name: 'March 2026' });
+    expect(grid.querySelectorAll('[tabindex="0"]')).toHaveLength(1);
+    expect(screen.getByRole('button', { name: '2026-03-14' })).toHaveFocus();
+  });
+
+  test('arrows then Enter pick a day: the field gets it and focus returns to the calendar button', () => {
+    const onChange = jest.fn((e: React.ChangeEvent<HTMLInputElement>) => e.target.value);
+    render(<DateInput label="Due" defaultValue="2026-03-14" onChange={onChange} />);
+    const button = screen.getByRole('button', { name: 'Choose Due date' });
+    fireEvent.click(button);
+    fireEvent.keyDown(document.activeElement!, { key: 'ArrowDown' });
+    expect(screen.getByRole('button', { name: '2026-03-21' })).toHaveFocus();
+    // a native button: Enter clicks it
+    fireEvent.click(document.activeElement!);
+    expect(onChange).toHaveReturnedWith('2026-03-21');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(button).toHaveFocus();
+    expect(screen.getByRole('textbox')).toHaveValue('2026-03-21');
+  });
+
+  test('Escape closes it and returns focus to the calendar button, the field unchanged', () => {
+    render(<DateInput label="Due" defaultValue="2026-03-14" />);
+    const button = screen.getByRole('button', { name: 'Choose Due date' });
+    fireEvent.click(button);
+    fireEvent.keyDown(document.activeElement!, { key: 'ArrowRight' });
+    fireEvent.keyDown(document.activeElement!, { key: 'Escape' });
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(button).toHaveFocus();
+    expect(screen.getByRole('textbox')).toHaveValue('2026-03-14');
   });
 });

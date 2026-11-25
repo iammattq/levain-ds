@@ -3,12 +3,16 @@
   "description": "A chat-style input component with an auto-growing textarea and submit button. Designed for conversational UIs like refinement prompts or chat interfaces.",
   "category": "components",
   "usage": [
-    "Chat-style input with textarea and submit button side by side",
+    "Follows the form-input convention (docs/prop-conventions.json, formInputs).",
+    "Chat-style input with textarea and submit button",
+    "A native text field: value + the native onChange(event) for controlled, defaultValue for uncontrolled (it clears after a submit)",
+    "onSubmit(value) is the commit: the button, or Enter without Shift (not while an IME composition is open, not over maxLength)",
+    "An app's onKeyDown, onFocus and onBlur run before the component's; preventDefault in onKeyDown skips Enter-to-submit",
+    "Optional label, helperText, error and touched: an error shows at once unless touched is false",
     "Auto-growing textarea that expands with content up to a max height",
-    "Submit on Enter key (Shift+Enter for newlines)",
     "Optional character limit with visual counter",
     "Loading state disables input and shows spinner on button",
-    "Primary button with ArrowUp icon for submission"
+    "No size: one size today"
   ],
   "design": [
     "Stacked layout: chromeless textarea on top, action row below.",
@@ -17,15 +21,19 @@
     "Bottom row has character counter (left) and primary submit button (right).",
     "Character counter uses `.type-caption` with muted color, error color when over limit.",
     "Submit button is a primary iconOnly Button with ArrowUp icon (xs size).",
-    "Textarea auto-grows from 1 line up to ~5 lines, then scrolls."
+    "Textarea auto-grows from 1 line up to ~5 lines, then scrolls.",
+    "The root is a plain wrapper; the label sits above the bordered box and the helper or error below it.",
+    "A text field: the box shows focus however it came (border and ring-1 in --color-primary; --color-error with an error or over the limit)."
   ],
   "examples": [
     "import { ChatInput } from '@/lib/designsystem';\nimport { useState } from 'react';\n\nfunction RefinePanel() {\n  const [instruction, setInstruction] = useState('');\n  const [loading, setLoading] = useState(false);\n\n  const handleSubmit = async () => {\n    setLoading(true);\n    await refineImage(instruction);\n    setInstruction('');\n    setLoading(false);\n  };\n\n  return (\n    <ChatInput\n      value={instruction}\n      onChange={(e) => setInstruction(e.target.value)}\n      onSubmit={handleSubmit}\n      placeholder=\"Describe how to modify the image...\"\n      maxLength={500}\n      loading={loading}\n      submitLabel=\"Refine image\"\n    />\n  );\n}",
-    "// Basic usage without character limit\n<ChatInput\n  value={message}\n  onChange={(e) => setMessage(e.target.value)}\n  onSubmit={() => sendMessage(message)}\n  placeholder=\"Type a message...\"\n/>",
-    "// Disabled state\n<ChatInput\n  value={message}\n  onChange={(e) => setMessage(e.target.value)}\n  onSubmit={handleSubmit}\n  placeholder=\"Select an item first...\"\n  disabled\n/>"
+    "// Basic usage without character limit\n<ChatInput\n  value={message}\n  onChange={(e) => setMessage(e.target.value)}\n  onSubmit={sendMessage}\n  placeholder=\"Type a message...\"\n/>",
+    "// Disabled state\n<ChatInput\n  value={message}\n  onChange={(e) => setMessage(e.target.value)}\n  onSubmit={handleSubmit}\n  placeholder=\"Select an item first...\"\n  disabled\n/>",
+    "// Uncontrolled, with a label and an error\n<ChatInput\n  label=\"Instruction\"\n  onSubmit={(text) => refine(text)}\n  error={serverError}\n  placeholder=\"Describe the change...\"\n/>"
   ],
   "accessibility": [
-    "Textarea has aria-label set to placeholder text for screen readers",
+    "Named by label (<label htmlFor>), else the app's aria-label, else the placeholder",
+    "A shown error (or being over the limit) sets aria-invalid; aria-describedby points at the error or helper, and an app's own is kept",
     "Submit button has configurable aria-label via submitLabel prop",
     "Character limit is visually displayed but not announced (decorative)"
   ],
@@ -34,40 +42,72 @@
       "name": "id",
       "type": "string",
       "optional": true,
-      "defaultValue": "auto-generated",
-      "description": "Unique identifier for the textarea (auto-generated if not provided)",
-      "configurable": false
+      "defaultValue": null,
+      "description": "The textarea's id; generated with useId() when left out",
+      "configurable": true
     },
     {
-      "name": "value",
+      "name": "value / defaultValue",
       "type": "string",
-      "optional": false,
+      "optional": true,
       "defaultValue": null,
-      "description": "Current value of the textarea",
-      "configurable": true
+      "description": "value for controlled; defaultValue for uncontrolled (cleared after a submit)",
+      "configurable": false
     },
     {
       "name": "onChange",
       "type": "(event: React.ChangeEvent<HTMLTextAreaElement>) => void",
-      "optional": false,
+      "optional": true,
       "defaultValue": null,
-      "description": "Function called when the textarea value changes",
+      "description": "The native change event (a native text field keeps the native signature)",
       "configurable": false
     },
     {
       "name": "onSubmit",
-      "type": "() => void",
+      "type": "(value: string) => void",
       "optional": false,
       "defaultValue": null,
-      "description": "Function called when the form is submitted (button click or Enter key)",
+      "description": "The commit, with the text: the button or Enter",
       "configurable": false
+    },
+    {
+      "name": "label",
+      "type": "string",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Visible label. Without it, aria-label, else the placeholder, names the field",
+      "configurable": true
+    },
+    {
+      "name": "helperText",
+      "type": "string",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Helper text below the box (the error replaces it)",
+      "configurable": true
+    },
+    {
+      "name": "error",
+      "type": "string",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Error message; shown unless touched is false or the field is disabled",
+      "configurable": true
+    },
+    {
+      "name": "touched",
+      "type": "boolean",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Leave out to show error at once; pass the field's touched state to hold it until the field is left (false hides it)",
+      "configurable": true
     },
     {
       "name": "placeholder",
       "type": "string",
       "optional": true,
       "defaultValue": null,
-      "description": "Placeholder text displayed when the textarea is empty",
+      "description": "Placeholder text",
       "configurable": true
     },
     {
@@ -75,7 +115,7 @@
       "type": "number",
       "optional": true,
       "defaultValue": null,
-      "description": "Maximum character limit (displays counter when set)",
+      "description": "Character limit; shows the counter",
       "configurable": true
     },
     {
@@ -83,7 +123,7 @@
       "type": "boolean",
       "optional": true,
       "defaultValue": "false",
-      "description": "Whether the input is in a loading state (disables input and shows spinner)",
+      "description": "Disables the field and shows a spinner on the button",
       "configurable": true
     },
     {
@@ -91,7 +131,7 @@
       "type": "boolean",
       "optional": true,
       "defaultValue": "false",
-      "description": "Whether the input is disabled",
+      "description": "Native disabled",
       "configurable": true
     },
     {
@@ -99,16 +139,32 @@
       "type": "string",
       "optional": true,
       "defaultValue": null,
-      "description": "Additional CSS class for the container element",
+      "description": "Merged with cn on the root (the wrapper around the box)",
       "configurable": false
     },
     {
       "name": "submitLabel",
       "type": "string",
       "optional": true,
-      "defaultValue": "\"Submit\"",
-      "description": "Accessible label for the submit button",
+      "defaultValue": "'Submit'",
+      "description": "aria-label for the submit button",
       "configurable": true
+    },
+    {
+      "name": "ref",
+      "type": "Ref<HTMLTextAreaElement>",
+      "optional": true,
+      "defaultValue": null,
+      "description": "The native textarea; object or callback refs both keep auto-resize",
+      "configurable": false
+    },
+    {
+      "name": "...rest",
+      "type": "TextareaHTMLAttributes",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Every other prop (name, aria-*, data-*, autoFocus…) goes to the textarea",
+      "configurable": false
     }
   ]
 }

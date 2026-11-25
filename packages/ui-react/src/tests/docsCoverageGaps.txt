@@ -33,13 +33,10 @@ Footer manifest
 GradientCard manifest
 GradientEditor doc
 GradientEditor manifest
-GradientInput doc
 GradientInput manifest
 Icons doc
 Image doc
 Image manifest
-ImageCompare doc
-ImageCompare manifest
 ImageWithLoadState doc
 ImageWithLoadState manifest
 LevainProvider doc

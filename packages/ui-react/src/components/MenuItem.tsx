@@ -43,6 +43,13 @@ export interface MenuItemProps extends Omit<
    * slot usually holds buttons of its own and a button cannot contain a button.
    */
   rightContent?: React.ReactNode;
+  /**
+   * Content at the row's end that is part of the row (a status mark, a check):
+   * unlike `rightContent`, a click on it is the row's click and the item stays
+   * a `<button>` with an `onClick`. Not for controls of its own. Its colour
+   * follows the row's.
+   */
+  trailing?: React.ReactNode;
   /** Whether the menu item is currently active/selected. */
   isActive?: boolean;
   /** If provided, renders the item as an internal Next.js Link. */
@@ -107,6 +114,7 @@ const MenuItem = forwardRef<HTMLElement, MenuItemProps>(
       LeftIcon,
       RightIcon,
       rightContent,
+      trailing,
       isActive = false,
       href,
       size = 'sm',
@@ -196,6 +204,10 @@ const MenuItem = forwardRef<HTMLElement, MenuItemProps>(
               strokeWidth={iconStrokeWidth}
             />
           </span>
+        )}
+
+        {trailing != null && trailing !== false && (
+          <span className="flex shrink-0 items-center">{trailing}</span>
         )}
 
         {rightContent && (

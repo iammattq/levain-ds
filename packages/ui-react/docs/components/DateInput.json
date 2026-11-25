@@ -3,85 +3,113 @@
   "description": "A component combining a calendar button with a text input for selecting and displaying date values in YYYY-MM-DD format.",
   "category": "components",
   "usage": [
-    "Import: `import { DateInput } from \\'@/lib/designsystem\\';`",
+    "Follows the form-input convention (docs/prop-conventions.json, formInputs).",
+    "Import: `import { DateInput } from '@/lib/designsystem';`",
     "Provides both calendar picker and manual text input methods.",
+    "A native text field: onChange receives the native ChangeEvent; event.target.value is the masked YYYY-MM-DD date, whether typed or picked from the calendar",
+    "Controlled with value, or uncontrolled with defaultValue",
     "Text input includes automatic formatting to enforce YYYY-MM-DD pattern as user types.",
-    "Includes built-in validation for date format (YYYY-MM-DD) and validity (e.g., rejects Feb 30).",
-    "Supports external validation, error display, helper text, and required/disabled states.",
-    "Forwards refs to the underlying text input element."
+    "Built-in validation for date format and validity (e.g., rejects Feb 30) shows after the first blur; an error the app passes shows at once unless touched is false",
+    "Forwards refs to the underlying text input element; unnamed props (name, aria-*, data-*, onFocus…) go to it too."
   ],
   "examples": [
-    "```tsx\nimport { DateInput } from '@/lib/designsystem';\nimport { useState } from 'react';\n\nexport default function DatePickerExample() {\n  const [date, setDate] = useState('');\n  const [touched, setTouched] = useState(false);\n\n  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {\n    setDate(event.target.value);\n  };\n\n  const handleBlur = () => {\n    setTouched(true);\n  };\n\n  return (\n    <DateInput\n      id=\"appointment-date\"\n      label=\"Appointment Date\"\n      value={date}\n      onChange={handleChange}\n      onBlur={handleBlur}\n      touched={touched}\n      helperText=\"Select or enter a date in YYYY-MM-DD format.\"\n      required\n    />\n  );\n}\n```"
+    "```tsx\nimport { DateInput } from '@/lib/designsystem';\nimport { useState } from 'react';\n\nexport default function DatePickerExample() {\n  const [date, setDate] = useState('');\n\n  return (\n    <DateInput\n      label=\"Appointment Date\"\n      value={date}\n      onChange={(event) => setDate(event.target.value)}\n      helperText=\"Select or enter a date in YYYY-MM-DD format.\"\n      required\n    />\n  );\n}\n```"
   ],
   "design": [
     "The component wraps a clickable calendar button and a text input.",
     "The calendar dropdown uses a Portal and is positioned relative to the viewport to avoid clipping.",
-    "The `onChange` handler receives a standard `ChangeEvent` from the text input, even when the calendar initiates the change, for consistency.",
+    "onChange receives a real ChangeEvent from the text input; a calendar pick sets the input's value and dispatches a native input event",
+    "Sizes from the input scale ('2xs' to 'lg', utils/inputSizing.ts), default 'md'",
     "Styling aims to visually merge the button and text input, resembling the `TextInput` component but with the prepended button.",
     "Uses design system tokens for borders, focus rings, text colors, and error states."
   ],
   "accessibility": [
-    "The calendar button has an `aria-label` for screen readers.",
-    "The text input includes `aria-invalid` and `aria-describedby` for error/helper text association.",
-    "Full keyboard accessibility is provided for the dropdown calendar.",
-    "Focus states are managed correctly."
+    "The calendar button has an `aria-label` and aria-expanded; the calendar opens in a role=\"dialog\" and Escape closes it",
+    "The text input carries aria-invalid and aria-describedby (the error or helper, merged with any aria-describedby passed in)",
+    "The calendar is a WAI-ARIA date grid: one Tab stop, arrows by day and week, Home/End the week, PageUp/PageDown the month",
+    "Named by its label (htmlFor/id), or by aria-label / aria-labelledby passed through"
   ],
   "props": [
     {
       "name": "id",
       "type": "string",
-      "optional": false,
-      "description": "Unique identifier for the input.",
+      "optional": true,
+      "defaultValue": null,
+      "description": "The input's id; generated with useId() when left out",
       "configurable": false
     },
     {
       "name": "label",
       "type": "string",
-      "optional": false,
-      "description": "Text label displayed above the input.",
-      "configurable": false
+      "optional": true,
+      "defaultValue": null,
+      "description": "Visible label. Without it, pass aria-label or aria-labelledby"
     },
     {
       "name": "value",
       "type": "string",
-      "optional": false,
-      "description": "Current date value (in YYYY-MM-DD format).",
-      "configurable": true
+      "optional": true,
+      "defaultValue": null,
+      "description": "Controlled: the date, YYYY-MM-DD ('' for none). Leave out for uncontrolled"
+    },
+    {
+      "name": "defaultValue",
+      "type": "string",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Uncontrolled: the date at first",
+      "configurable": false
     },
     {
       "name": "onChange",
       "type": "(event: ChangeEvent<HTMLInputElement>) => void",
-      "optional": false,
-      "description": "Function called when value changes (from text input or calendar picker).",
+      "optional": true,
+      "defaultValue": null,
+      "description": "The native change event; event.target.value is the masked date, typed or picked",
       "configurable": false
     },
     {
       "name": "error",
       "type": "string",
       "optional": true,
-      "description": "Error message to display (takes precedence over internal validation).",
-      "configurable": false
+      "defaultValue": null,
+      "description": "The app's error message: shows at once unless touched is false; replaces the helper text"
     },
     {
       "name": "validate",
       "type": "(value: string) => string | null | undefined",
       "optional": true,
-      "description": "Custom validation function called on value change.",
+      "defaultValue": null,
+      "description": "Your own check; its message (like the format check's) shows after the first blur, or when touched is true",
       "configurable": false
     },
     {
       "name": "helperText",
       "type": "string",
       "optional": true,
-      "description": "Text displayed below the input when not in an error state.",
-      "configurable": false
+      "defaultValue": null,
+      "description": "Text displayed below the input when not in an error state."
+    },
+    {
+      "name": "touched",
+      "type": "boolean",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Leave out to show an error the app passes at once; pass the field's touched state to hold it until the field is left. false hides errors"
+    },
+    {
+      "name": "size",
+      "type": "'2xs' | 'xs' | 'sm' | 'md' | 'lg'",
+      "optional": true,
+      "defaultValue": "'md'",
+      "description": "Size from the input scale"
     },
     {
       "name": "className",
       "type": "string",
       "optional": true,
       "defaultValue": "''",
-      "description": "CSS classes for the outer container div.",
+      "description": "CSS classes for the outer container div, merged with cn() so yours win.",
       "configurable": false
     },
     {
@@ -98,14 +126,6 @@
       "optional": true,
       "defaultValue": "''",
       "description": "CSS classes specifically for the calendar <button> element.",
-      "configurable": false
-    },
-    {
-      "name": "touched",
-      "type": "boolean",
-      "optional": true,
-      "defaultValue": "false",
-      "description": "Set to true to enable validation error display (usually after blur).",
       "configurable": false
     },
     {
@@ -130,6 +150,22 @@
       "defaultValue": "false",
       "description": "Disables the input and calendar button.",
       "configurable": true
+    },
+    {
+      "name": "ref",
+      "type": "Ref<HTMLInputElement>",
+      "optional": true,
+      "defaultValue": null,
+      "description": "The text input",
+      "configurable": false
+    },
+    {
+      "name": "...rest",
+      "type": "InputHTMLAttributes",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Every other prop (name, aria-*, data-*, onFocus…) goes to the text input",
+      "configurable": false
     }
   ],
   "subcomponents": []

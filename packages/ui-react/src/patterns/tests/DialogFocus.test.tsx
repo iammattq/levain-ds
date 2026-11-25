@@ -156,15 +156,15 @@ describe('Escape inside a Modal: the widget first, then the Modal (T29)', () => 
     const page = (e: KeyboardEvent) => { if (e.key === 'Escape') seen.push(e.defaultPrevented); };
     document.addEventListener('keydown', page);
     render(<Modal isOpen onClose={onClose} title="Rename">{() => <EditableText value="Sage" showEditIcon onSave={jest.fn()} />}</Modal>);
-    await user.click(screen.getByRole('button', { name: 'Edit' }));
+    await user.click(document.querySelector('button[aria-label="Edit"]') as HTMLElement); // the pencil: a mouse target, out of the tree (T55)
     await user.clear(screen.getByRole('textbox'));
     await user.type(screen.getByRole('textbox'), 'Moss');
     await user.keyboard('{Escape}');
     expect(screen.queryByRole('textbox')).toBeNull();
     expect(screen.getByText('Sage')).toBeInTheDocument();
     expect(onClose).not.toHaveBeenCalled();
-    // focus went with the input; back inside the Modal, the next Escape is the Modal's
-    screen.getByRole('button', { name: 'Edit' }).focus();
+    // focus is back on the EditableText (T55), inside the Modal: the next Escape is the Modal's
+    expect(screen.getByRole('button', { name: 'Sage, edit' })).toHaveFocus();
     await user.keyboard('{Escape}');
     document.removeEventListener('keydown', page);
     expect(onClose).toHaveBeenCalled();

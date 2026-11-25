@@ -1,0 +1,50 @@
+{
+  "name": "Menu",
+  "description": "A list of choices that opens from a button: a Popover with role=\"menu\" and MenuItem rows, the chosen one checked, with the menu keys (ArrowDown on the trigger opens; arrows wrap; Home/End; Enter or Space selects and closes; Escape, Tab or a press outside closes, focus back on the trigger).",
+  "category": "components",
+  "usage": [
+    "Use for a short list of choices or actions that belongs to one button: a project switcher, a sort order, a row's actions",
+    "Pass items as data ({ value, label, end?, disabled? }); onSelect gets the value and the menu closes after it",
+    "Pass value for a pick-one menu: the chosen row is checked and focus starts on it",
+    "Pass the trigger as a render prop and spread its props onto your own button (they include onKeyDown, for ArrowDown)",
+    "end holds status at the row's end (a ring, marks); it is part of the row, so a press on it selects. Not for controls of its own",
+    "Not for a form or a few controls (use Popover), a list that filters as you type, or nested submenus (not supported)"
+  ],
+  "examples": [
+    "<Menu label=\"Project\" items={projects.map(p => ({ value: p.name, label: p.name, end: <Ring working={p.working} /> }))}\n  value={current} onSelect={pickProject} portal={false} alignOffset={6} className=\"min-w-[13rem]\"\n  trigger={p => <button {...p}>{current} <ChevronDown size={14} /></button>} />",
+    "// actions, no chosen one: plain menuitems\n<Menu label=\"Card\" align=\"end\" items={[{ value: 'edit', label: 'Edit' }, { value: 'archive', label: 'Archive', disabled: !canArchive }]}\n  onSelect={act} trigger={p => <Button {...p} variant=\"ghost\" aria-label=\"More\"><MoreHorizontal size={16} /></Button>} />"
+  ],
+  "design": [
+    "Popover's surface and motion: --color-surface-elevated, --elevation-3 with a 1px --color-border-subtle ring, --radius-lg; grows out of the trigger (recipe.morph) and collapses back",
+    "Content padding --space-3xs (0.25rem); width to fit, className sets a min width",
+    "Rows are MenuItem buttons at size md (type-label), 2.25rem tall, --space-2xs side padding, --radius-md corner, muted text",
+    "Hover: --color-state-hover; keyboard focus: --color-state-active with default text, no ring; the chosen row default text at 600",
+    "The row's end: the item's end content, then a 14px check slot that every row keeps in a pick-one menu, so the columns line up",
+    "Disabled rows: --color-text-disabled, no hover"
+  ],
+  "accessibility": [
+    "The trigger gets aria-haspopup=\"menu\", aria-expanded, and aria-controls naming the menu while open (Popover)",
+    "The panel is role=\"menu\" named by label. With value the rows are menuitemradio with aria-checked (a pick-one menu); without, plain menuitem",
+    "Rows have tabIndex -1: focus moves by the keys, not by Tab. Focus starts on the chosen row, else the first enabled one",
+    "ArrowDown/ArrowUp move through enabled rows and wrap at both ends; Home/End go to the first and last; Enter or Space selects and closes",
+    "Escape, a press outside, or Tab / Shift+Tab from any row closes it, and focus goes back to the trigger",
+    "Disabled rows carry aria-disabled=\"true\", are skipped by the keys and do nothing when pressed; with every row disabled, focus goes to the menu itself"
+  ],
+  "props": [
+    { "name": "trigger", "type": "(props: MenuTriggerProps) => ReactNode", "optional": false, "description": "Renders the trigger; spread the given ref, onClick, onKeyDown and aria props onto a button." },
+    { "name": "label", "type": "string", "optional": false, "description": "The menu's accessible name." },
+    { "name": "items", "type": "MenuOption[]", "optional": false, "description": "The rows: { value: string; label: ReactNode; end?: ReactNode; disabled?: boolean }." },
+    { "name": "value", "type": "string", "optional": true, "description": "The chosen item: checked, focused at open; makes the rows menuitemradio." },
+    { "name": "onSelect", "type": "(value: string) => void", "optional": true, "description": "A row's click, Enter or Space; the menu closes after it." },
+    { "name": "open", "type": "boolean", "optional": true, "description": "Controlled open state. Leave out for uncontrolled." },
+    { "name": "defaultOpen", "type": "boolean", "optional": true, "defaultValue": "false", "description": "Uncontrolled: open at first." },
+    { "name": "onOpenChange", "type": "(open: boolean) => void", "optional": true, "description": "Called when the trigger, ArrowDown, a selection, Escape, Tab or a press outside asks to open or close." },
+    { "name": "placement", "type": "'top' | 'bottom' | 'left' | 'right'", "optional": true, "defaultValue": "'bottom'", "description": "Popover's: the preferred side; flips when it has no room." },
+    { "name": "align", "type": "'start' | 'center' | 'end'", "optional": true, "defaultValue": "'start'", "description": "Popover's: alignment along the trigger." },
+    { "name": "sideOffset", "type": "number", "optional": true, "defaultValue": "6", "description": "Popover's: gap from the trigger, in px." },
+    { "name": "alignOffset", "type": "number", "optional": true, "defaultValue": "0", "description": "Popover's: how far the menu reaches past the trigger's aligned edge, in px (the switcher: 6, its names under the label)." },
+    { "name": "viewportMargin", "type": "number", "optional": true, "defaultValue": "8", "description": "Popover's: least distance from the window's edges, in px." },
+    { "name": "portal", "type": "boolean", "optional": true, "defaultValue": "true", "description": "Popover's: portalled above dialogs, or false beside the trigger (a trigger in a static bar only)." },
+    { "name": "className", "type": "string", "optional": true, "description": "Classes for the menu's box (min width, width)." }
+  ]
+}

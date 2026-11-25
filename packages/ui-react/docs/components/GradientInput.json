@@ -1,0 +1,170 @@
+{
+  "name": "GradientInput",
+  "description": "A gradient chip beside a summary of the gradient (angle and stop count). Clicking either opens the gradient editor (stops, colors, angle) in a popover.",
+  "category": "components",
+  "usage": [
+    "Follows the form-input convention (docs/prop-conventions.json, formInputs).",
+    "Use for choosing a linear gradient, e.g. a fill or a shine layer",
+    "onChange(gradient) is called with the whole new GradientValue, value first",
+    "Controlled with value, or uncontrolled with defaultValue (default black to white at 90°)",
+    "Use lockedHue to vary only the alpha of each stop (shine/gloss effects); minStops and maxStops bound the stops",
+    "It has no native field: the ref, the id and unnamed props (aria-*, data-*, onFocus…) go to the chip, its focusable root"
+  ],
+  "examples": [
+    "```tsx\nimport { GradientInput, type GradientValue } from '@/lib/designsystem';\nimport { useState } from 'react';\n\nexport default function FillExample() {\n  const [fill, setFill] = useState<GradientValue>({\n    angle: 90,\n    stops: [\n      { position: 0, color: { hex: '#5C62D6', alpha: 100 } },\n      { position: 100, color: { hex: '#E86A92', alpha: 100 } },\n    ],\n  });\n\n  return <GradientInput label=\"Fill\" value={fill} onChange={setFill} size=\"sm\" />;\n}\n```"
+  ],
+  "design": [
+    "The chip shows the gradient; the summary beside it reads '<angle>°, <n> stops' and also opens the editor",
+    "The editor opens in a portalled popover beside the chip, on whichever side has room",
+    "Sizes from the input scale ('2xs' to 'lg', utils/inputSizing.ts), default 'md'; compact is the deprecated alias for 'xs'",
+    "Keyboard ring on the chip: 2px var(--color-border-focus), offset 2px on var(--color-surface-canvas)",
+    "Error state: var(--color-error) borders and message; disabled: a transparent chip, var(--color-text-disabled) text"
+  ],
+  "accessibility": [
+    "The chip is a button named 'Edit <label> gradient' (or by aria-label / aria-labelledby passed through), with aria-expanded and aria-haspopup=\"dialog\"",
+    "The editor is a role=\"dialog\"; Escape closes it and returns focus to the chip",
+    "aria-describedby on the chip points at the error or helper (merged with any passed in)",
+    "disabled sets the native disabled on the chip"
+  ],
+  "props": [
+    {
+      "name": "id",
+      "type": "string",
+      "optional": true,
+      "defaultValue": null,
+      "description": "The chip's id; generated with useId() when left out",
+      "configurable": false
+    },
+    {
+      "name": "label",
+      "type": "string",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Visible label. Without it, pass aria-label or aria-labelledby"
+    },
+    {
+      "name": "value",
+      "type": "GradientValue",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Controlled: the gradient ({ angle, stops }). Leave out for uncontrolled",
+      "configurable": false
+    },
+    {
+      "name": "defaultValue",
+      "type": "GradientValue",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Uncontrolled: the gradient at first (default black to white at 90°)",
+      "configurable": false
+    },
+    {
+      "name": "onChange",
+      "type": "(value: GradientValue) => void",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Called with the whole new gradient",
+      "configurable": false
+    },
+    {
+      "name": "error",
+      "type": "string",
+      "optional": true,
+      "defaultValue": null,
+      "description": "The app's error message: shows at once unless touched is false; replaces the helper text"
+    },
+    {
+      "name": "helperText",
+      "type": "string",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Text displayed below the input when not in an error state."
+    },
+    {
+      "name": "touched",
+      "type": "boolean",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Leave out to show an error the app passes at once; pass the field's touched state to hold it until the field is left. false hides errors"
+    },
+    {
+      "name": "size",
+      "type": "'2xs' | 'xs' | 'sm' | 'md' | 'lg'",
+      "optional": true,
+      "defaultValue": "'md'",
+      "description": "Size from the input scale"
+    },
+    {
+      "name": "compact",
+      "type": "boolean",
+      "optional": true,
+      "defaultValue": "false",
+      "description": "Deprecated: use size=\"xs\". size wins when both are given"
+    },
+    {
+      "name": "required",
+      "type": "boolean",
+      "optional": true,
+      "defaultValue": "false",
+      "description": "Marks the input as required (adds asterisk to label)."
+    },
+    {
+      "name": "disabled",
+      "type": "boolean",
+      "optional": true,
+      "defaultValue": "false",
+      "description": "The chip natively disabled; the editor doesn't open; nothing fires"
+    },
+    {
+      "name": "minStops",
+      "type": "number",
+      "optional": true,
+      "defaultValue": "2",
+      "description": "Minimum number of stops"
+    },
+    {
+      "name": "maxStops",
+      "type": "number",
+      "optional": true,
+      "defaultValue": "10",
+      "description": "Maximum number of stops"
+    },
+    {
+      "name": "lockedHue",
+      "type": "string",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Lock all stops to this hex hue; only alpha varies (shine/gloss effects)"
+    },
+    {
+      "name": "className",
+      "type": "string",
+      "optional": true,
+      "defaultValue": null,
+      "description": "CSS classes for the outer container, merged with cn() so yours win"
+    },
+    {
+      "name": "chipClassName",
+      "type": "string",
+      "optional": true,
+      "defaultValue": "''",
+      "description": "CSS classes for the gradient chip <button>"
+    },
+    {
+      "name": "ref",
+      "type": "Ref<HTMLButtonElement>",
+      "optional": true,
+      "defaultValue": null,
+      "description": "The chip, its focusable root",
+      "configurable": false
+    },
+    {
+      "name": "...rest",
+      "type": "ButtonHTMLAttributes",
+      "optional": true,
+      "defaultValue": null,
+      "description": "Every other prop (aria-*, data-*, onFocus…) goes to the chip",
+      "configurable": false
+    }
+  ]
+}

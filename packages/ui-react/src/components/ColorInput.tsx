@@ -7,12 +7,14 @@ import React, {
   useEffect,
   useLayoutEffect,
   useCallback,
+  useId,
 } from 'react';
 import { createPortal } from 'react-dom';
 import { cn } from '../utils/cn';
 import { besideTrigger } from '../utils/besideTrigger';
 import ColorPickerPanel from './ColorPickerPanel';
 import { inputSizeConfig, type InputSize } from '../utils/inputSizing';
+import { useControlled } from '../utils/useControlled';
 
 // Basic color validation (checks for # followed by 3, 4, 6, or 8 hex chars)
 const isValidHexColor = (color: string): boolean =>
@@ -21,22 +23,32 @@ const isValidHexColor = (color: string): boolean =>
 /** Size variants for ColorInput */
 export type ColorInputSize = InputSize;
 
-export interface ColorInputProps {
-  /** Unique identifier for the input */
-  id: string;
-  /** Text label for the input field */
-  label: string;
-  /** Current color value (string, expected hex format e.g., #RRGGBB) */
-  value: string;
-  /** Function called when the color value changes */
-  onChange: (value: string) => void;
+/**
+ * ColorInput follows the form-input convention (docs/prop-conventions.json, formInputs): `value` / `defaultValue` (a
+ * hex string) and `onChange(hex)`, value first; the ref, the `id` and every prop it doesn't name (name, aria-*, data-*,
+ * onFocus, onKeyDown…) go to the text field. The chip beside it opens the picker.
+ */
+export interface ColorInputProps extends Omit<
+  React.InputHTMLAttributes<HTMLInputElement>,
+  'value' | 'defaultValue' | 'onChange' | 'size' | 'className' | 'id'
+> {
+  /** The text field's id; generated when left out */
+  id?: string;
+  /** Visible label. Without it, pass `aria-label` or `aria-labelledby` */
+  label?: string;
+  /** Controlled: the colour, a hex string such as #RRGGBB. Leave out for uncontrolled */
+  value?: string;
+  /** Uncontrolled: the colour at first (default '') */
+  defaultValue?: string;
+  /** The new colour (upper-case hex, '#' added), whether typed or picked */
+  onChange?: (value: string) => void;
   /** Current alpha value (0-100). Only used when hideAlpha is false. */
   alpha?: number;
   /** Function called when the alpha value changes. Only used when hideAlpha is false. */
   onAlphaChange?: (alpha: number) => void;
-  /** Optional: Error message to display */
+  /** The app's error message: shows at once unless `touched` is false */
   error?: string;
-  /** Optional: Validation function */
+  /** Your own check; its message (like the hex check's) shows after the first blur, or when `touched` is true */
   validate?: (value: string) => string | null | undefined;
   /** Optional helper text shown below the input */
   helperText?: string;
@@ -46,10 +58,8 @@ export interface ColorInputProps {
   inputClassName?: string;
   /** Additional class name for the color chip element */
   chipClassName?: string;
-  /** Whether the field has been touched/blurred (controls validation visibility) */
+  /** Leave out to show the app's error at once; pass the field's touched state to hold it until the field is left */
   touched?: boolean;
-  /** Function called when the text input loses focus */
-  onBlur?: (event: React.FocusEvent<HTMLInputElement>) => void;
   /** Whether the field is required */
   required?: boolean;
   /** Whether the field is disabled */
@@ -64,12 +74,13 @@ export interface ColorInputProps {
   hideAlpha?: boolean;
 }
 
-const ColorInput = forwardRef<HTMLButtonElement, ColorInputProps>(
+const ColorInput = forwardRef<HTMLInputElement, ColorInputProps>(
   (
     {
-      id,
+      id: idProp,
       label,
-      value,
+      value: valueProp,
+      defaultValue = '',
       onChange,
       alpha = 100,
       onAlphaChange,
@@ -77,18 +88,28 @@ const ColorInput = forwardRef<HTMLButtonElement, ColorInputProps>(
       error: externalError,
       validate,
       helperText,
-      className = '',
+      className,
       inputClassName = '',
       chipClassName = '',
-      touched = false,
+      touched,
       required = false,
       disabled = false,
       size,
       compact = false,
       hideAlpha,
+      'aria-describedby': describedBy,
+      ...props
     },
     ref
   ) => {
+    const autoId = useId();
+    const id = idProp ?? autoId;
+    const [value, setValue] = useControlled(
+      valueProp,
+      defaultValue,
+      onChange,
+      'ColorInput'
+    );
     // Handle deprecated compact prop - size takes precedence
     const effectiveSize: ColorInputSize = size ?? (compact ? 'xs' : 'md');
     const config = inputSizeConfig[effectiveSize];
@@ -99,13 +120,13 @@ const ColorInput = forwardRef<HTMLButtonElement, ColorInputProps>(
     const popoverRef = useRef<HTMLDivElement>(null);
     const textInputRef = useRef<HTMLInputElement>(null);
     const [isOpen, setIsOpen] = useState(false);
-    const [internalError, setInternalError] = useState<string | null>(null);
+    const [blurred, setBlurred] = useState(false);
 
-    // Combine forwarded ref with internal ref
+    // The ref goes to the text field (formInputs.ref: "ColorInput forwards to its text field")
     const setRefs = useCallback(
-      (element: HTMLButtonElement | null) => {
+      (element: HTMLInputElement | null) => {
         (
-          triggerRef as React.MutableRefObject<HTMLButtonElement | null>
+          textInputRef as React.MutableRefObject<HTMLInputElement | null>
         ).current = element;
         if (typeof ref === 'function') {
           ref(element);
@@ -116,26 +137,30 @@ const ColorInput = forwardRef<HTMLButtonElement, ColorInputProps>(
       [ref]
     );
 
-    // Validate color format internally
-    useEffect(() => {
-      let validationResult: string | null | undefined = null;
-      if (!isValidHexColor(value) && value !== '') {
-        validationResult = 'Invalid hex color format.';
-      } else if (validate) {
-        validationResult = validate(value);
-      }
-      setInternalError(validationResult ?? null);
-    }, [value, validate]);
+    // Our own check: the hex format, then the app's validate
+    const internalError =
+      value !== '' && !isValidHexColor(value)
+        ? 'Invalid hex color format.'
+        : (validate?.(value) ?? null);
 
-    const effectiveError = externalError ?? internalError;
-    const showError = touched && !!effectiveError;
+    // Errors (Q-touched): the app's shows at once unless touched is false; our own waits for the first blur (or
+    // touched); neither while disabled
+    const shownExternal = touched !== false ? externalError : undefined;
+    const shownInternal =
+      touched === true || (touched !== false && blurred)
+        ? internalError
+        : null;
+    const effectiveError = shownExternal || shownInternal || null;
+    const showError = !disabled && !!effectiveError;
     const errorId = `${id}-error`;
     const helperId = `${id}-helper`;
-    const descriptionId = showError
+    const ownDescription = showError
       ? errorId
       : helperText
         ? helperId
         : undefined;
+    const descriptionId =
+      [describedBy, ownDescription].filter(Boolean).join(' ') || undefined;
 
     const POPOVER_HEIGHT = 300;
     const OFFSET = 8;
@@ -226,7 +251,8 @@ const ColorInput = forwardRef<HTMLButtonElement, ColorInputProps>(
 
     // Handle color changes from the picker panel
     const handleColorPickerChange = (color: { hex: string; alpha: number }) => {
-      onChange(color.hex.toUpperCase());
+      if (disabled) return;
+      setValue(color.hex.toUpperCase());
       if (onAlphaChange && color.alpha !== alpha) {
         onAlphaChange(color.alpha);
       }
@@ -239,38 +265,45 @@ const ColorInput = forwardRef<HTMLButtonElement, ColorInputProps>(
       if (inputValue && !inputValue.startsWith('#')) {
         inputValue = '#' + inputValue;
       }
-      onChange(inputValue);
+      setValue(inputValue);
+    };
+
+    const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+      setBlurred(true);
+      onBlur?.(e);
     };
 
     return (
       <div className={cn('flex flex-col', className)}>
         {/* Label */}
-        <label
-          htmlFor={id}
-          className={`${config.labelClass} mb-1 block ${disabled ? 'text-[var(--color-text-disabled)]' : 'text-[var(--color-text-default)]'}`}
-        >
-          {label}{' '}
-          {required && <span className="text-[var(--color-error)]">*</span>}
-        </label>
+        {label !== undefined && (
+          <label
+            htmlFor={id}
+            className={`${config.labelClass} mb-1 block ${disabled ? 'text-[var(--color-text-disabled)]' : 'text-[var(--color-text-default)]'}`}
+          >
+            {label}{' '}
+            {required && <span className="text-[var(--color-error)]">*</span>}
+          </label>
+        )}
 
         {/* Input Group (Chip + Text Input) */}
         <div className="flex items-center">
           {/* Color Chip Button */}
           <button
-            ref={setRefs}
+            ref={triggerRef}
             type="button"
             onClick={handleChipClick}
             disabled={disabled}
             aria-expanded={isOpen}
             aria-haspopup="dialog"
-            aria-describedby={descriptionId}
+            aria-describedby={ownDescription}
             className={cn(
               'flex-shrink-0 border border-r-0 transition-colors focus:outline-none',
               config.roundedL,
               config.chipSize,
               disabled
                 ? 'cursor-not-allowed border-[var(--color-border-subtle)]'
-                : 'border-[var(--color-border-default)] focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-1',
+                : 'border-[var(--color-border-default)] focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface-canvas)]',
               showError && !disabled
                 ? 'border-[var(--color-error)]'
                 : 'border-[var(--color-border-default)]',
@@ -280,17 +313,18 @@ const ColorInput = forwardRef<HTMLButtonElement, ColorInputProps>(
               backgroundColor:
                 isValidHexColor(value) && !disabled ? value : 'transparent',
             }}
-            aria-label={`Choose ${label} color`}
+            aria-label={label ? `Choose ${label} color` : 'Choose color'}
           />
 
           {/* Text Input */}
           <input
-            ref={textInputRef}
+            {...props}
+            ref={setRefs}
             id={id}
             type="text"
             value={value}
             onChange={handleTextInputChange}
-            onBlur={onBlur}
+            onBlur={handleBlur}
             disabled={disabled}
             required={required}
             aria-invalid={showError}
@@ -340,7 +374,7 @@ const ColorInput = forwardRef<HTMLButtonElement, ColorInputProps>(
             <div
               ref={popoverRef}
               role="dialog"
-              aria-label={`Edit ${label}`}
+              aria-label={label ? `Edit ${label}` : 'Edit color'}
               className="fixed z-[9999] w-64 rounded-lg border border-[var(--color-border-default)] bg-[var(--color-surface-card)] p-3 shadow-lg"
               style={{
                 // Initial values - useLayoutEffect sets actual position via direct DOM manipulation

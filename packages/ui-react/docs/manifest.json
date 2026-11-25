@@ -36,6 +36,26 @@
   },
   {
     "category": "Components",
+    "name": "ImageViewer",
+    "description": "An image or a before/after pair full screen on a dark scrim, pinch- and wheel-zoomed by the image while the page stays put"
+  },
+  {
+    "category": "Components",
+    "name": "Popover",
+    "description": "Panel anchored to a trigger that grows out of it, flips for room, closes on Escape or a press outside"
+  },
+  {
+    "category": "Components",
+    "name": "Tooltip",
+    "description": "Short hint for one control on hover or keyboard focus, placed and flipped like Popover, never takes focus"
+  },
+  {
+    "category": "Components",
+    "name": "Menu",
+    "description": "List of choices that opens from a button, the chosen one checked, with arrow keys, Home/End and Enter"
+  },
+  {
+    "category": "Components",
     "name": "Toaster",
     "description": "Notification system for displaying alerts and messages"
   },
@@ -63,6 +83,16 @@
     "category": "Components",
     "name": "ProgressBar",
     "description": "Horizontal fill with optional value text beside it, xs to lg, three tones"
+  },
+  {
+    "category": "Components",
+    "name": "Skeleton",
+    "description": "Placeholder line, box or circle that pulses while a list loads, inside a group that says Loading"
+  },
+  {
+    "category": "Components",
+    "name": "EmptyState",
+    "description": "Dashed outline with a muted centred message and an optional action, where a list has nothing to show"
   },
   {
     "category": "Components",
@@ -158,6 +188,11 @@
     "category": "Patterns",
     "name": "Drawer",
     "description": "Full-height side panel that slides in from the left over a scrim, for a phone menu"
+  },
+  {
+    "category": "Patterns",
+    "name": "ImageCompare",
+    "description": "Two images compared: side by side, or before and after in one frame with a drag handle"
   },
   {
     "category": "Templates",
