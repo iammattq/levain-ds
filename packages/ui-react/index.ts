@@ -58,6 +58,8 @@ export { Skeleton, SkeletonGroup } from './src/components/Skeleton';
 export type { SkeletonProps, SkeletonShape, SkeletonGroupProps } from './src/components/Skeleton';
 export { EmptyState } from './src/components/EmptyState';
 export type { EmptyStateProps } from './src/components/EmptyState';
+export { Notice } from './src/components/Notice';
+export type { NoticeProps, NoticeTone } from './src/components/Notice';
 export { RelativeTime } from './src/components/RelativeTime';
 export type { RelativeTimeProps } from './src/components/RelativeTime';
 export { formatSpan } from './src/utils/time';
