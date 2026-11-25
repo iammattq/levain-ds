@@ -261,6 +261,47 @@ describe('a swipe comes to rest (T60: iOS drops a snap if the strip changes mid-
     expect(strip().scrollTop).toBe(0);
   });
 
+  it('the backstop: at rest between columns, it scrolls on to the nearest, smoothly, then settles there', () => {
+    render(<Harness />);
+    swipeTo(W * 0.9); // iOS dropped the snap: at rest a column off
+    flush(COLUMN_STRIP_QUIET);
+    expect(scrollTo).toHaveBeenCalledTimes(1);
+    expect(scrollTo).toHaveBeenCalledWith({ left: W, behavior: 'smooth' });
+    expect(strip().style.height).toBe('100px'); // not yet: the backstop's own scroll settles it
+    fireEvent.scroll(strip()); // the backstop's scroll (the mock jumps there)
+    flush(COLUMN_STRIP_QUIET);
+    expect(scrollTo).toHaveBeenCalledTimes(1);
+    expect(strip().style.height).toBe('200px');
+    expect(pill('Queued')).toHaveAttribute('aria-current', 'true');
+  });
+
+  it('the backstop goes back too, to the nearer page', () => {
+    render(<Harness defaultCurrent="In progress" />);
+    swipeTo(W * 2.3);
+    flush(COLUMN_STRIP_QUIET);
+    expect(scrollTo).toHaveBeenCalledWith({ left: W * 2, behavior: 'smooth' });
+  });
+
+  it('no backstop on a page, or within 1 px of one', () => {
+    render(<Harness />);
+    swipeTo(W + 1);
+    flush(COLUMN_STRIP_QUIET);
+    swipeTo(W * 2 - 0.5);
+    flush(COLUMN_STRIP_QUIET);
+    expect(scrollTo).not.toHaveBeenCalled();
+    expect(strip().style.height).toBe('300px');
+  });
+
+  it('a backstop that also ends off a page settles there rather than nudging again', () => {
+    render(<Harness />);
+    scrollTo.mockImplementationOnce(function (this: HTMLElement) { this.scrollLeft = W * 0.8; });
+    swipeTo(W * 0.7);
+    flush(COLUMN_STRIP_QUIET);
+    flush(COLUMN_STRIP_QUIET);
+    expect(scrollTo).toHaveBeenCalledTimes(1);
+    expect(strip().style.height).toBe('200px');
+  });
+
   it('a held card\'s page moves the height at once (no native scroll in play)', async () => {
     render(<Harness />);
     act(() => drag.onDragChange(true));

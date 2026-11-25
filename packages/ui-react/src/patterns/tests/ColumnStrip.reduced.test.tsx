@@ -38,6 +38,17 @@ it('a pill jumps at once', () => {
   expect(scrollTo).toHaveBeenCalledWith({ left: W * 2, behavior: 'auto' });
 });
 
+it('the backstop scrolls to the nearest column at once', () => {
+  jest.useFakeTimers();
+  render(<Harness />);
+  const strip = document.querySelector('[data-strip]') as HTMLElement;
+  strip.scrollLeft = W * 1.2;
+  fireEvent.scroll(strip);
+  act(() => { jest.advanceTimersByTime(120); });
+  expect(scrollTo).toHaveBeenCalledWith({ left: W, behavior: 'auto' });
+  jest.useRealTimers();
+});
+
 it('a held card pages without a slide, and the cue shows at full strength', async () => {
   jest.useFakeTimers();
   render(<Harness />);

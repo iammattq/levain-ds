@@ -108,6 +108,8 @@ export function ColumnStrip({
   label = 'Columns', pillsEnd, className, pillsClassName,
 }: ColumnStripProps) {
   const reduce = !!useReducedMotion();
+  const reduced = useRef(reduce);
+  reduced.current = reduce;
   const indexOf = (key: string | undefined) => Math.max(0, columns.findIndex(c => c.key === key));
   const strip = useRef<HTMLDivElement>(null);
   const rail = useRef<HTMLDivElement>(null);
@@ -147,20 +149,32 @@ export function ColumnStrip({
     if (!el) return;
     let touching = false;
     let quiet = 0;
+    const ends = 'onscrollend' in el;
     const onPage = () => Math.abs(el.scrollLeft - snapIndex(el.scrollLeft, el.clientWidth, count.current) * el.clientWidth) <= 1;
     // the strip never scrolls up and down (each column is its own height); WebKit's autoscroll under a held mouse
     // would scroll it once it shrinks to a shorter column, cutting off the column's top. Put back only at rest (no
     // touch, on a page): a write mid-swipe would drop the snap
     const level = () => { if (el.scrollTop && !touching && onPage()) el.scrollTop = 0; };
+    let nudged = false;
     const settle = () => {
       window.clearTimeout(quiet);
       if (touching || held.current.on) return;
+      // the backstop: come to rest between columns (iOS dropped the snap), scroll on to the nearest. The scroll it starts
+      // settles in turn; if that one too ends off a page, settle there rather than nudge forever
+      if (!onPage() && !nudged) {
+        nudged = true;
+        const left = snapIndex(el.scrollLeft, el.clientWidth, count.current) * el.clientWidth;
+        if (typeof el.scrollTo === 'function') el.scrollTo({ left, behavior: reduced.current ? 'auto' : 'smooth' });
+        else el.scrollLeft = left;
+        if (!ends) quiet = window.setTimeout(settle, COLUMN_STRIP_QUIET);
+        return;
+      }
+      nudged = false;
       level();
       const i = snapIndex(el.scrollLeft, el.clientWidth, count.current);
       setAt(i);
       setSettled(i);
     };
-    const ends = 'onscrollend' in el;
     const on = () => {
       // nor sideways while a card is held (the rail's transform pages it): WebKit's autoscroll would nudge it
       if (held.current.on) { if (el.scrollLeft !== held.current.base) el.scrollLeft = held.current.base; return; }
