@@ -16,7 +16,8 @@
     "A page slides on recipe.sheetIn's easing at duration.arrival (620 ms): easing out, no overshoot (like the iPhone's home screen)",
     "The cue: a 24 px glow of --color-text-link at the paging edge, building linearly over the dwell",
     "Defaults: edge 56 px, dwell 500 ms, repeat 600 ms",
-    "Only the column in view sets the strip's height; the others are clipped to it, so the strip never scrolls up and down"
+    "Only the column in view sets the strip's height; the others are clipped to it, so the strip never scrolls up and down. Both move once a swipe comes to rest (scrollend, or 120 ms without a scroll), never mid-swipe, as iOS drops a snap if the strip changes under it",
+    "A swipe that comes to rest between columns (iOS can drop a snap) scrolls on to the nearest, smoothly (at once under Reduce Motion)"
   ],
   "accessibility": [
     "The pills are buttons in a nav (label `label`, default \"Columns\"); the current one has aria-current=true",
