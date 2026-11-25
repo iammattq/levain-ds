@@ -184,7 +184,9 @@ export function ColumnStrip({
       if (held.current.on) { if (el.scrollLeft !== held.current.base) el.scrollLeft = held.current.base; return; }
       level();
       setAt(snapIndex(el.scrollLeft, el.clientWidth, count.current));
-      if (!ends) { window.clearTimeout(quiet); quiet = window.setTimeout(settle, COLUMN_STRIP_QUIET); }
+      // a scroll cancels the settle a lifted finger armed (a fling is under way); where scrollend comes, it settles
+      window.clearTimeout(quiet);
+      if (!ends) quiet = window.setTimeout(settle, COLUMN_STRIP_QUIET);
     };
     // a new swipe may start during the backstop's own scroll: it gets its own backstop
     const down = (e: TouchEvent) => { touching = e.touches.length > 0; swiped = true; nudged = false; };

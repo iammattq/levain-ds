@@ -214,6 +214,31 @@ describe('a swipe comes to rest (T60: iOS drops a snap if the strip changes mid-
       expect(col('Queued').style.maxHeight).toBe('');
       expect(col('Ideas').style.maxHeight).toBe('200px');
     });
+
+    it('a fling after the finger lifts cancels the lift\'s settle: nothing moves until scrollend', () => {
+      render(<Harness />);
+      touch('touchStart', 1);
+      swipeTo(W * 0.3);
+      touch('touchEnd', 0); // arms the settle a tap needs
+      swipeTo(W * 0.5); // the fling
+      swipeTo(W * 0.7);
+      flush(COLUMN_STRIP_QUIET * 3);
+      expect(scrollTo).not.toHaveBeenCalled();
+      expect(strip().style.height).toBe('100px');
+      swipeTo(W);
+      rest();
+      expect(scrollTo).not.toHaveBeenCalled();
+      expect(strip().style.height).toBe('200px');
+    });
+
+    it('a tap with no scroll still settles through the lift\'s timer', () => {
+      render(<Harness />);
+      strip().scrollTop = 40;
+      touch('touchStart', 1);
+      touch('touchEnd', 0);
+      flush(COLUMN_STRIP_QUIET);
+      expect(strip().scrollTop).toBe(0);
+    });
   });
 
   describe('where there is none (iOS 18)', () => {
