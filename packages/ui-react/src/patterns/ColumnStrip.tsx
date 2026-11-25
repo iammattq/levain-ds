@@ -69,6 +69,8 @@ export interface ColumnStripProps {
 export const COLUMN_STRIP_EDGE = 56;
 export const COLUMN_STRIP_DWELL = 500;
 export const COLUMN_STRIP_REPEAT = 600;
+/** Where there's no scrollend (iOS 18's WebKit), a swipe has come to rest after this long (ms) without a scroll. */
+export const COLUMN_STRIP_QUIET = 120;
 
 /** The column a scroll position rests on: the nearest whole column, within 0..count-1. */
 export function snapIndex(scrollLeft: number, width: number, count: number): number {
@@ -106,6 +108,8 @@ export function ColumnStrip({
   label = 'Columns', pillsEnd, className, pillsClassName,
 }: ColumnStripProps) {
   const reduce = !!useReducedMotion();
+  const reduced = useRef(reduce);
+  reduced.current = reduce;
   const indexOf = (key: string | undefined) => Math.max(0, columns.findIndex(c => c.key === key));
   const strip = useRef<HTMLDivElement>(null);
   const rail = useRef<HTMLDivElement>(null);
@@ -133,22 +137,79 @@ export function ColumnStrip({
     if (el && atRef.current) el.scrollLeft = atRef.current * el.clientWidth;
   }, []);
 
-  // a swipe: the pills follow the nearest column
+  // A swipe: the pills follow the nearest column live, but the strip's height and the clip on the other columns follow
+  // `settled`, which moves only once the swipe has come to rest (scrollend, or QUIET ms without a scroll where there is
+  // none, as on iOS 18). iOS WebKit drops a pending mandatory snap if the snap container or its areas change size, or
+  // the scroll position is written, during momentum, and leaves the strip resting between columns.
+  const [settled, setSettled] = useState(at);
+  const settleNow = useRef<() => void>(() => {});
   const count = useRef(columns.length);
   count.current = columns.length;
   useEffect(() => {
     const el = strip.current;
     if (!el) return;
+    let touching = false;
+    // a touch since the strip last settled: until it settles again, its momentum may still be running
+    let swiped = false;
+    let quiet = 0;
+    const ends = 'onscrollend' in el;
+    const onPage = () => Math.abs(el.scrollLeft - snapIndex(el.scrollLeft, el.clientWidth, count.current) * el.clientWidth) <= 1;
+    // the strip never scrolls up and down (each column is its own height); WebKit's autoscroll under a held mouse
+    // would scroll it once it shrinks to a shorter column, cutting off the column's top. Put back only at rest (no
+    // touch since the last settle, on a page): a write mid-swipe or mid-momentum would drop the snap
+    const level = () => { if (el.scrollTop && !touching && !swiped && onPage()) el.scrollTop = 0; };
+    let nudged = false;
+    const settle = () => {
+      window.clearTimeout(quiet);
+      if (touching || held.current.on) return;
+      // the backstop: come to rest between columns (iOS dropped the snap), scroll on to the nearest. The scroll it starts
+      // settles in turn; if that one too ends off a page, settle there rather than nudge forever
+      if (!onPage() && !nudged) {
+        nudged = true;
+        const left = snapIndex(el.scrollLeft, el.clientWidth, count.current) * el.clientWidth;
+        if (typeof el.scrollTo === 'function') el.scrollTo({ left, behavior: reduced.current ? 'auto' : 'smooth' });
+        else el.scrollLeft = left;
+        if (!ends) quiet = window.setTimeout(settle, COLUMN_STRIP_QUIET);
+        return;
+      }
+      nudged = false;
+      swiped = false;
+      level();
+      const i = snapIndex(el.scrollLeft, el.clientWidth, count.current);
+      setAt(i);
+      setSettled(i);
+    };
     const on = () => {
-      // the strip never scrolls up and down (each column is its own height); WebKit's autoscroll under a held mouse
-      // would scroll it once it shrinks to a shorter column, cutting off the column's top
-      if (el.scrollTop) el.scrollTop = 0;
       // nor sideways while a card is held (the rail's transform pages it): WebKit's autoscroll would nudge it
       if (held.current.on) { if (el.scrollLeft !== held.current.base) el.scrollLeft = held.current.base; return; }
+      level();
       setAt(snapIndex(el.scrollLeft, el.clientWidth, count.current));
+      // a scroll cancels the settle a lifted finger armed (a fling is under way); where scrollend comes, it settles
+      window.clearTimeout(quiet);
+      if (!ends) quiet = window.setTimeout(settle, COLUMN_STRIP_QUIET);
     };
+    // a new swipe may start during the backstop's own scroll: it gets its own backstop
+    const down = (e: TouchEvent) => { touching = e.touches.length > 0; swiped = true; nudged = false; };
+    const up = (e: TouchEvent) => {
+      touching = e.touches.length > 0;
+      if (!touching) { window.clearTimeout(quiet); quiet = window.setTimeout(settle, COLUMN_STRIP_QUIET); }
+    };
+    settleNow.current = settle;
+    // only listened to (passive): the browser scrolls the swipe itself
     el.addEventListener('scroll', on, { passive: true });
-    return () => el.removeEventListener('scroll', on);
+    el.addEventListener('scrollend', settle);
+    el.addEventListener('touchstart', down, { passive: true });
+    el.addEventListener('touchend', up, { passive: true });
+    el.addEventListener('touchcancel', up, { passive: true });
+    return () => {
+      window.clearTimeout(quiet);
+      settleNow.current = () => {};
+      el.removeEventListener('scroll', on);
+      el.removeEventListener('scrollend', settle);
+      el.removeEventListener('touchstart', down);
+      el.removeEventListener('touchend', up);
+      el.removeEventListener('touchcancel', up);
+    };
   }, []);
 
   const go = (i: number) => {
@@ -166,18 +227,18 @@ export function ColumnStrip({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [current]);
 
-  // the strip is as tall as the column in view
+  // the strip is as tall as the column in view (once it has come to rest)
   const pageEls = useRef<(HTMLElement | null)[]>([]);
   const [height, setHeight] = useState<number>();
   useLayoutEffect(() => {
-    const el = pageEls.current[at];
+    const el = pageEls.current[settled];
     if (!el) return;
     setHeight(el.offsetHeight || undefined);
     if (typeof ResizeObserver === 'undefined') return;
     const ro = new ResizeObserver(() => setHeight(el.offsetHeight || undefined));
     ro.observe(el);
     return () => ro.disconnect();
-  }, [at]);
+  }, [settled]);
 
   // ---- a held card ----
   const held = useRef({ on: false, base: 0, shift: 0 });
@@ -192,7 +253,9 @@ export function ColumnStrip({
   const page = (i: number) => {
     const el = strip.current!;
     held.current.shift = i * el.clientWidth - held.current.base;
+    // no native scroll is in play while held (snap off, the strip pinned), so the height follows the page at once
     setAt(i);
+    setSettled(i);
     sliding.current = animate(railX, -held.current.shift, slide);
     return sliding.current.finished;
   };
@@ -226,6 +289,8 @@ export function ColumnStrip({
       }
       el.style.scrollSnapType = '';
       held.current = { on: false, base: el.scrollLeft, shift: 0 };
+      // a settle that came while the card was held was skipped: settle now, so the height catches up with the pills
+      settleNow.current();
     },
     onDragMove(x) {
       const el = strip.current;
@@ -303,7 +368,7 @@ export function ColumnStrip({
               data-column={c.key}
               // the columns out of view are clipped to the strip's height (it clips them there anyway), so the strip
               // has nothing to scroll up and down into
-              style={i === at || height === undefined ? undefined : { maxHeight: height, overflow: 'hidden' }}
+              style={i === settled || height === undefined ? undefined : { maxHeight: height, overflow: 'hidden' }}
               className="w-full shrink-0 snap-start"
             >
               {c.content}
