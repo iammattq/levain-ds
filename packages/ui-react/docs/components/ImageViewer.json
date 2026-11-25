@@ -1,10 +1,10 @@
 {
   "name": "ImageViewer",
-  "description": "One image, or a before/after pair, full screen on Modal's dark scrim, zoomed by the image itself (pinch, double tap, pan, wheel, keys) while the page stays put.",
+  "description": "One image, or a before/after pair, full screen on Modal's solid scrim, zoomed by the image itself (pinch, double tap, pan, wheel, keys) while the page stays put.",
   "category": "components",
   "usage": [
     "`open` and `onClose` (controlled), and either `src` + `alt` (one image) or `compare` (two `{ label, src }`, before then after, shown in ImageCompare's slider). `label` names the dialog (default: `alt`, or \"<before> and <after>\").",
-    "Opens on `Modal scrim=\"dark\" bare`: the image fitted inside the safe-area insets (1rem at least) and centred, a ✕ top right. A tap outside the image, the ✕ or Escape closes; focus returns to what opened it.",
+    "Opens on `Modal scrim=\"solid\" bare`: the image fitted inside the safe-area insets (1rem at least) and centred, a ✕ top right. A tap outside the image, the ✕ or Escape closes; focus returns to what opened it.",
     "Open it over a dialog (a card's thumbnail): it sits on top, and Escape or closing goes back to that dialog. Render it after the dialog opens (on the thumbnail's tap), so its portal lands after the dialog's.",
     "Gestures: two fingers pinch around their midpoint (and pan as it moves); a double tap on the image toggles 1x and 2.5x around the tap; one finger pans when zoomed. Always 1x-5x, and a zoomed image's edges never come inside the screen on a side it overflows. Closing resets it.",
     "Mouse: the wheel, or ctrl+wheel (a trackpad's pinch), zooms around the cursor; a drag pans when zoomed; a double click toggles.",
@@ -17,7 +17,7 @@
     "import { ImageViewer } from '@levain/ui-react';\n\n// a before/after pair, zoomable, the slider's handle on top\n<ImageViewer\n  open={open}\n  onClose={() => setOpen(false)}\n  compare={[\n    { label: 'Before', src: '/captures/before.png' },\n    { label: 'After', src: '/captures/after.png' },\n  ]}\n/>"
   ],
   "design": [
-    "The scrim is Modal's dark one (--color-surface-0 at 90 %, no backdrop-filter); no card: the image sits straight on it, --radius-md on a single image.",
+    "The scrim is Modal's solid one (--color-surface-0 fully opaque, no backdrop-filter: nothing of the page shows behind the image, T63); no card: the image sits straight on it, --radius-md on a single image.",
     "The ✕: a secondary icon Button, 44px round, top right inside the safe area (--spacing-xs at least).",
     "Motion: double tap, keys and reset ease the transform (--duration-shift, --ease-spring-out); pinch, pan and the wheel follow the input with no transition; Modal's fade (fadeIn) opens and closes it. Under Reduce Motion nothing eases.",
     "A pair: ImageCompare's slider with its `zoom`: no frame, the labels at the visible image's bottom corners (the ✕ takes the top right)."

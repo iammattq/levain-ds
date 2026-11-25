@@ -1,6 +1,6 @@
 {
   "name": "Modal",
-  "description": "A customizable dialog component that overlays page content with a backdrop blur effect (or, with scrim=\"dark\", a solid dark scrim) and smooth animations. Supports titles, contextual menus, various sizes, a bare panel with no card, and custom animations.",
+  "description": "A customizable dialog component that overlays page content with a backdrop blur effect (or, with scrim=\"dark\", a dark scrim at 90 %; with scrim=\"solid\", the same colour fully opaque) and smooth animations. Supports titles, contextual menus, various sizes, a bare panel with no card, and custom animations.",
   "category": "components",
   "usage": [
     "Control visibility using the `isOpen` prop (controlled component).",
@@ -12,7 +12,8 @@
     "Override default animations using the `motionProps` prop (Framer Motion).",
     "Modal closes on Escape key press (only the top dialog, when one is over another) or by clicking the backdrop.",
     "Uses React Portal to render at the document body level.",
-    "`scrim=\"dark\"` swaps the light blur for a solid dark scrim with no backdrop-filter: for media (ImageViewer), and anywhere a full-screen blur is too heavy (iOS can turn a Home Screen app white with a fixed blur over a zoomed page, Ringmaster T169).",
+    "`scrim=\"dark\"` swaps the light blur for a dark scrim (90 %) with no backdrop-filter: for a dialog over a busy page, and anywhere a full-screen blur is too heavy (iOS can turn a Home Screen app white with a fixed blur over a zoomed page, Ringmaster T169). The page still shows through faintly.",
+    "`scrim=\"solid\"` (T63) is the same dark colour fully opaque, also with no backdrop-filter: nothing of the page shows. For media that should stand alone (ImageViewer uses it); a dialog that should keep the page in sight uses `dark`.",
     "`bare` drops the card: no surface, border, radius, shadow or padding, and the panel fills the screen (`size` is ignored), so the children lay themselves out on the scrim. Give it a `label`; a `title` or `menuOptions` still draws the head. A tap on the overlay can't reach a full-screen panel, so a bare child closes itself (ImageViewer closes on a tap outside its image)."
   ],
   "examples": [
@@ -31,7 +32,7 @@
     "Choose an appropriate `size` based on the content volume.",
     "The title should clearly indicate the modal's purpose.",
     "Use the contextual menu for secondary actions related to the modal's content or context.",
-    "scrim=\"dark\": --color-surface-0 (the surface ramp's darkest step, near black in light and dark alike) at 90 %, the same token SheetScrim uses in dark mode; no new token. The default blur scrim is unchanged."
+    "scrim=\"dark\": --color-surface-0 (the surface ramp's darkest step, near black in light and dark alike) at 90 %, the same token SheetScrim uses in dark mode; no new token. scrim=\"solid\": the same token at 100 % (T63). The default blur scrim is unchanged."
   ],
   "accessibility": [
     "A modal dialog (`role=\"dialog\"`, `aria-modal`), named by its `title`, or by `label` when it has none.",
@@ -94,10 +95,10 @@
     },
     {
       "name": "scrim",
-      "type": "'blur' | 'dark'",
+      "type": "'blur' | 'dark' | 'solid'",
       "optional": true,
       "defaultValue": "'blur'",
-      "description": "The layer behind the dialog: the light gradient with a backdrop blur (default), or a solid dark scrim (--color-surface-0 at 90 %) with no backdrop-filter."
+      "description": "The layer behind the dialog: the light gradient with a backdrop blur (default), a dark scrim (--color-surface-0 at 90 %) with no backdrop-filter, or `solid`: the same colour fully opaque, no backdrop-filter (ImageViewer)."
     },
     {
       "name": "bare",
