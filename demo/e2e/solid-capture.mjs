@@ -7,10 +7,11 @@
 //   single-rest, single-zoom, pair-rest, pair-zoom, dialog-single-zoom (the viewer over the open blur Modal),
 //   dialog-pair-rest; and modal-dark (Modal scrim="dark" on its own, the page behind it).
 // Writes <theme>-<mode>-<width>-<frame>-<label>.png and <label>.json: each frame's scrim (kind, computed background,
-// backdrop-filter). compare: from the PNGs, in the browser, the margin (x 2-10 px the whole height, and y 2-14 px up to
-// 64 px short of the right edge, where the ✕ sits: scrim only, outside the 16 px inset and a dialog card's padding) as
-// its spread of luma (max - min, 0-255): 0 means nothing of the page shows there. Checks, exit 1 on a failure: after, every viewer frame's scrim is `solid`, fully opaque, no backdrop-filter, and
-// its margin spread is 0; modal-dark is `dark` at 90 % before and after, and its pixels are unchanged. compare.json and
+// backdrop-filter, and the box of what sits on it). compare: from the PNGs, in the browser, the scrim alone (every
+// pixel 6 px clear of the image's or dialog card's box, but the ✕'s top-right corner, 96 px) as its spread of luma
+// (max - min, 0-255): 0 means nothing of the page shows. Checks, exit 1 on a failure: after, every viewer frame's scrim
+// is `solid`, fully opaque, no backdrop-filter, and at rest its spread is 0 (zoomed, the image fills the screen);
+// modal-dark is `dark` at 90 % before and after, and its pixels are unchanged. compare.json and
 // composite.png: a row per combo and width, each frame before | after.
 import { createRequire } from 'node:module';
 import fs from 'node:fs';
@@ -31,8 +32,12 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
 const probe = page => page.evaluate(() => {
   const all = document.querySelectorAll('[data-modal-scrim]'), scrim = all[all.length - 1];
   const cs = scrim && getComputedStyle(scrim);
-  const v = document.querySelectorAll('[data-image-viewer]');
+  const v = document.querySelectorAll('[data-image-viewer]'), d = document.querySelectorAll('[role="dialog"]');
+  // what sits on the scrim: the viewer's content, else the top dialog's card
+  const top = v.length ? v[v.length - 1].querySelector('[data-image-viewer-content]') : d[d.length - 1];
+  const b = top?.getBoundingClientRect();
   return {
+    rect: b && { l: b.left, t: b.top, r: b.right, b: b.bottom },
     viewer: v.length > 0,
     zoom: v.length ? +v[v.length - 1].dataset.zoom : null,
     scrim: scrim && { kind: scrim.dataset.modalScrim, bg: cs.backgroundColor, backdrop: cs.backdropFilter, opacity: cs.opacity },
@@ -98,27 +103,28 @@ async function compare(out) {
   const page = await browser.newPage();
   const url = f => `data:image/png;base64,${fs.readFileSync(`${out}/${f}`).toString('base64')}`;
   /** The margin's luma spread, and (for modal-dark) how many pixels differ between before and after. */
-  const measure = (a, b) => page.evaluate(async ([a, b]) => {
+  const measure = (a, b, rect) => page.evaluate(async ([a, b, rect]) => {
     const load = async src => { const i = new Image(); i.src = src; await i.decode(); const c = new OffscreenCanvas(i.width, i.height); const x = c.getContext('2d'); x.drawImage(i, 0, 0); return x.getImageData(0, 0, i.width, i.height); };
     const [A, B] = await Promise.all([load(a), load(b)]);
     const dpr = A.width > 2000 ? 2 : 3, W = A.width / dpr;
-    // the left column (x 2-10) the whole height, and the top band (y 2-14) from the left to 64 px short of the ✕
-    const inBand = (x, y) => (x >= 2 && x < 10) || (y >= 2 && y < 14 && x >= 2 && x < W - 64);
+    // the scrim alone: everything 6 px clear of the content's box, but the ✕'s corner (the top right 96 x 96 px)
+    const inBand = (x, y) => !(x > rect.l - 6 && x < rect.r + 6 && y > rect.t - 6 && y < rect.b + 6) && !(x > W - 96 && y < 96);
     const spread = d => { let lo = 255, hi = 0; for (let y = 0; y < d.height; y++) for (let x = 0; x < d.width; x++) { if (!inBand(x / dpr, y / dpr)) continue; const i = (y * d.width + x) * 4, l = 0.2126 * d.data[i] + 0.7152 * d.data[i + 1] + 0.0722 * d.data[i + 2]; lo = Math.min(lo, l); hi = Math.max(hi, l); } return +(hi - lo).toFixed(1); };
     let diff = 0; for (let i = 0; i < A.data.length; i += 4) if (A.data[i] !== B.data[i] || A.data[i + 1] !== B.data[i + 1] || A.data[i + 2] !== B.data[i + 2]) diff++;
     return { before: spread(A), after: spread(B), diffPx: diff };
-  }, [url(a), url(b)]);
-  const alpha = bg => { const m = bg?.match(/rgba?\(([^)]+)\)/); const p = m ? m[1].split(/[ ,/]+/).filter(Boolean) : []; return p.length > 3 ? +p[3] : 1; };
+  }, [url(a), url(b), rect]);
+  // a computed colour's alpha: rgba(r, g, b, a), or the `/ a` of rgb() / oklab(); none means 1
+const alpha = bg => { const m = bg?.match(/\/\s*([\d.]+)\s*\)$/) || bg?.match(/^rgba\([^,]+,[^,]+,[^,]+,\s*([\d.]+)\)$/); return m ? +m[1] : 1; };
   const results = {}, fails = [];
   for (const key of KEYS) for (const frame of FRAMES) {
     const k = `${key}-${frame}`, b = before[k], a = after[k];
-    const m = (results[k] = { ...(await measure(`${k}-before.png`, `${k}-after.png`)), scrim: { before: b.scrim, after: a.scrim } });
+    const m = (results[k] = { ...(await measure(`${k}-before.png`, `${k}-after.png`, a.rect)), scrim: { before: b.scrim, after: a.scrim } });
     if (frame === 'modal-dark') {
       for (const [l, n] of [['before', b], ['after', a]]) if (n.scrim?.kind !== 'dark' || Math.abs(alpha(n.scrim.bg) - 0.9) > 0.01) fails.push(`${k}: ${l} scrim ${JSON.stringify(n.scrim)}`);
       if (m.diffPx) fails.push(`${k}: ${m.diffPx} pixels changed`);
     } else {
       if (a.scrim?.kind !== 'solid' || alpha(a.scrim.bg) !== 1 || a.scrim.backdrop !== 'none') fails.push(`${k}: after scrim ${JSON.stringify(a.scrim)}`);
-      if (m.after !== 0) fails.push(`${k}: the page shows in the margin after (spread ${m.after})`);
+      if (!frame.includes('zoom') && m.after !== 0) fails.push(`${k}: the page shows in the margin after (spread ${m.after})`);
     }
   }
   fs.writeFileSync(`${out}/compare.json`, JSON.stringify({ results, fails }, null, 2));
