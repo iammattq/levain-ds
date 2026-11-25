@@ -44,6 +44,7 @@ export function ViewerDemo({ Section }: { Section: (p: { title: string; note: st
   const [page, setPage] = useState<Open>(null);
   const [dialog, setDialog] = useState(false);
   const [inDialog, setInDialog] = useState<Open>(null);
+  const [dark, setDark] = useState(false);
   return (
     <Section
       title="Image viewer: zoom the image, not the page"
@@ -54,6 +55,10 @@ export function ViewerDemo({ Section }: { Section: (p: { title: string; note: st
         <Button variant="secondary" onClick={() => setDialog(true)} data-viewer-dialog-open="">
           Open a dialog with thumbnails
         </Button>
+        {/* T63: Modal's own dark scrim (90 %), beside the viewer's solid one: the page still shows through faintly */}
+        <Button variant="secondary" onClick={() => setDark(true)} data-viewer-dark-open="">
+          Open a dark-scrim dialog
+        </Button>
         <Viewers open={page} onClose={() => setPage(null)} />
         <Modal isOpen={dialog} onClose={() => setDialog(false)} title="A card with images">
           {() => (
@@ -62,6 +67,9 @@ export function ViewerDemo({ Section }: { Section: (p: { title: string; note: st
               <Thumbs onOpen={setInDialog} />
             </div>
           )}
+        </Modal>
+        <Modal isOpen={dark} onClose={() => setDark(false)} title="A dark-scrim dialog" scrim="dark">
+          {() => <p className="type-body-sm text-[var(--color-text-muted)]">Modal scrim="dark": the page shows faintly behind it. The image viewer's backdrop is solid.</p>}
         </Modal>
         {/* after the dialog, so its portal lands on top of the dialog's */}
         <Viewers open={inDialog} onClose={() => setInDialog(null)} />

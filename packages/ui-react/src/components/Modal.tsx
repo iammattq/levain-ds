@@ -26,16 +26,24 @@ interface ModalProps {
   motionProps?: MotionProps;
   size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | 'full';
   /**
-   * The layer behind the dialog. 'blur' (default): a light gradient with a backdrop blur. 'dark' (T61): a solid dark
-   * scrim with no backdrop-filter, `--color-surface-0` (the surface ramp's darkest step, near black in both modes) at 90 %.
+   * The layer behind the dialog. 'blur' (default): a light gradient with a backdrop blur. 'dark' (T61): a dark scrim at
+   * 90 % with no backdrop-filter, `--color-surface-0` (the surface ramp's darkest step, near black in both modes); the
+   * page still shows faintly. 'solid' (T63): the same colour fully opaque, no backdrop-filter, so nothing of the page
+   * shows (ImageViewer).
    */
-  scrim?: 'blur' | 'dark';
+  scrim?: 'blur' | 'dark' | 'solid';
   /**
    * No card (T61): no surface, border, radius, shadow or padding, and the panel fills the screen (`size` is ignored), so
    * the children lay themselves out straight on the scrim. A `title` or `menuOptions` still draws the head.
    */
   bare?: boolean;
 }
+
+const scrimClasses = {
+  blur: 'fixed inset-0 bg-linear-to-b from-[var(--color-surface-inverted)]/10 to-[var(--color-accent)]/10 backdrop-blur-sm',
+  dark: 'fixed inset-0 bg-[var(--color-surface-0)]/90',
+  solid: 'fixed inset-0 bg-[var(--color-surface-0)]',
+};
 
 export function Modal({
   isOpen,
@@ -126,15 +134,11 @@ export function Modal({
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-50 overflow-y-auto">
-          {/* The scrim: a light blur (default), or solid dark with no backdrop-filter (a full-screen fixed blur is heavy on
-              iOS, worst with the page zoomed: Ringmaster T169) */}
+          {/* The scrim: a light blur (default), or dark (90 %) or solid with no backdrop-filter (a full-screen fixed blur
+              is heavy on iOS, worst with the page zoomed: Ringmaster T169) */}
           <motion.div
             data-modal-scrim={scrim}
-            className={
-              scrim === 'dark'
-                ? 'fixed inset-0 bg-[var(--color-surface-0)]/90'
-                : 'fixed inset-0 bg-linear-to-b from-[var(--color-surface-inverted)]/10 to-[var(--color-accent)]/10 backdrop-blur-sm'
-            }
+            className={scrimClasses[scrim]}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}

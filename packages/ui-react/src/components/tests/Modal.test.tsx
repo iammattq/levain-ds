@@ -317,6 +317,15 @@ describe('Modal scrim and bare', () => {
     expect(panel()).toHaveClass('bg-[var(--color-surface-card)]');
   });
 
+  // T63: the image viewer's backdrop
+  test('scrim="solid": surface-0 fully opaque, no opacity modifier, no backdrop-filter, no gradient', () => {
+    open({ scrim: 'solid' });
+    expect(scrim()).toHaveAttribute('data-modal-scrim', 'solid');
+    expect(scrim().className).toBe('fixed inset-0 bg-[var(--color-surface-0)]');
+    expect(scrim().className).not.toMatch(/\/\d|blur|backdrop|gradient|linear/);
+    expect(panel()).toHaveClass('bg-[var(--color-surface-card)]');
+  });
+
   test('bare: no card, no padding; the panel fills the screen and the children sit straight in it', () => {
     open({ scrim: 'dark', bare: true, size: 'sm' });
     expect(panel()).toHaveAttribute('data-bare', 'true');

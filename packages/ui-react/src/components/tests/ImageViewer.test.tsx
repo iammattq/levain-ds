@@ -155,9 +155,11 @@ describe('ImageViewer', () => {
   };
 
   describe('the shell', () => {
-    test('opens on Modal\'s dark scrim with no card: a dialog named by the alt text, the image fitted, a close button', () => {
+    test('opens on Modal\'s solid scrim with no card: a dialog named by the alt text, the image fitted, a close button', () => {
       openPage();
-      expect(document.querySelector('[data-modal-scrim]')).toHaveAttribute('data-modal-scrim', 'dark');
+      // T63: opaque, so nothing of the page shows behind the image
+      expect(document.querySelector('[data-modal-scrim]')).toHaveAttribute('data-modal-scrim', 'solid');
+      expect(document.querySelector('[data-modal-scrim]')!.className).toBe('fixed inset-0 bg-[var(--color-surface-0)]');
       const dialog = screen.getByRole('dialog', { name: 'This build' });
       expect(dialog).toHaveAttribute('data-bare', 'true');
       expect(image()).toHaveAttribute('src', '/shot.png');
