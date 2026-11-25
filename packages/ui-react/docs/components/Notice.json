@@ -1,0 +1,85 @@
+{
+  "name": "Notice",
+  "description": "A quiet, persistent status line in a container: a small rounded box in a tone's colours, body-small text that wraps, an optional action and Dismiss at the end. The Ringmaster board's \"Offline, reconnecting…\" and \"Your idea wasn't sent\" lines.",
+  "category": "components",
+  "usage": [
+    "Use for a state the person should know about while it lasts, in place, under the header or above the content it is about: a lost connection, an action that didn't go through",
+    "Say it in one short line; it wraps on a phone. Keep it mounted and change its children when the state changes (Reconnecting… to the next message), so the change is announced through the same region",
+    "muted (default) for a passing state that needs nothing from the person; info, caution or error when it does. The tone is a colour, so the words carry the meaning too",
+    "An action only when the person can do something about it here (a small ghost Button, \"Retry\"); onDismiss when the line can be put away. Either makes it an alert",
+    "Width is the container's; className for layout",
+    "Not a toast (no timer, no stacking: use Toaster), not a dialog (use StatusCard or Modal), not an empty list (use EmptyState), not a banner across the page"
+  ],
+  "examples": [
+    "// the board's quiet offline line: a polite status\n<Notice>Offline, reconnecting…</Notice>",
+    "// an action that didn't go through: an alert with Retry and Dismiss\n<Notice\n  tone=\"error\"\n  action={<Button size=\"sm\" variant=\"ghost\" onClick={retry}>Retry</Button>}\n  onDismiss={() => setLost(null)}\n>\n  Your idea wasn't sent: the network dropped\n</Notice>",
+    "// with a glyph\n<Notice tone=\"caution\" icon={<WifiOff size={16} />}>Offline, reconnecting…</Notice>"
+  ],
+  "design": [
+    "Tones from the existing tokens, no new ones: muted is --color-text-muted on --color-surface-subtle; info, caution and error are --color-{tone}-fg on --color-{tone}-bg. Each passes 4.5:1 in Sage and Cobalt Mono, light and dark",
+    "A 1px border on every tone, because no tone's background reaches 3:1 against the page surfaces: muted --color-border-subtle; the others their fg mixed 30% into their bg",
+    "Corner --radius-md; padding --spacing-sm across and --spacing-2xs down; no shadow",
+    "Text type-body-sm (14px, line height 1.5) in the tone's fg, wrapping",
+    "The action and Dismiss (small ghost Buttons) at the end of the line when they fit beside 12rem of text, under the text, at the end, when not",
+    "The icon sits before the message, centred on the line, --spacing-2xs from it"
+  ],
+  "accessibility": [
+    "role=\"status\" (polite, atomic) when it is only a message; role=\"alert\" when it has an action or Dismiss, so the person hears there is something to do. A role passed in wins",
+    "Changing the children of a mounted Notice is announced through the same region. One that mounts with its text is announced unreliably by some screen readers: mount it empty or early when the first message matters",
+    "The icon is decorative and aria-hidden; the message carries the meaning",
+    "The action and Dismiss are real buttons in the Tab order; Dismiss's label is overridable (dismissLabel)"
+  ],
+  "props": [
+    {
+      "name": "tone",
+      "type": "'muted' | 'info' | 'caution' | 'error'",
+      "optional": true,
+      "defaultValue": "'muted'",
+      "description": "The colours: muted text on the subtle surface, or a status tone's fg on its bg.",
+      "configurable": true
+    },
+    {
+      "name": "children",
+      "type": "ReactNode",
+      "optional": true,
+      "description": "The message.",
+      "configurable": true
+    },
+    {
+      "name": "action",
+      "type": "ReactNode",
+      "optional": true,
+      "description": "Something to do about it, at the end of the line: a small ghost levain Button. Makes the Notice an alert.",
+      "configurable": false
+    },
+    {
+      "name": "onDismiss",
+      "type": "() => void",
+      "optional": true,
+      "description": "Shows a small ghost Dismiss button that calls this. Makes the Notice an alert.",
+      "configurable": false
+    },
+    {
+      "name": "dismissLabel",
+      "type": "string",
+      "optional": true,
+      "defaultValue": "'Dismiss'",
+      "description": "The Dismiss button's label.",
+      "configurable": true
+    },
+    {
+      "name": "icon",
+      "type": "ReactNode",
+      "optional": true,
+      "description": "A decorative glyph before the message, hidden from screen readers.",
+      "configurable": false
+    },
+    {
+      "name": "className",
+      "type": "string",
+      "optional": true,
+      "description": "Classes merged with the box's own (cn); ref and other div props go to the root.",
+      "configurable": false
+    }
+  ]
+}

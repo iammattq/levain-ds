@@ -96,6 +96,11 @@
   },
   {
     "category": "Components",
+    "name": "Notice",
+    "description": "A quiet inline status line in a tone's colours, with an optional action and Dismiss"
+  },
+  {
+    "category": "Components",
     "name": "TextInput",
     "description": "Accessible text input component with error states and helper text"
   },
