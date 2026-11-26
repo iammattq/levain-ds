@@ -15,7 +15,7 @@ const contrast = (a: string, b: string) => {
   return (hi! + 0.05) / (lo! + 0.05);
 };
 
-const THEMES = ['Sage', 'Cobalt Mono'];
+const THEMES = ['Sage', 'Cobalt Mono', 'Cobalt Warm'];
 const TONES = Object.keys(noticeTokens) as NoticeTone[];
 const PAGES = ['surface-canvas', 'surface-section', 'surface-card'];
 

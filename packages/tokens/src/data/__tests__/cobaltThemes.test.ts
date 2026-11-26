@@ -20,15 +20,15 @@ const contrast = (a: string, b: string) => {
   return (hi + 0.05) / (lo + 0.05);
 };
 
-const NAMES = ['Cobalt Mono'];
+const NAMES = ['Cobalt Mono', 'Cobalt Warm'];
 const cobalt = NAMES.map((name) => {
   const input = baseThemesV2.find((t) => t.name === name);
   if (!input) throw new Error('missing theme ' + name);
   return { name, theme: themeGeneratorV2.generate(input) };
 });
 
-describe('Cobalt Mono (TH1)', () => {
-  it('ships after the seven built-ins, so no existing theme changes index', () => {
+describe('Cobalt Mono (TH1) and Cobalt Warm', () => {
+  it('ship after the seven built-ins, Cobalt Warm last, so no existing theme changes index', () => {
     expect(baseThemesV2.slice(7).map((t) => t.name)).toEqual(NAMES);
   });
 
@@ -95,5 +95,43 @@ describe('Cobalt Mono (TH1)', () => {
     }
     expect(hexToOklch(tok('light').primary).l).toBeLessThan(30); // lightness 0-100
     expect(hexToOklch(tok('dark').primary).l).toBeGreaterThan(90);
+  });
+
+  // Cobalt Warm (Ringmaster T201): white with a touch of warmth, a slightly warm black, cream text in dark, never beige
+  const warm = (mode: 'light' | 'dark') => cobalt[1].theme[mode].tokens as Record<string, string>;
+  const warmHue = (hex: string) => { const h = hexToOklch(hex).h; expect(h).toBeGreaterThanOrEqual(65); expect(h).toBeLessThanOrEqual(100); };
+  it('Cobalt Warm: light surfaces are white with a touch of warmth, never cream (chroma 0.002-0.006, toward the cream)', () => {
+    for (const k of ['surface-canvas', 'surface-section', 'surface-card', 'surface-component', 'surface-elevated']) {
+      expect(chroma(warm('light')[k])).toBeGreaterThanOrEqual(0.002);
+      expect(chroma(warm('light')[k])).toBeLessThanOrEqual(0.006);
+      warmHue(warm('light')[k]);
+    }
+  });
+  it("Cobalt Warm: light text is Cobalt Mono's black with a slight warmth (chroma 0.005-0.012, the same lightness within 2)", () => {
+    for (const k of ['text-emphasis', 'text-default', 'text-muted', 'text-faint']) {
+      expect(chroma(warm('light')[k])).toBeGreaterThanOrEqual(0.005);
+      expect(chroma(warm('light')[k])).toBeLessThanOrEqual(0.012);
+      expect(Math.abs(hexToOklch(warm('light')[k]).l - hexToOklch(tok('light')[k]).l)).toBeLessThanOrEqual(2);
+      warmHue(warm('light')[k]);
+    }
+  });
+  it('Cobalt Warm: dark text is a subtle cream, its quieter tiers a dimmer cream, none louder than the cream itself', () => {
+    const cream = hexToOklch('#F5E9CF');
+    for (const k of ['text-emphasis', 'text-default', 'text-muted', 'text-faint']) {
+      expect(chroma(warm('dark')[k])).toBeGreaterThanOrEqual(0.008);
+      expect(chroma(warm('dark')[k])).toBeLessThan(cream.c);
+      warmHue(warm('dark')[k]);
+    }
+    expect(hexToOklch(warm('dark')['text-default']).l).toBeGreaterThan(hexToOklch(warm('dark')['text-muted']).l);
+    expect(hexToOklch(warm('dark')['text-muted']).l).toBeGreaterThan(hexToOklch(warm('dark')['text-faint']).l);
+  });
+  it('Cobalt Warm: dark surfaces are a warm near-black (chroma at most 0.012)', () => {
+    for (const k of ['surface-canvas', 'surface-section', 'surface-card', 'surface-component', 'surface-elevated']) {
+      expect(chroma(warm('dark')[k])).toBeLessThanOrEqual(0.012);
+      warmHue(warm('dark')[k]);
+    }
+  });
+  it('Cobalt Warm: its links are a warmer blue than cobalt (hue past 264, toward ultramarine)', () => {
+    for (const mode of ['light', 'dark'] as const) expect(hexToOklch(warm(mode)['text-link']).h).toBeGreaterThan(266);
   });
 });

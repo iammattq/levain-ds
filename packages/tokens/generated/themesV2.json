@@ -1878,5 +1878,240 @@
         "level3": "0px 0px 36px rgba(94, 94, 94, 0.450)"
       }
     }
+  },
+  "8": {
+    "name": "Cobalt Warm",
+    "light": {
+      "primary": "#3A4FC8",
+      "accent": "#F5E9CF",
+      "surfaces": [
+        "#010100",
+        "#0e0d09",
+        "#1a1814",
+        "#24221d",
+        "#2d2a26",
+        "#35332e",
+        "#3d3a35",
+        "#44423c",
+        "#4b4943",
+        "#52504a",
+        "#595650",
+        "#605d56",
+        "#66635c",
+        "#66635c",
+        "#c0beb8",
+        "#ceccc7",
+        "#d8d6d1",
+        "#dfddd8",
+        "#e5e3de",
+        "#eae8e4",
+        "#eeece8",
+        "#f2f0ed",
+        "#f6f4f1",
+        "#f9f7f4",
+        "#fcfaf8",
+        "#fefdfb"
+      ],
+      "primaryRamp": [
+        "#dee4f6",
+        "#c2d0fa",
+        "#a3b9fc",
+        "#7e99f8",
+        "#3A4FC8",
+        "#172075",
+        "#0d144a",
+        "#060c29",
+        "#03050f"
+      ],
+      "accentRamp": [
+        "#fffbf4",
+        "#fdf7ea",
+        "#faf2e0",
+        "#f8eed8",
+        "#F5E9CF",
+        "#e1d7c2",
+        "#cec6b5",
+        "#bbb5a9",
+        "#a8a49d"
+      ],
+      "tokens": {
+        "surface-canvas": "#f2f0ed",
+        "surface-section": "#f6f4f1",
+        "surface-card": "#f9f7f4",
+        "surface-component": "#fcfaf8",
+        "surface-subtle": "#f6f4f1",
+        "surface-interactive": "#fcfaf8",
+        "surface-elevated": "#fefdfb",
+        "surface-inverted": "#52504a",
+        "text-emphasis": "#0e0d09",
+        "text-default": "#24221d",
+        "text-muted": "#4b4943",
+        "text-faint": "#605d56",
+        "text-disabled": "#66635c",
+        "text-inverted": "#fcfaf8",
+        "text-link": "#3A4FC8",
+        "border-subtle": "#e5e3de",
+        "border-default": "#d8d6d1",
+        "border-emphasis": "#c0beb8",
+        "border-focus": "#3A4FC8",
+        "border-decorative": "#3A4FC8",
+        "primary": "#0e0d09",
+        "accent": "#24221d",
+        "gradient-start": "#3A4FC8",
+        "gradient-end": "#172075"
+      },
+      "actions": {
+        "success": "#357a3a",
+        "success-fg": "#004f0d",
+        "success-bg": "#cdf0cd",
+        "error": "#a34945",
+        "error-fg": "#721c1c",
+        "error-bg": "#ffd6d1",
+        "caution": "#905d00",
+        "caution-fg": "#8a5700",
+        "caution-bg": "#fde0b9",
+        "info": "#007798",
+        "info-fg": "#004b6b",
+        "info-bg": "#b9efff"
+      },
+      "spectrum": {
+        "cool": "#1e83b9",
+        "warm": "#b4603b",
+        "vivid": "#9363ac"
+      },
+      "states": {
+        "hover": "oklch(0% 0 0 / 4%)",
+        "focus": "oklch(0% 0 0 / 6%)",
+        "active": "oklch(0% 0 0 / 8%)"
+      },
+      "textOnPrimary": "#fefdfb",
+      "textOnAccent": "#fefdfb",
+      "elevationColors": {
+        "low": "rgba(234, 234, 234, 0.040)",
+        "default": "rgba(234, 234, 234, 0.080)",
+        "high": "rgba(234, 234, 234, 0.120)"
+      },
+      "elevationStyles": {
+        "level1": "0px 2px 8px rgba(234, 234, 234, 0.040)",
+        "level2": "0px 6px 16px rgba(234, 234, 234, 0.080)",
+        "level3": "0px 10px 30px rgba(234, 234, 234, 0.120)"
+      }
+    },
+    "dark": {
+      "primary": "#3A4FC8",
+      "accent": "#F5E9CF",
+      "surfaces": [
+        "#010100",
+        "#0e0d09",
+        "#1a1814",
+        "#24221d",
+        "#2d2a26",
+        "#35332e",
+        "#3d3a35",
+        "#44423c",
+        "#4b4943",
+        "#52504a",
+        "#595650",
+        "#605d56",
+        "#66635c",
+        "#66635c",
+        "#c0beb8",
+        "#ceccc7",
+        "#d8d6d1",
+        "#dfddd8",
+        "#e5e3de",
+        "#eae8e4",
+        "#eeece8",
+        "#f2f0ed",
+        "#f6f4f1",
+        "#f9f7f4",
+        "#fcfaf8",
+        "#fefdfb"
+      ],
+      "primaryRamp": [
+        "#dee4f6",
+        "#c2d0fa",
+        "#a3b9fc",
+        "#7e99f8",
+        "#3A4FC8",
+        "#172075",
+        "#0d144a",
+        "#060c29",
+        "#03050f"
+      ],
+      "accentRamp": [
+        "#fffbf4",
+        "#fdf7ea",
+        "#faf2e0",
+        "#f8eed8",
+        "#F5E9CF",
+        "#e1d7c2",
+        "#cec6b5",
+        "#bbb5a9",
+        "#a8a49d"
+      ],
+      "tokens": {
+        "surface-canvas": "#0e0d09",
+        "surface-section": "#1a1814",
+        "surface-card": "#24221d",
+        "surface-component": "#2d2a26",
+        "surface-subtle": "#1a1814",
+        "surface-interactive": "#2d2a26",
+        "surface-elevated": "#35332e",
+        "surface-inverted": "#f6f4f1",
+        "text-emphasis": "#fffbf4",
+        "text-default": "#fdf7ea",
+        "text-muted": "#cec6b5",
+        "text-faint": "#bbb5a9",
+        "text-disabled": "#66635c",
+        "text-inverted": "#0e0d09",
+        "text-link": "#a3b9fc",
+        "border-subtle": "#3d3a35",
+        "border-default": "#4b4943",
+        "border-emphasis": "#605d56",
+        "border-focus": "#7e99f8",
+        "border-decorative": "#3A4FC8",
+        "primary": "#fefdfb",
+        "accent": "#fdf7ea",
+        "gradient-start": "#3A4FC8",
+        "gradient-end": "#172075"
+      },
+      "actions": {
+        "success": "#357a3a",
+        "success-fg": "#72b875",
+        "success-bg": "#000a00",
+        "error": "#a34945",
+        "error-fg": "#e6857e",
+        "error-bg": "#170000",
+        "caution": "#905d00",
+        "caution-fg": "#d09945",
+        "caution-bg": "#120200",
+        "info": "#007798",
+        "info-fg": "#2fb5d8",
+        "info-bg": "#000815"
+      },
+      "spectrum": {
+        "cool": "#4ca8e0",
+        "warm": "#dc845f",
+        "vivid": "#b987d3"
+      },
+      "states": {
+        "hover": "oklch(100% 0 0 / 5%)",
+        "focus": "oklch(100% 0 0 / 7%)",
+        "active": "oklch(100% 0 0 / 9%)"
+      },
+      "textOnPrimary": "#0e0d09",
+      "textOnAccent": "#0e0d09",
+      "elevationColors": {
+        "low": "rgba(234, 234, 234, 0.150)",
+        "default": "rgba(234, 234, 234, 0.300)",
+        "high": "rgba(234, 234, 234, 0.450)"
+      },
+      "elevationStyles": {
+        "level1": "0px 0px 14px rgba(234, 234, 234, 0.150)",
+        "level2": "0px 0px 22px rgba(234, 234, 234, 0.300)",
+        "level3": "0px 0px 36px rgba(234, 234, 234, 0.450)"
+      }
+    }
   }
 }

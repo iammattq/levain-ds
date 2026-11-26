@@ -31,6 +31,31 @@ const cobaltMono: ThemeInputV2 = {
   textOn: { light: { primary: 25, accent: 25 }, dark: { primary: 1, accent: 1 } },
 };
 
+/** Cobalt Warm (Ringmaster T201): Cobalt Mono's warm sibling, as restrained. The neutrals lean toward the designer's
+ *  cream (#F5E9CF, hue 86): light is white with a touch of warmth (about 0.003-0.005 chroma on the surfaces) and a
+ *  slightly warm black (about 0.008-0.012 on the text); dark is a warm near-black. The surface ramp's chroma depends on
+ *  lightness alone (calculateChroma), so its flat falloff (0.3) keeps the tint near even from the canvas to the text.
+ *  Dark text is a subtle cream, its quieter tiers a dimmer cream: that can't come from the one neutral ramp (its top
+ *  stops are light mode's near-white surfaces too), so the accent colour is the cream and dark text maps to the accent
+ *  ramp (no component draws the accent ramp itself; the accent token follows the text, as in Cobalt Mono). The links
+ *  and focus are a warmer blue than cobalt, leaning toward ultramarine (hue 270, not 264). */
+const cobaltWarm: ThemeInputV2 = {
+  name: 'Cobalt Warm',
+  primary: '#3A4FC8',
+  accent: '#F5E9CF',
+  accentRamp: { ceiling: 99, floor: 72, lightCurve: 1, darkCurve: 1, chromaFalloff: 0.75 },
+  surfaces: { tint: 10.7, tintColor: '#F5E9CF', chromaFalloff: 0.3, floor: 6, ceiling: 99.5, darkCurve: 0.6, lightCurve: 0.2 },
+  states: { light: { intensity: 4 }, dark: { intensity: 5 } },
+  actionColors: { chroma: 0.12, baseLightness: 52, darkFgLightnessOffset: -20, caution: { hue: 75, lightFgLightnessOffset: -2 } },
+  elevation: { source: 'accent', chroma: 0, lightOpacity: 8, darkOpacity: 30 },
+  tokenMapping: {
+    light: { 'text-emphasis': 1, 'text-default': 3, 'text-muted': 8, 'text-faint': 11, 'border-subtle': 18, 'border-default': 16, 'border-emphasis': 14, primary: 1, accent: 3 },
+    // the cream: emphasis and default from its light half, muted and faint from its dimmer half
+    dark: { 'text-emphasis': 'accent-100', 'text-default': 'accent-200', 'text-muted': 'accent-700', 'text-faint': 'accent-800', 'text-link': 'primary-300', 'border-focus': 'primary-400', primary: 25, accent: 'accent-200' },
+  },
+  textOn: { light: { primary: 25, accent: 25 }, dark: { primary: 1, accent: 1 } },
+};
+
 /**
  * Array of built-in V2 theme definitions.
  * Each theme only needs name, primary, and accent colors.
@@ -316,4 +341,5 @@ export const baseThemesV2: ThemeInputV2[] = [
   },
   // after the seven, so no existing theme changes index
   cobaltMono,
+  cobaltWarm,
 ];
