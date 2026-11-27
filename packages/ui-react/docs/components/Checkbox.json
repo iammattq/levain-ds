@@ -11,7 +11,7 @@
     "Sizes: 'sm' | 'md' (default) | 'lg'; the label takes the scale's type (sm: type-label-sm; md, lg: type-label)."
   ],
   "examples": [
-    "```tsx\nimport { useState } from 'react';\nimport { Checkbox } from '@/lib/designsystem';\n\nfunction MyComponent() {\n  const [isChecked, setIsChecked] = useState(false);\n\n  return (\n    <Checkbox\n      id=\"terms\"\n      checked={isChecked}\n      onChange={setIsChecked}\n      label=\"I agree to the terms\"\n    />\n  );\n}\n```",
+    "```tsx\nimport { useState } from 'react';\nimport { Checkbox } from '@levain/ui-react';\n\nfunction MyComponent() {\n  const [isChecked, setIsChecked] = useState(false);\n\n  return (\n    <Checkbox\n      id=\"terms\"\n      checked={isChecked}\n      onChange={setIsChecked}\n      label=\"I agree to the terms\"\n    />\n  );\n}\n```",
     "```tsx\n// Disabled Checkbox\n<Checkbox id=\"disabled-check\" checked={true} onChange={() => {}} label=\"Cannot change\" disabled />\n```",
     "```tsx\n// Indeterminate Checkbox\n<Checkbox id=\"select-all\" checked={'indeterminate'} onChange={handleSelectAllChange} label=\"Select some items\" />\n```",
     "```tsx\n// Different Sizes\n<Checkbox id=\"small-check\" checked={val} onChange={setVal} label=\"Small\" size=\"sm\" />\n<Checkbox id=\"medium-check\" checked={val} onChange={setVal} label=\"Medium\" size=\"md\" />\n<Checkbox id=\"large-check\" checked={val} onChange={setVal} label=\"Large\" size=\"lg\" />\n```",

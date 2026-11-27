@@ -11,7 +11,7 @@
     "selectedDate/onDateSelect are deprecated aliases for value/onChange; they still work for one release"
   ],
   "examples": [
-    "```tsx\nimport { Calendar } from '@/lib/designsystem';\nimport { useState } from 'react';\n\nexport default function CalendarExample() {\n  const [date, setDate] = useState<Date | null>(new Date());\n  return <Calendar aria-label=\"Due date\" value={date} onChange={setDate} />;\n}\n```"
+    "```tsx\nimport { Calendar } from '@levain/ui-react';\nimport { useState } from 'react';\n\nexport default function CalendarExample() {\n  const [date, setDate] = useState<Date | null>(new Date());\n  return <Calendar aria-label=\"Due date\" value={date} onChange={setDate} />;\n}\n```"
   ],
   "design": [
     "The calendar uses a fixed width (320px) for consistent layout.",

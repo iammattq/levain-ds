@@ -17,16 +17,6 @@ type PageLayout =
   | 'two-column-sidebar-right'
   | 'two-column-sidebar-left';
 
-// ASCII header text options (must match AsciiHeader component)
-type AsciiTitleOption =
-  | 'Matt Quinn'
-  | 'Work'
-  | 'Photos'
-  | 'Journal'
-  | 'Dashboard'
-  | 'Admin'
-  | 'Sign In'
-  | 'Design System';
 type AsciiColorVariant = 'gradient' | 'secondary';
 
 export interface PageTemplateProps {
@@ -53,7 +43,7 @@ export interface PageTemplateProps {
   /** Number of columns (1-5) for the sidebar in sidebar layouts. Defaults to 4. */
   sidebarColumns?: 1 | 2 | 3 | 4 | 5; // Use literal type for validation
   /** Use ASCII art header instead of regular heading */
-  asciiTitle?: AsciiTitleOption;
+  asciiTitle?: string;
   /** Color variant for ASCII header (defaults to 'secondary' for sub-pages) */
   asciiColorVariant?: AsciiColorVariant;
   /** Hide the title (useful when title is rendered inside content, e.g. bento grids) */

@@ -11,7 +11,7 @@
     "It has no native field: the ref, the id and unnamed props (aria-*, data-*, onFocus…) go to the chip, its focusable root"
   ],
   "examples": [
-    "```tsx\nimport { GradientInput, type GradientValue } from '@/lib/designsystem';\nimport { useState } from 'react';\n\nexport default function FillExample() {\n  const [fill, setFill] = useState<GradientValue>({\n    angle: 90,\n    stops: [\n      { position: 0, color: { hex: '#5C62D6', alpha: 100 } },\n      { position: 100, color: { hex: '#E86A92', alpha: 100 } },\n    ],\n  });\n\n  return <GradientInput label=\"Fill\" value={fill} onChange={setFill} size=\"sm\" />;\n}\n```"
+    "```tsx\nimport { GradientInput, type GradientValue } from '@levain/ui-react';\nimport { useState } from 'react';\n\nexport default function FillExample() {\n  const [fill, setFill] = useState<GradientValue>({\n    angle: 90,\n    stops: [\n      { position: 0, color: { hex: '#5C62D6', alpha: 100 } },\n      { position: 100, color: { hex: '#E86A92', alpha: 100 } },\n    ],\n  });\n\n  return <GradientInput label=\"Fill\" value={fill} onChange={setFill} size=\"sm\" />;\n}\n```"
   ],
   "design": [
     "The chip shows the gradient; the summary beside it reads '<angle>°, <n> stops' and also opens the editor",

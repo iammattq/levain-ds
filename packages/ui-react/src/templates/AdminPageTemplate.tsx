@@ -7,17 +7,6 @@ import { ArrowLeft, Loader2, XCircle } from 'lucide-react';
 import AsciiHeader from '../patterns/AsciiHeader';
 import { Button } from '../components/Button';
 
-// ASCII header text options (must match AsciiHeader component)
-type AsciiTitleOption =
-  | 'Matt Quinn'
-  | 'Work'
-  | 'Photos'
-  | 'Journal'
-  | 'Dashboard'
-  | 'Admin'
-  | 'Sign In'
-  | 'Design System';
-
 export interface AdminPageTemplateProps {
   /** Title for the page */
   title: string;
@@ -36,7 +25,7 @@ export interface AdminPageTemplateProps {
   /** Status indicator to display next to the title (e.g., Tag component) */
   status?: React.ReactNode;
   /** Use ASCII art header instead of regular heading */
-  asciiTitle?: AsciiTitleOption;
+  asciiTitle?: string;
   /** Loading state - shows spinner instead of content */
   loading?: boolean;
   /** Error state - shows error message instead of content */

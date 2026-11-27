@@ -1,0 +1,11 @@
+levain DS
+Copyright (c) 2026 Matt Quinn
+
+levain DS is licensed under the MIT License (see LICENSE), except for two files of type data made by others:
+
+- packages/ui-react/src/patterns/dotMatrix5x7.ts: the 5x7 dot-matrix glyphs from DotMatrix5x7 by felias-fogg
+  (https://github.com/felias-fogg/DotMatrix5x7), drawn by DotMatrixReveal. Licensed under the LGPL-3.0
+  (LICENSES/LGPL-3.0.txt, with LICENSES/GPL-3.0.txt). The file can be swapped for your own glyphs of the same shape.
+
+- packages/ui-react/src/utils/pagga.ts: the Pagga block letters by Sam Hocevar (a toilet font), drawn by AsciiHeader.
+  Licensed under the WTFPL (LICENSES/WTFPL.txt).

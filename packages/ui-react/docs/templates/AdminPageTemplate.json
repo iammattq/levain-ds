@@ -3,7 +3,7 @@
   "description": "A condensed page template for admin interfaces with a compact header layout. Title and back button on the left, status indicators and action buttons on the right. Designed for functional admin UIs with minimal spacing.",
   "category": "templates",
   "usage": [
-    "Import from barrel: `import { AdminPageTemplate } from '@/lib/designsystem'`",
+    "Import from barrel: `import { AdminPageTemplate } from '@levain/ui-react'`",
     "Use for admin pages that need a compact, functional header with actions",
     "Pass action buttons via the `actions` prop - they appear on the right side of the header",
     "Use `status` prop for inline status indicators (e.g., Tag components) next to the title",
@@ -12,11 +12,11 @@
     "Template handles loading and error states automatically via `loading` and `error` props"
   ],
   "examples": [
-    "Basic Admin Page:\n```tsx\nimport { AdminPageTemplate, Button } from '@/lib/designsystem';\nimport { Plus } from 'lucide-react';\n\nexport default function GalleriesPage() {\n  return (\n    <AdminPageTemplate\n      title=\"Galleries\"\n      actions={\n        <Button variant=\"primary\" Icon={Plus}>\n          New Gallery\n        </Button>\n      }\n    >\n      {/* Page content */}\n    </AdminPageTemplate>\n  );\n}\n```",
-    "Detail Page with Back Button and Status:\n```tsx\nimport { AdminPageTemplate, Tag, Button } from '@/lib/designsystem';\nimport { useRouter } from 'next/navigation';\n\nexport default function AnalysisDetailPage() {\n  const router = useRouter();\n  \n  return (\n    <AdminPageTemplate\n      title=\"image-filename.jpg\"\n      onBackClick={() => router.back()}\n      status={<Tag variant=\"success\">Approved</Tag>}\n      actions={\n        <Button variant=\"secondary\">Re-analyze</Button>\n      }\n    >\n      {/* Detail content */}\n    </AdminPageTemplate>\n  );\n}\n```",
-    "Top-Level Section with ASCII Title:\n```tsx\nimport { AdminPageTemplate, Button } from '@/lib/designsystem';\nimport { FolderOpen, Sparkles, Plus } from 'lucide-react';\n\nexport default function PhotosPage() {\n  return (\n    <AdminPageTemplate\n      title=\"Photos\"\n      asciiTitle=\"Photos\"\n      actions={\n        <>\n          <Button Icon={FolderOpen}>Image Manager</Button>\n          <Button Icon={Sparkles}>Analyze Photos</Button>\n          <Button variant=\"primary\" Icon={Plus}>New Gallery</Button>\n        </>\n      }\n    >\n      {/* Gallery grid */}\n    </AdminPageTemplate>\n  );\n}\n```",
-    "Page with Loading State:\n```tsx\n<AdminPageTemplate\n  title=\"Analysis Details\"\n  onBackClick={() => router.back()}\n  loading={isLoading}\n>\n  {/* Content only renders when loading is false */}\n</AdminPageTemplate>\n```",
-    "Page with Error State:\n```tsx\n<AdminPageTemplate\n  title=\"Analysis Details\"\n  onBackClick={() => router.back()}\n  error={error}\n>\n  {/* Content only renders when error is null */}\n</AdminPageTemplate>\n```"
+    "Basic Admin Page:\n```tsx\nimport { AdminPageTemplate, Button } from '@levain/ui-react';\nimport { Plus } from 'lucide-react';\n\nexport default function GalleriesPage() {\n  return (\n    <AdminPageTemplate\n      title=\"Galleries\"\n      actions={\n        <Button variant=\"primary\" Icon={Plus}>\n          New Gallery\n        </Button>\n      }\n    >\n      {/* Page content */}\n    </AdminPageTemplate>\n  );\n}\n```",
+    "Detail Page with Back Button and Status:\n```tsx\nimport { AdminPageTemplate, Tag, Button } from '@levain/ui-react';\n\nexport default function AnalysisDetailPage() {\n  return (\n    <AdminPageTemplate\n      title=\"image-filename.jpg\"\n      onBackClick={() => window.history.back()}\n      status={<Tag variant=\"success\">Approved</Tag>}\n      actions={\n        <Button variant=\"secondary\">Re-analyze</Button>\n      }\n    >\n      {/* Detail content */}\n    </AdminPageTemplate>\n  );\n}\n```",
+    "Top-Level Section with ASCII Title:\n```tsx\nimport { AdminPageTemplate, Button } from '@levain/ui-react';\nimport { FolderOpen, Sparkles, Plus } from 'lucide-react';\n\nexport default function PhotosPage() {\n  return (\n    <AdminPageTemplate\n      title=\"Photos\"\n      asciiTitle=\"Photos\"\n      actions={\n        <>\n          <Button Icon={FolderOpen}>Image Manager</Button>\n          <Button Icon={Sparkles}>Analyze Photos</Button>\n          <Button variant=\"primary\" Icon={Plus}>New Gallery</Button>\n        </>\n      }\n    >\n      {/* Gallery grid */}\n    </AdminPageTemplate>\n  );\n}\n```",
+    "Page with Loading State:\n```tsx\n<AdminPageTemplate\n  title=\"Analysis Details\"\n  onBackClick={() => window.history.back()}\n  loading={isLoading}\n>\n  {/* Content only renders when loading is false */}\n</AdminPageTemplate>\n```",
+    "Page with Error State:\n```tsx\n<AdminPageTemplate\n  title=\"Analysis Details\"\n  onBackClick={() => window.history.back()}\n  error={error}\n>\n  {/* Content only renders when error is null */}\n</AdminPageTemplate>\n```"
   ],
   "design": [
     "Uses tight padding (py-4 px-4/6/9) compared to PageTemplate's more spacious layout",
@@ -82,7 +82,7 @@
       "type": "() => void",
       "optional": true,
       "defaultValue": null,
-      "description": "Callback for back button (alternative to backLink, e.g., router.back()).",
+      "description": "Callback for back button (alternative to backLink, e.g., window.history.back()).",
       "configurable": false
     },
     {
@@ -103,10 +103,10 @@
     },
     {
       "name": "asciiTitle",
-      "type": "AsciiTitleOption",
+      "type": "string",
       "optional": true,
       "defaultValue": null,
-      "description": "Use ASCII art header instead of regular heading. Options match AsciiHeader component.",
+      "description": "Use an ASCII art header instead of a regular heading: any text, drawn by AsciiHeader (letters, digits and spaces).",
       "configurable": true
     },
     {

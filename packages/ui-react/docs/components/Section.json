@@ -39,7 +39,7 @@
     }
   ],
   "usage": [
-    "Import Section and CardContent from '@/lib/designsystem'",
+    "Import Section and CardContent from '@levain/ui-react'",
     "Use Section as a container for grouping related content",
     "For single-column layouts, simply wrap content in Section with desired padding",
     "For two equal columns, set layout='two-column-equal' - columns split 50/50 on medium screens and larger",
@@ -49,7 +49,7 @@
     "Pair with CardContent for consistent inner spacing within columns/content areas, especially when Section padding is set to 'none'"
   ],
   "examples": [
-    "import { Section, CardContent } from '@/lib/designsystem';\n\n<Section layout=\"single-column\" padding=\"md\">\n  <CardContent>\n    <h2>Section Title</h2>\n    <p>Section content goes here</p>\n  </CardContent>\n</Section>;",
+    "import { Section, CardContent } from '@levain/ui-react';\n\n<Section layout=\"single-column\" padding=\"md\">\n  <CardContent>\n    <h2>Section Title</h2>\n    <p>Section content goes here</p>\n  </CardContent>\n</Section>;",
     "<Section padding=\"md\">\n  <CardContent>\n    <h2 className=\"mb-2 text-lg font-medium\">Content Area</h2>\n    <p>This is static content in a styled container.</p>\n  </CardContent>\n</Section>",
     "<Section layout=\"two-column-equal\" padding=\"lg\">\n  {/* lg padding = gap-12 */}\n  {/* Column 1 */}\n  <CardContent>\n    <h2 className=\"mb-2 text-lg font-medium\">First Column</h2>\n    <p>Content for the first column</p>\n  </CardContent>\n  {/* Column 2 */}\n  <CardContent>\n    <h2 className=\"mb-2 text-lg font-medium\">Second Column</h2>\n    <p>Content for the second column</p>\n  </CardContent>\n</Section>",
     "<Section layout=\"two-column-sidebar-right\" padding=\"md\">\n  {/* md padding = gap-8 */}\n  {/* Main Content (8/12 cols on lg) */}\n  <div className=\"lg:col-span-8\">\n    <CardContent>\n      <h2 className=\"mb-2 text-lg font-medium\">Main Content Area</h2>\n      <p>This area takes up more space.</p>\n    </CardContent>\n  </div>\n  {/* Sidebar (4/12 cols on lg) */}\n  <aside className=\"lg:col-span-4\">\n    <CardContent>\n      <h3 className=\"text-md mb-2 font-medium\">Sidebar</h3>\n      <ul>\n        <li>Link 1</li>\n        <li>Link 2</li>\n      </ul>\n    </CardContent>\n  </aside>\n</Section>"

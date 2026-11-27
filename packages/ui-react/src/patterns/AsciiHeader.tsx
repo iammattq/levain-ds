@@ -3,59 +3,28 @@
 import React from 'react';
 import { generatePaggaText } from '../utils/pagga';
 
-type AsciiText =
-  | 'Matt Quinn'
-  | 'Work'
-  | 'Projects'
-  | 'Photos'
-  | 'Journal'
-  | 'Dashboard'
-  | 'Admin'
-  | 'Sign In'
-  | 'Themes'
-  | 'Design System'
-  | 'Button Studio'
-  | 'Theme Builder'
-  | 'Typography'
-  | 'Surfaces'
-  | 'ASCII Lab'
-  | 'Dot Matrix'
-  | 'Components';
-
 type AsciiSize = 'sm' | 'md' | 'lg';
 
 type AsciiColorVariant = 'gradient' | 'secondary' | 'default';
 
 interface AsciiHeaderProps {
-  text: AsciiText;
+  /** Any text. Letters, digits and spaces are drawn (letters in capitals); other characters are left out. */
+  text: string;
   size?: AsciiSize;
   colorVariant?: AsciiColorVariant;
   className?: string;
 }
 
-// Pre-generated ASCII art for supported text values
-// Note: "Matt Quinn" has custom Q character with backslash for style
-const ASCII_ART: Record<AsciiText, string> = {
-  'Matt Quinn': `░█▄█░█▀█░▀█▀░▀█▀░░░▄▀▄░█░█░▀█▀░█▀█░█▀█
+// Hand-drawn art that takes the place of the generated letters for one text: this one has a custom Q with a backslash.
+// A Map, not an object: a text like 'constructor' must not find a prototype member.
+const HAND_DRAWN = new Map<string, string>([
+  [
+    'Matt Quinn',
+    `░█▄█░█▀█░▀█▀░▀█▀░░░▄▀▄░█░█░▀█▀░█▀█░█▀█
 ░█░█░█▀█░░█░░░█░░░░█\\█░█░█░░█░░█░█░█░█
 ░▀░▀░▀░▀░░▀░░░▀░░░░░▀\\░▀▀▀░▀▀▀░▀░▀░▀░▀`,
-  Work: generatePaggaText('WORK'),
-  Projects: generatePaggaText('PROJECTS'),
-  Photos: generatePaggaText('PHOTOS'),
-  Journal: generatePaggaText('JOURNAL'),
-  Dashboard: generatePaggaText('DASHBOARD'),
-  Admin: generatePaggaText('ADMIN'),
-  'Sign In': generatePaggaText('SIGN IN'),
-  Themes: generatePaggaText('THEMES'),
-  'Design System': generatePaggaText('DESIGN SYSTEM'),
-  'Button Studio': generatePaggaText('BUTTON STUDIO'),
-  'Theme Builder': generatePaggaText('THEME BUILDER'),
-  Typography: generatePaggaText('TYPOGRAPHY'),
-  Surfaces: generatePaggaText('SURFACES'),
-  'ASCII Lab': generatePaggaText('ASCII LAB'),
-  'Dot Matrix': generatePaggaText('DOT MATRIX'),
-  Components: generatePaggaText('COMPONENTS'),
-};
+  ],
+]);
 
 const SIZE_CLASSES: Record<AsciiSize, string> = {
   sm: 'text-[0.35rem] leading-none sm:text-[0.4rem] md:text-[0.5rem]',
@@ -69,7 +38,7 @@ const AsciiHeader = ({
   colorVariant = 'gradient',
   className = '',
 }: AsciiHeaderProps) => {
-  const asciiArt = ASCII_ART[text];
+  const asciiArt = HAND_DRAWN.get(text) ?? generatePaggaText(text);
 
   const colorStyles =
     colorVariant === 'gradient'

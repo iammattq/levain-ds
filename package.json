@@ -5,6 +5,12 @@
   "type": "module",
   "packageManager": "pnpm@10.27.0",
   "description": "levain DS: design tokens and React components. TypeScript source; consumers transpile it (smoke/ builds it as one would).",
+  "author": "Matt Quinn",
+  "homepage": "https://github.com/iammattq/levain-ds#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/iammattq/levain-ds.git"
+  },
   "scripts": {
     "test": "node --test scripts/version.test.mjs && pnpm --filter './packages/*' test",
     "check:version": "node scripts/version.mjs check",

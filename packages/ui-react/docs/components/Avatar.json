@@ -3,7 +3,7 @@
   "description": "Displays a circular image, often used for user profiles, with an optional decorative gradient border.",
   "category": "components",
   "usage": [
-    "Import the Avatar component: `import { Avatar } from '@/lib/designsystem';`",
+    "Import the Avatar component: `import { Avatar } from '@levain/ui-react';`",
     "Provide the required `src` and `alt` props.",
     "Optionally adjust the `size` (default: 64).",
     "Use `showBorder={false}` to hide the gradient border.",
@@ -38,8 +38,7 @@
       "type": "string",
       "optional": false,
       "description": "Alt text for the avatar image, crucial for accessibility.",
-      "configurable": true,
-      "defaultValue": "Matt Quinn avatar"
+      "configurable": true
     },
     {
       "name": "size",

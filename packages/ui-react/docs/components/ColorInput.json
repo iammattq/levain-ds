@@ -12,7 +12,7 @@
     "The ref goes to the text field; unnamed props (name, aria-*, data-*, onFocus…) go to it too"
   ],
   "examples": [
-    "```tsx\nimport { ColorInput } from '@/lib/designsystem';\nimport { useState } from 'react';\n\nexport default function ColorPickerExample() {\n  const [color, setColor] = useState('#5C62D6');\n\n  return (\n    <ColorInput\n      label=\"Base Color\"\n      value={color}\n      onChange={setColor}\n      helperText=\"Select the primary base color for the theme.\"\n      required\n    />\n  );\n}\n```"
+    "```tsx\nimport { ColorInput } from '@levain/ui-react';\nimport { useState } from 'react';\n\nexport default function ColorPickerExample() {\n  const [color, setColor] = useState('#5C62D6');\n\n  return (\n    <ColorInput\n      label=\"Base Color\"\n      value={color}\n      onChange={setColor}\n      helperText=\"Select the primary base color for the theme.\"\n      required\n    />\n  );\n}\n```"
   ],
   "design": [
     "The component pairs a color chip (button) and a text input, visually merged like TextInput with a prepended chip.",

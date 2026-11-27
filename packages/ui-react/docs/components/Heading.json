@@ -9,7 +9,7 @@
     "Set `inverted={true}` to render the heading with inverted text color (suitable for dark backgrounds).",
     "Set `noSpacing={true}` to remove all default margins and padding for fine-tuned layout control.",
     "Provide a `backLink` URL (string) to prepend a styled back arrow link to the heading.",
-    "Alternatively, use `onBackClick` callback to render a back button that triggers custom navigation (e.g., router.back()).",
+    "Alternatively, use `onBackClick` callback to render a back button that triggers custom navigation (e.g., window.history.back()).",
     "Use `backLinkTitle` to provide an accessible label for the back link or button (defaults to 'Go back').",
     "Set `editable={true}` to make the heading editable with double-click or pencil icon.",
     "Provide `onEditSave` callback function to handle the updated heading text when editing is saved.",
@@ -20,7 +20,7 @@
     "```tsx\n// Simple H1 heading\n<Heading level=\"h1\">Page Title</Heading>\n```",
     "```tsx\n// Centered H2 heading without the accent bar\n<Heading level=\"h2\" align=\"center\" showBar={false}>Section Title</Heading>\n```",
     "```tsx\n// H3 heading with a back link\n<Heading level=\"h3\" backLink=\"/previous-page\">Sub Section</Heading>\n```",
-    "```tsx\n// H1 heading with back button using browser history\nimport { useRouter } from 'next/navigation';\n\nfunction PageWithBackButton() {\n  const router = useRouter();\n  return (\n    <Heading \n      level=\"h1\" \n      onBackClick={() => router.back()}\n      backLinkTitle=\"Go back\"\n      showBar={false}\n    >\n      Detail Page\n    </Heading>\n  );\n}\n```",
+    "```tsx\n// H1 heading with back button using browser history\nimport { Heading } from '@levain/ui-react';\n\nfunction PageWithBackButton() {\n  return (\n    <Heading \n      level=\"h1\" \n      onBackClick={() => window.history.back()}\n      backLinkTitle=\"Go back\"\n      showBar={false}\n    >\n      Detail Page\n    </Heading>\n  );\n}\n```",
     "```tsx\n// H4 heading with inverted color for dark backgrounds\n<div style={{ backgroundColor: 'black', padding: '1rem' }}>\n  <Heading level=\"h4\" inverted={true}>Widget Title</Heading>\n</div>\n```",
     "```tsx\n// Editable H2 heading\nimport { useState } from 'react';\n\nfunction EditableHeadingExample() {\n  const [title, setTitle] = useState('Click to edit me');\n  \n  return (\n    <Heading \n      level=\"h2\" \n      editable={true} \n      onEditSave={setTitle}\n    >\n      {title}\n    </Heading>\n  );\n}\n```",
     "```tsx\n// H3 heading with no spacing for custom layouts\n<Heading level=\"h3\" showBar={false} noSpacing>Section Title</Heading>\n```",
@@ -85,7 +85,7 @@
       "name": "onBackClick",
       "type": "() => void",
       "optional": true,
-      "description": "If provided, renders a styled back arrow button that calls this callback when clicked. Use as an alternative to backLink when you need custom navigation behavior (e.g., router.back())."
+      "description": "If provided, renders a styled back arrow button that calls this callback when clicked. Use as an alternative to backLink when you need custom navigation behavior (e.g., window.history.back())."
     },
     {
       "name": "showBar",

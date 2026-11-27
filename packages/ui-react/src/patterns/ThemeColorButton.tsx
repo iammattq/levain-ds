@@ -20,11 +20,6 @@ const ThemeColorButton = forwardRef<HTMLButtonElement, ThemeColorButtonProps>(
       const currentIndex = availableIndices.indexOf(themeIndex);
       const nextIndex = (currentIndex + 1) % availableIndices.length;
 
-      // Log for debugging
-      console.log(
-        `Cycling color theme from index ${themeIndex} to ${availableIndices[nextIndex]}`
-      );
-
       setThemeIndex(availableIndices[nextIndex]);
     };
 

@@ -14,7 +14,7 @@
     "Use labelTooltip to provide contextual help for technical or domain-specific parameters"
   ],
   "examples": [
-    "import { Slider } from '@/lib/designsystem';\nimport { useState } from 'react';\n\nfunction MyComponent() {\n  const [value, setValue] = useState(50);\n\n  return (\n    <Slider\n      label=\"Brightness\"\n      value={value}\n      min={0}\n      max={100}\n      onChange={setValue}\n    />\n  );\n}",
+    "import { Slider } from '@levain/ui-react';\nimport { useState } from 'react';\n\nfunction MyComponent() {\n  const [value, setValue] = useState(50);\n\n  return (\n    <Slider\n      label=\"Brightness\"\n      value={value}\n      min={0}\n      max={100}\n      onChange={setValue}\n    />\n  );\n}",
     "<Slider\n  size=\"sm\"\n  label=\"Angle\"\n  value={config.angle}\n  min={0}\n  max={360}\n  step={15}\n  onChange={(v) => updateConfig({ angle: v })}\n  valueFormatter={(v) => `${v}°`}\n  showTooltip\n/>",
     "<Slider\n  label=\"Commission (%)\"\n  value={commission}\n  min={0}\n  max={100}\n  onChange={setCommission}\n  showTooltip\n  showMinMax\n  helperText=\"Choose how much commission each affiliate receives\"\n/>",
     "<Slider\n  size=\"sm\"\n  label=\"Opacity\"\n  value={opacity}\n  min={0}\n  max={1}\n  step={0.01}\n  onChange={setOpacity}\n  valueFormatter={(v) => v.toFixed(2)}\n  className=\"mb-0\"\n/>",
