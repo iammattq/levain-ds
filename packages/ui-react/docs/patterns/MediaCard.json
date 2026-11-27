@@ -16,7 +16,7 @@
     "Integration with the Card component system for consistency"
   ],
   "examples": [
-    "import { MediaCard } from '@/lib/designsystem';\n\nfunction MyComponent() {\n  return (\n    <MediaCard\n      title=\"Article Title\"\n      subtitle=\"Published January 1, 2024\"\n      href=\"/articles/article-slug\"\n      imageSrc=\"/images/article-image.jpg\"\n    />\n  );\n}",
+    "import { MediaCard } from '@levain/ui-react';\n\nfunction MyComponent() {\n  return (\n    <MediaCard\n      title=\"Article Title\"\n      subtitle=\"Published January 1, 2024\"\n      href=\"/articles/article-slug\"\n      imageSrc=\"/images/article-image.jpg\"\n    />\n  );\n}",
     "<MediaCard\n  title=\"Coming Soon\"\n  subtitle=\"New content will be added shortly\"\n  href=\"/placeholder\"\n/>",
     "<MediaCard\n  title=\"Dynamic Content\"\n  subtitle=\"Interactive visualization\"\n  href=\"/visualizations/dynamic\"\n  particleVariant=\"minimal\"\n/>",
     "<MediaCard\n  title=\"Widescreen Content\"\n  href=\"/videos/intro\"\n  imageSrc=\"/images/video-thumbnail.jpg\"\n  aspectRatio=\"aspect-video\"\n/>",

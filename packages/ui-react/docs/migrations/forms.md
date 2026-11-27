@@ -1,17 +1,17 @@
 # Forms migration guide (for agents)
 
 levain's 16 form inputs now follow one convention (T35, T53, T54, T55: the first release after v0.9.0). This guide is what an app must or
-may change to move to them: an app already on an older levain, or one with its own copy of these components (the
-portfolio's `@portfolio/ui-react`) moving to `@levain/ui-react`. It lists only what an app can see, not the
+may change to move to them: an app already on an older levain, or one with its own copy of these components moving
+to `@levain/ui-react`. It lists only what an app can see, not the
 internals.
 
 ## How to use this
 
-1. **Find the import.** This counts the files that import each component, multi-line imports included (put the
-   app's own package name in place of `portfolio` if it has a copy):
+1. **Find the import.** This counts the files that import each component, multi-line imports included (for an app with its
+   own copy, put that copy's import path in place of `@levain/ui-react`):
 
    ```sh
-   rg -U -o --no-filename "import \{[^}]*\} from '@(levain|portfolio)/ui-react'" src | rg -o '\b[A-Z][A-Za-z]+\b' | sort | uniq -c
+   rg -U -o --no-filename "import \{[^}]*\} from '@levain/ui-react'" src | rg -o '\b[A-Z][A-Za-z]+\b' | sort | uniq -c
    ```
 
    Keep the 16 below; skip the rest. Three ways a use hides from the `<Name` greps below:
@@ -326,7 +326,7 @@ reliable check is `expect(radio).toBeChecked()`.
 ## SegmentedControl
 
 **Find:** `rg -n '<SegmentedControl\b' src`, then read each tag to its `/>`: one with no `label`, `aria-label` or
-`aria-labelledby` needs a name (an `id` alone names nothing). Apps often have many: the portfolio has 14 unnamed. In
+`aria-labelledby` needs a name (an `id` alone names nothing). Apps often have many: the first app moved had 14. In
 tests, search every test file, not only those that import it (a test of a screen renders it indirectly):
 `rg -n "aria-pressed" -g '*test*' -g '*spec*' src`, then keep the hits whose button is a SegmentedControl option
 (its text is one of an `options` label).

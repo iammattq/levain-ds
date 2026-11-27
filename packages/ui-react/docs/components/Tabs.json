@@ -10,7 +10,7 @@
     "Always provide meaningful labels for accessibility"
   ],
   "examples": [
-    "```tsx\nimport { Tabs } from '@/lib/designsystem';\n\nconst tabs = [\n  { value: 'style', label: 'Style' },\n  { value: 'image', label: 'Image' },\n  { value: 'arrange', label: 'Arrange' },\n];\n\n<Tabs\n  tabs={tabs}\n  value={activeTab}\n  onChange={setActiveTab}\n/>\n```",
+    "```tsx\nimport { Tabs } from '@levain/ui-react';\n\nconst tabs = [\n  { value: 'style', label: 'Style' },\n  { value: 'image', label: 'Image' },\n  { value: 'arrange', label: 'Arrange' },\n];\n\n<Tabs\n  tabs={tabs}\n  value={activeTab}\n  onChange={setActiveTab}\n/>\n```",
     "```tsx\n// With disabled tab\nconst tabs = [\n  { value: 'active', label: 'Active' },\n  { value: 'disabled', label: 'Disabled', disabled: true },\n  { value: 'another', label: 'Another' },\n];\n\n<Tabs tabs={tabs} value={value} onChange={setValue} />\n```",
     "```tsx\n// Compact size for dense UIs\n<Tabs\n  tabs={tabs}\n  value={value}\n  onChange={setValue}\n  size=\"compact\"\n/>\n```",
     "```tsx\n// With accessible label\n<Tabs\n  tabs={tabs}\n  value={value}\n  onChange={setValue}\n  label=\"View options\"\n/>\n```"

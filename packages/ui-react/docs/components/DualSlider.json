@@ -12,7 +12,7 @@
     "minValue/maxValue/onMinChange/onMaxChange are deprecated aliases for value/onChange; they still work for one release"
   ],
   "examples": [
-    "import { DualSlider } from '@/lib/designsystem';\nimport { useState } from 'react';\n\nfunction MyComponent() {\n  const [price, setPrice] = useState<[number, number]>([10, 50]);\n\n  return (\n    <DualSlider\n      label=\"Price Range\"\n      value={price}\n      min={0}\n      max={100}\n      onChange={setPrice}\n    />\n  );\n}",
+    "import { DualSlider } from '@levain/ui-react';\nimport { useState } from 'react';\n\nfunction MyComponent() {\n  const [price, setPrice] = useState<[number, number]>([10, 50]);\n\n  return (\n    <DualSlider\n      label=\"Price Range\"\n      value={price}\n      min={0}\n      max={100}\n      onChange={setPrice}\n    />\n  );\n}",
     "<DualSlider\n  label=\"Date Range\"\n  defaultValue={[1950, 2000]}\n  min={1900}\n  max={2023}\n  onChange={([from, to]) => setFilter({ from, to })}\n  minLabel=\"From\"\n  maxLabel=\"To\"\n  valueFormatter={(min, max) => `${min} to ${max}`}\n  size=\"sm\"\n/>"
   ],
   "design": [

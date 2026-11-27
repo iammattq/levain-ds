@@ -12,8 +12,8 @@
     "For advanced usage, refer to the Sonner documentation at https://sonner.emilkowal.ski/"
   ],
   "examples": [
-    "import { Toaster } from '@/lib/designsystem';\n\nfunction RootLayout({ children }) {\n  return (\n    <html lang=\"en\">\n      <body>\n        {children}\n        <Toaster />\n      </body>\n    </html>\n  );\n}",
-    "import { toast } from 'sonner';\nimport { Button } from '@/lib/designsystem';\n\nfunction MyComponent() {\n  return (\n    <Button onClick={() => toast('This is a toast notification')}>\n      Show Toast\n    </Button>\n  );\n}",
+    "import { Toaster } from '@levain/ui-react';\n\nfunction RootLayout({ children }) {\n  return (\n    <html lang=\"en\">\n      <body>\n        {children}\n        <Toaster />\n      </body>\n    </html>\n  );\n}",
+    "import { toast } from 'sonner';\nimport { Button } from '@levain/ui-react';\n\nfunction MyComponent() {\n  return (\n    <Button onClick={() => toast('This is a toast notification')}>\n      Show Toast\n    </Button>\n  );\n}",
     "// Base/Default toast\ntoast('This is a standard toast.');\n\n// Success toast\ntoast.success('Operation completed successfully');\n\n// Error toast\ntoast.error('An error occurred');\n\n// Warning toast\ntoast.warning('Please check the details.');\n\n// Info toast\ntoast.info('Here is some information.');\n\n// Loading toast\ntoast.loading('Processing your request...');\n\n// Promise toast (shows loading, then success/error)\ntoast.promise(fetchData(), {\n  loading: 'Loading data...',\n  success: (data) => `Loaded ${data.length} items`,\n  error: 'Failed to load data',\n});\n\n// Custom component toast\ntoast(\n  <div className=\"flex items-center\">\n    {/* <Icon className=\"mr-2\" /> */}\n    <span>Custom toast content</span>\n  </div>\n);"
   ],
   "design": [

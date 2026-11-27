@@ -10,7 +10,7 @@
     "Combine with other Card sub-components for complex layouts"
   ],
   "examples": [
-    "```tsx\n// Using a preset\nimport { GradientCard } from '@/lib/designsystem';\n\n<GradientCard preset=\"elevated\">\n  <div className=\"p-6\">\n    <h3>Elevated Card</h3>\n    <p>Appears to float above the surface</p>\n  </div>\n</GradientCard>\n```",
+    "```tsx\n// Using a preset\nimport { GradientCard } from '@levain/ui-react';\n\n<GradientCard preset=\"elevated\">\n  <div className=\"p-6\">\n    <h3>Elevated Card</h3>\n    <p>Appears to float above the surface</p>\n  </div>\n</GradientCard>\n```",
     "```tsx\n// As a link\n<GradientCard href=\"/articles/my-article\" preset=\"matts\">\n  <div className=\"p-6\">\n    <h3>Clickable Card</h3>\n  </div>\n</GradientCard>\n```",
     "```tsx\n// Custom configuration\n<GradientCard\n  lightConfig={{\n    surface: { startIndex: 22, endIndex: 20, angle: 180 },\n    borderTop: { colorIndex: 25, angle: 180, width: 1 },\n    borderBottom: { colorIndex: 18, angle: 180, width: 1 },\n  }}\n  darkConfig={{\n    surface: { startIndex: 6, endIndex: 4, angle: 180 },\n    borderTop: { colorIndex: 8, angle: 180, width: 1 },\n    borderBottom: { colorIndex: 2, angle: 180, width: 1 },\n  }}\n>\n  <div className=\"p-6\">Custom Gradient Card</div>\n</GradientCard>\n```",
     "```tsx\n// Without hover effect\n<GradientCard preset=\"inset\" hoverEffect={false}>\n  <div className=\"p-6\">Static Card</div>\n</GradientCard>\n```"

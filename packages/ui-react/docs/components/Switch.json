@@ -11,7 +11,7 @@
     "Accessible with keyboard navigation"
   ],
   "examples": [
-    "import { Switch } from '@/lib/designsystem';\n\nfunction MyComponent() {\n  const [isEnabled, setIsEnabled] = useState(false);\n\n  return (\n    <Switch\n      id=\"my-switch\"\n      checked={isEnabled}\n      onChange={setIsEnabled}\n      label=\"Enable feature\"\n    />\n  );\n}",
+    "import { Switch } from '@levain/ui-react';\n\nfunction MyComponent() {\n  const [isEnabled, setIsEnabled] = useState(false);\n\n  return (\n    <Switch\n      id=\"my-switch\"\n      checked={isEnabled}\n      onChange={setIsEnabled}\n      label=\"Enable feature\"\n    />\n  );\n}",
     "<Switch id=\"small-switch\" checked={checked} onChange={handleChange} size=\"sm\" label=\"Small\" />\n<Switch id=\"medium-switch\" checked={checked} onChange={handleChange} size=\"md\" label=\"Medium\" />\n<Switch id=\"large-switch\" checked={checked} onChange={handleChange} size=\"lg\" label=\"Large\" />",
     "<Switch\n  id=\"disabled-switch\"\n  checked={true}\n  onChange={() => {}}\n  disabled={true}\n  label=\"Disabled switch\"\n/>",
     "<Switch id=\"no-label-switch\" checked={checked} onChange={handleChange} />",

@@ -3,7 +3,7 @@
   "description": "A standardized layout template for front-end (non-admin) pages that provides consistent structure, spacing, and layout options. It includes the PageTransition component to ensure smooth transitions between pages.",
   "category": "templates",
   "usage": [
-    "Import from barrel: `import { PageTemplate } from '@/lib/designsystem'`",
+    "Import from barrel: `import { PageTemplate } from '@levain/ui-react'`",
     "Use for front-end (non-admin) pages to maintain consistent layout structure",
     "Choose appropriate layout: 'single-column', 'two-column-equal', 'two-column-sidebar-right', or 'two-column-sidebar-left'",
     "In 'single-column' and 'two-column-equal' layouts, the H1 title is rendered above the content",
@@ -15,11 +15,11 @@
     "Use backLink and backLinkTitle props to add navigation breadcrumb to the heading"
   ],
   "examples": [
-    "Standard Page (Single Column):\n```tsx\nimport { PageTemplate } from '@/lib/designsystem';\n\nexport default function MyPage() {\n  return (\n    <PageTemplate title=\"My Page Title\" layout=\"single-column\">\n      {/* Single-column page content */}\n      <p>Your main content here.</p>\n    </PageTemplate>\n  );\n}\n```",
+    "Standard Page (Single Column):\n```tsx\nimport { PageTemplate } from '@levain/ui-react';\n\nexport default function MyPage() {\n  return (\n    <PageTemplate title=\"My Page Title\" layout=\"single-column\">\n      {/* Single-column page content */}\n      <p>Your main content here.</p>\n    </PageTemplate>\n  );\n}\n```",
     "Standard Page with Content Section:\n```tsx\n<PageTemplate title=\"Standard Page\">\n  <div className=\"bg-surface-1 rounded p-4\">\n    Content section that spans the full available width.\n  </div>\n</PageTemplate>\n```",
     "Two Equal Columns:\n```tsx\n<PageTemplate title=\"Two Column Page\" layout=\"two-column-equal\" secondColumn={\n  <div className=\"bg-surface-1 rounded p-4\">\n    Content for the right column.\n  </div>\n}>\n  {/* First Column (children) */}\n  <div className=\"bg-surface-1 rounded p-4\">Content for the left column.</div>\n</PageTemplate>\n```",
-    "Two Columns (Sidebar Right Layout):\n```tsx\nimport { PageTemplate, Placeholder } from '@/lib/designsystem';\n\n<PageTemplate\n  title=\"Right Sidebar Layout Page\"\n  layout=\"two-column-sidebar-right\"\n  // sidebarColumns={3} // Example: Use 3 columns for sidebar (9 for main)\n  sidebar={\n    <Placeholder height=\"200px\">Sidebar Content (Default 4 cols)</Placeholder>\n  }\n>\n  {/* Main Content (children) */}\n  <Placeholder height=\"300px\">Main Content Area (Default 8 cols)</Placeholder>\n</PageTemplate>\n```",
-    "Two Columns (Sidebar Left Layout):\n```tsx\nimport { PageTemplate, Placeholder } from '@/lib/designsystem';\n\n<PageTemplate\n  title=\"Left Sidebar Layout Page\"\n  layout=\"two-column-sidebar-left\"\n  sidebarColumns={3} // Example: Use 3 columns for sidebar (9 for main)\n  sidebar={<Placeholder height=\"200px\">Sidebar Content (3 cols)</Placeholder>}\n>\n  {/* Main Content (children) */}\n  <Placeholder height=\"300px\">Main Content Area (9 cols)</Placeholder>\n</PageTemplate>\n```",
+    "Two Columns (Sidebar Right Layout):\n```tsx\nimport { PageTemplate } from '@levain/ui-react';\n\n<PageTemplate\n  title=\"Right Sidebar Layout Page\"\n  layout=\"two-column-sidebar-right\"\n  // sidebarColumns={3} // Example: Use 3 columns for sidebar (9 for main)\n  sidebar={\n    <div style={{ height: 200 }}>Sidebar Content (Default 4 cols)</div>\n  }\n>\n  {/* Main Content (children) */}\n  <div style={{ height: 300 }}>Main Content Area (Default 8 cols)</div>\n</PageTemplate>\n```",
+    "Two Columns (Sidebar Left Layout):\n```tsx\nimport { PageTemplate } from '@levain/ui-react';\n\n<PageTemplate\n  title=\"Left Sidebar Layout Page\"\n  layout=\"two-column-sidebar-left\"\n  sidebarColumns={3} // Example: Use 3 columns for sidebar (9 for main)\n  sidebar={<div style={{ height: 200 }}>Sidebar Content (3 cols)</div>}\n>\n  {/* Main Content (children) */}\n  <div style={{ height: 300 }}>Main Content Area (9 cols)</div>\n</PageTemplate>\n```",
     "Full-Width Page:\n```tsx\n<PageTemplate title=\"Full Width Page\" maxWidth={false}>\n  <div className=\"bg-surface-1 w-full p-4\">\n    This content will expand to the full width of the viewport\n  </div>\n</PageTemplate>\n```",
     "Page with Back Link:\n```tsx\n<PageTemplate\n  title=\"Detail Page\"\n  backLink=\"/parent-section\"\n  backLinkTitle=\"Back to Section\"\n>\n  <div className=\"p-4\">\n    This page has a back button that navigates to the parent section\n  </div>\n</PageTemplate>\n```"
   ],

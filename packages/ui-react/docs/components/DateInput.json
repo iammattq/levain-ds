@@ -4,7 +4,7 @@
   "category": "components",
   "usage": [
     "Follows the form-input convention (docs/prop-conventions.json, formInputs).",
-    "Import: `import { DateInput } from '@/lib/designsystem';`",
+    "Import: `import { DateInput } from '@levain/ui-react';`",
     "Provides both calendar picker and manual text input methods.",
     "A native text field: onChange receives the native ChangeEvent; event.target.value is the masked YYYY-MM-DD date, whether typed or picked from the calendar",
     "Controlled with value, or uncontrolled with defaultValue",
@@ -13,7 +13,7 @@
     "Forwards refs to the underlying text input element; unnamed props (name, aria-*, data-*, onFocus…) go to it too."
   ],
   "examples": [
-    "```tsx\nimport { DateInput } from '@/lib/designsystem';\nimport { useState } from 'react';\n\nexport default function DatePickerExample() {\n  const [date, setDate] = useState('');\n\n  return (\n    <DateInput\n      label=\"Appointment Date\"\n      value={date}\n      onChange={(event) => setDate(event.target.value)}\n      helperText=\"Select or enter a date in YYYY-MM-DD format.\"\n      required\n    />\n  );\n}\n```"
+    "```tsx\nimport { DateInput } from '@levain/ui-react';\nimport { useState } from 'react';\n\nexport default function DatePickerExample() {\n  const [date, setDate] = useState('');\n\n  return (\n    <DateInput\n      label=\"Appointment Date\"\n      value={date}\n      onChange={(event) => setDate(event.target.value)}\n      helperText=\"Select or enter a date in YYYY-MM-DD format.\"\n      required\n    />\n  );\n}\n```"
   ],
   "design": [
     "The component wraps a clickable calendar button and a text input.",
