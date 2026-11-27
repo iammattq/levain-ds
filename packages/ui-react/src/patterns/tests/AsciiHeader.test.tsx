@@ -27,6 +27,14 @@ describe('AsciiHeader', () => {
     expect(art(container)).toContain('█\\█');
   });
 
+  test('a text that names an object member draws as letters', () => {
+    for (const text of ['constructor', 'toString', '__proto__']) {
+      const { container, unmount } = render(<AsciiHeader text={text} />);
+      expect(art(container)).toBe(generatePaggaText(text));
+      unmount();
+    }
+  });
+
   test('leaves out characters it has no letters for', () => {
     const { container } = render(<AsciiHeader text="Hi!" />);
     expect(art(container)).toBe(generatePaggaText('HI'));

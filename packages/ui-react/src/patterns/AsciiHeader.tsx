@@ -16,11 +16,15 @@ interface AsciiHeaderProps {
 }
 
 // Hand-drawn art that takes the place of the generated letters for one text: this one has a custom Q with a backslash.
-const HAND_DRAWN: Record<string, string> = {
-  'Matt Quinn': `░█▄█░█▀█░▀█▀░▀█▀░░░▄▀▄░█░█░▀█▀░█▀█░█▀█
+// A Map, not an object: a text like 'constructor' must not find a prototype member.
+const HAND_DRAWN = new Map<string, string>([
+  [
+    'Matt Quinn',
+    `░█▄█░█▀█░▀█▀░▀█▀░░░▄▀▄░█░█░▀█▀░█▀█░█▀█
 ░█░█░█▀█░░█░░░█░░░░█\\█░█░█░░█░░█░█░█░█
 ░▀░▀░▀░▀░░▀░░░▀░░░░░▀\\░▀▀▀░▀▀▀░▀░▀░▀░▀`,
-};
+  ],
+]);
 
 const SIZE_CLASSES: Record<AsciiSize, string> = {
   sm: 'text-[0.35rem] leading-none sm:text-[0.4rem] md:text-[0.5rem]',
@@ -34,7 +38,7 @@ const AsciiHeader = ({
   colorVariant = 'gradient',
   className = '',
 }: AsciiHeaderProps) => {
-  const asciiArt = HAND_DRAWN[text] ?? generatePaggaText(text);
+  const asciiArt = HAND_DRAWN.get(text) ?? generatePaggaText(text);
 
   const colorStyles =
     colorVariant === 'gradient'
