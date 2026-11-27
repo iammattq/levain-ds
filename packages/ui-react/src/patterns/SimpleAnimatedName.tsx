@@ -5,7 +5,8 @@ import React, { useState, useEffect } from 'react';
 import { themeManager } from '@levain/tokens';
 
 interface SimpleAnimatedNameProps {
-  name?: string;
+  /** The text to animate. Required: there is no default. */
+  name: string;
   className?: string;
 }
 
@@ -20,7 +21,7 @@ function keyBelongsElsewhere(e: KeyboardEvent): boolean {
 }
 
 const SimpleAnimatedName = ({
-  name = 'Matt Quinn',
+  name,
   className = '',
 }: SimpleAnimatedNameProps) => {
   const enhancedTheme = useEnhancedTheme();

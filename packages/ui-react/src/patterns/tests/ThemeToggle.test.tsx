@@ -64,6 +64,14 @@ describe('ThemeToggle', () => {
     expect(mockSetTheme).toHaveBeenCalledWith('dark');
   });
 
+  it('prints nothing to the console when clicked', () => {
+    const log = jest.spyOn(console, 'log').mockImplementation(() => {});
+    render(<ThemeToggle />);
+    fireEvent.click(screen.getByRole('button'));
+    expect(log).not.toHaveBeenCalled();
+    log.mockRestore();
+  });
+
   it('cycles through themes in order: light -> dark -> system -> light', () => {
     // Test for light theme
     mockTheme = 'light';

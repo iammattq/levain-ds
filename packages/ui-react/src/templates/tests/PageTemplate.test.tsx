@@ -27,4 +27,13 @@ describe('PageTemplate', () => {
     expect(html).toContain('Entry body');
     expect(html).toContain('Side');
   });
+
+  test('asciiTitle takes any text', () => {
+    render(
+      <PageTemplate title="Garden" asciiTitle="Garden 2">
+        <p>Entry body</p>
+      </PageTemplate>
+    );
+    expect(screen.getByRole('heading', { level: 1, name: 'Garden 2' })).toBeInTheDocument();
+  });
 });

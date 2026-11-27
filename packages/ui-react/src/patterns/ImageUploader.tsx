@@ -353,10 +353,6 @@ export default function ImageUploader({
       // Make sure we don't have any query parameters in the endpoint
       deleteEndpoint = deleteEndpoint.split('?')[0];
 
-      console.log(
-        `Deleting image: ${imageId} using endpoint: ${deleteEndpoint}`
-      );
-
       // Delete the image
       try {
         const response = await fetch(deleteEndpoint, {
@@ -377,8 +373,6 @@ export default function ImageUploader({
             `Failed to delete image: ${response.status} ${response.statusText}`
           );
         }
-
-        console.log(`Successfully deleted image ${imageId}`);
       } catch (error) {
         console.error('Error deleting image:', error);
         // Re-throw the error to be caught by the outer catch

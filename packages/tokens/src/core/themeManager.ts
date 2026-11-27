@@ -290,7 +290,6 @@ export class ThemeManager {
       // Apply to DOM. Both modes are written, scoped like a base theme, so a light/dark change needs nothing here.
       const mode = this.isDarkMode() ? 'dark' : 'light';
       applyModeClass(getTheme());
-      const themeMode = generated[mode];
       const attr = `user-${id}`;
 
       // Load typography for consistent styling
@@ -323,10 +322,6 @@ export class ThemeManager {
       document.body.setAttribute('data-theme-index', `user-${id}`);
       document.body.setAttribute('data-theme-mode', mode);
 
-      console.debug(`Applied user theme "${theme.name}" (${mode} mode):`, {
-        primary: themeMode.primary,
-        accent: themeMode.accent,
-      });
     } catch (error) {
       console.error('Failed to apply user theme', error);
       // Fallback to default built-in theme
@@ -424,22 +419,14 @@ export class ThemeManager {
     try {
       // Use custom loader if provided, otherwise use default import
       if (this.themeJsonLoader) {
-        console.debug('[themeManager] loadThemes: using custom loader');
         this.cachedThemes = await this.themeJsonLoader();
       } else {
         // Default loader - import from package's generated folder
-        console.debug(
-          '[themeManager] loadThemes: dynamic import ../../generated/themesV2.json'
-        );
         const themes = (await import('../../generated/themesV2.json')) as {
           default: ThemesV2Collection;
         };
         this.cachedThemes = themes.default;
       }
-      console.debug(
-        '[themeManager] loadThemes: success, %d theme(s)',
-        Object.keys(this.cachedThemes).length
-      );
       return this.cachedThemes;
     } catch (error) {
       const err = error as Error;
@@ -464,24 +451,15 @@ export class ThemeManager {
     try {
       // Use custom loader if provided, otherwise use default import
       if (this.typographyJsonLoader) {
-        console.debug('[themeManager] loadTypography: using custom loader');
         this.cachedTypography = await this.typographyJsonLoader();
       } else {
         // Default loader - import from package's generated folder
-        console.debug(
-          '[themeManager] loadTypography: dynamic import ../../generated/typographyV2.json'
-        );
         const typography =
           (await import('../../generated/typographyV2.json')) as {
             default: TypographyV2Collection;
           };
         this.cachedTypography = typography.default;
       }
-      console.debug(
-        '[themeManager] loadTypography: success, %d preset(s); first key=%s',
-        Object.keys(this.cachedTypography).length,
-        Object.keys(this.cachedTypography)[0]
-      );
       return this.cachedTypography;
     } catch (error) {
       const err = error as Error;
@@ -525,7 +503,6 @@ export class ThemeManager {
    */
   async applyTheme(index: number): Promise<void> {
     if (typeof window === 'undefined') return;
-    console.debug('[themeManager] applyTheme START index=%d', index);
 
     try {
       // Load themes and typography data
@@ -533,11 +510,6 @@ export class ThemeManager {
         this.loadThemes(),
         this.loadTypography(),
       ]);
-      console.debug(
-        '[themeManager] applyTheme: themes+typography resolved (themes=%d, typo=%d)',
-        Object.keys(themes).length,
-        Object.keys(typography).length
-      );
 
       // Get the number of available themes
       const themeCount = Object.keys(themes).length;
@@ -588,26 +560,11 @@ export class ThemeManager {
         ? this.generateTypographyCSS(typoPreset)
         : '';
 
-      const themeMode = theme[mode];
-      const debugInfo = {
-        primary: themeMode.primary,
-        accent: themeMode.accent,
-      };
-
       styleEl.textContent = typographyCSS;
 
       // Add data attribute to body for easier debugging
       document.body.setAttribute('data-theme-index', validIndex.toString());
       document.body.setAttribute('data-theme-mode', mode);
-
-      // Print debug info
-      console.debug(
-        `[themeManager] applyTheme SUCCESS index=%d (%s) css_len=%d`,
-        validIndex,
-        mode,
-        styleEl.textContent.length
-      );
-      console.debug('[themeManager] debug colors:', debugInfo);
     } catch (error) {
       const err = error as Error;
       console.error(
@@ -704,8 +661,6 @@ export class ThemeManager {
 
     const typographyCSS = this.generateTypographyCSS(typography);
     styleEl.textContent = typographyCSS;
-
-    console.debug(`Applied typography preview: ${typography.name}`);
   }
 
   /**

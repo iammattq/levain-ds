@@ -21,11 +21,6 @@ const ThemeToggle = forwardRef<HTMLButtonElement, ThemeToggleProps>(
       const currentIndex = themeOrder.indexOf(theme);
       const nextIndex = (currentIndex + 1) % themeOrder.length;
 
-      // Log for debugging
-      console.log(
-        `Cycling theme from ${theme} to ${themeOrder[nextIndex]}, current themeIndex: ${themeIndex}`
-      );
-
       setTheme(themeOrder[nextIndex]);
     };
 

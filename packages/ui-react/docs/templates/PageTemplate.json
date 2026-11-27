@@ -126,10 +126,10 @@
     },
     {
       "name": "asciiTitle",
-      "type": "AsciiTitleOption",
+      "type": "string",
       "optional": true,
       "defaultValue": null,
-      "description": "Use ASCII art header instead of regular heading. Options: 'Matt Quinn', 'Work', 'Photos', 'Journal', 'Dashboard', 'Admin', 'Sign In'.",
+      "description": "Use an ASCII art header instead of a regular heading: any text, drawn by AsciiHeader (letters, digits and spaces).",
       "configurable": true
     },
     {

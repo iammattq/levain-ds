@@ -6,8 +6,7 @@
     {
       "name": "name",
       "type": "string",
-      "optional": true,
-      "defaultValue": "Matt Quinn",
+      "optional": false,
       "description": "The text to display with the animation effect",
       "configurable": true
     },
@@ -29,8 +28,7 @@
     "Includes a helpful title tooltip explaining keyboard interactions"
   ],
   "examples": [
-    "// Basic usage with default name\n<SimpleAnimatedName />",
-    "// With custom name\n<SimpleAnimatedName name=\"John Doe\" />",
+    "// Basic usage\n<SimpleAnimatedName name=\"Jane Doe\" />",
     "// With custom styling\n<SimpleAnimatedName\n  name=\"Portfolio\"\n  className=\"text-3xl font-bold\"\n/>"
   ],
   "design": [

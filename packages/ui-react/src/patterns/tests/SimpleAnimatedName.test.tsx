@@ -77,26 +77,27 @@ describe('SimpleAnimatedName Pattern', () => {
     keydownHandler = null;
   });
 
-  test('renders with default name', () => {
-    render(<SimpleAnimatedName />);
-    expect(screen.getByText('Matt Quinn')).toBeInTheDocument();
-  });
-
-  test('renders with custom name', () => {
+  test('renders the name it is given', () => {
     render(<SimpleAnimatedName name="John Doe" />);
     expect(screen.getByText('John Doe')).toBeInTheDocument();
   });
 
+  test('has no default name', () => {
+    // @ts-expect-error name is required
+    const { container } = render(<SimpleAnimatedName />);
+    expect(container.textContent).toBe('');
+  });
+
   test('applies custom className', () => {
-    render(<SimpleAnimatedName className="custom-class text-xl" />);
-    const nameElement = screen.getByText('Matt Quinn');
+    render(<SimpleAnimatedName name="levain" className="custom-class text-xl" />);
+    const nameElement = screen.getByText('levain');
     expect(nameElement).toHaveClass('text-xl');
     expect(nameElement).toHaveClass('custom-class');
   });
 
   test('has title tooltip with instructions', () => {
-    render(<SimpleAnimatedName />);
-    const nameElement = screen.getByText('Matt Quinn');
+    render(<SimpleAnimatedName name="levain" />);
+    const nameElement = screen.getByText('levain');
     expect(nameElement).toHaveAttribute(
       'title',
       expect.stringContaining('Press space')
@@ -108,8 +109,8 @@ describe('SimpleAnimatedName Pattern', () => {
   });
 
   test('sets isHovered state on mouse events', () => {
-    render(<SimpleAnimatedName />);
-    const nameElement = screen.getByText('Matt Quinn');
+    render(<SimpleAnimatedName name="levain" />);
+    const nameElement = screen.getByText('levain');
 
     // Initial state, hover false
     fireEvent.mouseEnter(nameElement);
@@ -122,8 +123,8 @@ describe('SimpleAnimatedName Pattern', () => {
   });
 
   test('changes theme on Space key press when hovered', () => {
-    render(<SimpleAnimatedName />);
-    const nameElement = screen.getByText('Matt Quinn');
+    render(<SimpleAnimatedName name="levain" />);
+    const nameElement = screen.getByText('levain');
 
     // Simulate hover
     fireEvent.mouseEnter(nameElement);
@@ -137,7 +138,7 @@ describe('SimpleAnimatedName Pattern', () => {
   });
 
   test('does not change theme on Space key press when not hovered', () => {
-    render(<SimpleAnimatedName />);
+    render(<SimpleAnimatedName name="levain" />);
 
     // Do not hover the element
 
@@ -150,8 +151,8 @@ describe('SimpleAnimatedName Pattern', () => {
   });
 
   test('saves theme preference on S key press when hovered', () => {
-    render(<SimpleAnimatedName />);
-    const nameElement = screen.getByText('Matt Quinn');
+    render(<SimpleAnimatedName name="levain" />);
+    const nameElement = screen.getByText('levain');
 
     // Simulate hover
     fireEvent.mouseEnter(nameElement);
@@ -165,8 +166,8 @@ describe('SimpleAnimatedName Pattern', () => {
   });
 
   test('applies proper styling with gradient effects', () => {
-    render(<SimpleAnimatedName />);
-    const nameElement = screen.getByText('Matt Quinn');
+    render(<SimpleAnimatedName name="levain" />);
+    const nameElement = screen.getByText('levain');
 
     // Check for inline styles that can be tested reliably
     expect(nameElement).toHaveAttribute('style');
@@ -200,8 +201,8 @@ describe('SimpleAnimatedName Pattern', () => {
       const host = document.createElement('div');
       host.innerHTML = html;
       document.body.appendChild(host);
-      render(<SimpleAnimatedName />);
-      fireEvent.mouseEnter(screen.getByText('Matt Quinn'));
+      render(<SimpleAnimatedName name="levain" />);
+      fireEvent.mouseEnter(screen.getByText('levain'));
       const target = host.querySelector(selector)!;
 
       const space = keyOn('Space', target);
@@ -215,8 +216,8 @@ describe('SimpleAnimatedName Pattern', () => {
     });
 
     test('leaves Ctrl+S and Cmd+S to the browser', () => {
-      render(<SimpleAnimatedName />);
-      fireEvent.mouseEnter(screen.getByText('Matt Quinn'));
+      render(<SimpleAnimatedName name="levain" />);
+      fireEvent.mouseEnter(screen.getByText('levain'));
       const ctrl = keyOn('KeyS', document.body, { ctrlKey: true });
       const meta = keyOn('KeyS', document.body, { metaKey: true });
       expect(ctrl.defaultPrevented).toBe(false);
@@ -225,8 +226,8 @@ describe('SimpleAnimatedName Pattern', () => {
     });
 
     test('still takes Space typed on the page itself', () => {
-      render(<SimpleAnimatedName />);
-      fireEvent.mouseEnter(screen.getByText('Matt Quinn'));
+      render(<SimpleAnimatedName name="levain" />);
+      fireEvent.mouseEnter(screen.getByText('levain'));
       const space = keyOn('Space', document.body);
       expect(space.defaultPrevented).toBe(true);
       expect(mockSetThemeIndex).toHaveBeenCalled();

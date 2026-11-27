@@ -103,10 +103,10 @@
     },
     {
       "name": "asciiTitle",
-      "type": "AsciiTitleOption",
+      "type": "string",
       "optional": true,
       "defaultValue": null,
-      "description": "Use ASCII art header instead of regular heading. Options match AsciiHeader component.",
+      "description": "Use an ASCII art header instead of a regular heading: any text, drawn by AsciiHeader (letters, digits and spaces).",
       "configurable": true
     },
     {
