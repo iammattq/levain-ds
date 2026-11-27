@@ -4,7 +4,8 @@
 // Chromium at 390x844 (iPhone 14) and 1280x800, Sage (theme 0) and Cobalt Mono (theme 7), light and dark, on ?only=fab,
 // the same steps on both builds. Frames: closed; open (a pointer press, no ring); list-ring (opened by keyboard: the
 // ring on the first row); level-field (Write to me chosen by keyboard, a draft typed: the field focused, its ring);
-// level-back (Shift+Tab: the back arrow's ring). Writes <width>-<combo>-<frame>-{before,after}.png, numbers.json (the
+// level-back (Shift+Tab: the back arrow's ring); appearance (the Appearance level by keyboard: the Light/Dark switch
+// focused, its ring). The demo has no level with a button of its own: the back arrow is the levels' button. Writes <width>-<combo>-<frame>-{before,after}.png, numbers.json (the
 // colours each frame resolves to) and composite-<width>.png (each frame, before beside after).
 import { createRequire } from 'node:module';
 import fs from 'node:fs';
@@ -23,7 +24,7 @@ const browser = await pw.chromium.launch({ executablePath: exe, headless: true }
 const iphone = { ...(({ defaultBrowserType, ...d }) => d)(pw.devices['iPhone 14']), viewport: { width: 390, height: 844 } };
 const WIDTHS = [[390, iphone], [1280, { viewport: { width: 1280, height: 800 } }]];
 const COMBOS = [['sage', 0, 'light'], ['sage', 0, 'dark'], ['cobalt', 7, 'light'], ['cobalt', 7, 'dark']];
-const FRAMES = ['closed', 'open', 'list-ring', 'level-field', 'level-back'];
+const FRAMES = ['closed', 'open', 'list-ring', 'level-field', 'level-back', 'appearance'];
 const PANEL = '[data-fab-menu]', TRIGGER = '[data-fab-trigger]';
 const FILL = { light: [220, 229, 246], dark: [245, 233, 207] };
 const TEXT = { light: 'rgb(0, 0, 0)', dark: 'rgb(43, 36, 24)' };
@@ -45,6 +46,7 @@ const probe = p => p.evaluate(sel => {
     focus: a?.dataset?.fabItem ?? (a?.hasAttribute?.('data-fab-back') ? 'back' : a?.tagName.toLowerCase()),
     ring: a && a !== document.body && a.matches(':focus-visible') ? { outline: `${acs.outlineStyle} ${acs.outlineColor}`, shadow: acs.boxShadow } : null,
     field: ta ? { color: getComputedStyle(ta).color, border: getComputedStyle(ta).borderTopColor, bg: getComputedStyle(ta).backgroundColor } : null,
+    switch: !!a?.closest?.('[data-fab-level="appearance"]'),
     back: getComputedStyle(el.querySelector('[data-fab-level="write"] [data-fab-back]')).color,
   };
 }, PANEL);
@@ -73,6 +75,10 @@ for (const [width, opts] of WIDTHS) {
       await page.keyboard.press('Enter'); await settled(page);
       await page.keyboard.type('Half a thought'); await shoot('level-field');
       await page.keyboard.press('Shift+Tab'); await pause(100); await shoot('level-back');
+      // back to the list (focus on Write to me), down to Appearance: the Light/Dark switch takes focus, its ring shows
+      await page.keyboard.press('Enter'); await settled(page);
+      await page.keyboard.press('Tab'); await page.keyboard.press('Enter'); await settled(page);
+      await shoot('appearance');
       await ctx.close();
       if (side === 'after') {
         const n = f => numbers[`${key}-${f}-after`];
@@ -84,7 +90,8 @@ for (const [width, opts] of WIDTHS) {
           fieldFocused: n('level-field').focus === 'textarea',
           backRing: n('level-back').focus === 'back' && !!n('level-back').ring,
           // the rings in the panel's text colour (the demo's fillText) on the fill (Q-t72ring)
-          ringsInText: ['list-ring', 'level-back'].every(f => (n(f).ring?.shadow + ' ' + n(f).ring?.outline).includes(TEXT[mode])),
+          switchRing: n('appearance').level === 'appearance' && !!n('appearance').switch && !!n('appearance').ring,
+          ringsInText: ['list-ring', 'level-back', 'appearance'].every(f => (n(f).ring?.shadow + ' ' + n(f).ring?.outline).includes(TEXT[mode])),
           beforeOpenIsSurface: far(rgb(numbers[`${key}-open-before`].bg), FILL[mode]) > 2,
         };
       }
