@@ -59,6 +59,8 @@ for (const [width, opts] of WIDTHS) {
       page.on('pageerror', e => errors.push(`${key} ${side}: ${e.message}`));
       await page.goto(`${base}?only=fab&theme=${theme}&mode=${mode}`, { waitUntil: 'networkidle' });
       await page.evaluate(() => document.fonts.ready);
+      // the stage in view (at 390 it starts below the fold, and a press off-screen lands nowhere)
+      await page.evaluate(() => document.querySelector('[data-demo="fab-stage"]').scrollIntoView({ block: 'end' }));
       await settled(page);
       const clip = await corner(page);
       const shoot = async frame => { const f = `${key}-${frame}-${side}`; await page.screenshot({ path: `${out}/${f}.png`, clip }); numbers[f] = await probe(page); };
