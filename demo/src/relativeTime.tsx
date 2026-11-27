@@ -2,7 +2,7 @@
 // time.ts span() and its own one-second useNow), so the two can be compared. The times are set back from page load.
 import { RelativeTime, formatSpan } from '@levain/ui-react';
 import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
-import { BENCH } from './bench';
+import { BENCH, sample } from './bench';
 
 const LOADED = Date.now();
 const MIN = 60, HOUR = 3600;
@@ -21,14 +21,14 @@ function useBoardNow() {
 
 // whole: the consumer colours the whole phrase like the board's flag, from the time's data-state (styles.css :has)
 type Row = { who: string; code: string; ago: number; flag?: (t: ReactNode) => ReactNode; warnAfter?: number; whole?: boolean };
-const ROWS: Row[] = [
+const ROWS: Row[] = sample([
   { who: 'eng3', code: 'T6', ago: 45 },
   { who: 'Question', code: 'Q25', ago: 12 * MIN },
   { who: 'Question', code: 'Q18', ago: 20 * MIN, warnAfter: 15 * MIN, flag: (t) => <>Waiting {t}</> },
   { who: 'eng1', code: 'T22', ago: 3 * HOUR + 20 * MIN, warnAfter: 15 * MIN, flag: (t) => <>Asked {t} ago</>, whole: true },
   { who: 'PM', code: 'T4', ago: 2 * HOUR },
   { who: 'PM', code: 'T2', ago: 50 * HOUR },
-];
+]);
 
 function Card({ label, children }: { label: string; children: ReactNode }) {
   return (

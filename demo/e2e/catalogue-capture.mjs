@@ -72,6 +72,9 @@ if (side === 'after') {
   checks.title = await page.title();
   checks.sections = await page.$$eval('[data-catalogue-section]', els => els.map(e => e.id));
   checks.toc = await page.$$eval('[data-catalogue-toc] a', els => els.map(a => a.getAttribute('href')));
+  // a public page: no task codes (T62, L8, D14…), no PM, no team names in what a visitor reads
+  checks.internalWords = await page.$$eval('[data-catalogue-section]', els => els.flatMap(s =>
+    [...s.innerText.matchAll(/.{0,24}\b(?:[TLDQRBIC]\d{1,3}|PM|eng\d|Matt|Ringmaster)\b.{0,24}/g)].map(m => `${s.id}: ${m[0].replace(/\s+/g, ' ')}`)));
   checks.boardInCatalogue = await page.locator('[data-demo="popover-board"], [data-demo="stack-row-board"], [data-side="board"], [data-compare="board"]').count();
   await page.locator('[data-catalogue-switch="theme"]').selectOption('7');
   await page.getByRole('radio', { name: 'Dark' }).click();
@@ -90,6 +93,7 @@ if (side === 'after') {
     [checks.toc.every((h, i) => h === '#' + checks.sections[i]), 'the links go to the sections, in order'],
     [Object.values(sideScroll).every(px => px <= 0), 'the page does not scroll sideways, at 390 or 1280'],
     [checks.boardInCatalogue === 0, 'no board copy in the catalogue'],
+    [checks.internalWords.length === 0, 'no task codes, PM or names in the catalogue'],
     [/theme=7/.test(checks.urlAfterSwitches) && /mode=dark/.test(checks.urlAfterSwitches) && /density=condensed/.test(checks.urlAfterSwitches), 'the switches write the URL'],
     [checks.darkAfterSwitch, 'the mode switch turns the page dark'],
     [checks.boardUnderBench > 0 && checks.benchHasCatalogue === 0, '?bench=1 is the bench, with the board copies'],

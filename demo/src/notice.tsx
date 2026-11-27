@@ -14,7 +14,7 @@ export const LOST = "Your idea wasn't sent: the network dropped";
 
 const Box = ({ id, label, children }: { id: string; label: string; children: ReactNode }) => (
   <div className="space-y-xs" data-demo={`notice-${id}`}>
-    <p className="type-caption text-[var(--color-text-faint)]">T62 · {label}</p>
+    <p className="type-caption text-[var(--color-text-faint)]">{BENCH && 'T62 · '}{label}</p>
     <div className="space-y-xs rounded-[var(--radius-xl)] bg-[var(--color-surface-section)] p-sm">
       <div className="flex items-center justify-between gap-sm">
         <h3 className="type-label m-0">Your work</h3>

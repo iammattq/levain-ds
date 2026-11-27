@@ -26,7 +26,7 @@ function LevainLoadingSkeleton() {
 
 const Side = ({ who, children }: { who: string; children: ReactNode }) => (
   <div className="space-y-xs" data-demo={`skeleton-${who}`}>
-    <p className="type-caption text-[var(--color-text-faint)]">T47 · {who}</p>
+    {BENCH && <p className="type-caption text-[var(--color-text-faint)]">T47 · {who}</p>}
     <div data-demo-shapes={who}>{children}</div>
   </div>
 );

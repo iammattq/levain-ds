@@ -111,12 +111,19 @@ function Header({ theme0, themesReady, density, setDensity }: { theme0: number; 
   const [mode, setMode] = useState<'light' | 'dark'>(isDark() ? 'dark' : 'light');
   useEffect(() => {
     let live = true;
-    void themesReady.then(() => {
+    // ?theme= out of range (99, -1): the manager falls back to a real theme; the select and the URL follow it.
+    // If the themes never load, the select names the index rather than sitting on '…'.
+    const settle = () => {
       const all = themeManager.getThemes();
-      if (live && all) setNames(Object.entries(all).sort(([a], [b]) => +a - +b).map(([k, t]) => ({ value: k, label: t.name })));
-    });
+      if (!live) return;
+      if (!all) { setNames([{ value: String(theme0), label: `Theme ${theme0}` }]); return; }
+      setNames(Object.entries(all).sort(([a], [b]) => +a - +b).map(([k, t]) => ({ value: k, label: t.name })));
+      const real = themeManager.ensureValidThemeIndex(theme0, all);
+      if (real !== theme0) { setThemeIndex(real); writeUrl(real, isDark() ? 'dark' : 'light', density); }
+    };
+    themesReady.then(settle, settle);
     return () => { live = false; };
-  }, [themesReady]);
+  }, [themesReady, theme0, density]);
   const pickTheme = (i: number) => { setThemeIndex(i); void themeManager.applyTheme(i); writeUrl(i, mode, density); };
   const pickMode = (m: string) => { const v = m === 'dark' ? 'dark' : 'light'; setMode(v); setTheme(v); writeUrl(theme, v, density); };
   const pickDensity = (d: string) => { setDensity(d); writeUrl(theme, mode, d); };

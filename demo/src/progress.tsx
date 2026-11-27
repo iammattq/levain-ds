@@ -54,7 +54,8 @@ export function ProgressDemo({ Section }: { Section: (p: { title: string; note: 
       </div>}
 
       <div data-grid className="overflow-x-auto">
-        <table className="w-full border-separate border-spacing-x-sm border-spacing-y-xs">
+        {/* in the catalogue the table keeps its width on a phone and scrolls inside itself (the bench keeps its frames) */}
+        <table className={`w-full border-separate border-spacing-x-sm border-spacing-y-xs${BENCH ? '' : ' min-w-[48rem]'}`}>
           <thead className="type-caption text-left text-[var(--color-text-muted)]">
             <tr><th>size</th>{TONES.map(t => <th key={t} colSpan={2}>{t}</th>)}</tr>
           </thead>

@@ -46,7 +46,8 @@ const CASES: { name: string; commands: string[] }[] = [
   { name: 'Three commands', commands: ['cd ~/Projects/levain-ds', 'git fetch origin', 'git checkout feature/t4-command-block'] },
   {
     name: 'A long one that wraps',
-    commands: ['ringmaster heavy t4 --kind capture --on pc --out captures/T4 bash demo/scripts/capture-command.sh captures/T4', 'pnpm --filter @levain/ui-react exec jest --maxWorkers=2 src/components/tests/CommandBlock.test.tsx'],
+    // the catalogue's long line is a plain sample; the bench keeps its own, so its frames don't change
+    commands: [BENCH ? 'ringmaster heavy t4 --kind capture --on pc --out captures/T4 bash demo/scripts/capture-command.sh captures/T4' : 'pnpm --filter @levain/demo exec playwright test --project=chromium --reporter=line e2e/command-block.spec.ts', 'pnpm --filter @levain/ui-react exec jest --maxWorkers=2 src/components/tests/CommandBlock.test.tsx'],
   },
 ];
 

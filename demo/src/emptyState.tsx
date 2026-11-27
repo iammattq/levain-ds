@@ -12,7 +12,7 @@ const CARD_HEIGHT = '9.1875rem';
 
 const Side = ({ who, children }: { who: string; children: ReactNode }) => (
   <div className="space-y-xs" data-demo={`empty-${who}`}>
-    <p className="type-caption text-[var(--color-text-faint)]">T46 · {who}</p>
+    {BENCH && <p className="type-caption text-[var(--color-text-faint)]">T46 · {who}</p>}
     <div data-demo-empty={who}>{children}</div>
   </div>
 );

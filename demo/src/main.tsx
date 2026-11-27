@@ -35,19 +35,19 @@ import { ViewerDemo } from './viewer';
 import { ColoursDemo } from './colours';
 import { PickerDemo } from './picker';
 import { FormsDemo } from './forms';
-import { BENCH } from './bench';
+import { BENCH, plain, sample } from './bench';
 import { Catalogue, ColourSpecimen, SubSection, TypeSpecimen, type SectionComponent } from './catalogue';
 
 type Item = { id: string; title: string; owner: string; age: string; state?: 'blocked' | 'waiting'; images?: number; links?: number };
-const TODO: Item[] = [
+const TODO: Item[] = sample([
   { id: 'T4', title: 'Board: two tabs, Work board and Completed', owner: 'Matt', age: '3h', links: 1 },
   { id: 'T5', title: 'The comment box is one line and cuts off what I type', owner: 'Matt', age: '1h', images: 1 },
   { id: 'T6', title: 'Drag and drop on the board', owner: 'Matt', age: '40m' },
-];
-const QUEUED: Item[] = [
+]);
+const QUEUED: Item[] = sample([
   { id: 'T2', title: 'Release v0.13.0: BN1, BN2 and IR1; notes first', owner: 'PM', age: '2h', state: 'waiting' },
   { id: 'T3', title: 'Bench background options and the condenser line fix', owner: 'eng1', age: '25m', state: 'blocked', images: 2 },
-];
+]);
 
 const markers = (it: Item): StatusMarker[] => [
   { icon: User, label: it.owner },
@@ -82,7 +82,7 @@ function DragDemo({ Section = BenchSection, prefix = '' }: { Section?: SectionCo
     return { ...next, [m.to]: to };
   });
   const card = (it: Item) => (
-    <StatusCard id={prefix + it.id} number={it.id} title={it.title} markers={markers(it)} accent={it.state === 'blocked' ? 'error' : undefined} open={open?.id === it.id} onOpen={() => setOpen(it)} />
+    <StatusCard id={prefix + it.id} number={plain(it.id)} title={it.title} markers={markers(it)} accent={it.state === 'blocked' ? 'error' : undefined} open={open?.id === it.id} onOpen={() => setOpen(it)} />
   );
   return (
     <Section title="Drag, and a card becoming its dialog" note="Drag a card between the lists, or focus one and press Space, then the arrows. Click a card to open it.">
@@ -98,7 +98,7 @@ function DragDemo({ Section = BenchSection, prefix = '' }: { Section?: SectionCo
           ))}
         </div>
       </SortableGroup>
-      <StatusCardDialog id={open ? prefix + open.id : ''} open={!!open} onClose={() => setOpen(null)} number={open?.id} title={open?.title ?? ''} markers={open ? markers(open) : []}>
+      <StatusCardDialog id={open ? prefix + open.id : ''} open={!!open} onClose={() => setOpen(null)} number={open ? plain(open.id) : undefined} title={open?.title ?? ''} markers={open ? markers(open) : []}>
         <p className="type-body text-[var(--color-text-muted)]">The card grew into this dialog: one element, its corners and size moving on the spring, its content fading in once there was room. Close it and it collapses back into its place.</p>
       </StatusCardDialog>
     </Section>
@@ -114,25 +114,25 @@ const STACK_CARD = new URLSearchParams(location.search).get('stackCard') !== '0'
 function StackDemo({ Section = BenchSection }: { Section?: SectionComponent }) {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(0);
-  const look = { id: 'L8', number: 'L8 · 1 of 2', kind: { label: 'Look', tone: 'accent' as const }, title: 'The strip, second pass', markers: [{ icon: User, label: 'Matt' }, { icon: ImageIcon, label: '2', title: '2 images' }],
+  const look = sample({ id: 'L8', number: 'L8 · 1 of 2', kind: { label: 'Look', tone: 'accent' as const }, title: 'The strip, second pass', markers: [{ icon: User, label: 'Matt' }, { icon: ImageIcon, label: '2', title: '2 images' }],
     children: (
       <div className="space-y-sm" data-demo="stack-look">
         <div className="aspect-[16/7] rounded-[var(--radius-lg)] bg-[var(--color-surface-section)]" />
         <p className="type-body-sm text-[var(--color-text-muted)]">The look comes first; the decision it's for waits behind it, one step back, as the board's pile does.</p>
         <div><Button size="sm" variant="primary" data-demo="stack-next" onClick={() => setStep(1)}>Next</Button></div>
       </div>
-    ) };
-  const decide = { id: 'D14', number: 'D14 · 2 of 2', kind: { label: 'Decide' }, title: 'Strip or arc for the progress mark', markers: [{ icon: Clock, label: '2h', title: 'waiting 2 hours' }],
+    ) });
+  const decide = sample({ id: 'D14', number: 'D14 · 2 of 2', kind: { label: 'Decide' }, title: 'Strip or arc for the progress mark', markers: [{ icon: Clock, label: '2h', title: 'waiting 2 hours' }],
     children: (
       <div className="space-y-sm" data-demo="stack-decide">
         <p className="type-body-sm text-[var(--color-text-muted)]">The look went away; this one came forward on recipe.morph. Under Reduce Motion both are cross-fades.</p>
         <div className="flex gap-xs"><Button size="sm" variant="ghost" data-demo="stack-back" onClick={() => setStep(0)}>Back</Button><Button size="sm" variant="primary" onClick={() => setOpen(false)}>Send</Button></div>
       </div>
-    ) };
+    ) });
   return (
     <Section title="A dialog stack: a look over its decide" note="Open the card: the look grows out of it with the decide behind, 10 px lower and 5 % smaller. Next, Back; Escape or a click outside closes the front only. The pair is one card: whichever dialog closes last goes back into it.">
       <div className="max-w-sm" data-demo="stack-card">
-        <StatusCard id="L8" number="L8" kind={{ label: 'Look', tone: 'accent' }} title="The strip, second pass" markers={look.markers} open={open} onOpen={() => { setStep(0); setOpen(true); }} />
+        <StatusCard id="L8" number={plain('L8')} kind={{ label: 'Look', tone: 'accent' }} title="The strip, second pass" markers={look.markers} open={open} onOpen={() => { setStep(0); setOpen(true); }} />
       </div>
       <StatusCardDialogStack dialogs={open ? [look, decide].slice(step) : []} onClose={() => setOpen(false)} cardId={STACK_CARD ? 'L8' : undefined} />
     </Section>
@@ -209,7 +209,7 @@ function WindowDemo({ Section = BenchSection }: { Section?: SectionComponent }) 
 
 function ListDemo({ Section = BenchSection }: { Section?: SectionComponent }) {
   const reduce = useReducedMotion();
-  const [items, setItems] = useState(['Answered: D212 Strip', 'Answered: D213 Even light', 'L205 bench glass', 'R18 run the checker']);
+  const [items, setItems] = useState(() => sample(['Answered: D212 Strip', 'Answered: D213 Even light', 'L205 bench glass', 'R18 run the checker']));
   const [n, setN] = useState(1);
   return (
     <Section title="Lists: items enter and collapse out, the rest close the gap" note="Enter and leave on --duration-content-in; neighbours move on recipe.shift.">
@@ -356,8 +356,10 @@ const q = new URLSearchParams(location.search);
 const asked = q.get('mode');
 if (asked === 'light' || asked === 'dark') setTheme(asked); else initTheme();
 // ?theme=<n> starts on that built-in theme (7: Cobalt Mono)
-const theme0 = Number(q.get('theme') ?? 0) || 0;
-const themesReady = themeManager.applyTheme(theme0);
+// (out of range, the manager falls back to a real theme and the catalogue's select follows it; a failed load still
+// settles, so the select never waits on it)
+const theme0 = Math.trunc(Number(q.get('theme') ?? 0)) || 0;
+const themesReady = themeManager.applyTheme(theme0).catch((e: unknown) => console.error('levain: the theme did not load', e));
 createRoot(document.getElementById('root')!).render(
   <StrictMode><LevainProvider>
     {BENCH ? <Bench /> : <Catalogue demos={DEMOS} theme0={theme0} themesReady={themesReady} density0={q.get('density') === 'condensed' ? 'condensed' : 'comfortable'} />}
