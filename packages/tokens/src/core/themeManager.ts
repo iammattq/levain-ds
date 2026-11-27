@@ -16,6 +16,7 @@ import { baseThemesV2 } from '../data/baseThemesV2';
 import { migrateKey, readKey, removeKey, writeKey } from './storage';
 import { applyModeClass, getTheme, isDarkMode } from './themeMode';
 import {
+  SCHEME_ATTR,
   THEME_ATTR,
   THEMES_MARKER,
   cssBlock,
@@ -642,6 +643,19 @@ export class ThemeManager {
     });
 
     css += '}\n';
+
+    // The colour vars point at --color-* tokens, which resolve where they are declared. Declared on :root alone they take
+    // the page's mode, so a scheme scope (T72) would never reach .type-* text. Declare them again on the scope (T74).
+    const colorVars = Object.entries(typography.vars).filter(([key]) =>
+      /^type-.*-color$/.test(key),
+    );
+    if (colorVars.length > 0) {
+      css += `[${SCHEME_ATTR}] {\n`;
+      colorVars.forEach(([key, value]) => {
+        css += `  --${key}: ${value} !important;\n`;
+      });
+      css += '}\n';
+    }
 
     return css;
   }

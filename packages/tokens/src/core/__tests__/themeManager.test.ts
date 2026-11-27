@@ -307,6 +307,49 @@ describe('ThemeManager', () => {
     });
   });
 
+  describe('generateTypographyCSS', () => {
+    // T74: the --type-*-color vars resolve where declared, so a scheme scope needs its own copy.
+    it('re-declares every type colour var on the scheme scope, and only those', async () => {
+      const { ThemeManager } = await import('../themeManager');
+      const manager = new ThemeManager();
+      const css = manager.generateTypographyCSS({
+        name: 'T',
+        vars: {
+          'type-caption-size': '12px',
+          'type-caption-color': 'var(--color-text-muted)',
+          'type-caption-compact-color': 'var(--color-text-muted)',
+        },
+      });
+      const scope = css.split('[data-levain-scheme] {')[1];
+      expect(scope).toContain('--type-caption-color: var(--color-text-muted) !important;');
+      expect(scope).toContain('--type-caption-compact-color: var(--color-text-muted) !important;');
+      expect(scope).not.toContain('--type-caption-size');
+    });
+
+    it('does the same for the shipped presets', async () => {
+      const { ThemeManager } = await import('../themeManager');
+      const manager = new ThemeManager();
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const presets = require('../../../generated/typographyV2.json') as Record<
+        string,
+        { name: string; vars: Record<string, string> }
+      >;
+      Object.values(presets).forEach((preset) => {
+        const css = manager.generateTypographyCSS(preset as never);
+        const names = Object.keys(preset.vars).filter((k) => /^type-.*-color$/.test(k));
+        expect(names.length).toBeGreaterThan(0);
+        const scope = css.split('[data-levain-scheme] {')[1];
+        names.forEach((k) => expect(scope).toContain(`--${k}:`));
+      });
+    });
+
+    it('adds no scope block when a preset has no colour vars', async () => {
+      const { ThemeManager } = await import('../themeManager');
+      const css = new ThemeManager().generateTypographyCSS({ name: 'T', vars: {} });
+      expect(css).not.toContain('data-levain-scheme');
+    });
+  });
+
   describe('generateAllThemesCSS', () => {
     it('generates theme selector variables', async () => {
       const { ThemeManager } = await import('../themeManager');
