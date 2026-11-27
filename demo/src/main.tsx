@@ -1,7 +1,7 @@
 // levain DS's demo. The default page is the catalogue (catalogue.tsx, T67); ?bench=1 is the test bench, the page as it
 // was (motion, density and drag, the board copies beside levain's pieces). Every timing here comes from @levain/tokens.
 // ?density=condensed starts condensed; ?mode=light starts light; ?theme=7 starts on Cobalt Mono.
-// ?only=progress, ?only=decide, ?only=time, ?only=count, ?only=command, ?only=sheet, ?only=bottom-sheet, ?only=drawer, ?only=timeline, ?only=cardstack, ?only=compare, ?only=slider, ?only=viewer, ?only=strip, ?only=column, ?only=colours, ?only=picker, ?only=popover, ?only=tooltip, ?only=menu, ?only=skeleton, ?only=empty, ?only=notice or ?only=forms shows only that section (for captures).
+// ?only=progress, ?only=decide, ?only=time, ?only=count, ?only=command, ?only=sheet, ?only=bottom-sheet, ?only=drawer, ?only=fab, ?only=timeline, ?only=cardstack, ?only=compare, ?only=slider, ?only=viewer, ?only=strip, ?only=column, ?only=colours, ?only=picker, ?only=popover, ?only=tooltip, ?only=menu, ?only=skeleton, ?only=empty, ?only=notice or ?only=forms shows only that section (for captures).
 import '@fontsource/open-sans/400.css';
 import '@fontsource/open-sans/600.css';
 import '@fontsource/oswald/400.css';
@@ -21,6 +21,7 @@ import { ColumnDemo } from './column';
 import { RelativeTimeDemo } from './relativeTime';
 import { BottomSheetDemo } from './bottomSheet';
 import { DrawerDemo } from './drawer';
+import { FabMenuDemo } from './fabMenu';
 import { PopoverDemo } from './popover';
 import { TooltipDemo } from './tooltip';
 import { MenuDemo as LevainMenuDemo } from './menu';
@@ -273,7 +274,7 @@ function Bench() {
         </div>
         <SegmentedControl id="density" size="sm" value={density} onChange={setDensity} options={[{ label: 'Comfortable', value: 'comfortable' }, { label: 'Condensed', value: 'condensed' }]} />
       </header>
-      {q.get('only') === 'progress' ? <ProgressDemo Section={BenchSection} /> : q.get('only') === 'decide' ? <DecideDemo Section={BenchSection} /> : q.get('only') === 'time' ? <RelativeTimeDemo Section={BenchSection} /> : q.get('only') === 'count' ? <CountDemo Section={BenchSection} /> : q.get('only') === 'command' ? <CommandDemo Section={BenchSection} /> : q.get('only') === 'sheet' ? <SheetDemo Section={BenchSection} /> : q.get('only') === 'bottom-sheet' ? <BottomSheetDemo Section={BenchSection} /> : q.get('only') === 'drawer' ? <DrawerDemo Section={BenchSection} /> : q.get('only') === 'timeline' ? <TimelineDemo Section={BenchSection} /> : q.get('only') === 'cardstack' ? <CardStackDemo Section={BenchSection} /> : q.get('only') === 'compare' ? <ImageCompareDemo Section={BenchSection} /> : q.get('only') === 'slider' ? <ImageCompareSliderDemo Section={BenchSection} /> : q.get('only') === 'viewer' ? <ViewerDemo Section={BenchSection} /> : q.get('only') === 'strip' ? <StripDemo Section={BenchSection} /> : q.get('only') === 'column' ? <ColumnDemo Section={BenchSection} /> : q.get('only') === 'colours' ? <ColoursDemo Section={BenchSection} /> : q.get('only') === 'picker' ? <PickerDemo Section={BenchSection} /> : q.get('only') === 'popover' ? <PopoverDemo Section={BenchSection} /> : q.get('only') === 'tooltip' ? <TooltipDemo Section={BenchSection} /> : q.get('only') === 'menu' ? <LevainMenuDemo Section={BenchSection} /> : q.get('only') === 'skeleton' ? <SkeletonDemo Section={BenchSection} /> : q.get('only') === 'empty' ? <EmptyStateDemo Section={BenchSection} /> : q.get('only') === 'notice' ? <NoticeDemo Section={BenchSection} /> : q.get('only') === 'forms' ? <FormsDemo Section={BenchSection} /> : <>
+      {q.get('only') === 'progress' ? <ProgressDemo Section={BenchSection} /> : q.get('only') === 'decide' ? <DecideDemo Section={BenchSection} /> : q.get('only') === 'time' ? <RelativeTimeDemo Section={BenchSection} /> : q.get('only') === 'count' ? <CountDemo Section={BenchSection} /> : q.get('only') === 'command' ? <CommandDemo Section={BenchSection} /> : q.get('only') === 'sheet' ? <SheetDemo Section={BenchSection} /> : q.get('only') === 'bottom-sheet' ? <BottomSheetDemo Section={BenchSection} /> : q.get('only') === 'drawer' ? <DrawerDemo Section={BenchSection} /> : q.get('only') === 'fab' ? <FabMenuDemo Section={BenchSection} /> : q.get('only') === 'timeline' ? <TimelineDemo Section={BenchSection} /> : q.get('only') === 'cardstack' ? <CardStackDemo Section={BenchSection} /> : q.get('only') === 'compare' ? <ImageCompareDemo Section={BenchSection} /> : q.get('only') === 'slider' ? <ImageCompareSliderDemo Section={BenchSection} /> : q.get('only') === 'viewer' ? <ViewerDemo Section={BenchSection} /> : q.get('only') === 'strip' ? <StripDemo Section={BenchSection} /> : q.get('only') === 'column' ? <ColumnDemo Section={BenchSection} /> : q.get('only') === 'colours' ? <ColoursDemo Section={BenchSection} /> : q.get('only') === 'picker' ? <PickerDemo Section={BenchSection} /> : q.get('only') === 'popover' ? <PopoverDemo Section={BenchSection} /> : q.get('only') === 'tooltip' ? <TooltipDemo Section={BenchSection} /> : q.get('only') === 'menu' ? <LevainMenuDemo Section={BenchSection} /> : q.get('only') === 'skeleton' ? <SkeletonDemo Section={BenchSection} /> : q.get('only') === 'empty' ? <EmptyStateDemo Section={BenchSection} /> : q.get('only') === 'notice' ? <NoticeDemo Section={BenchSection} /> : q.get('only') === 'forms' ? <FormsDemo Section={BenchSection} /> : <>
       <DragDemo />
       <DecideDemo Section={BenchSection} />
       <StackDemo />
@@ -283,6 +284,7 @@ function Bench() {
       <ColumnDemo Section={BenchSection} />
       <BottomSheetDemo Section={BenchSection} />
       <DrawerDemo Section={BenchSection} />
+      <FabMenuDemo Section={BenchSection} />
       <PopoverDemo Section={BenchSection} />
       <TooltipDemo Section={BenchSection} />
       <LevainMenuDemo Section={BenchSection} />
@@ -331,6 +333,7 @@ const DEMOS: Record<string, (S: SectionComponent) => ReactNode> = {
   tooltip: S => <TooltipDemo Section={S} />,
   menu: S => <LevainMenuDemo Section={S} />,
   drawer: S => <DrawerDemo Section={S} />,
+  fab: S => <FabMenuDemo Section={S} />,
   'bottom-sheet': S => <BottomSheetDemo Section={S} />,
   'phone-dialogs': S => <SheetDemo Section={S} />,
   'dialog-stack': S => <StackDemo Section={S} />,

@@ -27,6 +27,7 @@ export const GROUPS: { name: string; sections: Entry[] }[] = [
     { id: 'tooltip', title: 'Tooltip', note: 'A short hint for one control, after a 300 ms hover or at once on keyboard focus. The strip\'s is a toggle: a tap or Enter shows it.' },
     { id: 'menu', title: 'Menu', note: 'A list of choices from a button, the chosen one checked. Arrows move, Enter or Space picks, Escape closes.' },
     { id: 'drawer', title: 'Drawer', note: 'A full-height panel from the left over a scrim; focus moves in and back, the page stays still under it, a swipe left closes it.' },
+    { id: 'fab', title: 'Floating menu', note: 'A round button in the corner that grows into a menu; choose a row to slide to its level, and a draft there survives closing.' },
     { id: 'bottom-sheet', title: 'Bottom sheet', note: 'A sheet from the bottom with a handle: swipe down or flick to close, or the ✕, a tap outside, Escape.' },
     { id: 'phone-dialogs', title: 'Dialogs on a phone', note: 'Below md a dialog opens as a bottom sheet: it rises from the bottom, scrolls inside and closes by its handle.' },
     { id: 'dialog-stack', title: 'Dialog stack', note: 'Two dialogs as a pile, grown out of one card: Next sends the front one away, Back brings it back.' },
