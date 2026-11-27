@@ -39,7 +39,7 @@ function LevainStrip({ s, who }: { s: StageOf; who: string }) {
 
 const Card = ({ who, children }: { who: string; children: ReactNode }) => (
   <div className="flex flex-col gap-[0.25rem] rounded-[var(--radius-lg)] bg-[var(--color-surface-card)] p-[0.75rem] shadow-[inset_0_0_0_1px_var(--color-border-subtle)]" data-demo={`tooltip-${who}`}>
-    <span className="type-caption text-[var(--color-text-faint)]">{BENCH ? `T42 · ${who}` : '#42'}</span>
+    <span className="type-caption text-[var(--color-text-faint)]">{BENCH ? <>T42 · {who}</> : '#42'}</span>
     <span className="font-medium">Tooltip</span>
     {children}
   </div>
@@ -47,7 +47,7 @@ const Card = ({ who, children }: { who: string; children: ReactNode }) => (
 
 const Restart = ({ who, children }: { who: string; children: ReactNode }) => (
   <div className="flex items-center gap-2xs" data-demo={`restart-${who}`}>
-    <span className="type-body-sm text-[var(--color-text-muted)]">{BENCH ? `PM · context 91% · ${who}` : 'Context 91%'}</span>
+    <span className="type-body-sm text-[var(--color-text-muted)]">{BENCH ? <>PM · context 91% · {who}</> : 'Context 91%'}</span>
     <span className="pm-restart">{children}</span>
   </div>
 );
