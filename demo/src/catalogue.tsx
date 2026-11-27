@@ -6,7 +6,8 @@ import { SegmentedControl, Select } from '@levain/ui-react';
 import { useEffect, useState, type ReactElement, type ReactNode } from 'react';
 
 export type SectionComponent = (p: { title: string; note: string; children: ReactNode }) => ReactElement;
-type Entry = { id: string; title: string; note: string };
+/** wide: the section's pieces don't shrink to a phone; the section scrolls sideways inside itself, the page doesn't. */
+type Entry = { id: string; title: string; note: string; wide?: boolean };
 
 export const REPO = 'https://github.com/iammattq/levain-ds';
 
@@ -43,7 +44,7 @@ export const GROUPS: { name: string; sections: Entry[] }[] = [
     { id: 'sortable', title: 'Sortable lists and cards', note: 'Drag a card between the lists, or focus one and press Space, then the arrows. Click a card and it grows into its dialog.' },
     { id: 'decide', title: 'A card with its answers', note: 'StatusCard with actions on its face: a press on an answer never opens the card or starts a drag.' },
     { id: 'card-stack', title: 'Card stack', note: 'A row that piles at the right, and a pile on phones: scroll or swipe and the cards peel off and settle.' },
-    { id: 'columns', title: 'Columns, Stack and Cluster', note: 'Column: a glyph, the title, the count, marks and an action over its cards; with scroll, the header stays.' },
+    { id: 'columns', wide: true, title: 'Columns, Stack and Cluster', note: 'Column: a glyph, the title, the count, marks and an action over its cards; with scroll, the header stays.' },
     { id: 'strip', title: 'Column strip', note: 'Columns on a phone: swipe between them or tap a pill; rest a dragged card at an edge and the strip pages.' },
     { id: 'timeline', title: 'Timeline', note: 'Dated entries in an ordered list, the current one\'s dot filled: a career and a release history.' },
     { id: 'command', title: 'Command block', note: 'Commands to copy, one at a time or all at once; the icon turns to a check for a moment.' },
@@ -68,7 +69,13 @@ export function sectionFor(id: string): SectionComponent {
           <h3 className="type-heading-4">{e.title}</h3>
           <p className="type-body-sm max-w-prose text-[var(--color-text-muted)]">{e.note}</p>
         </div>
-        {children}
+        {e.wide ? (
+          <div className="overflow-x-auto pb-2xs" data-catalogue-wide>
+            <div className="min-w-[60rem] space-y-sm">{children}</div>
+          </div>
+        ) : (
+          children
+        )}
       </section>
     );
     SECTIONS.set(id, S);

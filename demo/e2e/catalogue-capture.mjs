@@ -21,7 +21,7 @@ if (!exe) throw new Error('no Chromium found (set CHROMIUM)');
 const browser = await chromium.launch({ executablePath: exe, headless: true });
 const COMBOS = [['sage', 0, 'light'], ['sage', 0, 'dark'], ['cobalt', 7, 'light'], ['cobalt', 7, 'dark']];
 const SIZES = { 390: { width: 390, height: 844 }, 1280: { width: 1280, height: 800 } };
-const errors = [], checks = {};
+const errors = [], checks = {}, sideScroll = {};
 
 const open = async (query, size, scale = 2) => {
   const ctx = await browser.newContext({ viewport: size, deviceScaleFactor: scale, reducedMotion: 'reduce' });
@@ -41,6 +41,7 @@ for (const [name, theme, mode] of COMBOS) {
     await page.screenshot({ path: `${out}/top-${key}.png` });
     await ctx.close();
     ({ ctx, page } = await open(query, size, 1));
+    sideScroll[key] = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     await page.screenshot({ path: `${out}/full-${key}.png`, fullPage: true });
     await ctx.close();
   }
@@ -84,11 +85,13 @@ if (side === 'after') {
     [checks.title === 'levain DS', 'the page title is levain DS'],
     [checks.sections.length === 29 && checks.toc.length === 29, 'every section has an anchor and a link'],
     [checks.toc.every((h, i) => h === '#' + checks.sections[i]), 'the links go to the sections, in order'],
+    [Object.values(sideScroll).every(px => px <= 0), 'the page does not scroll sideways, at 390 or 1280'],
     [checks.boardInCatalogue === 0, 'no board copy in the catalogue'],
     [/theme=7/.test(checks.urlAfterSwitches) && /mode=dark/.test(checks.urlAfterSwitches) && /density=condensed/.test(checks.urlAfterSwitches), 'the switches write the URL'],
     [checks.darkAfterSwitch, 'the mode switch turns the page dark'],
     [checks.boardUnderBench > 0 && checks.benchHasCatalogue === 0, '?bench=1 is the bench, with the board copies'],
   ];
+  checks.sideScroll = sideScroll;
   checks.failed = want.filter(([ok]) => !ok).map(([, what]) => what);
   if (checks.failed.length) errors.push(...checks.failed.map(w => 'check failed: ' + w));
   fs.writeFileSync(`${out}/checks.json`, JSON.stringify({ ...checks, errors }, null, 2));
