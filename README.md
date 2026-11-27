@@ -183,7 +183,7 @@ TypeScript, React, Tailwind CSS 4, [culori](https://culorijs.org) for the colour
 
 ## Licence and credits
 
-MIT (see [LICENSE](LICENSE)), with two exceptions for type data made by others:
+MIT (see [LICENSE](LICENSE)), with two exceptions for type data made by others, listed in [NOTICE](NOTICE):
 
 - **DotMatrix5x7** by felias-fogg, [github.com/felias-fogg/DotMatrix5x7](https://github.com/felias-fogg/DotMatrix5x7): the 5×7 dot-matrix glyphs DotMatrixReveal draws. They live in their own file, `packages/ui-react/src/patterns/dotMatrix5x7.ts`, which is licensed under the LGPL-3.0 ([LICENSES/LGPL-3.0.txt](LICENSES/LGPL-3.0.txt), with [LICENSES/GPL-3.0.txt](LICENSES/GPL-3.0.txt)). You can swap that file for your own glyphs of the same shape.
 - **Pagga** by Sam Hocevar, a toilet font: the block letters AsciiHeader draws, in `packages/ui-react/src/utils/pagga.ts`, under the WTFPL ([LICENSES/WTFPL.txt](LICENSES/WTFPL.txt)).

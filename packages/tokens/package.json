@@ -1,6 +1,13 @@
 {
   "name": "@levain/tokens",
   "version": "0.12.0",
+  "author": "Matt Quinn",
+  "homepage": "https://github.com/iammattq/levain-ds#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/iammattq/levain-ds.git",
+    "directory": "packages/tokens"
+  },
   "private": true,
   "type": "module",
   "main": "./index.ts",
