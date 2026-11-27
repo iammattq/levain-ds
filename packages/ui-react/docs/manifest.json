@@ -196,6 +196,11 @@
   },
   {
     "category": "Patterns",
+    "name": "FabMenu",
+    "description": "Floating round button in the corner that morphs into a menu panel, with a level per item and a back arrow"
+  },
+  {
+    "category": "Patterns",
     "name": "ImageCompare",
     "description": "Two images compared: side by side, or before and after in one frame with a drag handle"
   },
