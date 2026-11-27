@@ -284,6 +284,9 @@ export const FabMenu = forwardRef<HTMLDivElement, FabMenuProps>(function FabMenu
   const openPair = (c: FabMenuColor | true | undefined) => c !== undefined && c !== true && typeof c !== 'string';
   // the scope: on the contents always (hidden while closed), on the button while open
   const scheme = openScheme ? { 'data-levain-scheme': openScheme } : {};
+  // on an openFill, focus rings (the rows, the back arrow, the open button, a control using --color-border-focus) take
+  // the panel's text colour: a theme's own focus colour can fall under 3:1 on a light fill (Q-t72ring)
+  const ringOnFill = openFill !== undefined ? { '--color-border-focus': openFg.value } : {};
   const panelStyle = {
     '--fab-menu-width': openWidth,
     '--fab-menu-cap': cap,
@@ -338,6 +341,7 @@ export const FabMenu = forwardRef<HTMLDivElement, FabMenuProps>(function FabMenu
           width: 'var(--fab-menu-width)',
           // in a scope, the text resolves here (on the panel it would be the page's mode's); a class reads it
           ...(openScheme ? { '--fab-content-fg': openFg.value } : {}),
+          ...ringOnFill,
           opacity: open ? 1 : 0,
           transform: open || reduce ? 'none' : 'translateY(6px)',
           visibility: shown ? 'visible' : 'hidden',
@@ -419,6 +423,7 @@ export const FabMenu = forwardRef<HTMLDivElement, FabMenuProps>(function FabMenu
           width: FAB_SIZE,
           height: FAB_SIZE,
           color: open ? 'var(--color-text-muted)' : 'inherit',
+          ...(open ? ringOnFill : {}),
           transition: reduce ? 'none' : `color 0s ${open ? IN_DELAY_MS : FADE_MS}ms`,
         }}
         className="absolute right-0 bottom-0 grid cursor-pointer place-items-center rounded-full focus:outline-none focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-[var(--color-border-focus)]"

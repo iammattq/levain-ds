@@ -26,6 +26,7 @@ const COMBOS = [['sage', 0, 'light'], ['sage', 0, 'dark'], ['cobalt', 7, 'light'
 const FRAMES = ['closed', 'open', 'list-ring', 'level-field', 'level-back'];
 const PANEL = '[data-fab-menu]', TRIGGER = '[data-fab-trigger]';
 const FILL = { light: [220, 229, 246], dark: [245, 233, 207] };
+const TEXT = { light: 'rgb(0, 0, 0)', dark: 'rgb(43, 36, 24)' };
 const rgb = s => (s.match(/[\d.]+/g) ?? []).slice(0, 3).map(Number);
 const far = (a, b) => Math.max(...a.map((v, i) => Math.abs(v - b[i])));
 
@@ -82,6 +83,8 @@ for (const [width, opts] of WIDTHS) {
           rowRing: n('list-ring').focus === 'work' && !!n('list-ring').ring,
           fieldFocused: n('level-field').focus === 'textarea',
           backRing: n('level-back').focus === 'back' && !!n('level-back').ring,
+          // the rings in the panel's text colour (the demo's fillText) on the fill (Q-t72ring)
+          ringsInText: ['list-ring', 'level-back'].every(f => (n(f).ring?.shadow + ' ' + n(f).ring?.outline).includes(TEXT[mode])),
           beforeOpenIsSurface: far(rgb(numbers[`${key}-open-before`].bg), FILL[mode]) > 2,
         };
       }

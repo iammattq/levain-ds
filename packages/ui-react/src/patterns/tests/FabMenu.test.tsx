@@ -363,6 +363,23 @@ describe('FabMenu: open fill and open scheme', () => {
     expect(trigger()).not.toHaveAttribute('data-levain-scheme');
   });
 
+  it('on an openFill, focus rings take the panel\'s text colour: the contents always, the button while open (Q-t72ring)', async () => {
+    render(<FabMenu items={items} fill={{ light: '#dce5f6', dark: '#f5e9cf' }} fillText={{ light: '#000', dark: '#2b2418' }} openFill openScheme="light" />);
+    const ring = (el: HTMLElement) => el.style.getPropertyValue('--color-border-focus');
+    expect(ring(contents())).toBe('var(--fab-text)');
+    expect(ring(trigger())).toBe('');
+    await press(trigger());
+    expect(ring(trigger())).toBe('var(--fab-text)');
+    expect(ring(fab())).toBe('');
+  });
+
+  it('no openFill: focus rings keep the theme\'s focus colour', async () => {
+    render(<FabMenu items={items} openScheme="light" />);
+    await press(trigger());
+    expect(contents().style.getPropertyValue('--color-border-focus')).toBe('');
+    expect(trigger().style.getPropertyValue('--color-border-focus')).toBe('');
+  });
+
   it('openScheme with openFillText: the contents take that text', () => {
     render(<FabMenu items={items} openFill="#f5e9cf" openFillText="#2b2418" openScheme="light" />);
     expect(contents().style.getPropertyValue('--fab-content-fg')).toBe('#2b2418');
