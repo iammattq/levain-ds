@@ -68,7 +68,7 @@ if (side === 'after') {
   checks.title = await page.title();
   checks.sections = await page.$$eval('[data-catalogue-section]', els => els.map(e => e.id));
   checks.toc = await page.$$eval('[data-catalogue-toc] a', els => els.map(a => a.getAttribute('href')));
-  checks.boardInCatalogue = await page.locator('[data-who="board"], [data-demo="popover-board"], [data-demo="stack-row-board"]').count();
+  checks.boardInCatalogue = await page.locator('[data-demo="popover-board"], [data-demo="stack-row-board"], [data-side="board"], [data-compare="board"]').count();
   await page.locator('[data-catalogue-switch="theme"]').selectOption('7');
   await page.getByRole('radio', { name: 'Dark' }).click();
   await page.getByRole('radio', { name: 'Condensed' }).click();
@@ -80,6 +80,17 @@ if (side === 'after') {
   checks.boardUnderBench = await bench.page.locator('[data-demo="popover-board"], [data-demo="stack-row-board"]').count();
   checks.benchHasCatalogue = await bench.page.locator('[data-catalogue-section]').count();
   await bench.ctx.close();
+  const want = [
+    [checks.title === 'levain DS', 'the page title is levain DS'],
+    [checks.sections.length === 29 && checks.toc.length === 29, 'every section has an anchor and a link'],
+    [checks.toc.every((h, i) => h === '#' + checks.sections[i]), 'the links go to the sections, in order'],
+    [checks.boardInCatalogue === 0, 'no board copy in the catalogue'],
+    [/theme=7/.test(checks.urlAfterSwitches) && /mode=dark/.test(checks.urlAfterSwitches) && /density=condensed/.test(checks.urlAfterSwitches), 'the switches write the URL'],
+    [checks.darkAfterSwitch, 'the mode switch turns the page dark'],
+    [checks.boardUnderBench > 0 && checks.benchHasCatalogue === 0, '?bench=1 is the bench, with the board copies'],
+  ];
+  checks.failed = want.filter(([ok]) => !ok).map(([, what]) => what);
+  if (checks.failed.length) errors.push(...checks.failed.map(w => 'check failed: ' + w));
   fs.writeFileSync(`${out}/checks.json`, JSON.stringify({ ...checks, errors }, null, 2));
   console.log(JSON.stringify(checks, null, 2));
 }

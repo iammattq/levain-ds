@@ -2,7 +2,7 @@
   "name": "@levain/demo",
   "private": true,
   "type": "module",
-  "description": "levain DS's motion, density and drag, on one page: pnpm --filter @levain/demo dev",
+  "description": "levain DS's catalogue: every piece, in each theme, light and dark (?bench=1 is the test bench): pnpm --filter @levain/demo dev",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit -p . && vite build --base ./"
