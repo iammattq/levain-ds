@@ -7,7 +7,9 @@
  * the close that always settles).
  *
  * The panel opens on a list of `items`; choosing one slides to that item's level, with a back arrow. Every level stays
- * mounted, open or closed, so a half-typed draft survives going back and forth and closing. The contents keep the open
+ * mounted, open or closed, so a half-typed draft survives going back and forth and closing. A reopen always starts on the
+ * list (the level resets once the close has settled, not mid-close, so the panel never slides while shrinking), the
+ * drafts kept: choosing the item again shows its draft. The contents keep the open
  * width, anchored right (the edge that stays put), so nothing reflows mid-morph; they fade and rise 6px once it has
  * started to open.
  *
@@ -164,6 +166,8 @@ export const FabMenu = forwardRef<HTMLDivElement, FabMenuProps>(function FabMenu
 
   const close = useCallback(() => setOpen(false), [setOpen]);
   const back = useCallback(() => setLevel(null), []);
+  // the close has settled: hidden, and the next open starts on the list (every level stays mounted, drafts kept)
+  const settle = useCallback(() => { setShown(false); setLevel(null); setLastLevel(null); }, []);
 
   // the close settles: every finite transition running in the panel is waited out (allSettled: one cancelled or
   // retargeted rejects), then it looks again (a retarget starts a new one), until none is left. The net ends it at
@@ -171,10 +175,10 @@ export const FabMenu = forwardRef<HTMLDivElement, FabMenuProps>(function FabMenu
   useEffect(() => {
     if (open || !shown) return;
     const el = panel.current;
-    if (!el) { setShown(false); return; }
+    if (!el) { settle(); return; }
     let live = true;
     let timer: ReturnType<typeof setTimeout> | undefined;
-    const finish = () => { if (!live) return; live = false; clearTimeout(timer); setShown(false); };
+    const finish = () => { if (!live) return; live = false; clearTimeout(timer); settle(); };
     const listable = typeof el.getAnimations === 'function';
     // the panel's own: the morph, the contents' fade, the mark. Not the app's, inside the list or a level (one paused or
     // endless there would hold the close for ever)
@@ -188,7 +192,7 @@ export const FabMenu = forwardRef<HTMLDivElement, FabMenuProps>(function FabMenu
       finish();
     })();
     return () => { live = false; clearTimeout(timer); };
-  }, [open, shown]);
+  }, [open, shown, settle]);
 
   // the open height: the view on screen's own, measured before paint, and again as it changes
   const list = useRef<HTMLDivElement>(null);
