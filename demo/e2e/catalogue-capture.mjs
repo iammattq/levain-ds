@@ -2,7 +2,7 @@
 // T67: the demo's default page (before: the test bench; after: the catalogue). Run on the PC through demo/e2e/catalogue.sh:
 //   node catalogue-capture.mjs <base-url> <out> <before|after>
 // Chromium at 390x844 and 1280x800 (DPR 2), Sage (theme 0) and Cobalt Mono (theme 7), light and dark, reduced motion.
-// Into <out>/<side>/: top-<combo>-<w>.png (the first screen), full-<combo>-<w>.png (the whole page, DPR 1), and
+// Into <out>/<side>/: top-<combo>-<w>.png (the first screen), full-<combo>-<w>[-<part>].png (the whole page, DPR 1, in 8000px parts), and
 // only-tooltip.png (?only=tooltip, Sage light, 1280: must not change). After only: readme-*.png (clean catalogue shots
 // for the README) and checks.json (the catalogue's switches write the URL; a board copy shows only under ?bench=1).
 // When both sides are in <out>: composite.png, before beside after per theme, mode and width.
@@ -42,7 +42,10 @@ for (const [name, theme, mode] of COMBOS) {
     await ctx.close();
     ({ ctx, page } = await open(query, size, 1));
     sideScroll[key] = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
-    await page.screenshot({ path: `${out}/full-${key}.png`, fullPage: true });
+    // Chromium can't capture more than 16384px in one go (it repeats the top), so the whole page comes in 8000px parts
+    const height = await page.evaluate(() => document.documentElement.scrollHeight);
+    for (let y = 0, n = 1; y < height; y += 8000, n++)
+      await page.screenshot({ path: `${out}/full-${key}${height > 8000 ? `-${n}` : ''}.png`, fullPage: true, clip: { x: 0, y, width: size.width, height: Math.min(8000, height - y) } });
     await ctx.close();
   }
 }
