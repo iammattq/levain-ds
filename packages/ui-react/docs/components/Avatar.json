@@ -38,8 +38,7 @@
       "type": "string",
       "optional": false,
       "description": "Alt text for the avatar image, crucial for accessibility.",
-      "configurable": true,
-      "defaultValue": "Matt Quinn avatar"
+      "configurable": true
     },
     {
       "name": "size",
