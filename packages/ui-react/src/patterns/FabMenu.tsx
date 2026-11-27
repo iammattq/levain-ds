@@ -326,12 +326,12 @@ export const FabMenu = forwardRef<HTMLDivElement, FabMenuProps>(function FabMenu
                   <button
                     type="button"
                     data-fab-back=""
+                    aria-label={`Back from ${item.label}`}
                     onClick={back}
                     className="flex min-w-0 items-center gap-3xs rounded-[var(--radius-sm)] px-2xs py-3xs text-[var(--color-text-default)] transition-colors hover:bg-[var(--color-surface-canvas)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)]"
                   >
                     <ChevronLeft size={16} aria-hidden />
                     <span className="type-label truncate">{item.label}</span>
-                    <span className="sr-only">, back</span>
                   </button>
                 </header>
                 <div data-fab-level-body="" className="px-sm py-xs">

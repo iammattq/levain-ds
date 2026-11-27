@@ -222,3 +222,83 @@ describe('FabMenu: the button and the morph', () => {
   });
 });
 
+
+const row = (name: string) => document.querySelector<HTMLElement>(`[data-fab-item="${name}"]`)!;
+const levelOf = (id: string) => document.querySelector<HTMLElement>(`[data-fab-level="${id}"]`)!;
+const listView = () => document.querySelector<HTMLElement>('[data-fab-list]')!;
+const backOf = (id: string) => levelOf(id).querySelector<HTMLButtonElement>('[data-fab-back]')!;
+
+describe('FabMenu: the list and its levels', () => {
+  it('opens on the list: a row per item (MenuItem buttons with a chevron), every level mounted, off to the right and inert', async () => {
+    render(<FabMenu items={items} />);
+    await press(trigger());
+    expect(fab().dataset.level).toBe('list');
+    expect(listView().style.transform).toBe('translateX(0)');
+    expect(listView()).not.toHaveAttribute('inert');
+    expect(screen.getAllByRole('listitem')).toHaveLength(3);
+    expect(row('Notifications').tagName).toBe('BUTTON');
+    expect(row('Notifications')).toHaveTextContent('Notifications');
+    expect(row('Notifications').querySelector('[data-testid="icon-heart"]')).not.toBeNull();
+    expect(row('settings')).toHaveTextContent('Settings'); // keyed by id when given
+    for (const id of ['Notifications', 'Draft', 'settings']) {
+      expect(levelOf(id).style.transform).toBe('translateX(100%)');
+      expect(levelOf(id)).toHaveAttribute('inert');
+      expect(levelOf(id).style.visibility).toBe('hidden');
+    }
+  });
+
+  it("choosing a row slides to its level (260ms, spring-out), headed by a back arrow with the item's name", async () => {
+    render(<FabMenu items={items} />);
+    await press(trigger());
+    await press(row('settings'));
+    expect(fab().dataset.level).toBe('settings');
+    expect(listView().style.transform).toBe('translateX(-100%)');
+    expect(listView()).toHaveAttribute('inert');
+    const lv = levelOf('settings');
+    expect(lv.style.transform).toBe('translateX(0)');
+    expect(lv.style.visibility).toBe('visible');
+    expect(lv).not.toHaveAttribute('inert');
+    expect(lv.style.transition).toBe('transform var(--duration-shift) var(--ease-spring-out)');
+    expect(lv).toHaveAccessibleName('Settings');
+    expect(backOf('settings')).toHaveAccessibleName('Back from Settings');
+    expect(backOf('settings').querySelector('[data-testid="icon-chevronleft"]')).not.toBeNull();
+    expect(screen.getByRole('button', { name: 'Save' })).toBeInTheDocument();
+  });
+
+  it('the back arrow slides back to the list; the level stays visible to slide out, then another level takes its place', async () => {
+    render(<FabMenu items={items} />);
+    await press(trigger());
+    await press(row('Notifications'));
+    await press(backOf('Notifications'));
+    expect(fab().dataset.level).toBe('list');
+    expect(listView().style.transform).toBe('translateX(0)');
+    expect(levelOf('Notifications').style.transform).toBe('translateX(100%)');
+    expect(levelOf('Notifications').style.visibility).toBe('visible');
+    expect(levelOf('Notifications')).toHaveAttribute('inert');
+    await press(row('Draft'));
+    expect(levelOf('Notifications').style.visibility).toBe('hidden');
+    expect(levelOf('Draft').style.visibility).toBe('visible');
+  });
+
+  it('a half-typed draft survives going back and forth, and closing and reopening (every level stays mounted)', async () => {
+    render(<FabMenu items={items} />);
+    await press(trigger());
+    await press(row('Draft'));
+    const note = screen.getByRole('textbox', { name: 'Note' }) as HTMLTextAreaElement;
+    fireEvent.change(note, { target: { value: 'Half a thought' } });
+    await press(backOf('Draft'));
+    await press(row('Notifications'));
+    await press(backOf('Notifications'));
+    await press(row('Draft'));
+    expect(note.isConnected).toBe(true);
+    expect((screen.getByRole('textbox', { name: 'Note' }) as HTMLTextAreaElement).value).toBe('Half a thought');
+    await closeWith();
+    await act(async () => { jest.advanceTimersByTime(300); });
+    expect(settled()).toBe(true);
+    expect(note.isConnected).toBe(true);
+    await press(trigger());
+    // it reopens where it was left, the draft in place
+    expect(fab().dataset.level).toBe('Draft');
+    expect(note.value).toBe('Half a thought');
+  });
+});
