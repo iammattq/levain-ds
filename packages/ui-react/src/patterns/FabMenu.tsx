@@ -25,7 +25,7 @@
  * and it goes back to what had it (the button) on close. Escape steps back from a level to the list, then closes; a
  * widget inside that claims Escape keeps it open. A press outside closes it, unless it lands in another dialog or popup.
  */
-import { forwardRef, useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ElementType, type ReactNode } from 'react';
+import { forwardRef, useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties, type ElementType, type ReactNode } from 'react';
 import { useReducedMotion } from 'framer-motion';
 import { ChevronLeft, ChevronRight, PlusIcon, type LucideProps } from 'lucide-react';
 import MenuItem from '../components/MenuItem';
@@ -133,6 +133,7 @@ export const FabMenu = forwardRef<HTMLDivElement, FabMenuProps>(function FabMenu
   const [open, setOpen] = useControlled(openProp, defaultOpen, onOpenChange, 'FabMenu');
   const panel = useRef<HTMLDivElement | null>(null);
   const content = useRef<HTMLDivElement>(null);
+  const contentId = useId();
   const setPanel = useCallback(
     (el: HTMLDivElement | null) => {
       panel.current = el;
@@ -166,8 +167,11 @@ export const FabMenu = forwardRef<HTMLDivElement, FabMenuProps>(function FabMenu
     let timer: ReturnType<typeof setTimeout> | undefined;
     const finish = () => { if (!live) return; live = false; clearTimeout(timer); setShown(false); };
     const listable = typeof el.getAnimations === 'function';
+    // the panel's own: the morph, the contents' fade, the mark. Not the app's, inside the list or a level (one paused or
+    // endless there would hold the close for ever)
+    const own = (a: Animation) => !((a.effect as KeyframeEffect | null)?.target as Element | null)?.closest?.('[data-fab-list],[data-fab-level]');
     const running = () => (listable ? el.getAnimations({ subtree: true }) : []).filter(a =>
-      a.playState !== 'finished' && a.playState !== 'idle' && Number.isFinite(Number(a.effect?.getComputedTiming().endTime)));
+      own(a) && a.playState !== 'finished' && a.playState !== 'idle' && Number.isFinite(Number(a.effect?.getComputedTiming().endTime)));
     const net = () => { timer = setTimeout(() => (running().some(a => a.playState === 'paused') ? net() : finish()), CLOSE_MS + 40); };
     net();
     if (listable) void (async () => {
@@ -262,7 +266,7 @@ export const FabMenu = forwardRef<HTMLDivElement, FabMenuProps>(function FabMenu
       className={cn(
         'fixed right-[calc(1.5rem+var(--safe-right))] bottom-[calc(1.5rem+var(--safe-bottom))] z-40 overflow-hidden',
         '[width:var(--fab-w)] [height:var(--fab-h)] [border-radius:var(--fab-r)] [background-color:var(--fab-bg)] [color:var(--fab-fg)]',
-        'shadow-[var(--elevation-3),inset_0_0_0_1px_var(--color-border-subtle)]',
+        'shadow-[var(--elevation-3),inset_0_0_0_1px_var(--color-border-default)]',
         className,
       )}
     >
@@ -273,6 +277,7 @@ export const FabMenu = forwardRef<HTMLDivElement, FabMenuProps>(function FabMenu
         aria-hidden={!open || undefined}
         inert={!open || undefined}
         tabIndex={-1}
+        id={contentId}
         data-fab-content=""
         style={{
           width: 'var(--fab-menu-width)',
@@ -319,7 +324,7 @@ export const FabMenu = forwardRef<HTMLDivElement, FabMenuProps>(function FabMenu
                 aria-label={item.label}
                 data-fab-level={id}
                 inert={!here || undefined}
-                style={{ ...slide(here ? '0' : '100%'), visibility: id === lastLevel ? 'visible' : 'hidden' }}
+                style={{ ...slide(here ? '0' : '100%'), visibility: shown && id === lastLevel ? 'visible' : 'hidden' }}
                 className="absolute inset-x-0 top-0 flex flex-col overflow-y-auto overscroll-contain"
               >
                 <header className="flex shrink-0 items-center px-2xs pt-2xs">
@@ -347,6 +352,8 @@ export const FabMenu = forwardRef<HTMLDivElement, FabMenuProps>(function FabMenu
       <button
         type="button"
         aria-expanded={open}
+        aria-haspopup="dialog"
+        aria-controls={contentId}
         aria-label={open ? `Close ${label}` : `Open ${label}`}
         data-fab-trigger=""
         onClick={() => setOpen(!open)}

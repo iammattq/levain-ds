@@ -14,18 +14,18 @@
     "import { FabMenu } from '@levain/ui-react';\nimport { Briefcase, PenLine } from 'lucide-react';\n\n<FabMenu\n  label=\"Site menu\"\n  fill=\"#f5e9cf\"\n  fillText=\"#2b2418\"\n  items={[\n    { id: 'work', label: 'Work', icon: Briefcase, content: <WorkLinks /> },\n    { id: 'write', label: 'Write to me', icon: PenLine, content: <TextArea label=\"Message\" /> },\n  ]}\n/>"
   ],
   "design": [
-    "Closed: a 56 px circle (radius 28 px, half its size, never radius-full: a 9999 px radius squares the corners mid-morph) 1.5rem from the bottom-right corner plus the safe-area insets, elevation-3 and a hairline border-subtle ring",
+    "Closed: a 56 px circle (radius 28 px, half its size, never radius-full: a 9999 px radius squares the corners mid-morph) 1.5rem from the bottom-right corner plus the safe-area insets, elevation-3 and a 1 px border-default ring, kept in every state, so the open panel has an edge on a light page (as Popover's)",
     "Open: `width` (default 20rem, capped at the screen less 1.5rem a side), as tall as the level on screen plus the button's 56 px row (capped at 100dvh less 6rem; a long level scrolls inside), radius-xl, the elevated surface",
     "Open: width and height over 460 ms (--duration-morph) on --ease-spring, which overshoots and settles; the radius on --ease-spring-out. Close: all three over 260 ms (--duration-shift) on --ease-spring-out, no bounce. A change of level re-springs the height",
     "The fill switches between the button's colour and the panel's in one step, at 180 ms opening and 160 ms closing (a zero-length transition, delayed), never blended: a cream blended toward a dark surface goes taupe",
     "The contents keep the open width, anchored right, so nothing reflows mid-morph; they fade in over 160 ms and rise 6 px (320 ms on the spring), from 180 ms. Closing, they fade and sink over 160 ms",
     "The mark: three hairlines (the last short) fold into a cross over 260 ms on spring-out; glyph=\"plus\" turns a plus 45 degrees instead. The cross is muted text on the panel",
     "A level slides in from the right over 260 ms on spring-out as the list slides out left; back reverses it. The level's head is a back arrow with the item's name",
-    "The close always settles: it waits on every transition still running in the panel (one cancelled or retargeted mid-way starts another, which is waited on too), and a safety net ends it at 300 ms unless one is paused on purpose. Settled, the contents are hidden (still mounted) and data-closing clears",
+    "The close always settles: it waits on every transition of its own still running (the morph, the contents' fade, the mark; never the app's inside the list or a level, so one paused or endless there can't hold it; one cancelled or retargeted mid-way starts another, which is waited on too), and a safety net ends it at 300 ms unless one is paused on purpose. Settled, the contents are hidden (still mounted) and data-closing clears",
     "Under Reduce Motion there is no morph: the shape and fill change in one step, the contents only fade (160 ms, no rise), levels switch without sliding"
   ],
   "accessibility": [
-    "The button has an accessible name (Open <label> / Close <label>) and aria-expanded",
+    "The button has an accessible name (Open <label> / Close <label>), aria-expanded, aria-haspopup=\"dialog\" and aria-controls (the panel's dialog)",
     "The open panel is role=\"dialog\" named by `label`; closed, it is inert and aria-hidden. The list or levels not on screen are inert",
     "Focus moves into the contents on open (the first row, or the level's first control, else its back arrow), into a level when one is chosen, to the row that opened it on back, and to the button on close (useDialogFocus, shared with Modal and Drawer: Tab wraps inside the panel)",
     "Escape answers only from the top dialog and not when a widget inside claimed it (preventDefault)",

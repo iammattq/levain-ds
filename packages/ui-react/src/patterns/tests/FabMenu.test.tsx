@@ -5,6 +5,7 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { Heart, Search } from 'lucide-react';
 import { FabMenu, FAB_SIZE, type FabMenuItem } from '../FabMenu';
+import { useDialogFocus } from '../../utils/useDialogFocus';
 
 // no Reduce Motion (FabMenu.reduced.test.tsx has it); put back as it was
 const ownMatchMedia = Object.getOwnPropertyDescriptor(window, 'matchMedia');
@@ -18,10 +19,10 @@ beforeAll(() => {
 afterAll(() => { if (ownMatchMedia) Object.defineProperty(window, 'matchMedia', ownMatchMedia); else delete (window as { matchMedia?: unknown }).matchMedia; });
 
 /** A stand-in for one CSS transition in the panel: running until it's finished, cancelled or paused. */
-type Fake = { playState: AnimationPlayState; effect: { getComputedTiming: () => { endTime: number } }; finished: Promise<unknown>; end: () => void; cancel: () => void };
-const fake = (endTime = 260): Fake => {
+type Fake = { playState: AnimationPlayState; effect: { target?: Element | null; getComputedTiming: () => { endTime: number } }; finished: Promise<unknown>; end: () => void; cancel: () => void };
+const fake = (endTime = 260, target: Element | null = null): Fake => {
   let end!: () => void, cancel!: () => void;
-  const a = { playState: 'running' as AnimationPlayState, effect: { getComputedTiming: () => ({ endTime }) } } as Fake;
+  const a = { playState: 'running' as AnimationPlayState, effect: { target, getComputedTiming: () => ({ endTime }) } } as Fake;
   a.finished = new Promise<unknown>((res, rej) => {
     end = () => { a.playState = 'finished'; res(a); };
     cancel = () => { a.playState = 'idle'; rej(new DOMException('cancelled', 'AbortError')); };
@@ -68,6 +69,11 @@ describe('FabMenu: the button and the morph', () => {
     expect(fab().dataset.open).toBe('false');
     expect(trigger()).toHaveAccessibleName('Open Site menu');
     expect(trigger()).toHaveAttribute('aria-expanded', 'false');
+    expect(trigger()).toHaveAttribute('aria-haspopup', 'dialog');
+    expect(trigger()).toHaveAttribute('aria-controls', contents().id);
+    expect(contents().id).not.toBe('');
+    // a 1px border-default edge in every state, so the open panel shows on a light page
+    expect(fab().className).toContain('inset_0_0_0_1px_var(--color-border-default)');
     // the contents are mounted but hidden and inert
     expect(contents().style.visibility).toBe('hidden');
     expect(contents()).toHaveAttribute('inert');
@@ -173,6 +179,39 @@ describe('FabMenu: the button and the morph', () => {
     a.playState = 'running';
     await act(async () => { a.end(); });
     expect(settled()).toBe(true);
+  });
+
+  it("one paused inside a level is the app's, not the close's: the net still ends it", async () => {
+    render(<FabMenu items={items} />);
+    await press(trigger());
+    const inLevel = fake(260, document.querySelector('[data-fab-level="settings"] button'));
+    inLevel.playState = 'paused';
+    const width = fake(260, fab());
+    await closeWith(width, inLevel);
+    await act(async () => { width.end(); });
+    expect(settled()).toBe(true);
+    // and alone, held there: the net ends it at 300ms
+    await press(trigger());
+    await closeWith(inLevel);
+    await act(async () => { jest.advanceTimersByTime(300); });
+    expect(settled()).toBe(true);
+  });
+
+  it('unmounted mid-close: its 300ms net is cleared and nothing lands after', async () => {
+    const errors = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const { unmount } = render(<FabMenu items={items} />);
+    await press(trigger());
+    const set = jest.spyOn(window, 'setTimeout'), clear = jest.spyOn(window, 'clearTimeout');
+    const a = fake();
+    await closeWith(a);
+    expect(fab().dataset.closing).toBe('true');
+    const nets = set.mock.calls.flatMap((c, i) => (c[1] === 300 ? [set.mock.results[i].value] : []));
+    expect(nets).toHaveLength(1);
+    unmount();
+    expect(clear.mock.calls.map(c => c[0])).toContain(nets[0]);
+    await act(async () => { a.end(); jest.advanceTimersByTime(1000); });
+    expect(errors).not.toHaveBeenCalled();
+    set.mockRestore(); clear.mockRestore(); errors.mockRestore();
   });
 
   it('a browser that cannot list animations: the net alone ends it', async () => {
@@ -296,6 +335,8 @@ describe('FabMenu: the list and its levels', () => {
     await act(async () => { jest.advanceTimersByTime(300); });
     expect(settled()).toBe(true);
     expect(note.isConnected).toBe(true);
+    // closed, the level left on screen is hidden too (a visible child would show through the hidden contents)
+    expect(levelOf('Draft').style.visibility).toBe('hidden');
     await press(trigger());
     // it reopens where it was left, the draft in place
     expect(fab().dataset.level).toBe('Draft');
@@ -323,6 +364,28 @@ describe('FabMenu: closing routes, focus, controlled', () => {
     await key('Escape');
     expect(fab().dataset.open).toBe('false');
     expect(trigger()).toHaveFocus();
+  });
+
+  it('a second dialog open on top: Escape closes only that one, the next steps back and closes FabMenu', async () => {
+    function Over() {
+      const [open, setOpen] = useState(false);
+      const ref = React.useRef<HTMLDivElement>(null);
+      useDialogFocus(open, ref, () => setOpen(false));
+      return <><button type="button" onClick={() => setOpen(true)}>Are you sure</button>{open && <div ref={ref} role="dialog" aria-label="Sure?" tabIndex={-1}><button type="button">Yes</button></div>}</>;
+    }
+    render(<FabMenu items={[{ label: 'Danger', content: <Over /> }]} />);
+    await press(trigger());
+    await press(row('Danger'));
+    await press(screen.getByRole('button', { name: 'Are you sure' }));
+    expect(screen.getByRole('dialog', { name: 'Sure?' })).toBeInTheDocument();
+    await key('Escape');
+    expect(screen.queryByRole('dialog', { name: 'Sure?' })).toBeNull();
+    expect(fab().dataset.open).toBe('true');
+    expect(fab().dataset.level).toBe('Danger');
+    await key('Escape');
+    expect(fab().dataset.level).toBe('list');
+    await key('Escape');
+    expect(fab().dataset.open).toBe('false');
   });
 
   it('an Escape a widget inside claimed keeps it open', async () => {

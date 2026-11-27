@@ -7,10 +7,11 @@
 // (the close settled: data-closing gone, the contents hidden but mounted, the draft still there), and open under Reduce
 // Motion (no morph: full size two frames after the press). Then the fill frame by frame, opening (0-460 ms) and closing
 // (0-260 ms): every frame's background is the button's cream or the panel's surface, never a blend.
-// Then the live site's menu (mattquinn.ca, .os-menu) at the same widths, closed / mid-open 80 / open / mid-close 100,
-// for compare-*.png.
-// Writes <width>-<combo>-<state>.png, fill-{open,close}-<width>-<combo>.png, site-*.png, compare-<width>.png,
-// numbers.json and composite.png.
+// Every press is a real pointer press (page.mouse), so no focus ring shows on the first row: a ring reads as a selected
+// row. One frame opens it by keyboard instead (1280, Sage light: open-keyboard), to show the ring where it belongs.
+// Then the live site's menu (mattquinn.ca, .os-menu) at the same widths, closed / mid-open 80 / open / mid-close 100.
+// Writes <width>-<combo>-<state>.png, fill-{open,close}-<width>-<combo>.png, site-*.png, numbers.json and composite.png.
+// (compare-<width>.png, levain beside the site's and t259's, is joined on the laptop from these and t259's own frames.)
 import { createRequire } from 'node:module';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -43,7 +44,11 @@ const hold = (p, scope, ms) => p.evaluate(async ([scope, ms]) => {
   const root = document.querySelector(scope);
   for (const a of document.getAnimations()) if (a.effect?.target && root?.contains(a.effect.target)) { a.pause(); a.currentTime = ms; }
 }, [scope, ms]);
-const press = (p, sel) => p.evaluate(sel => document.querySelector(sel).click(), sel);
+/** A real pointer press in the middle of `sel` (page.mouse: pointer events, then the click), as a person's. */
+const press = async (p, sel) => {
+  const b = await p.evaluate(sel => { const r = document.querySelector(sel).getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; }, sel);
+  await p.mouse.click(b.x, b.y);
+};
 const release = p => p.evaluate(() => { for (const a of document.getAnimations()) if (a.playState === 'paused') a.play(); });
 const rgb = s => (s.match(/[\d.]+/g) ?? []).slice(0, 3).map(Number);
 const far = (a, b) => Math.max(...a.map((v, i) => Math.abs(v - b[i])));
@@ -57,6 +62,8 @@ const probe = p => p.evaluate(sel => {
     box: { w: Math.round(r.width), h: Math.round(r.height), right: Math.round(el.offsetParent ? el.offsetParent.getBoundingClientRect().right - r.right : innerWidth - r.right), bottom: Math.round(el.offsetParent ? el.offsetParent.getBoundingClientRect().bottom - r.bottom : innerHeight - r.bottom) },
     radius: cs.borderTopLeftRadius, bg: cs.backgroundColor, contents: { opacity: +cc.opacity, visibility: cc.visibility },
     focus: document.activeElement?.closest('[data-fab-menu]') ? (document.activeElement.dataset.fabItem ?? document.activeElement.tagName.toLowerCase()) : document.activeElement?.tagName.toLowerCase(),
+    ring: !!document.activeElement?.matches(':focus-visible') && document.activeElement !== document.body,
+    edge: cs.boxShadow.match(/rgba?\([^)]*\) 0px 0px 0px 1px inset/)?.[0] ?? null,
     draft: draft?.value ?? null,
   };
 }, PANEL);
@@ -85,14 +92,14 @@ for (const [width, opts, insets] of WIDTHS) {
     await shoot('closed');
     await press(page, TRIGGER); await hold(page, PANEL, 80); await shoot('mid-open', 'mid-open 80ms');
     await release(page); await settled(page); await shoot('open');
-    await page.evaluate(() => document.querySelector('[data-fab-item="write"]').click()); await settled(page);
+    await press(page, '[data-fab-item="write"]'); await settled(page);
     await page.keyboard.type('Half a thought');
     await shoot('level', 'on a level');
     await press(page, TRIGGER); await hold(page, PANEL, 100); await shoot('mid-close', 'mid-close 100ms');
     await release(page); await settled(page); await shoot('closed-again', 'closed again');
     // the fill, frame by frame (from the list: back out of the level first)
     await press(page, TRIGGER); await settled(page);
-    await page.evaluate(() => document.querySelector('[data-fab-back]').click()); await settled(page);
+    await press(page, '[data-fab-level="write"] [data-fab-back]'); await settled(page);
     const openBox = (await probe(page)).box;
     const surface = rgb((await probe(page)).bg);
     await press(page, TRIGGER); await settled(page);
@@ -128,6 +135,8 @@ for (const [width, opts, insets] of WIDTHS) {
       morphs: numbers[`${key}-mid-open`].box.w > 56 && numbers[`${key}-mid-open`].box.w < numbers[`${key}-open`].box.w + 40,
       closedIsCircle: numbers[`${key}-closed`].box.w === 56 && numbers[`${key}-closed`].box.h === 56 && numbers[`${key}-closed`].radius === '28px',
       openFocusIn: numbers[`${key}-open`].focus === 'work',
+      noRingOnPointerOpen: !numbers[`${key}-open`].ring,
+      edgeEveryState: ['closed', 'mid-open', 'open', 'level', 'mid-close'].every(s => numbers[`${key}-${s}`].edge),
       levelShown: numbers[`${key}-level`].level === 'write',
       closeSettled: !numbers[`${key}-closed-again`].closing && numbers[`${key}-closed-again`].contents.visibility === 'hidden' && !after.closing,
       draftSurvives: numbers[`${key}-closed-again`].draft === 'Half a thought',
@@ -135,6 +144,12 @@ for (const [width, opts, insets] of WIDTHS) {
       fillStepsAt180: opening.filter(f => f.t < 180).every(f => f.is === 'cream') && opening.filter(f => f.t > 180).every(f => f.is === 'surface'),
       fillStepsAt160: closing.filter(f => f.t < 160).every(f => f.is === 'surface') && closing.filter(f => f.t > 160).every(f => f.is === 'cream'),
     };
+    if (key === '1280-sage-light') {
+      // the one keyboard-opened frame: the ring on the first row, where focus went
+      await page.focus(TRIGGER); await page.keyboard.press('Enter'); await settled(page);
+      await shoot('open-keyboard', 'open by keyboard');
+      checks[key].ringOnKeyboardOpen = numbers[`${key}-open-keyboard`].ring && numbers[`${key}-open-keyboard`].focus === 'work';
+    }
     await ctx.close();
     // Reduce Motion: full size two frames after the press, no morph
     const r = await open({ ...opts, reducedMotion: 'reduce' }, insets, `?only=fab&theme=${theme}&mode=${mode}`, `${key} reduce`);
@@ -177,14 +192,6 @@ for (const [width, opts] of WIDTHS) {
 const img = f => `data:image/png;base64,${fs.readFileSync(`${out}/${f}.png`).toString('base64')}`;
 const sheet = await browser.newPage({ viewport: { width: 1800, height: 600 } });
 const css = '<style>body{margin:0;padding:16px;background:#ccc;font:13px system-ui;width:max-content}.row{display:flex;gap:10px;align-items:flex-start;margin-bottom:14px}.row b{width:110px;flex:none}figure{margin:0}figcaption{height:20px}img{display:block;width:220px}</style>';
-// compare-<width>.png: levain's (Sage light) beside the site's, state by state
-for (const width of Object.keys(siteShots)) {
-  const ours = Object.fromEntries(shots[`${width}-sage-light`]);
-  const states = [['closed', 'closed'], ['mid-open', 'mid-open 80ms'], ['open', 'open'], ['mid-close', 'mid-close 100ms']];
-  const row = (who, f) => `<div class="row"><b>${who}</b>${states.map(([s, l]) => f(s, l) ? `<figure><figcaption>${l}</figcaption><img src="${img(f(s, l))}"></figure>` : '').join('')}</div>`;
-  await sheet.setContent(css + row('levain', (s, l) => ours[l]) + row('mattquinn.ca', s => siteShots[width][s]));
-  await sheet.screenshot({ path: `${out}/compare-${width}.png`, fullPage: true });
-}
 // composite.png: a row per width and combo
 await sheet.setContent(css + Object.entries(shots).map(([key, list]) => `<div class="row"><b>${key.replace(/-/g, ' ')}</b>${list.map(([label, f]) => `<figure><figcaption>${label}</figcaption><img src="${img(f)}"></figure>`).join('')}</div>`).join(''));
 await sheet.screenshot({ path: `${out}/composite.png`, fullPage: true });
