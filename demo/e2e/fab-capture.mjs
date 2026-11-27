@@ -6,7 +6,7 @@
 // capture holds it), open on the list, on a level (Write to me, a draft typed), mid-close (held at 100 ms), closed again
 // (the close settled: data-closing gone, the contents hidden but mounted, the draft still there), and open under Reduce
 // Motion (no morph: full size two frames after the press). Then the fill frame by frame, opening (0-460 ms) and closing
-// (0-260 ms): every frame's background is the button's fill (Cobalt's link blue in light, the site's cream in dark) or
+// (0-260 ms): every frame's background is the button's fill (a soft blue in light, the site's cream in dark) or
 // the panel's surface, never a blend.
 // Every press is a real pointer press (page.mouse), so no focus ring shows on the first row: a ring reads as a selected
 // row. One frame opens it by keyboard instead (1280, Sage light: open-keyboard), to show the ring where it belongs.
@@ -36,8 +36,8 @@ const fakeInsets = (page, insets) => page.evaluate(insets => {
 }, insets);
 const COMBOS = [['sage', 0, 'light'], ['sage', 0, 'dark'], ['cobalt', 7, 'light'], ['cobalt', 7, 'dark']];
 const PANEL = '[data-fab-menu]', TRIGGER = '[data-fab-trigger]';
-/** The demo's closed fill per mode: Cobalt's link blue #2451C9 in light, the site's cream #f5e9cf in dark. */
-const FILL = { light: [36, 81, 201], dark: [245, 233, 207] };
+/** The demo's closed fill per mode: a soft blue #dce5f6 in light, the site's cream #f5e9cf in dark. */
+const FILL = { light: [220, 229, 246], dark: [245, 233, 207] };
 
 /** Holds the transitions inside `scope` at `ms` (paused), two frames after whatever started them (t259's capture). */
 const hold = (p, scope, ms) => p.evaluate(async ([scope, ms]) => {

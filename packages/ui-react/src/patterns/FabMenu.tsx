@@ -44,7 +44,10 @@ export interface FabMenuItem {
   content: ReactNode;
 }
 
-/** A colour, or one per mode: `dark` applies under levain's `.dark` class. */
+/**
+ * A colour, or one per mode: `dark` applies under levain's `.dark` class.
+ * The pair switches on the consumer's `.dark` class variant (Tailwind's `dark:`), so the app must set `.dark` for it.
+ */
 export type FabMenuColor = string | { light: string; dark: string };
 
 export interface FabMenuProps {

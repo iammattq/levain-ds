@@ -108,10 +108,10 @@ describe('FabMenu: the button and the morph', () => {
   });
 
   it('a { light, dark } fill: each mode its own colour, switched by the .dark class in CSS (no JS mode check)', () => {
-    render(<FabMenu items={items} fill={{ light: '#2451C9', dark: '#f5e9cf' }} fillText={{ light: '#ffffff', dark: '#2b2418' }} />);
+    render(<FabMenu items={items} fill={{ light: '#dce5f6', dark: '#f5e9cf' }} fillText={{ light: '#000', dark: '#2b2418' }} />);
     const v = (name: string) => fab().style.getPropertyValue(name);
-    expect([v('--fab-fill-light'), v('--fab-fill-dark')]).toEqual(['#2451C9', '#f5e9cf']);
-    expect([v('--fab-text-light'), v('--fab-text-dark')]).toEqual(['#ffffff', '#2b2418']);
+    expect([v('--fab-fill-light'), v('--fab-fill-dark')]).toEqual(['#dce5f6', '#f5e9cf']);
+    expect([v('--fab-text-light'), v('--fab-text-dark')]).toEqual(['#000', '#2b2418']);
     expect(v('--fab-bg')).toBe('var(--fab-fill)');
     expect(v('--fab-fg')).toBe('var(--fab-text)');
     const cls = fab().className.split(' ');
@@ -126,7 +126,7 @@ describe('FabMenu: the button and the morph', () => {
   });
 
   it('with a pair, the fill still switches to the panel in one step both ways (0s at 180ms open, 160ms close)', async () => {
-    render(<FabMenu items={items} fill={{ light: '#2451C9', dark: '#f5e9cf' }} fillText={{ light: '#ffffff', dark: '#2b2418' }} />);
+    render(<FabMenu items={items} fill={{ light: '#dce5f6', dark: '#f5e9cf' }} fillText={{ light: '#000', dark: '#2b2418' }} />);
     await press(trigger());
     const s = fab().style;
     expect(s.getPropertyValue('--fab-bg')).toBe('var(--color-surface-elevated)');
