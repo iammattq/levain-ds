@@ -85,7 +85,7 @@ export function DecideDemo({ Section }: { Section: (p: { title: string; note: st
         <p className="type-body-sm text-[var(--color-text-muted)]" data-demo="decide-picked" aria-live="polite">{picked}</p>
       </div>
       <StatusCardDialog id={open ? 'lv-' + open.id : ''} open={!!open} onClose={() => setOpen(null)} number={open ? plain(open.id) : undefined} kind={{ label: 'Decide', tone: 'accent' }} title={open?.title ?? ''}>
-        <p className="type-body-sm text-[var(--color-text-muted)]">{open?.q} {BENCH ? 'PM recommends' : 'Recommended'}: {open?.rec}.</p>
+        <p className="type-body-sm text-[var(--color-text-muted)]">{open?.q}{BENCH ? ' PM recommends: ' : ' Recommended: '}{open?.rec}.</p>
         <div className="flex flex-wrap gap-2xs">{open && answers(open, (d, o) => { pick(d, o); setOpen(null); })}</div>
       </StatusCardDialog>
     </Section>
