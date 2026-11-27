@@ -326,6 +326,18 @@ describe('ThemeManager', () => {
       expect(scope).not.toContain('--type-caption-size');
     });
 
+    it('leaves the :root block as it was, every var still in it', async () => {
+      const { ThemeManager } = await import('../themeManager');
+      const vars = {
+        'type-caption-size': '12px',
+        'type-caption-color': 'var(--color-text-muted)',
+      };
+      const css = new ThemeManager().generateTypographyCSS({ name: 'T', vars });
+      expect(css.split('[data-levain-scheme] {')[0]).toBe(
+        ':root {\n  --type-caption-size: 12px !important;\n  --type-caption-color: var(--color-text-muted) !important;\n}\n',
+      );
+    });
+
     it('does the same for the shipped presets', async () => {
       const { ThemeManager } = await import('../themeManager');
       const manager = new ThemeManager();
