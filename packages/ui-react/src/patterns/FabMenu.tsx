@@ -16,7 +16,8 @@
  * Motion (CSS transitions, the tokens' --ease-spring and --ease-spring-out): open, the size on the spring over 460ms
  * (it overshoots and settles) and the radius from 28px (half the circle; a 9999px radius squares the corners mid-morph)
  * on spring-out; close, all three over 260ms on spring-out. The fill switches from the button's colour to the panel's
- * in one step (at 180ms opening, 160ms closing), never blended: a blend of a cream and a dark surface goes taupe. Under
+ * in one step (at 180ms opening, 160ms closing), never blended: a blend of a cream and a dark surface goes taupe. The open
+ * panel can keep the button's colour instead (T72: `openFill`), its contents in one mode's colours (`openScheme`). Under
  * Reduce Motion there is no morph: the shape changes in one step and the contents only fade.
  *
  * The close always settles: it waits on every transition still running in the panel, looks again (a cancelled or
@@ -63,6 +64,22 @@ export interface FabMenuProps {
   fill?: FabMenuColor;
   /** The closed button's glyph colour on `fill`; a pair as for `fill`. Defaults to the default text colour. */
   fillText?: FabMenuColor;
+  /**
+   * The open panel's background (T72). `true` keeps `fill` (a pair keeps its per-mode switch); a colour or pair gives
+   * the open panel its own. Left out, the open panel is the elevated surface.
+   */
+  openFill?: true | FabMenuColor;
+  /**
+   * The open panel's text colour on `openFill`; a pair as for `fill`. Defaults to `fillText` when `openFill` is `true`
+   * and `fillText` is given, else the default text colour (of `openScheme`'s mode when set).
+   */
+  openFillText?: FabMenuColor;
+  /**
+   * The colours of the contents (and of the button while open): one mode's colours of the current theme, whatever the
+   * page's (levain's `data-levain-scheme`). For an `openFill` that is light in a dark page, `'light'`, so the text,
+   * fields, back arrow and focus rings read on it. The panel's shadow and edge stay the page's.
+   */
+  openScheme?: 'light' | 'dark';
   /** The button's mark: three lines that fold into a cross, or a plus that turns into one. */
   glyph?: 'menu' | 'plus';
   /** The open panel's width (any CSS length); capped to the screen less 1.5rem a side. */
@@ -130,7 +147,10 @@ export const FabMenu = forwardRef<HTMLDivElement, FabMenuProps>(function FabMenu
     items,
     label = 'Menu',
     fill = 'var(--color-surface-elevated)',
-    fillText = 'var(--color-text-default)',
+    fillText: fillTextProp,
+    openFill,
+    openFillText,
+    openScheme,
     glyph = 'menu',
     width = '20rem',
     open: openProp,
@@ -140,6 +160,7 @@ export const FabMenu = forwardRef<HTMLDivElement, FabMenuProps>(function FabMenu
   },
   ref,
 ) {
+  const fillText = fillTextProp ?? 'var(--color-text-default)';
   const reduce = !!useReducedMotion();
   const [open, setOpen] = useControlled(openProp, defaultOpen, onOpenChange, 'FabMenu');
   const panel = useRef<HTMLDivElement | null>(null);
@@ -255,18 +276,28 @@ export const FabMenu = forwardRef<HTMLDivElement, FabMenuProps>(function FabMenu
     typeof c === 'string' ? { value: c, vars: {} } : { value: `var(--fab-${name})`, vars: { [`--fab-${name}-light`]: c.light, [`--fab-${name}-dark`]: c.dark } };
   const bg = modeVars(fill, 'fill');
   const fg = modeVars(fillText, 'text');
+  // open: the elevated surface, or openFill (true: the closed fill again), and its text
+  const openBg = openFill === undefined ? { value: 'var(--color-surface-elevated)', vars: {} } : openFill === true ? { value: bg.value, vars: {} } : modeVars(openFill, 'open-fill');
+  const openFg = openFillText !== undefined ? modeVars(openFillText, 'open-text')
+    : openFill === true && fillTextProp !== undefined ? { value: fg.value, vars: {} }
+    : { value: 'var(--color-text-default)', vars: {} };
+  const openPair = (c: FabMenuColor | true | undefined) => c !== undefined && c !== true && typeof c !== 'string';
+  // the scope: on the contents always (hidden while closed), on the button while open
+  const scheme = openScheme ? { 'data-levain-scheme': openScheme } : {};
   const panelStyle = {
     '--fab-menu-width': openWidth,
     '--fab-menu-cap': cap,
     ...bg.vars,
     ...fg.vars,
+    ...openBg.vars,
+    ...openFg.vars,
     ...(open
       ? {
           '--fab-w': 'var(--fab-menu-width)',
           '--fab-h': `min(${viewH + FAB_SIZE}px, var(--fab-menu-cap))`,
           '--fab-r': 'var(--radius-xl)',
-          '--fab-bg': 'var(--color-surface-elevated)',
-          '--fab-fg': 'var(--color-text-default)',
+          '--fab-bg': openBg.value,
+          '--fab-fg': openFg.value,
         }
       : { '--fab-w': `${FAB_SIZE}px`, '--fab-h': `${FAB_SIZE}px`, '--fab-r': `${FAB_SIZE / 2}px`, '--fab-bg': bg.value, '--fab-fg': fg.value }),
     transition: tr.panel,
@@ -288,6 +319,8 @@ export const FabMenu = forwardRef<HTMLDivElement, FabMenuProps>(function FabMenu
         '[width:var(--fab-w)] [height:var(--fab-h)] [border-radius:var(--fab-r)] [background-color:var(--fab-bg)] [color:var(--fab-fg)]',
         'shadow-[var(--elevation-3),inset_0_0_0_1px_var(--color-border-default)]',
         '[--fab-fill:var(--fab-fill-light)] [--fab-text:var(--fab-text-light)] dark:[--fab-fill:var(--fab-fill-dark)] dark:[--fab-text:var(--fab-text-dark)]',
+        openPair(openFill) && '[--fab-open-fill:var(--fab-open-fill-light)] dark:[--fab-open-fill:var(--fab-open-fill-dark)]',
+        openPair(openFillText) && '[--fab-open-text:var(--fab-open-text-light)] dark:[--fab-open-text:var(--fab-open-text-dark)]',
         className,
       )}
     >
@@ -300,14 +333,17 @@ export const FabMenu = forwardRef<HTMLDivElement, FabMenuProps>(function FabMenu
         tabIndex={-1}
         id={contentId}
         data-fab-content=""
+        {...scheme}
         style={{
           width: 'var(--fab-menu-width)',
+          // in a scope, the text resolves here (on the panel it would be the page's mode's); a class reads it
+          ...(openScheme ? { '--fab-content-fg': openFg.value } : {}),
           opacity: open ? 1 : 0,
           transform: open || reduce ? 'none' : 'translateY(6px)',
           visibility: shown ? 'visible' : 'hidden',
           transition: tr.content,
         }}
-        className="absolute right-0 bottom-0 flex flex-col outline-none"
+        className={cn('absolute right-0 bottom-0 flex flex-col outline-none', openScheme && '[color:var(--fab-content-fg)]')}
       >
         <div className="relative overflow-hidden [height:var(--fab-view-h)]" style={{ '--fab-view-h': `min(${viewH}px, ${viewCap})` } as CSSProperties}>
           <div
@@ -377,6 +413,7 @@ export const FabMenu = forwardRef<HTMLDivElement, FabMenuProps>(function FabMenu
         aria-controls={contentId}
         aria-label={open ? `Close ${label}` : `Open ${label}`}
         data-fab-trigger=""
+        {...(open ? scheme : {})}
         onClick={() => setOpen(!open)}
         style={{
           width: FAB_SIZE,

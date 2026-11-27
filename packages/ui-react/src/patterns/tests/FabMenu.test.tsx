@@ -307,6 +307,97 @@ describe('FabMenu: the button and the morph', () => {
 });
 
 
+// T72: the open panel in the button's colour, its contents in one mode's colours (data-levain-scheme).
+describe('FabMenu: open fill and open scheme', () => {
+  const v = (name: string) => fab().style.getPropertyValue(name);
+  const scoped = () => [...document.querySelectorAll('[data-levain-scheme]')];
+
+  it('left out: the open panel is the elevated surface and default text, as before; no scope anywhere', async () => {
+    render(<FabMenu items={items} fill={{ light: '#dce5f6', dark: '#f5e9cf' }} fillText={{ light: '#000', dark: '#2b2418' }} />);
+    await press(trigger());
+    expect([v('--fab-bg'), v('--fab-fg')]).toEqual(['var(--color-surface-elevated)', 'var(--color-text-default)']);
+    expect(scoped()).toEqual([]);
+    expect(contents().style.getPropertyValue('--fab-content-fg')).toBe('');
+    expect(contents().className).not.toContain('--fab-content-fg');
+    expect(fab().className).not.toContain('--fab-open-');
+  });
+
+  it('openFill: the open panel keeps the fill and its text (a pair keeps its per-mode switch); the switch is still one step', async () => {
+    render(<FabMenu items={items} fill={{ light: '#dce5f6', dark: '#f5e9cf' }} fillText={{ light: '#000', dark: '#2b2418' }} openFill />);
+    await press(trigger());
+    expect([v('--fab-bg'), v('--fab-fg')]).toEqual(['var(--fab-fill)', 'var(--fab-text)']);
+    expect(fab().style.transition).toContain('background-color 0s 180ms, color 0s 180ms');
+    await closeWith(fake());
+    expect([v('--fab-bg'), v('--fab-fg')]).toEqual(['var(--fab-fill)', 'var(--fab-text)']);
+  });
+
+  it('openFill with no fillText: the open text is the default text colour', async () => {
+    render(<FabMenu items={items} fill="#f5e9cf" openFill />);
+    await press(trigger());
+    expect([v('--fab-bg'), v('--fab-fg')]).toEqual(['#f5e9cf', 'var(--color-text-default)']);
+  });
+
+  it('openFill as its own colour or pair, with openFillText', async () => {
+    render(<FabMenu items={items} fill="#123456" openFill={{ light: '#eeeeee', dark: '#f5e9cf' }} openFillText="#111111" />);
+    expect(v('--fab-bg')).toBe('#123456');
+    await press(trigger());
+    expect([v('--fab-bg'), v('--fab-fg')]).toEqual(['var(--fab-open-fill)', '#111111']);
+    expect([v('--fab-open-fill-light'), v('--fab-open-fill-dark')]).toEqual(['#eeeeee', '#f5e9cf']);
+    const cls = fab().className.split(' ');
+    for (const c of ['[--fab-open-fill:var(--fab-open-fill-light)]', 'dark:[--fab-open-fill:var(--fab-open-fill-dark)]']) expect(cls).toContain(c);
+    expect(fab().className).not.toContain('--fab-open-text:');
+  });
+
+  it('openScheme: the contents carry the scope always, the button only while open; the panel never', async () => {
+    render(<FabMenu items={items} fill={{ light: '#dce5f6', dark: '#f5e9cf' }} openFill openScheme="light" />);
+    expect(contents()).toHaveAttribute('data-levain-scheme', 'light');
+    expect(trigger()).not.toHaveAttribute('data-levain-scheme');
+    expect(fab()).not.toHaveAttribute('data-levain-scheme');
+    // the text resolves inside the scope
+    expect(contents().style.getPropertyValue('--fab-content-fg')).toBe('var(--color-text-default)');
+    expect(contents().className.split(' ')).toContain('[color:var(--fab-content-fg)]');
+    await press(trigger());
+    expect(trigger()).toHaveAttribute('data-levain-scheme', 'light');
+    expect(fab()).not.toHaveAttribute('data-levain-scheme');
+    await closeWith(fake());
+    expect(trigger()).not.toHaveAttribute('data-levain-scheme');
+  });
+
+  it('openScheme with openFillText: the contents take that text', () => {
+    render(<FabMenu items={items} openFill="#f5e9cf" openFillText="#2b2418" openScheme="light" />);
+    expect(contents().style.getPropertyValue('--fab-content-fg')).toBe('#2b2418');
+  });
+
+  // the real generated CSS in jsdom's cascade: a dark page (.dark on <html>), the scope gets the theme's light colours
+  it('in a dark page, the scope takes the theme\'s light colours over the .dark ones', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const fs = require('fs') as typeof import('fs');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const path = require('path') as typeof import('path');
+    const css = fs.readFileSync(path.join(__dirname, '../../../../tokens/generated/themes.css'), 'utf8');
+    const style = document.createElement('style');
+    style.textContent = css;
+    document.head.appendChild(style);
+    const root = document.documentElement;
+    root.classList.add('dark');
+    root.setAttribute('data-levain-theme', 'sage');
+    try {
+      render(<FabMenu items={items} openFill="#f5e9cf" openScheme="light" />);
+      const canvas = (el: Element) => getComputedStyle(el).getPropertyValue('--color-text-default').trim();
+      const lightBlock = css.slice(css.indexOf('html[data-levain-theme="sage"]'));
+      const darkBlock = css.slice(css.indexOf('.dark[data-levain-theme="sage"]'));
+      const valueIn = (block: string) => block.match(/--color-text-default: ([^;]+);/)![1];
+      expect(valueIn(lightBlock)).not.toBe(valueIn(darkBlock));
+      expect(canvas(root)).toBe(valueIn(darkBlock));
+      expect(canvas(contents())).toBe(valueIn(lightBlock));
+    } finally {
+      root.classList.remove('dark');
+      root.removeAttribute('data-levain-theme');
+      style.remove();
+    }
+  });
+});
+
 const row = (name: string) => document.querySelector<HTMLElement>(`[data-fab-item="${name}"]`)!;
 const levelOf = (id: string) => document.querySelector<HTMLElement>(`[data-fab-level="${id}"]`)!;
 const listView = () => document.querySelector<HTMLElement>('[data-fab-list]')!;
