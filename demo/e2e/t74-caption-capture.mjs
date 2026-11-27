@@ -33,6 +33,9 @@ for (const [name, theme] of [['sage', 0], ['cobalt', 7]]) {
     await settled(page);
     await press(page, '[data-fab-trigger]'); await settled(page);
     await page.focus('[data-fab-item="journal"]'); await page.keyboard.press('Enter'); await settled(page);
+    // main's demo has no caption line: add the same one, so both builds show it
+    await page.evaluate(() => { if (document.querySelector('[data-demo="fab-caption"]')) return; const l = document.querySelector('[data-fab-level="journal"]'); const p = document.createElement('p'); p.dataset.demo = 'fab-caption'; p.className = 'type-caption mt-2xs'; p.textContent = 'Updated weekly'; l.appendChild(p); });
+    await pause(200);
     const clip = await page.evaluate(() => { const r = document.querySelector('[data-demo="fab-stage"]').getBoundingClientRect(); const w = Math.min(r.width, 440); return { x: Math.round(r.right - w), y: Math.round(r.top), width: Math.round(w), height: Math.round(r.height) }; });
     await page.screenshot({ path: `${out}/${name}-dark-journal-${side}.png`, clip });
     const n = await page.evaluate(() => ({ caption: getComputedStyle(document.querySelector('[data-demo="fab-caption"]')).color, bg: getComputedStyle(document.querySelector('[data-fab-menu]')).backgroundColor }));
