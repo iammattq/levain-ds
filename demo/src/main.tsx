@@ -75,7 +75,7 @@ function DragDemo({ Section = BenchSection, prefix = '' }: { Section?: SectionCo
   const [lists, setLists] = useState({ todo: TODO, queued: QUEUED });
   const [open, setOpen] = useState<Item | null>(null);
   const onMove = (m: SortableMove) => setLists(l => {
-    const from = l[m.from as 'todo'].filter(i => i.id !== m.key), item = l[m.from as 'todo'].find(i => i.id === m.key)!;
+    const from = l[m.from as 'todo'].filter(i => prefix + i.id !== m.key), item = l[m.from as 'todo'].find(i => prefix + i.id === m.key)!;
     const next = { ...l, [m.from]: from };
     const to = [...next[m.to as 'todo']];
     to.splice(m.index, 0, item);
@@ -91,7 +91,7 @@ function DragDemo({ Section = BenchSection, prefix = '' }: { Section?: SectionCo
           {(['todo', 'queued'] as const).map((k, i) => (
             <div key={k} className="space-y-2xs" data-list={k}>
               <h3 className="type-label">{k === 'todo' ? 'To do' : 'Queued'} <span className="text-[var(--color-text-faint,var(--color-text-muted))]">{lists[k].length}</span></h3>
-              <SortableList id={k} order={i} label={k === 'todo' ? 'To do' : 'Queued'} items={lists[k]} getKey={it => it.id} renderItem={card}
+              <SortableList id={k} order={i} label={k === 'todo' ? 'To do' : 'Queued'} items={lists[k]} getKey={it => prefix + it.id} renderItem={card}
                 className="min-h-24 rounded-[var(--radius-xl)] bg-[var(--color-surface-section)] p-2xs"
                 empty={<p className="type-caption p-xs text-[var(--color-text-muted)]">Nothing here. Drop a card.</p>} />
             </div>

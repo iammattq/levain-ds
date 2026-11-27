@@ -169,7 +169,7 @@ export function Catalogue({ demos, theme0, themesReady, density0 }: {
   const [density, setDensity] = useState(density0);
   useEffect(() => { document.title = 'levain DS'; }, []);
   return (
-    <div data-density={density === 'condensed' ? 'condensed' : undefined} className="mx-auto max-w-5xl space-y-xl px-md py-lg lg:px-lg">
+    <div data-density={density === 'condensed' ? 'condensed' : undefined} className="mx-auto max-w-5xl space-y-xl px-lg py-lg">
       <Header theme0={theme0} themesReady={themesReady} density={density} setDensity={setDensity} />
       <Contents />
       {GROUPS.map(g => (
