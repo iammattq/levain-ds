@@ -23,7 +23,7 @@ const ITEMS: FabMenuItem[] = [
   },
   {
     id: 'journal', label: 'Journal', icon: BookOpen,
-    content: <ul className="type-body-sm flex flex-col gap-3xs text-[var(--color-text-muted)]"><li>Morphs that settle</li><li>A spring you can sample</li><li>Never blend the fill</li></ul>,
+    content: <><ul className="type-body-sm flex flex-col gap-3xs text-[var(--color-text-muted)]"><li>Morphs that settle</li><li>A spring you can sample</li><li>Never blend the fill</li></ul><p data-demo="fab-caption" className="type-caption mt-2xs">Updated weekly</p></>,
   },
   { id: 'write', label: 'Write to me', icon: PenLine, content: <TextArea label="Message" rows={3} placeholder="A draft stays while you look around" /> },
   { id: 'appearance', label: 'Appearance', icon: Palette, content: <Appearance /> },
