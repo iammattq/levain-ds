@@ -5,10 +5,11 @@ import { CardStack, StatusCardDialog, morphId } from '@levain/ui-react';
 import { Layers } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { CardStack as BoardCardStack } from './compare/BoardCardStack';
+import { BENCH, plain, sample } from './bench';
 
 type Who = 'levain-row' | 'board-row' | 'levain-pile' | 'board-pile';
 type Work = { key: string; kind: string; title: string; line: string };
-const WORK: Work[] = [
+const WORK: Work[] = sample([
   { key: 'T50', kind: 'Decide · T50', title: 'Restart words that fit in the header at 1440', line: 'PM recommends A: short words on the line' },
   { key: 'L9', kind: 'Look · L9', title: 'The header at 1440, mid-restart', line: '2 images · from eng1' },
   { key: 'T36', kind: 'Decide · T36', title: 'A look and its decide as one card', line: 'Blocks eng2' },
@@ -17,7 +18,7 @@ const WORK: Work[] = [
   { key: 'T61', kind: 'Decide · T61', title: 'Keep the bell in the phone header or move it to More', line: '2 options' },
   { key: 'L14', kind: 'Look · L14', title: 'Completed tab, empty state', line: '1 image · from eng2' },
   { key: 'T70', kind: 'Decide · T70', title: 'How long a card stays in Completed before it archives', line: 'PM recommends a week' },
-];
+]);
 
 /** A stack card as the board draws one (board.css .card.compact): a top line, a title of two lines at most, one line under it. */
 function Face({ w }: { w: Work }) {
@@ -57,13 +58,13 @@ export function CardStackDemo({ Section }: { Section: (p: { title: string; note:
       </div>
       <div className="space-y-md" data-demo="stack-rows">
         <div data-demo="stack-row-levain" className="space-y-3xs"><Label>levain · row</Label><CardStack variant="row" cardWidth={232} {...props('levain-row')} /></div>
-        <div data-demo="stack-row-board" className="space-y-3xs"><Label>board's copy · row</Label><BoardCardStack variant="row" cardWidth={232} {...props('board-row')} /></div>
+        {BENCH && <div data-demo="stack-row-board" className="space-y-3xs"><Label>board's copy · row</Label><BoardCardStack variant="row" cardWidth={232} {...props('board-row')} /></div>}
       </div>
       <div className="grid gap-md sm:grid-cols-2" data-demo="stack-piles">
         <div data-demo="stack-pile-levain" className="max-w-[360px] space-y-3xs"><Label>levain · pile</Label><CardStack variant="pile" {...props('levain-pile')} /></div>
-        <div data-demo="stack-pile-board" className="max-w-[360px] space-y-3xs"><Label>board's copy · pile</Label><BoardCardStack variant="pile" {...props('board-pile')} /></div>
+        {BENCH && <div data-demo="stack-pile-board" className="max-w-[360px] space-y-3xs"><Label>board's copy · pile</Label><BoardCardStack variant="pile" {...props('board-pile')} /></div>}
       </div>
-      <StatusCardDialog id={id(last.who, lastW.key)} number={lastW.key} title={lastW.title} open={!!open} onClose={() => setOpen(null)}>
+      <StatusCardDialog id={id(last.who, lastW.key)} number={plain(lastW.key)} title={lastW.title} open={!!open} onClose={() => setOpen(null)}>
         <p className="type-body-sm text-[var(--color-text-muted)]">{lastW.line}</p>
       </StatusCardDialog>
     </Section>

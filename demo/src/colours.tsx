@@ -5,13 +5,14 @@ import {
   LevainProvider, SimpleAnimatedName, Slider, StatusCard, SurfaceCard, type DataTableProps,
 } from '@levain/ui-react';
 import { useState, type ReactNode } from 'react';
+import { BENCH, plain } from './bench';
 
 type Row = { id: string; title: string; state: string };
 const ROWS: Row[] = [
   { id: 'T25', title: 'Dialog height', state: 'done' },
   { id: 'T26', title: 'Architecture review', state: 'done' },
   { id: 'T27', title: 'Missing colour names', state: 'doing' },
-];
+].map(r => ({ ...r, id: plain(r.id) }));
 const COLUMNS: DataTableProps<Row, unknown>['columns'] = [
   { accessorKey: 'id', header: 'Task' },
   { accessorKey: 'title', header: 'Title' },
@@ -24,7 +25,8 @@ const staticTheme = () => STATIC_THEME;
 
 const Piece = ({ name, children, className = '' }: { name: string; children: ReactNode; className?: string }) => (
   <div data-piece={name} className={'space-y-2xs rounded-[var(--radius-lg)] bg-[var(--color-surface-canvas)] p-sm ' + className}>
-    <p className="type-label-sm text-[var(--color-text-muted)]">{name}</p>
+    {/* the bench shows the capture's piece id; the catalogue a plain label (animated-name → Animated name) */}
+    <p className="type-label-sm text-[var(--color-text-muted)]">{BENCH ? name : name[0].toUpperCase() + name.slice(1).replace(/-/g, ' ')}</p>
     {children}
   </div>
 );
@@ -44,7 +46,7 @@ export function ColoursDemo({ Section }: { Section: (p: { title: string; note: s
           <RadioButton id="r-b" name="r" value="b" checked={radio === 'b'} onChange={setRadio} label="Selected" />
         </Piece>
         <Piece name="status-card">
-          <StatusCard id="T27c" number="T27" title="Waiting on the designer" accent="caution" kind={{ label: 'Caution', tone: 'caution' }} markers={[{ label: 'stale', tone: 'caution' }]} />
+          <StatusCard id="T27c" number={plain('T27')} title="Waiting on the designer" accent="caution" kind={{ label: 'Caution', tone: 'caution' }} markers={[{ label: 'stale', tone: 'caution' }]} />
         </Piece>
         <Piece name="slider">
           <Slider label="Pool size" value={slider} min={0} max={100} onChange={setSlider} />
@@ -65,9 +67,9 @@ export function ColoursDemo({ Section }: { Section: (p: { title: string; note: s
         <Piece name="surface-card">
           <SurfaceCard selectable shadowStyle="none"><p className="type-body p-sm">Hover me: a 1px ring</p></SurfaceCard>
         </Piece>
-        <Piece name="content-navigation" className="md:col-span-2">
+        {BENCH && <Piece name="content-navigation" className="md:col-span-2">
           <ContentNavigation previous={{ title: 'Dialog height', slug: 't25' }} next={{ title: 'Missing colours', slug: 't27' }} basePath="#" backLinkText="Back to tasks" delayMs={0} />
-        </Piece>
+        </Piece>}
         <Piece name="admin-error">
           <AdminPageTemplate title="Admin" error="Could not load the tasks.">{null}</AdminPageTemplate>
         </Piece>

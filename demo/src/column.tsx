@@ -6,6 +6,7 @@ import { BOARD_COLUMN_CSS, BoardColumn, StatusIcon, type Status } from './compar
 import { Cluster, Column, Stack, StatusCard, Tag } from '@levain/ui-react';
 import { Plus, SlidersHorizontal } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { BENCH, plain } from './bench';
 
 type Item = { id: string; title: string };
 const COLS: { title: string; glyph: Status; items: Item[]; marks?: boolean; action?: 'add' | 'settings' }[] = [
@@ -30,7 +31,7 @@ const iconButton = (label: string, icon: ReactNode) => (
 );
 const action = (a?: 'add' | 'settings') => a === 'add' ? iconButton('Add idea', <Plus size={18} />) : a === 'settings' ? iconButton('Pool settings', <SlidersHorizontal size={18} />) : undefined;
 const marks = <span className="marks" role="img" aria-label="1 waiting on you, 1 blocked"><StatusIcon status="you" /><StatusIcon status="blocked" /></span>;
-const cards = (items: Item[], prefix = '') => items.map(it => <StatusCard key={it.id} id={prefix + it.id} number={it.id} title={it.title} />);
+const cards = (items: Item[], prefix = '') => items.map(it => <StatusCard key={it.id} id={prefix + it.id} number={plain(it.id)} title={it.title} />);
 
 const grid = 'grid items-start gap-sm';
 const cols = { gridTemplateColumns: '1fr 1fr 1.2fr' };
@@ -55,7 +56,7 @@ export function ColumnDemo({ Section }: { Section: (p: { title: string; note: st
           ))}
         </div>
       </>}
-      {only !== 'levain' && <>
+      {BENCH && only !== 'levain' && <>
         <p className="type-caption pt-md text-[var(--color-text-muted)]">The board's own column (a copy, for comparison)</p>
         <div data-compare="board" data-demo="columns" className={'rmb rm-glyphs ' + grid} style={cols}>
           {COLS.map(c => (

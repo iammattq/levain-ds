@@ -47,7 +47,7 @@ const open = async (side, query, { width = 1280, colorScheme = 'light', init } =
   if (init) await ctx.addInitScript(init);
   const page = await ctx.newPage();
   page.on('pageerror', e => checks.errors.push(`${side} ${query}: ${e.message}`));
-  await page.goto(`${SIDES[side]}?${query}`, { waitUntil: 'networkidle' });
+  await page.goto(`${SIDES[side]}?bench=1&${query}`, { waitUntil: 'networkidle' });
   await settle(page);
   return { ctx, page };
 };

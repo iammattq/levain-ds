@@ -3,6 +3,7 @@
 // heading of its own; the caller puts one above it. ?only=timeline shows only this section (for captures).
 import { Timeline, TimelineList, type TimelineEntryData } from '@levain/ui-react';
 import type { ReactNode } from 'react';
+import { plain } from './bench';
 
 const CAREER = [
   { company: 'Northwind', roles: [{ period: '2026 – now', title: 'Principal Design Engineer' }, { period: '2021 – 2025', title: 'Director, Design System' }] },
@@ -13,7 +14,7 @@ const Lines = ({ lines }: { lines: [string, string][] }) => (
   <ul className="space-y-3xs">
     {lines.map(([id, text]) => (
       <li key={id} className="flex gap-xs">
-        <span className="type-caption w-8 shrink-0 pt-[2px] tabular-nums text-[var(--color-text-faint,var(--color-text-muted))]">{id}</span>
+        <span className="type-caption w-8 shrink-0 pt-[2px] tabular-nums text-[var(--color-text-faint,var(--color-text-muted))]">{plain(id)}</span>
         <span className="min-w-0">{text}</span>
       </li>
     ))}

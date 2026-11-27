@@ -6,6 +6,7 @@
 import { Button, SortableGroup, SortableList, StatusCard, StatusCardDialog, type SortableMove } from '@levain/ui-react';
 import { Clock, User } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
+import { BENCH, plain } from './bench';
 
 type Decision = { id: string; title: string; q: string; options: string[]; rec: string; age: string };
 const DECISIONS: Decision[] = [
@@ -47,7 +48,7 @@ export function DecideDemo({ Section }: { Section: (p: { title: string; note: st
   // keys are unique across the group (SortableList's layoutId is group-wide): 'levain:D14', 'board:D14'
   const [cols, setCols] = useState({ levain: DECISIONS.map(d => 'levain:' + d.id), board: DECISIONS.map(d => 'board:' + d.id) });
   const of = (key: string) => DECISIONS.find(d => d.id === key.split(':')[1])!;
-  const pick = (d: Decision, o: string) => setPicked(`${d.id}: ${o}${o === d.rec ? ' (recommended)' : ''}`);
+  const pick = (d: Decision, o: string) => setPicked(`${plain(d.id)}: ${o}${o === d.rec ? ' (recommended)' : ''}`);
   const onMove = (m: SortableMove) => setCols(c => {
     const from = m.from as 'levain', to = m.to as 'levain';
     if (from !== to) return c; // each column keeps its own copies
@@ -70,21 +71,21 @@ export function DecideDemo({ Section }: { Section: (p: { title: string; note: st
               <SortableList id="levain" label="levain" items={cols.levain} getKey={k => k} renderItem={k => {
                 const d = of(k);
                 return (
-                  <StatusCard id={'lv-' + d.id} number={d.id} kind={{ label: 'Decide', tone: 'accent' }} title={d.title}
-                    markers={[{ icon: User, label: 'PM' }, { icon: Clock, label: d.age, title: 'waiting ' + d.age }, { label: d.options.length + ' options' }]}
+                  <StatusCard id={'lv-' + d.id} number={plain(d.id)} kind={{ label: 'Decide', tone: 'accent' }} title={d.title}
+                    markers={[{ icon: User, label: plain('PM') }, { icon: Clock, label: d.age, title: 'waiting ' + d.age }, { label: d.options.length + ' options' }]}
                     open={open?.id === d.id} onOpen={() => setOpen(d)} actions={answers(d, pick)} />
                 );
               }} />,
             )}
-            {column('Board stand-in, wired by hand',
+            {BENCH && column('Board stand-in, wired by hand',
               <SortableList id="board" label="board" items={cols.board} getKey={k => k} renderItem={k => <BoardStandIn d={of(k)} onOpen={() => setPicked(`${of(k).id} opened (the stand-in has no dialog)`)} onPick={pick} />} />,
             )}
           </div>
         </SortableGroup>
         <p className="type-body-sm text-[var(--color-text-muted)]" data-demo="decide-picked" aria-live="polite">{picked}</p>
       </div>
-      <StatusCardDialog id={open ? 'lv-' + open.id : ''} open={!!open} onClose={() => setOpen(null)} number={open?.id} kind={{ label: 'Decide', tone: 'accent' }} title={open?.title ?? ''}>
-        <p className="type-body-sm text-[var(--color-text-muted)]">{open?.q} PM recommends: {open?.rec}.</p>
+      <StatusCardDialog id={open ? 'lv-' + open.id : ''} open={!!open} onClose={() => setOpen(null)} number={open ? plain(open.id) : undefined} kind={{ label: 'Decide', tone: 'accent' }} title={open?.title ?? ''}>
+        <p className="type-body-sm text-[var(--color-text-muted)]">{open?.q}{BENCH ? ' PM recommends: ' : ' Recommended: '}{open?.rec}.</p>
         <div className="flex flex-wrap gap-2xs">{open && answers(open, (d, o) => { pick(d, o); setOpen(null); })}</div>
       </StatusCardDialog>
     </Section>

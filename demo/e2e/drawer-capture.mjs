@@ -136,7 +136,7 @@ const isOpen = page => page.locator('[data-drawer]').count().then(n => n > 0);
   const page = await ctx.newPage();
   page.on('pageerror', e => errors.push(`behaviour: ${e.message}`));
   // a tall page, so there is something to lock
-  await page.goto(`${base}?theme=0&mode=light`, { waitUntil: 'networkidle' });
+  await page.goto(`${base}?bench=1&theme=0&mode=light`, { waitUntil: 'networkidle' });
   const trigger = page.locator('[data-demo="drawer-open"]');
   await trigger.scrollIntoViewIfNeeded();
   const openIt = async () => { await trigger.click(); await page.waitForSelector('[data-drawer]'); await settled(page); };

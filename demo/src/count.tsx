@@ -5,6 +5,7 @@
 // design.
 import { CountBadge } from '@levain/ui-react';
 import type { ReactNode } from 'react';
+import { BENCH } from './bench';
 
 const BOARD_CSS = `
 .bc { --rm-xs: 0.875rem; --rm-amber: #f2af48; --rm-card: var(--color-surface-card); --rm-edge: none; font-size: var(--rm-xs); }
@@ -74,14 +75,14 @@ export function CountDemo({ Section }: { Section: (p: { title: string; note: str
   return (
     <Section title="CountBadge beside the board's counts" note="Left: copies of the board's column head, phone tab and next-release pill, in its own CSS. Right: the same with levain's CountBadge. The board's amber is its own; levain's caution is --color-caution-fg.">
       <style>{BOARD_CSS}</style>
-      <div className="bc grid grid-cols-1 gap-x-md gap-y-sm sm:grid-cols-[10rem_1fr_1fr]" data-demo="count">
+      <div className={'bc grid grid-cols-1 gap-x-md gap-y-sm ' + (BENCH ? 'sm:grid-cols-[10rem_1fr_1fr]' : 'sm:grid-cols-[10rem_1fr]')} data-demo="count">
         <span className="type-caption hidden text-[var(--color-text-faint)] sm:block" />
-        <span className="type-label text-[var(--color-text-muted)]">Board</span>
+        {BENCH && <span className="type-label text-[var(--color-text-muted)]">Board</span>}
         <span className="type-label text-[var(--color-text-muted)]">levain CountBadge</span>
         {ROWS.map((r) => (
           <div key={r.name} className="contents">
             <span className="type-caption self-center text-[var(--color-text-muted)]">{r.name}</span>
-            <div data-side="board" className="self-center">{r.board}</div>
+            {BENCH && <div data-side="board" className="self-center">{r.board}</div>}
             <div data-side="levain" className="self-center">{r.levain}</div>
           </div>
         ))}

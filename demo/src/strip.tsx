@@ -8,6 +8,7 @@
 import { BoardColumnStrip } from './compare/BoardColumnStrip';
 import { ColumnStrip, CountBadge, SortableGroup, SortableList, StatusCard, useColumnStrip, type SortableMove } from '@levain/ui-react';
 import { useState, type ReactNode } from 'react';
+import { BENCH, plain } from './bench';
 
 type Item = { id: string; title: string };
 type Key = 'ideas' | 'queued' | 'progress' | 'review';
@@ -44,10 +45,10 @@ const moved = (m: SortableMove) => (l: Record<Key, Item[]>) => {
 function body(k: Key, i: number, items: Item[], id = '') {
   return PAGEABLE.includes(k) ? (
     <SortableList id={k} order={i} label={NAMES[k]} items={items} getKey={it => it.id} className="min-h-24 space-y-2xs"
-      renderItem={it => <StatusCard id={id + it.id} number={it.id} title={it.title} />}
+      renderItem={it => <StatusCard id={id + it.id} number={plain(it.id)} title={it.title} />}
       empty={<p className="type-caption p-xs text-[var(--color-text-muted)]">Nothing here. Drop a card.</p>} />
   ) : (
-    <div className="space-y-2xs">{items.map(it => <StatusCard key={it.id} id={id + it.id} number={it.id} title={it.title} />)}</div>
+    <div className="space-y-2xs">{items.map(it => <StatusCard key={it.id} id={id + it.id} number={plain(it.id)} title={it.title} />)}</div>
   );
 }
 
@@ -86,7 +87,7 @@ export function StripDemo({ Section }: { Section: (p: { title: string; note: str
       </div>
       <p className="type-caption text-[var(--color-text-muted)]" data-demo="strip-at">In view: {NAMES[at as Key]}</p>
       </>}
-      {only !== 'levain' && <>
+      {BENCH && only !== 'levain' && <>
       <p className="type-caption pt-md text-[var(--color-text-muted)]">The board's own strip (a copy, for comparison)</p>
       <div data-compare="board" className="-mx-md sm:mx-0 sm:max-w-[390px] sm:rounded-[var(--radius-xl)] sm:border sm:border-[var(--color-border-subtle)]">
         <BoardCopy />

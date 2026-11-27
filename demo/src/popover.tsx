@@ -6,6 +6,7 @@ import { Popover, Slider } from '@levain/ui-react';
 import { Settings2 } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { BOARD_POPOVER_CSS, HeadPopover } from './compare/BoardHeadPopover';
+import { BENCH } from './bench';
 
 function Fields() {
   const [n, setN] = useState(3);
@@ -48,12 +49,12 @@ export function PopoverDemo({ Section }: { Section: (p: { title: string; note: s
   return (
     <Section title="A popover" note="Popover: a panel anchored to its trigger that grows out of it (the morph recipe), flips when there's no room, and closes on Escape, a press outside or Tab past its last control. Above: the board's HeadPopover (a copy); below: levain's, with the same trigger and panel.">
       <style>{BOARD_POPOVER_CSS}</style>
-      <div className="rmb flex max-w-md flex-col gap-[12rem] bg-transparent pb-[10rem]">
-        <Head who="board">
+      <div className={'rmb flex max-w-md flex-col bg-transparent ' + (BENCH ? 'gap-[12rem] pb-[10rem]' : 'gap-md')}>
+        {BENCH && <Head who="board">
           <HeadPopover icon={<Settings2 aria-hidden size={16} />} label="Workers" title="Workers">
             <Fields />
           </HeadPopover>
-        </Head>
+        </Head>}
         {levain('levain')}
         {only && <div className="fixed inset-x-[1rem] bottom-[1rem]">{levain('flip')}</div>}
       </div>

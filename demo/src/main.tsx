@@ -1,4 +1,5 @@
-// levain DS's motion, density and drag, on one page. Every timing here comes from @levain/tokens.
+// levain DS's demo. The default page is the catalogue (catalogue.tsx, T67); ?bench=1 is the test bench, the page as it
+// was (motion, density and drag, the board copies beside levain's pieces). Every timing here comes from @levain/tokens.
 // ?density=condensed starts condensed; ?mode=light starts light; ?theme=7 starts on Cobalt Mono.
 // ?only=progress, ?only=decide, ?only=time, ?only=count, ?only=command, ?only=sheet, ?only=bottom-sheet, ?only=drawer, ?only=timeline, ?only=cardstack, ?only=compare, ?only=slider, ?only=viewer, ?only=strip, ?only=column, ?only=colours, ?only=picker, ?only=popover, ?only=tooltip, ?only=menu, ?only=skeleton, ?only=empty, ?only=notice or ?only=forms shows only that section (for captures).
 import '@fontsource/open-sans/400.css';
@@ -9,7 +10,7 @@ import { initTheme, motion as motionFor, recipe, setTheme, stagger, themeManager
 import { Button, LevainProvider, SegmentedControl, SortableGroup, SortableList, StatusCard, StatusCardDialog, StatusCardDialogStack, type SortableMove, type StatusMarker } from '@levain/ui-react';
 import { AnimatePresence, LayoutGroup, motion, useReducedMotion } from 'framer-motion';
 import { Clock, Image as ImageIcon, Link2, Menu as MenuIcon, Plus, User, X } from 'lucide-react';
-import { StrictMode, useState } from 'react';
+import { StrictMode, useState, type ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { CommandDemo } from './command';
 import { CountDemo } from './count';
@@ -34,17 +35,19 @@ import { ViewerDemo } from './viewer';
 import { ColoursDemo } from './colours';
 import { PickerDemo } from './picker';
 import { FormsDemo } from './forms';
+import { BENCH, plain, sample } from './bench';
+import { Catalogue, ColourSpecimen, SubSection, TypeSpecimen, type SectionComponent } from './catalogue';
 
 type Item = { id: string; title: string; owner: string; age: string; state?: 'blocked' | 'waiting'; images?: number; links?: number };
-const TODO: Item[] = [
+const TODO: Item[] = sample([
   { id: 'T4', title: 'Board: two tabs, Work board and Completed', owner: 'Matt', age: '3h', links: 1 },
   { id: 'T5', title: 'The comment box is one line and cuts off what I type', owner: 'Matt', age: '1h', images: 1 },
   { id: 'T6', title: 'Drag and drop on the board', owner: 'Matt', age: '40m' },
-];
-const QUEUED: Item[] = [
+]);
+const QUEUED: Item[] = sample([
   { id: 'T2', title: 'Release v0.13.0: BN1, BN2 and IR1; notes first', owner: 'PM', age: '2h', state: 'waiting' },
   { id: 'T3', title: 'Bench background options and the condenser line fix', owner: 'eng1', age: '25m', state: 'blocked', images: 2 },
-];
+]);
 
 const markers = (it: Item): StatusMarker[] => [
   { icon: User, label: it.owner },
@@ -54,7 +57,7 @@ const markers = (it: Item): StatusMarker[] => [
   ...(it.links ? [{ icon: Link2, label: String(it.links), title: it.links + ' links' }] : []),
 ];
 
-function Section({ title, note, children }: { title: string; note: string; children: React.ReactNode }) {
+function BenchSection({ title, note, children }: { title: string; note: string; children: React.ReactNode }) {
   return (
     <section className="space-y-sm">
       <div className="space-y-3xs">
@@ -66,18 +69,20 @@ function Section({ title, note, children }: { title: string; note: string; child
   );
 }
 
-function DragDemo() {
+/** `prefix` keeps the cards' ids (their shared-layout ids) apart from the Column section's same cards; the bench
+ *  leaves it off, as it was, so its frames don't change. */
+function DragDemo({ Section = BenchSection, prefix = '' }: { Section?: SectionComponent; prefix?: string }) {
   const [lists, setLists] = useState({ todo: TODO, queued: QUEUED });
   const [open, setOpen] = useState<Item | null>(null);
   const onMove = (m: SortableMove) => setLists(l => {
-    const from = l[m.from as 'todo'].filter(i => i.id !== m.key), item = l[m.from as 'todo'].find(i => i.id === m.key)!;
+    const from = l[m.from as 'todo'].filter(i => prefix + i.id !== m.key), item = l[m.from as 'todo'].find(i => prefix + i.id === m.key)!;
     const next = { ...l, [m.from]: from };
     const to = [...next[m.to as 'todo']];
     to.splice(m.index, 0, item);
     return { ...next, [m.to]: to };
   });
   const card = (it: Item) => (
-    <StatusCard id={it.id} number={it.id} title={it.title} markers={markers(it)} accent={it.state === 'blocked' ? 'error' : undefined} open={open?.id === it.id} onOpen={() => setOpen(it)} />
+    <StatusCard id={prefix + it.id} number={plain(it.id)} title={it.title} markers={markers(it)} accent={it.state === 'blocked' ? 'error' : undefined} open={open?.id === it.id} onOpen={() => setOpen(it)} />
   );
   return (
     <Section title="Drag, and a card becoming its dialog" note="Drag a card between the lists, or focus one and press Space, then the arrows. Click a card to open it.">
@@ -86,14 +91,14 @@ function DragDemo() {
           {(['todo', 'queued'] as const).map((k, i) => (
             <div key={k} className="space-y-2xs" data-list={k}>
               <h3 className="type-label">{k === 'todo' ? 'To do' : 'Queued'} <span className="text-[var(--color-text-faint,var(--color-text-muted))]">{lists[k].length}</span></h3>
-              <SortableList id={k} order={i} label={k === 'todo' ? 'To do' : 'Queued'} items={lists[k]} getKey={it => it.id} renderItem={card}
+              <SortableList id={k} order={i} label={k === 'todo' ? 'To do' : 'Queued'} items={lists[k]} getKey={it => prefix + it.id} renderItem={card}
                 className="min-h-24 rounded-[var(--radius-xl)] bg-[var(--color-surface-section)] p-2xs"
                 empty={<p className="type-caption p-xs text-[var(--color-text-muted)]">Nothing here. Drop a card.</p>} />
             </div>
           ))}
         </div>
       </SortableGroup>
-      <StatusCardDialog id={open?.id ?? ''} open={!!open} onClose={() => setOpen(null)} number={open?.id} title={open?.title ?? ''} markers={open ? markers(open) : []}>
+      <StatusCardDialog id={open ? prefix + open.id : ''} open={!!open} onClose={() => setOpen(null)} number={open ? plain(open.id) : undefined} title={open?.title ?? ''} markers={open ? markers(open) : []}>
         <p className="type-body text-[var(--color-text-muted)]">The card grew into this dialog: one element, its corners and size moving on the spring, its content fading in once there was room. Close it and it collapses back into its place.</p>
       </StatusCardDialog>
     </Section>
@@ -106,28 +111,28 @@ const STACK_CARD = new URLSearchParams(location.search).get('stackCard') !== '0'
 
 /** Two dialogs as a pile (StatusCardDialogStack): a look in front of the decide it's for. Next sends the look away and
  *  brings the decide forward; Back brings the look back from away. */
-function StackDemo() {
+function StackDemo({ Section = BenchSection }: { Section?: SectionComponent }) {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(0);
-  const look = { id: 'L8', number: 'L8 · 1 of 2', kind: { label: 'Look', tone: 'accent' as const }, title: 'The strip, second pass', markers: [{ icon: User, label: 'Matt' }, { icon: ImageIcon, label: '2', title: '2 images' }],
+  const look = sample({ id: 'L8', number: 'L8 · 1 of 2', kind: { label: 'Look', tone: 'accent' as const }, title: 'The strip, second pass', markers: [{ icon: User, label: 'Matt' }, { icon: ImageIcon, label: '2', title: '2 images' }],
     children: (
       <div className="space-y-sm" data-demo="stack-look">
         <div className="aspect-[16/7] rounded-[var(--radius-lg)] bg-[var(--color-surface-section)]" />
         <p className="type-body-sm text-[var(--color-text-muted)]">The look comes first; the decision it's for waits behind it, one step back, as the board's pile does.</p>
         <div><Button size="sm" variant="primary" data-demo="stack-next" onClick={() => setStep(1)}>Next</Button></div>
       </div>
-    ) };
-  const decide = { id: 'D14', number: 'D14 · 2 of 2', kind: { label: 'Decide' }, title: 'Strip or arc for the progress mark', markers: [{ icon: Clock, label: '2h', title: 'waiting 2 hours' }],
+    ) });
+  const decide = sample({ id: 'D14', number: 'D14 · 2 of 2', kind: { label: 'Decide' }, title: 'Strip or arc for the progress mark', markers: [{ icon: Clock, label: '2h', title: 'waiting 2 hours' }],
     children: (
       <div className="space-y-sm" data-demo="stack-decide">
         <p className="type-body-sm text-[var(--color-text-muted)]">The look went away; this one came forward on recipe.morph. Under Reduce Motion both are cross-fades.</p>
         <div className="flex gap-xs"><Button size="sm" variant="ghost" data-demo="stack-back" onClick={() => setStep(0)}>Back</Button><Button size="sm" variant="primary" onClick={() => setOpen(false)}>Send</Button></div>
       </div>
-    ) };
+    ) });
   return (
     <Section title="A dialog stack: a look over its decide" note="Open the card: the look grows out of it with the decide behind, 10 px lower and 5 % smaller. Next, Back; Escape or a click outside closes the front only. The pair is one card: whichever dialog closes last goes back into it.">
       <div className="max-w-sm" data-demo="stack-card">
-        <StatusCard id="L8" number="L8" kind={{ label: 'Look', tone: 'accent' }} title="The strip, second pass" markers={look.markers} open={open} onOpen={() => { setStep(0); setOpen(true); }} />
+        <StatusCard id="L8" number={plain('L8')} kind={{ label: 'Look', tone: 'accent' }} title="The strip, second pass" markers={look.markers} open={open} onOpen={() => { setStep(0); setOpen(true); }} />
       </div>
       <StatusCardDialogStack dialogs={open ? [look, decide].slice(step) : []} onClose={() => setOpen(false)} cardId={STACK_CARD ? 'L8' : undefined} />
     </Section>
@@ -135,7 +140,7 @@ function StackDemo() {
 }
 
 /** The OS menu's principle: the button is the menu. One element changes width, height and radius; rows stagger in. */
-function MenuDemo() {
+function MenuDemo({ Section = BenchSection }: { Section?: SectionComponent }) {
   const [open, setOpen] = useState(false);
   const reduce = useReducedMotion();
   const rows = ['Writing', 'Work', 'Experiments', 'Photography', 'Customise'];
@@ -171,7 +176,7 @@ function MenuDemo() {
 }
 
 /** A window rising from bottom centre (recipe.arrive, opacity on recipe.fadeIn) and sinking back (recipe.depart). */
-function WindowDemo() {
+function WindowDemo({ Section = BenchSection }: { Section?: SectionComponent }) {
   const [open, setOpen] = useState(false);
   const reduce = useReducedMotion();
   return (
@@ -202,9 +207,9 @@ function WindowDemo() {
   );
 }
 
-function ListDemo() {
+function ListDemo({ Section = BenchSection }: { Section?: SectionComponent }) {
   const reduce = useReducedMotion();
-  const [items, setItems] = useState(['Answered: D212 Strip', 'Answered: D213 Even light', 'L205 bench glass', 'R18 run the checker']);
+  const [items, setItems] = useState(() => sample(['Answered: D212 Strip', 'Answered: D213 Even light', 'L205 bench glass', 'R18 run the checker']));
   const [n, setN] = useState(1);
   return (
     <Section title="Lists: items enter and collapse out, the rest close the gap" note="Enter and leave on --duration-content-in; neighbours move on recipe.shift.">
@@ -230,7 +235,7 @@ function ListDemo() {
   );
 }
 
-function TabsDemo() {
+function TabsDemo({ Section = BenchSection }: { Section?: SectionComponent }) {
   const reduce = useReducedMotion();
   const tabs = ['Work board', 'Completed', 'Releases'];
   const [tab, setTab] = useState(tabs[0]!);
@@ -255,7 +260,8 @@ function TabsDemo() {
   );
 }
 
-function App() {
+/** The test bench: the page as it was. Every ?only= address and ?bench=1 render it. */
+function Bench() {
   const q = new URLSearchParams(location.search);
   const [density, setDensity] = useState(q.get('density') === 'condensed' ? 'condensed' : 'comfortable');
   return (
@@ -267,31 +273,31 @@ function App() {
         </div>
         <SegmentedControl id="density" size="sm" value={density} onChange={setDensity} options={[{ label: 'Comfortable', value: 'comfortable' }, { label: 'Condensed', value: 'condensed' }]} />
       </header>
-      {q.get('only') === 'progress' ? <ProgressDemo Section={Section} /> : q.get('only') === 'decide' ? <DecideDemo Section={Section} /> : q.get('only') === 'time' ? <RelativeTimeDemo Section={Section} /> : q.get('only') === 'count' ? <CountDemo Section={Section} /> : q.get('only') === 'command' ? <CommandDemo Section={Section} /> : q.get('only') === 'sheet' ? <SheetDemo Section={Section} /> : q.get('only') === 'bottom-sheet' ? <BottomSheetDemo Section={Section} /> : q.get('only') === 'drawer' ? <DrawerDemo Section={Section} /> : q.get('only') === 'timeline' ? <TimelineDemo Section={Section} /> : q.get('only') === 'cardstack' ? <CardStackDemo Section={Section} /> : q.get('only') === 'compare' ? <ImageCompareDemo Section={Section} /> : q.get('only') === 'slider' ? <ImageCompareSliderDemo Section={Section} /> : q.get('only') === 'viewer' ? <ViewerDemo Section={Section} /> : q.get('only') === 'strip' ? <StripDemo Section={Section} /> : q.get('only') === 'column' ? <ColumnDemo Section={Section} /> : q.get('only') === 'colours' ? <ColoursDemo Section={Section} /> : q.get('only') === 'picker' ? <PickerDemo Section={Section} /> : q.get('only') === 'popover' ? <PopoverDemo Section={Section} /> : q.get('only') === 'tooltip' ? <TooltipDemo Section={Section} /> : q.get('only') === 'menu' ? <LevainMenuDemo Section={Section} /> : q.get('only') === 'skeleton' ? <SkeletonDemo Section={Section} /> : q.get('only') === 'empty' ? <EmptyStateDemo Section={Section} /> : q.get('only') === 'notice' ? <NoticeDemo Section={Section} /> : q.get('only') === 'forms' ? <FormsDemo Section={Section} /> : <>
+      {q.get('only') === 'progress' ? <ProgressDemo Section={BenchSection} /> : q.get('only') === 'decide' ? <DecideDemo Section={BenchSection} /> : q.get('only') === 'time' ? <RelativeTimeDemo Section={BenchSection} /> : q.get('only') === 'count' ? <CountDemo Section={BenchSection} /> : q.get('only') === 'command' ? <CommandDemo Section={BenchSection} /> : q.get('only') === 'sheet' ? <SheetDemo Section={BenchSection} /> : q.get('only') === 'bottom-sheet' ? <BottomSheetDemo Section={BenchSection} /> : q.get('only') === 'drawer' ? <DrawerDemo Section={BenchSection} /> : q.get('only') === 'timeline' ? <TimelineDemo Section={BenchSection} /> : q.get('only') === 'cardstack' ? <CardStackDemo Section={BenchSection} /> : q.get('only') === 'compare' ? <ImageCompareDemo Section={BenchSection} /> : q.get('only') === 'slider' ? <ImageCompareSliderDemo Section={BenchSection} /> : q.get('only') === 'viewer' ? <ViewerDemo Section={BenchSection} /> : q.get('only') === 'strip' ? <StripDemo Section={BenchSection} /> : q.get('only') === 'column' ? <ColumnDemo Section={BenchSection} /> : q.get('only') === 'colours' ? <ColoursDemo Section={BenchSection} /> : q.get('only') === 'picker' ? <PickerDemo Section={BenchSection} /> : q.get('only') === 'popover' ? <PopoverDemo Section={BenchSection} /> : q.get('only') === 'tooltip' ? <TooltipDemo Section={BenchSection} /> : q.get('only') === 'menu' ? <LevainMenuDemo Section={BenchSection} /> : q.get('only') === 'skeleton' ? <SkeletonDemo Section={BenchSection} /> : q.get('only') === 'empty' ? <EmptyStateDemo Section={BenchSection} /> : q.get('only') === 'notice' ? <NoticeDemo Section={BenchSection} /> : q.get('only') === 'forms' ? <FormsDemo Section={BenchSection} /> : <>
       <DragDemo />
-      <DecideDemo Section={Section} />
+      <DecideDemo Section={BenchSection} />
       <StackDemo />
-      <CardStackDemo Section={Section} />
-      <SheetDemo Section={Section} />
-      <StripDemo Section={Section} />
-      <ColumnDemo Section={Section} />
-      <BottomSheetDemo Section={Section} />
-      <DrawerDemo Section={Section} />
-      <PopoverDemo Section={Section} />
-      <TooltipDemo Section={Section} />
-      <LevainMenuDemo Section={Section} />
-      <SkeletonDemo Section={Section} />
-      <EmptyStateDemo Section={Section} />
-      <NoticeDemo Section={Section} />
-      <ProgressDemo Section={Section} />
-      <RelativeTimeDemo Section={Section} />
-      <CountDemo Section={Section} />
-      <CommandDemo Section={Section} />
-      <TimelineDemo Section={Section} />
-      <ImageCompareDemo Section={Section} />
-      <ImageCompareSliderDemo Section={Section} />
-      <ViewerDemo Section={Section} />
-      <ColoursDemo Section={Section} />
+      <CardStackDemo Section={BenchSection} />
+      <SheetDemo Section={BenchSection} />
+      <StripDemo Section={BenchSection} />
+      <ColumnDemo Section={BenchSection} />
+      <BottomSheetDemo Section={BenchSection} />
+      <DrawerDemo Section={BenchSection} />
+      <PopoverDemo Section={BenchSection} />
+      <TooltipDemo Section={BenchSection} />
+      <LevainMenuDemo Section={BenchSection} />
+      <SkeletonDemo Section={BenchSection} />
+      <EmptyStateDemo Section={BenchSection} />
+      <NoticeDemo Section={BenchSection} />
+      <ProgressDemo Section={BenchSection} />
+      <RelativeTimeDemo Section={BenchSection} />
+      <CountDemo Section={BenchSection} />
+      <CommandDemo Section={BenchSection} />
+      <TimelineDemo Section={BenchSection} />
+      <ImageCompareDemo Section={BenchSection} />
+      <ImageCompareSliderDemo Section={BenchSection} />
+      <ViewerDemo Section={BenchSection} />
+      <ColoursDemo Section={BenchSection} />
       <div className="grid grid-cols-1 gap-xl md:grid-cols-2">
         <MenuDemo />
         <WindowDemo />
@@ -303,8 +309,59 @@ function App() {
   );
 }
 
-const asked = new URLSearchParams(location.search).get('mode');
+/** The catalogue's sections: each id in catalogue.tsx's GROUPS, drawn with the section it's handed. */
+const DEMOS: Record<string, (S: SectionComponent) => ReactNode> = {
+  colour: S => <ColourSpecimen Section={S} />,
+  type: S => <TypeSpecimen Section={S} />,
+  motion: S => (
+    <S title="" note="">
+      <p className="type-caption text-[var(--color-text-muted)]">Stagger {stagger} ms; morph {recipe.morph.duration * 1000} ms.</p>
+      <div className="grid grid-cols-1 gap-xl md:grid-cols-2">
+        <MenuDemo Section={SubSection} />
+        <WindowDemo Section={SubSection} />
+        <ListDemo Section={SubSection} />
+        <TabsDemo Section={SubSection} />
+      </div>
+    </S>
+  ),
+  forms: S => <FormsDemo Section={S} />,
+  pickers: S => <PickerDemo Section={S} />,
+  controls: S => <ColoursDemo Section={S} />,
+  popover: S => <PopoverDemo Section={S} />,
+  tooltip: S => <TooltipDemo Section={S} />,
+  menu: S => <LevainMenuDemo Section={S} />,
+  drawer: S => <DrawerDemo Section={S} />,
+  'bottom-sheet': S => <BottomSheetDemo Section={S} />,
+  'phone-dialogs': S => <SheetDemo Section={S} />,
+  'dialog-stack': S => <StackDemo Section={S} />,
+  viewer: S => <ViewerDemo Section={S} />,
+  notice: S => <NoticeDemo Section={S} />,
+  progress: S => <ProgressDemo Section={S} />,
+  skeleton: S => <SkeletonDemo Section={S} />,
+  empty: S => <EmptyStateDemo Section={S} />,
+  count: S => <CountDemo Section={S} />,
+  time: S => <RelativeTimeDemo Section={S} />,
+  sortable: S => <DragDemo Section={S} prefix="drag-" />,
+  decide: S => <DecideDemo Section={S} />,
+  'card-stack': S => <CardStackDemo Section={S} />,
+  columns: S => <ColumnDemo Section={S} />,
+  strip: S => <StripDemo Section={S} />,
+  timeline: S => <TimelineDemo Section={S} />,
+  command: S => <CommandDemo Section={S} />,
+  compare: S => <ImageCompareDemo Section={S} />,
+  'compare-slider': S => <ImageCompareSliderDemo Section={S} />,
+};
+
+const q = new URLSearchParams(location.search);
+const asked = q.get('mode');
 if (asked === 'light' || asked === 'dark') setTheme(asked); else initTheme();
 // ?theme=<n> starts on that built-in theme (7: Cobalt Mono)
-void themeManager.applyTheme(Number(new URLSearchParams(location.search).get('theme') ?? 0) || 0);
-createRoot(document.getElementById('root')!).render(<StrictMode><LevainProvider><App /></LevainProvider></StrictMode>);
+// (out of range, the manager falls back to a real theme and the catalogue's select follows it; a failed load still
+// settles, so the select never waits on it)
+const theme0 = Math.trunc(Number(q.get('theme') ?? 0)) || 0;
+const themesReady = themeManager.applyTheme(theme0).catch((e: unknown) => console.error('levain: the theme did not load', e));
+createRoot(document.getElementById('root')!).render(
+  <StrictMode><LevainProvider>
+    {BENCH ? <Bench /> : <Catalogue demos={DEMOS} theme0={theme0} themesReady={themesReady} density0={q.get('density') === 'condensed' ? 'condensed' : 'comfortable'} />}
+  </LevainProvider></StrictMode>,
+);

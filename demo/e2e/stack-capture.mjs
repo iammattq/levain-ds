@@ -19,7 +19,7 @@ try {
     for (const [width, label] of [[390, 'phone'], [1280, 'desktop']]) {
       const page = await browser.newPage({ viewport: { width, height: width > 500 ? 900 : 844 }, deviceScaleFactor: 2 });
       page.on('pageerror', e => errors.push(e.message));
-      await page.goto(base + '?theme=7&mode=' + mode, { waitUntil: 'networkidle' });
+      await page.goto(base + '?bench=1&theme=7&mode=' + mode, { waitUntil: 'networkidle' });
       await pause(800);
       await openStack(page);
       await page.screenshot({ path: `${out}/stack-${mode}-${label}.png` });
@@ -40,7 +40,7 @@ try {
     const ctx = await browser.newContext({ viewport: { width: 1000, height: 760 }, reducedMotion, recordVideo: { dir: `${out}/video-${reducedMotion}`, size: { width: 1000, height: 760 } } });
     const page = await ctx.newPage();
     page.on('pageerror', e => errors.push(e.message));
-    await page.goto(base + '?theme=7&mode=light', { waitUntil: 'networkidle' });
+    await page.goto(base + '?bench=1&theme=7&mode=light', { waitUntil: 'networkidle' });
     await page.getByText('The strip, second pass').first().scrollIntoViewIfNeeded();
     await pause(900);
     await page.getByText('The strip, second pass').first().click(); await pause(1400);

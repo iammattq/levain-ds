@@ -2,6 +2,7 @@
 // hand-drawn stand-ins (its T47 context ring and bar, copied here as drawn) so the two can be compared.
 import { ProgressBar, ProgressRing, SegmentedControl, type ProgressSize, type ProgressTone } from '@levain/ui-react';
 import { useState } from 'react';
+import { BENCH } from './bench';
 
 const SIZES: ProgressSize[] = ['xs', 'sm', 'md', 'lg'];
 const TONES: ProgressTone[] = ['default', 'caution', 'danger'];
@@ -39,7 +40,7 @@ export function ProgressDemo({ Section }: { Section: (p: { title: string; note: 
       <SegmentedControl id="progress-amount" size="sm" value={used} onChange={setUsed}
         options={[0, 137_000, 372_000, 500_000].map(v => ({ label: k(v), value: String(v) }))} />
 
-      <div data-compare className="space-y-2xs rounded-[var(--radius-xl)] bg-[var(--color-surface-section)] p-sm">
+      {BENCH && <div data-compare className="space-y-2xs rounded-[var(--radius-xl)] bg-[var(--color-surface-section)] p-sm">
         <h3 className="type-label">xs beside the board's stand-ins</h3>
         {TONES.map(tone => (
           <div key={tone} data-compare-row={tone} className="grid grid-cols-[5rem_auto_auto_1fr_1fr] items-center gap-sm type-caption text-[var(--color-text-muted)]">
@@ -50,10 +51,11 @@ export function ProgressDemo({ Section }: { Section: (p: { title: string; note: 
             <ProgressBar size="xs" value={n} max={cap} tone={tone} label="Context" valueLabel={text} />
           </div>
         ))}
-      </div>
+      </div>}
 
       <div data-grid className="overflow-x-auto">
-        <table className="w-full border-separate border-spacing-x-sm border-spacing-y-xs">
+        {/* in the catalogue the table keeps its width on a phone and scrolls inside itself (the bench keeps its frames) */}
+        <table className={`w-full border-separate border-spacing-x-sm border-spacing-y-xs${BENCH ? '' : ' min-w-[48rem]'}`}>
           <thead className="type-caption text-left text-[var(--color-text-muted)]">
             <tr><th>size</th>{TONES.map(t => <th key={t} colSpan={2}>{t}</th>)}</tr>
           </thead>

@@ -5,8 +5,9 @@
 import { BottomSheet, Button, Checkbox, useIsPhone } from '@levain/ui-react';
 import { useState, type ReactNode } from 'react';
 import { T50Body, t50 } from './sheet';
+import { BENCH } from './bench';
 
-const FILTERS = ['Waiting on me', 'Blocked', 'Has images', 'Has links', 'Owned by the PM', 'Owned by eng1', 'Owned by eng2', 'Older than a day', 'Changed today', 'In a release'];
+const FILTERS = ['Waiting on me', 'Blocked', 'Has images', 'Has links', ...(BENCH ? ['Owned by the PM', 'Owned by eng1', 'Owned by eng2'] : ['Owned by me', 'Owned by others']), 'Older than a day', 'Changed today', 'In a release'];
 
 export function BottomSheetDemo({ Section }: { Section: (p: { title: string; note: string; children: ReactNode }) => ReactNode }) {
   const start = new URLSearchParams(location.search).get('open');
@@ -18,7 +19,7 @@ export function BottomSheetDemo({ Section }: { Section: (p: { title: string; not
     <Section title="A bottom sheet for any app" note={`BottomSheet: the same sheet as the dialogs above on a phone (handle, swipe down or flick to close, the ✕, a tap outside, Escape), with any head and body. It is a sheet at every width; the caller decides when to show one (useIsPhone says ${phone ? 'phone' : 'not a phone'} here).`}>
       <div className="flex flex-wrap gap-xs" data-demo="bottom-sheet-open">
         <Button size="sm" variant="outline" data-demo="bottom-sheet-filters" onClick={() => setFilters(true)}>Filters ({on.length})</Button>
-        <Button size="sm" variant="outline" data-demo="bottom-sheet-t50" onClick={() => setWords(true)}>The T50 words in a BottomSheet</Button>
+        <Button size="sm" variant="outline" data-demo="bottom-sheet-t50" onClick={() => setWords(true)}>{BENCH ? 'The T50 words in a BottomSheet' : 'A decision in a BottomSheet'}</Button>
       </div>
       <BottomSheet open={filters} onClose={() => setFilters(false)} title="Filters">
         <div className="flex flex-col gap-xs" data-demo="bottom-sheet-filter-list">

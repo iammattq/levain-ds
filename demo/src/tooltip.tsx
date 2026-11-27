@@ -7,6 +7,7 @@ import { Tooltip } from '@levain/ui-react';
 import { RotateCcw } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { BOARD_TIP_CSS, STAGE_MEANS, STAGE_WORD, STAGES, Strip, Tip, stageWord, tipRows, type StageOf } from './tooltipBoard';
+import { BENCH } from './bench';
 
 const S: StageOf = { stage: 'building', step: 2, steps: 4 };
 
@@ -38,7 +39,7 @@ function LevainStrip({ s, who }: { s: StageOf; who: string }) {
 
 const Card = ({ who, children }: { who: string; children: ReactNode }) => (
   <div className="flex flex-col gap-[0.25rem] rounded-[var(--radius-lg)] bg-[var(--color-surface-card)] p-[0.75rem] shadow-[inset_0_0_0_1px_var(--color-border-subtle)]" data-demo={`tooltip-${who}`}>
-    <span className="type-caption text-[var(--color-text-faint)]">T42 · {who}</span>
+    <span className="type-caption text-[var(--color-text-faint)]">{BENCH ? <>T42 · {who}</> : '#42'}</span>
     <span className="font-medium">Tooltip</span>
     {children}
   </div>
@@ -46,12 +47,12 @@ const Card = ({ who, children }: { who: string; children: ReactNode }) => (
 
 const Restart = ({ who, children }: { who: string; children: ReactNode }) => (
   <div className="flex items-center gap-2xs" data-demo={`restart-${who}`}>
-    <span className="type-body-sm text-[var(--color-text-muted)]">PM · context 91% · {who}</span>
+    <span className="type-body-sm text-[var(--color-text-muted)]">{BENCH ? <>PM · context 91% · {who}</> : 'Context 91%'}</span>
     <span className="pm-restart">{children}</span>
   </div>
 );
 const restartButton = (who: string) => (
-  <button type="button" className="pm-restart-icon" data-short aria-label="Restart PM" aria-haspopup="dialog" data-demo-restart={who}>
+  <button type="button" className="pm-restart-icon" data-short aria-label={BENCH ? 'Restart PM' : 'Restart'} aria-haspopup="dialog" data-demo-restart={who}>
     <RotateCcw aria-hidden size={15} />
   </button>
 );
@@ -61,11 +62,11 @@ export function TooltipDemo({ Section }: { Section: (p: { title: string; note: s
   return (
     <Section title="A tooltip" note="Tooltip: a short hint for one control, after a 300 ms hover or at once on keyboard focus, placed like Popover; it closes on leave, blur, Escape or a press. Each pair: the board's (a copy) first, then levain's, with the same trigger. The strip's is a toggle: a tap or Enter shows it.">
       <style>{BOARD_TIP_CSS}</style>
-      <div className="rmb flex max-w-md flex-col gap-[10rem] bg-transparent pb-[48rem]">
-        <Card who="board"><Strip s={S} /></Card>
+      <div className={'rmb flex max-w-md flex-col bg-transparent ' + (BENCH ? 'gap-[10rem] pb-[48rem]' : 'gap-md')}>
+        {BENCH && <Card who="board"><Strip s={S} /></Card>}
         <Card who="levain"><LevainStrip s={S} who="levain" /></Card>
-        <Restart who="board"><Tip text="Restart PM">{restartButton('board')}</Tip></Restart>
-        <Restart who="levain"><Tooltip content="Restart PM" data-demo-tip="restart">{restartButton('levain')}</Tooltip></Restart>
+        {BENCH && <Restart who="board"><Tip text="Restart PM">{restartButton('board')}</Tip></Restart>}
+        <Restart who="levain"><Tooltip content={BENCH ? 'Restart PM' : 'Restart'} data-demo-tip="restart">{restartButton('levain')}</Tooltip></Restart>
         {only && <div className="fixed inset-x-[1rem] bottom-[1rem]"><Card who="flip"><LevainStrip s={S} who="flip" /></Card></div>}
       </div>
     </Section>
