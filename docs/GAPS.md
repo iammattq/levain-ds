@@ -7,6 +7,7 @@ The first consumer outside the portfolio was a web board for running a team of c
 ## Open
 
 ### Components and patterns
+- **FabMenu reopens on the last level.** After a close, the next open starts on the level that was showing (a form), not on the list; it was built that way so the draft is in view, but the board expected the list (found in Ringmaster T259, on v0.13.0). Wanted: the level back to the list on close, the drafts still kept. The board waits on levain rather than patching it.
 - **StatusCard's kind label is forced to capitals.** The face sets `uppercase tracking-wide` on the kind ("QUEUED", "ALARM"), on the card and in `StatusCardDialog`, with no way to turn it off; the Ringmaster board's type rules say no all caps. Wants the casing left to the label (or a prop). The board lives with it for now.
 - **StatusCardDialog cuts off tall dialogs.** No max-height or scrolling, so a long dialog runs off the screen.
 - **Drag overlay width misses the grip.** The overlay is sized without the grip, so the card jumps in width when picked up.
