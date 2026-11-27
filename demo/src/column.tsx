@@ -6,6 +6,7 @@ import { BOARD_COLUMN_CSS, BoardColumn, StatusIcon, type Status } from './compar
 import { Cluster, Column, Stack, StatusCard, Tag } from '@levain/ui-react';
 import { Plus, SlidersHorizontal } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { BENCH } from './bench';
 
 type Item = { id: string; title: string };
 const COLS: { title: string; glyph: Status; items: Item[]; marks?: boolean; action?: 'add' | 'settings' }[] = [
@@ -55,7 +56,7 @@ export function ColumnDemo({ Section }: { Section: (p: { title: string; note: st
           ))}
         </div>
       </>}
-      {only !== 'levain' && <>
+      {BENCH && only !== 'levain' && <>
         <p className="type-caption pt-md text-[var(--color-text-muted)]">The board's own column (a copy, for comparison)</p>
         <div data-compare="board" data-demo="columns" className={'rmb rm-glyphs ' + grid} style={cols}>
           {COLS.map(c => (

@@ -6,6 +6,7 @@
 import { Button, SortableGroup, SortableList, StatusCard, StatusCardDialog, type SortableMove } from '@levain/ui-react';
 import { Clock, User } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
+import { BENCH } from './bench';
 
 type Decision = { id: string; title: string; q: string; options: string[]; rec: string; age: string };
 const DECISIONS: Decision[] = [
@@ -76,7 +77,7 @@ export function DecideDemo({ Section }: { Section: (p: { title: string; note: st
                 );
               }} />,
             )}
-            {column('Board stand-in, wired by hand',
+            {BENCH && column('Board stand-in, wired by hand',
               <SortableList id="board" label="board" items={cols.board} getKey={k => k} renderItem={k => <BoardStandIn d={of(k)} onOpen={() => setPicked(`${of(k).id} opened (the stand-in has no dialog)`)} onPick={pick} />} />,
             )}
           </div>

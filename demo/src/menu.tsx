@@ -5,6 +5,7 @@ import { Menu } from '@levain/ui-react';
 import { ChevronDown } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { BOARD_SWITCHER_CSS, othersOf, OthersGlyph, onPick, RowMarks, StatusIcon, Switcher, type Project } from './menuBoard';
+import { BENCH } from './bench';
 
 const PROJECTS: Project[] = [
   { name: 'levain', root: '', working: true },
@@ -88,8 +89,8 @@ export function MenuDemo({ Section }: { Section: (p: { title: string; note: stri
   return (
     <Section title="A menu" note="Menu: a list of choices that opens from a button, on Popover (role=menu), the chosen one checked. ArrowDown on the button opens it; arrows wrap; Home/End; Enter or Space picks; Escape, Tab or a press outside closes. Above: the board's project switcher (a copy); below: levain's Menu with the same button and rows.">
       <style>{BOARD_SWITCHER_CSS + END_CSS}</style>
-      <div className="rmb flex max-w-md flex-col gap-[14rem] bg-transparent pb-[14rem]">
-        <Bar who="board"><BoardSwitcher /></Bar>
+      <div className={'rmb flex max-w-md flex-col bg-transparent ' + (BENCH ? 'gap-[14rem] pb-[14rem]' : 'gap-md')}>
+        {BENCH && <Bar who="board"><BoardSwitcher /></Bar>}
         <Bar who="levain"><LevainSwitcher /></Bar>
       </div>
     </Section>

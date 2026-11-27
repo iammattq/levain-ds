@@ -5,6 +5,7 @@ import {
   LevainProvider, SimpleAnimatedName, Slider, StatusCard, SurfaceCard, type DataTableProps,
 } from '@levain/ui-react';
 import { useState, type ReactNode } from 'react';
+import { BENCH } from './bench';
 
 type Row = { id: string; title: string; state: string };
 const ROWS: Row[] = [
@@ -65,9 +66,9 @@ export function ColoursDemo({ Section }: { Section: (p: { title: string; note: s
         <Piece name="surface-card">
           <SurfaceCard selectable shadowStyle="none"><p className="type-body p-sm">Hover me: a 1px ring</p></SurfaceCard>
         </Piece>
-        <Piece name="content-navigation" className="md:col-span-2">
+        {BENCH && <Piece name="content-navigation" className="md:col-span-2">
           <ContentNavigation previous={{ title: 'Dialog height', slug: 't25' }} next={{ title: 'Missing colours', slug: 't27' }} basePath="#" backLinkText="Back to tasks" delayMs={0} />
-        </Piece>
+        </Piece>}
         <Piece name="admin-error">
           <AdminPageTemplate title="Admin" error="Could not load the tasks.">{null}</AdminPageTemplate>
         </Piece>

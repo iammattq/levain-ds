@@ -5,6 +5,7 @@ import { CardStack, StatusCardDialog, morphId } from '@levain/ui-react';
 import { Layers } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { CardStack as BoardCardStack } from './compare/BoardCardStack';
+import { BENCH } from './bench';
 
 type Who = 'levain-row' | 'board-row' | 'levain-pile' | 'board-pile';
 type Work = { key: string; kind: string; title: string; line: string };
@@ -57,11 +58,11 @@ export function CardStackDemo({ Section }: { Section: (p: { title: string; note:
       </div>
       <div className="space-y-md" data-demo="stack-rows">
         <div data-demo="stack-row-levain" className="space-y-3xs"><Label>levain · row</Label><CardStack variant="row" cardWidth={232} {...props('levain-row')} /></div>
-        <div data-demo="stack-row-board" className="space-y-3xs"><Label>board's copy · row</Label><BoardCardStack variant="row" cardWidth={232} {...props('board-row')} /></div>
+        {BENCH && <div data-demo="stack-row-board" className="space-y-3xs"><Label>board's copy · row</Label><BoardCardStack variant="row" cardWidth={232} {...props('board-row')} /></div>}
       </div>
       <div className="grid gap-md sm:grid-cols-2" data-demo="stack-piles">
         <div data-demo="stack-pile-levain" className="max-w-[360px] space-y-3xs"><Label>levain · pile</Label><CardStack variant="pile" {...props('levain-pile')} /></div>
-        <div data-demo="stack-pile-board" className="max-w-[360px] space-y-3xs"><Label>board's copy · pile</Label><BoardCardStack variant="pile" {...props('board-pile')} /></div>
+        {BENCH && <div data-demo="stack-pile-board" className="max-w-[360px] space-y-3xs"><Label>board's copy · pile</Label><BoardCardStack variant="pile" {...props('board-pile')} /></div>}
       </div>
       <StatusCardDialog id={id(last.who, lastW.key)} number={lastW.key} title={lastW.title} open={!!open} onClose={() => setOpen(null)}>
         <p className="type-body-sm text-[var(--color-text-muted)]">{lastW.line}</p>

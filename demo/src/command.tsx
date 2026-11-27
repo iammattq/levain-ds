@@ -5,6 +5,7 @@
 import { Button, CommandBlock, CommandBlockCopyAll } from '@levain/ui-react';
 import { Copy } from 'lucide-react';
 import { Fragment, type ReactNode } from 'react';
+import { BENCH } from './bench';
 
 /** The board's run-item commands and button row, as items.tsx writes them (Media and the Comment box left out). */
 function BoardCommands({ commands }: { commands: string[] }) {
@@ -56,14 +57,14 @@ const card = (children: ReactNode) => (
 export function CommandDemo({ Section }: { Section: (p: { title: string; note: string; children: ReactNode }) => ReactNode }) {
   return (
     <Section title="CommandBlock beside the board's run-item commands" note="Left: a copy of the board's markup (items.tsx). Right: levain's CommandBlock, with CommandBlockCopyAll in the same button row. Press a Copy: levain's icon turns to a check for a moment.">
-      <div className="grid grid-cols-1 gap-x-md gap-y-sm sm:grid-cols-[8rem_minmax(0,1fr)_minmax(0,1fr)]" data-demo="command">
+      <div className={'grid grid-cols-1 gap-x-md gap-y-sm ' + (BENCH ? 'sm:grid-cols-[8rem_minmax(0,1fr)_minmax(0,1fr)]' : 'sm:grid-cols-[8rem_minmax(0,1fr)]')} data-demo="command">
         <span className="hidden sm:block" />
-        <span className="type-label text-[var(--color-text-muted)]">Board</span>
+        {BENCH && <span className="type-label text-[var(--color-text-muted)]">Board</span>}
         <span className="type-label text-[var(--color-text-muted)]">levain CommandBlock</span>
         {CASES.map(c => (
           <div key={c.name} className="contents">
             <span className="type-caption text-[var(--color-text-muted)]">{c.name}</span>
-            <div data-side="board">{card(<BoardCommands commands={c.commands} />)}</div>
+            {BENCH && <div data-side="board">{card(<BoardCommands commands={c.commands} />)}</div>}
             <div data-side="levain">{card(<LevainCommands commands={c.commands} />)}</div>
           </div>
         ))}

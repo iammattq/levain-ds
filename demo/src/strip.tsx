@@ -8,6 +8,7 @@
 import { BoardColumnStrip } from './compare/BoardColumnStrip';
 import { ColumnStrip, CountBadge, SortableGroup, SortableList, StatusCard, useColumnStrip, type SortableMove } from '@levain/ui-react';
 import { useState, type ReactNode } from 'react';
+import { BENCH } from './bench';
 
 type Item = { id: string; title: string };
 type Key = 'ideas' | 'queued' | 'progress' | 'review';
@@ -86,7 +87,7 @@ export function StripDemo({ Section }: { Section: (p: { title: string; note: str
       </div>
       <p className="type-caption text-[var(--color-text-muted)]" data-demo="strip-at">In view: {NAMES[at as Key]}</p>
       </>}
-      {only !== 'levain' && <>
+      {BENCH && only !== 'levain' && <>
       <p className="type-caption pt-md text-[var(--color-text-muted)]">The board's own strip (a copy, for comparison)</p>
       <div data-compare="board" className="-mx-md sm:mx-0 sm:max-w-[390px] sm:rounded-[var(--radius-xl)] sm:border sm:border-[var(--color-border-subtle)]">
         <BoardCopy />

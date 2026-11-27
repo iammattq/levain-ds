@@ -32,7 +32,7 @@ try {
   for (const mode of ['light', 'dark']) {
     const page = await browser.newPage({ viewport: { width: 1280, height: 900 }, deviceScaleFactor: 2 });
     page.on('pageerror', e => errors.push(e.message));
-    await page.goto(base + '?theme=7&stackCard=' + (process.env.STACK_CARD ?? '1') + '&mode=' + mode, { waitUntil: 'networkidle' });
+    await page.goto(base + '?bench=1&theme=7&stackCard=' + (process.env.STACK_CARD ?? '1') + '&mode=' + mode, { waitUntil: 'networkidle' });
     await pause(800);
     const card = page.locator('[data-demo="stack-card"]');
     await card.scrollIntoViewIfNeeded();

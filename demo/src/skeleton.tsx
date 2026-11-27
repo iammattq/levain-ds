@@ -4,6 +4,7 @@
 import { Skeleton, SkeletonGroup } from '@levain/ui-react';
 import type { ReactNode } from 'react';
 import { LoadingSkeleton } from './skeletonExplorer';
+import { BENCH } from './bench';
 
 /** The explorer's LoadingSkeleton (clusters: 4 groups) with levain's shapes. */
 function LevainLoadingSkeleton() {
@@ -34,7 +35,7 @@ export function SkeletonDemo({ Section }: { Section: (p: { title: string; note: 
   return (
     <Section title="A skeleton" note="Skeleton: placeholder shapes while a list loads, on the section surface, pulsing softly (still under Reduce Motion). The portfolio photo explorer's (a copy) first, then levain's in the same layout.">
       <div className="space-y-xl">
-        <Side who="explorer"><LoadingSkeleton viewMode="clusters" /></Side>
+        {BENCH && <Side who="explorer"><LoadingSkeleton viewMode="clusters" /></Side>}
         <Side who="levain"><LevainLoadingSkeleton /></Side>
       </div>
     </Section>

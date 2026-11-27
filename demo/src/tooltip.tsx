@@ -7,6 +7,7 @@ import { Tooltip } from '@levain/ui-react';
 import { RotateCcw } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { BOARD_TIP_CSS, STAGE_MEANS, STAGE_WORD, STAGES, Strip, Tip, stageWord, tipRows, type StageOf } from './tooltipBoard';
+import { BENCH } from './bench';
 
 const S: StageOf = { stage: 'building', step: 2, steps: 4 };
 
@@ -61,10 +62,10 @@ export function TooltipDemo({ Section }: { Section: (p: { title: string; note: s
   return (
     <Section title="A tooltip" note="Tooltip: a short hint for one control, after a 300 ms hover or at once on keyboard focus, placed like Popover; it closes on leave, blur, Escape or a press. Each pair: the board's (a copy) first, then levain's, with the same trigger. The strip's is a toggle: a tap or Enter shows it.">
       <style>{BOARD_TIP_CSS}</style>
-      <div className="rmb flex max-w-md flex-col gap-[10rem] bg-transparent pb-[48rem]">
-        <Card who="board"><Strip s={S} /></Card>
+      <div className={'rmb flex max-w-md flex-col bg-transparent ' + (BENCH ? 'gap-[10rem] pb-[48rem]' : 'gap-md')}>
+        {BENCH && <Card who="board"><Strip s={S} /></Card>}
         <Card who="levain"><LevainStrip s={S} who="levain" /></Card>
-        <Restart who="board"><Tip text="Restart PM">{restartButton('board')}</Tip></Restart>
+        {BENCH && <Restart who="board"><Tip text="Restart PM">{restartButton('board')}</Tip></Restart>}
         <Restart who="levain"><Tooltip content="Restart PM" data-demo-tip="restart">{restartButton('levain')}</Tooltip></Restart>
         {only && <div className="fixed inset-x-[1rem] bottom-[1rem]"><Card who="flip"><LevainStrip s={S} who="flip" /></Card></div>}
       </div>

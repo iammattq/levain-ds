@@ -87,7 +87,7 @@ try {
     const ctx = await browser.newContext({ viewport: { width: 1000, height: 760 }, deviceScaleFactor: 1, recordVideo: { dir: `${out}/video-${name}`, size: { width: 1000, height: 760 } } });
     const page = await ctx.newPage();
     page.on('pageerror', e => errors.push(e.message));
-    await page.goto(`${base}?theme=${theme}&mode=${mode}&stackCard=${kind === 'card' ? 1 : 0}`, { waitUntil: 'networkidle' });
+    await page.goto(`${base}?bench=1&theme=${theme}&mode=${mode}&stackCard=${kind === 'card' ? 1 : 0}`, { waitUntil: 'networkidle' });
     // the sync square: black, flipped black/white by every click or key, in the same frame the app sees it; strip()
     // finds the flips in the video, one per action, so every strip's 0 ms is its click
     await page.evaluate(() => {
