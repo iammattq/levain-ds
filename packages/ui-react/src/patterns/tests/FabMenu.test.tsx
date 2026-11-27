@@ -302,3 +302,124 @@ describe('FabMenu: the list and its levels', () => {
     expect(note.value).toBe('Half a thought');
   });
 });
+
+const key = async (k: string, opts: KeyboardEventInit = {}) => {
+  await act(async () => { fireEvent.keyDown(document.activeElement ?? document.body, { key: k, ...opts }); });
+};
+const pointerDown = async (el: Element) => {
+  await act(async () => { el.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true, cancelable: true })); });
+};
+
+describe('FabMenu: closing routes, focus, controlled', () => {
+  it('Escape steps back from a level to the list, then closes; focus lands on the row, then the button', async () => {
+    render(<FabMenu items={items} />);
+    trigger().focus();
+    await press(trigger());
+    await press(row('Notifications'));
+    await key('Escape');
+    expect(fab().dataset.open).toBe('true');
+    expect(fab().dataset.level).toBe('list');
+    expect(row('Notifications')).toHaveFocus();
+    await key('Escape');
+    expect(fab().dataset.open).toBe('false');
+    expect(trigger()).toHaveFocus();
+  });
+
+  it('an Escape a widget inside claimed keeps it open', async () => {
+    const claimed: FabMenuItem[] = [{ label: 'Edit', content: <input aria-label="Name" onKeyDown={e => { if (e.key === 'Escape') e.preventDefault(); }} /> }];
+    render(<FabMenu items={claimed} />);
+    await press(trigger());
+    await press(row('Edit'));
+    expect(screen.getByRole('textbox', { name: 'Name' })).toHaveFocus();
+    await key('Escape');
+    expect(fab().dataset.open).toBe('true');
+    expect(fab().dataset.level).toBe('Edit');
+  });
+
+  it('a press outside closes it; a press inside, or in another dialog or popup, does not', async () => {
+    render(<><button type="button">Elsewhere</button><div data-popover=""><button type="button">In a popover</button></div><FabMenu items={items} /></>);
+    await press(trigger());
+    await pointerDown(row('Draft'));
+    expect(fab().dataset.open).toBe('true');
+    await pointerDown(screen.getByRole('button', { name: 'In a popover' }));
+    expect(fab().dataset.open).toBe('true');
+    await pointerDown(screen.getByRole('button', { name: 'Elsewhere' }));
+    expect(fab().dataset.open).toBe('false');
+  });
+
+  it('the button closes it (now a cross)', async () => {
+    render(<FabMenu items={items} />);
+    await press(trigger());
+    await press(trigger());
+    expect(fab().dataset.open).toBe('false');
+    expect(trigger()).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  it("focus moves in on open (the first row), into a level (its contents' first control, else the back arrow), and back to the button on close", async () => {
+    render(<FabMenu items={items} />);
+    trigger().focus();
+    await press(trigger());
+    expect(row('Notifications')).toHaveFocus();
+    await press(row('settings'));
+    expect(screen.getByRole('button', { name: 'Reset' })).toHaveFocus();
+    await press(backOf('settings'));
+    expect(row('settings')).toHaveFocus();
+    await press(row('Notifications'));
+    expect(backOf('Notifications')).toHaveFocus();
+    await press(trigger());
+    expect(trigger()).toHaveFocus();
+    // reopened on a level, focus goes into that level
+    await press(trigger());
+    expect(backOf('Notifications')).toHaveFocus();
+  });
+
+  it('Tab wraps inside the panel: the hidden list and levels are skipped, the cross is in the loop', async () => {
+    render(<FabMenu items={items} />);
+    trigger().focus();
+    await press(trigger());
+    await press(row('settings'));
+    // Shift+Tab from the first (the back arrow; the list's rows are inert) wraps to the last, the cross
+    backOf('settings').focus();
+    await key('Tab', { shiftKey: true });
+    expect(trigger()).toHaveFocus();
+    // Tab from the last (the cross) wraps to the first, the back arrow of the level on screen
+    trigger().focus();
+    await key('Tab');
+    expect(backOf('settings')).toHaveFocus();
+  });
+
+  it('uncontrolled: defaultOpen opens it at first; onOpenChange hears each change', async () => {
+    const onOpenChange = jest.fn();
+    render(<FabMenu items={items} defaultOpen onOpenChange={onOpenChange} />);
+    expect(fab().dataset.open).toBe('true');
+    await press(trigger());
+    expect(fab().dataset.open).toBe('false');
+    expect(onOpenChange).toHaveBeenLastCalledWith(false);
+  });
+
+  it("controlled: open is the app's; the routes ask through onOpenChange, and the app's own close closes it", async () => {
+    const asked: boolean[] = [];
+    function App() {
+      const [open, setOpen] = useState(false);
+      return (
+        <>
+          <button type="button" onClick={() => setOpen(false)}>App close</button>
+          <FabMenu items={items} open={open} onOpenChange={o => { asked.push(o); setOpen(o); }} />
+        </>
+      );
+    }
+    render(<App />);
+    await press(trigger());
+    expect(fab().dataset.open).toBe('true');
+    await press(screen.getByRole('button', { name: 'App close' }));
+    expect(fab().dataset.open).toBe('false');
+    expect(asked).toEqual([true]);
+    // held closed: the button only asks
+    const { unmount } = render(<FabMenu items={items} open={false} onOpenChange={o => asked.push(o)} />);
+    const held = document.querySelectorAll<HTMLButtonElement>('[data-fab-trigger]')[1]!;
+    await press(held);
+    expect(asked).toEqual([true, true]);
+    expect(held).toHaveAttribute('aria-expanded', 'false');
+    unmount();
+  });
+});
