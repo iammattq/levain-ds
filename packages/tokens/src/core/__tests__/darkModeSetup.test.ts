@@ -263,6 +263,29 @@ describe('dark mode set-up through applyTheme', () => {
       expect(base).not.toContain('!important');
     });
 
+    // T72: the runtime CSS carries the scheme scopes too, for base themes and user themes.
+    it('the injected base themes carry the scheme scopes', async () => {
+      const env = installFakeDom(false);
+      const { manager } = await loadModules();
+
+      await manager.applyTheme(0);
+
+      const base = env.styles.get('levain-themes')?.textContent ?? '';
+      expect(base).toContain('[data-levain-theme="test"] [data-levain-scheme="light"]');
+      expect(base).toContain('[data-levain-theme="test"] [data-levain-scheme="dark"]');
+    });
+
+    it('a user theme carries the scheme scopes', async () => {
+      const env = installFakeDom(false);
+      const { manager } = await loadModules();
+
+      await manager.applyUserTheme({ name: 'Mine', primary: '#5860fe', accent: '#d946ef' }, 'mine');
+
+      const css = env.styles.get('theme-styles')?.textContent ?? '';
+      expect(css).toContain('[data-levain-theme="user-mine"] [data-levain-scheme="light"]');
+      expect(css).toContain('[data-levain-theme="user-mine"] [data-levain-scheme="dark"]');
+    });
+
     it('the base themes are injected once, however often applyTheme runs', async () => {
       const env = installFakeDom(false);
       const { manager } = await loadModules();
