@@ -6,7 +6,8 @@
 // capture holds it), open on the list, on a level (Write to me, a draft typed), mid-close (held at 100 ms), closed again
 // (the close settled: data-closing gone, the contents hidden but mounted, the draft still there), and open under Reduce
 // Motion (no morph: full size two frames after the press). Then the fill frame by frame, opening (0-460 ms) and closing
-// (0-260 ms): every frame's background is the button's cream or the panel's surface, never a blend.
+// (0-260 ms): every frame's background is the button's fill (Cobalt's link blue in light, the site's cream in dark) or
+// the panel's surface, never a blend.
 // Every press is a real pointer press (page.mouse), so no focus ring shows on the first row: a ring reads as a selected
 // row. One frame opens it by keyboard instead (1280, Sage light: open-keyboard), to show the ring where it belongs.
 // Then the live site's menu (mattquinn.ca, .os-menu) at the same widths, closed / mid-open 80 / open / mid-close 100.
@@ -35,7 +36,8 @@ const fakeInsets = (page, insets) => page.evaluate(insets => {
 }, insets);
 const COMBOS = [['sage', 0, 'light'], ['sage', 0, 'dark'], ['cobalt', 7, 'light'], ['cobalt', 7, 'dark']];
 const PANEL = '[data-fab-menu]', TRIGGER = '[data-fab-trigger]';
-const CREAM = [245, 233, 207];
+/** The demo's closed fill per mode: Cobalt's link blue #2451C9 in light, the site's cream #f5e9cf in dark. */
+const FILL = { light: [36, 81, 201], dark: [245, 233, 207] };
 
 /** Holds the transitions inside `scope` at `ms` (paused), two frames after whatever started them (t259's capture). */
 const hold = (p, scope, ms) => p.evaluate(async ([scope, ms]) => {
@@ -121,7 +123,7 @@ for (const [width, opts, insets] of WIDTHS) {
         `<figure style="margin:0"><figcaption style="height:34px">${f.t}ms · ${f.w}px<br>contents ${Math.round(f.op * 100)}%</figcaption><img src="data:image/png;base64,${f.png}" style="width:${cw}px;height:${ch}px;display:block"></figure>`).join('')}</body>`);
       await sp.screenshot({ path: `${out}/${file}.png`, fullPage: true });
       await sp.close();
-      return frames.map(({ png, ...f }) => ({ ...f, is: far(rgb(f.bg), CREAM) <= 2 ? 'cream' : far(rgb(f.bg), surface) <= 2 ? 'surface' : 'BLEND' }));
+      return frames.map(({ png, ...f }) => ({ ...f, is: far(rgb(f.bg), FILL[mode]) <= 2 ? 'fill' : far(rgb(f.bg), surface) <= 2 ? 'surface' : 'BLEND' }));
     };
     await press(page, TRIGGER); await hold(page, PANEL, 0);
     const opening = await steps([0, 60, 120, 170, 190, 220, 260, 300, 380, 460], `fill-open-${key}`);
@@ -141,8 +143,9 @@ for (const [width, opts, insets] of WIDTHS) {
       closeSettled: !numbers[`${key}-closed-again`].closing && numbers[`${key}-closed-again`].contents.visibility === 'hidden' && !after.closing,
       draftSurvives: numbers[`${key}-closed-again`].draft === 'Half a thought',
       fillNeverBlends: [...opening, ...closing].every(f => f.is !== 'BLEND'),
-      fillStepsAt180: opening.filter(f => f.t < 180).every(f => f.is === 'cream') && opening.filter(f => f.t > 180).every(f => f.is === 'surface'),
-      fillStepsAt160: closing.filter(f => f.t < 160).every(f => f.is === 'surface') && closing.filter(f => f.t > 160).every(f => f.is === 'cream'),
+      fillStepsAt180: opening.filter(f => f.t < 180).every(f => f.is === 'fill') && opening.filter(f => f.t > 180).every(f => f.is === 'surface'),
+      fillStepsAt160: closing.filter(f => f.t < 160).every(f => f.is === 'surface') && closing.filter(f => f.t > 160).every(f => f.is === 'fill'),
+      closedFillPerMode: far(rgb(numbers[`${key}-closed`].bg), FILL[mode]) <= 2 && far(rgb(numbers[`${key}-closed-again`].bg), FILL[mode]) <= 2,
     };
     if (key === '1280-sage-light') {
       // the one keyboard-opened frame: the ring on the first row, where focus went

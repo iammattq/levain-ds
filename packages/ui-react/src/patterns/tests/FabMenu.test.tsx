@@ -107,6 +107,37 @@ describe('FabMenu: the button and the morph', () => {
     expect(trigger()).toHaveAttribute('aria-expanded', 'true');
   });
 
+  it('a { light, dark } fill: each mode its own colour, switched by the .dark class in CSS (no JS mode check)', () => {
+    render(<FabMenu items={items} fill={{ light: '#2451C9', dark: '#f5e9cf' }} fillText={{ light: '#ffffff', dark: '#2b2418' }} />);
+    const v = (name: string) => fab().style.getPropertyValue(name);
+    expect([v('--fab-fill-light'), v('--fab-fill-dark')]).toEqual(['#2451C9', '#f5e9cf']);
+    expect([v('--fab-text-light'), v('--fab-text-dark')]).toEqual(['#ffffff', '#2b2418']);
+    expect(v('--fab-bg')).toBe('var(--fab-fill)');
+    expect(v('--fab-fg')).toBe('var(--fab-text)');
+    const cls = fab().className.split(' ');
+    for (const c of ['[--fab-fill:var(--fab-fill-light)]', '[--fab-text:var(--fab-text-light)]', 'dark:[--fab-fill:var(--fab-fill-dark)]', 'dark:[--fab-text:var(--fab-text-dark)]']) expect(cls).toContain(c);
+  });
+
+  it('a string fill is unchanged: one colour straight on the panel, no per-mode properties', () => {
+    render(<FabMenu items={items} fill="#f5e9cf" fillText="#2b2418" />);
+    const v = (name: string) => fab().style.getPropertyValue(name);
+    expect([v('--fab-bg'), v('--fab-fg')]).toEqual(['#f5e9cf', '#2b2418']);
+    expect(['--fab-fill-light', '--fab-fill-dark', '--fab-text-light', '--fab-text-dark'].map(v)).toEqual(['', '', '', '']);
+  });
+
+  it('with a pair, the fill still switches to the panel in one step both ways (0s at 180ms open, 160ms close)', async () => {
+    render(<FabMenu items={items} fill={{ light: '#2451C9', dark: '#f5e9cf' }} fillText={{ light: '#ffffff', dark: '#2b2418' }} />);
+    await press(trigger());
+    const s = fab().style;
+    expect(s.getPropertyValue('--fab-bg')).toBe('var(--color-surface-elevated)');
+    expect(s.transition).toContain('background-color 0s 180ms, color 0s 180ms');
+    expect(s.transition).not.toMatch(/(background-color|color) [1-9]/);
+    await closeWith(fake());
+    expect(s.getPropertyValue('--fab-bg')).toBe('var(--fab-fill)');
+    expect(s.transition).toContain('background-color 0s 160ms, color 0s 160ms');
+    expect(s.transition).not.toMatch(/(background-color|color) [1-9]/);
+  });
+
   it('closes on spring-out over 260ms, the fill back in one step at 160ms; contents fade out and sink 6px', async () => {
     render(<FabMenu items={items} />);
     await press(trigger());

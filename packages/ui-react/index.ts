@@ -276,7 +276,7 @@ export { useIsPhone } from './src/patterns/Sheet';
 export { Drawer } from './src/patterns/Drawer';
 export type { DrawerProps } from './src/patterns/Drawer';
 export { FabMenu } from './src/patterns/FabMenu';
-export type { FabMenuProps, FabMenuItem } from './src/patterns/FabMenu';
+export type { FabMenuProps, FabMenuItem, FabMenuColor } from './src/patterns/FabMenu';
 export { CardStack } from './src/patterns/CardStack';
 export type { CardStackProps } from './src/patterns/CardStack';
 export { ColumnStrip, useColumnStrip, snapIndex, edgeSide, COLUMN_STRIP_EDGE, COLUMN_STRIP_DWELL, COLUMN_STRIP_REPEAT } from './src/patterns/ColumnStrip';

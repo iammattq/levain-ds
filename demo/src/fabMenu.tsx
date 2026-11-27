@@ -34,7 +34,7 @@ export function FabMenuDemo({ Section }: { Section: (p: { title: string; note: s
   return (
     <Section title="A floating menu" note="FabMenu: a round button in the corner that grows into a menu (460 ms on the spring; closing 260 ms), its fill switching in one step. Choose a row and it slides to that level; the back arrow, or Escape, comes back. Escape, a press outside or the cross closes it; a draft in Write to me survives. Under Reduce Motion it only fades.">
       <div data-demo="fab-stage" className="relative h-[30rem] overflow-hidden rounded-[var(--radius-xl)] bg-[var(--color-surface-section)]">
-        <FabMenu items={ITEMS} label="Site menu" fill="#f5e9cf" fillText="#2b2418" defaultOpen={startOpen} className="absolute" />
+        <FabMenu items={ITEMS} label="Site menu" fill={{ light: '#2451C9', dark: '#f5e9cf' }} fillText={{ light: '#ffffff', dark: '#2b2418' }} defaultOpen={startOpen} className="absolute" />
       </div>
     </Section>
   );

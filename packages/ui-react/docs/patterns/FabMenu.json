@@ -5,13 +5,13 @@
   "usage": [
     "`items`: each a label, an optional icon and its `content` (the level). Every level stays mounted, open or closed, so a half-typed draft survives going back and forth and closing",
     "Controlled or not, as Popover and Menu: `open` and `onOpenChange`, or `defaultOpen` (useControlled). The routes that close it (Escape, a press outside, the cross) ask through onOpenChange; the app can close it by setting open to false",
-    "`fill` and `fillText`: the closed button's colours (the site's cream, #f5e9cf, with dark text). They are props the app passes, not tokens. Open, it is always the elevated surface",
+    "`fill` and `fillText`: the closed button's colours. They are props the app passes, not tokens. A string is one colour for both modes; a `{ light, dark }` pair gives each mode its own, switched by the `.dark` class in CSS (custom properties, no JS mode check, so no flash). The demo passes Cobalt's link blue #2451C9 with white (about 6.6:1) in light and the site's cream #f5e9cf with #2b2418 in dark. Open, it is always the elevated surface",
     "Fixed to the screen's bottom-right corner, clear of the safe-area insets. `className=\"absolute\"` puts it in a positioned box instead (the demo's stage)",
     "It reopens on the level it was left on",
     "Escape steps back from a level to the list first, then closes, as the site's menu does"
   ],
   "examples": [
-    "import { FabMenu } from '@levain/ui-react';\nimport { Briefcase, PenLine } from 'lucide-react';\n\n<FabMenu\n  label=\"Site menu\"\n  fill=\"#f5e9cf\"\n  fillText=\"#2b2418\"\n  items={[\n    { id: 'work', label: 'Work', icon: Briefcase, content: <WorkLinks /> },\n    { id: 'write', label: 'Write to me', icon: PenLine, content: <TextArea label=\"Message\" /> },\n  ]}\n/>"
+    "import { FabMenu } from '@levain/ui-react';\nimport { Briefcase, PenLine } from 'lucide-react';\n\n<FabMenu\n  label=\"Site menu\"\n  fill={{ light: '#2451C9', dark: '#f5e9cf' }}\n  fillText={{ light: '#ffffff', dark: '#2b2418' }}\n  items={[\n    { id: 'work', label: 'Work', icon: Briefcase, content: <WorkLinks /> },\n    { id: 'write', label: 'Write to me', icon: PenLine, content: <TextArea label=\"Message\" /> },\n  ]}\n/>"
   ],
   "design": [
     "Closed: a 56 px circle (radius 28 px, half its size, never radius-full: a 9999 px radius squares the corners mid-morph) 1.5rem from the bottom-right corner plus the safe-area insets, elevation-3 and a 1 px border-default ring, kept in every state, so the open panel has an edge on a light page (as Popover's)",
@@ -51,18 +51,18 @@
     },
     {
       "name": "fill",
-      "type": "string",
+      "type": "string | { light: string; dark: string }",
       "optional": true,
       "defaultValue": "'var(--color-surface-elevated)'",
-      "description": "The closed button's background, any CSS colour",
+      "description": "The closed button's background, any CSS colour, or a { light, dark } pair switched by the .dark class",
       "configurable": true
     },
     {
       "name": "fillText",
-      "type": "string",
+      "type": "string | { light: string; dark: string }",
       "optional": true,
       "defaultValue": "'var(--color-text-default)'",
-      "description": "The closed button's mark colour on fill",
+      "description": "The closed button's mark colour on fill, or a { light, dark } pair as for fill",
       "configurable": true
     },
     {

@@ -44,14 +44,20 @@ export interface FabMenuItem {
   content: ReactNode;
 }
 
+/** A colour, or one per mode: `dark` applies under levain's `.dark` class. */
+export type FabMenuColor = string | { light: string; dark: string };
+
 export interface FabMenuProps {
   items: FabMenuItem[];
   /** The panel's accessible name; the button reads "Open <label>" and "Close <label>". */
   label?: string;
-  /** The closed button's background (e.g. the site's cream, #f5e9cf). Defaults to the panel's surface. */
-  fill?: string;
-  /** The closed button's glyph colour on `fill`. Defaults to the default text colour. */
-  fillText?: string;
+  /**
+   * The closed button's background (e.g. the site's cream, #f5e9cf). Defaults to the panel's surface.
+   * A `{ light, dark }` pair gives each mode its own, switched by the `.dark` class in CSS (no flash).
+   */
+  fill?: FabMenuColor;
+  /** The closed button's glyph colour on `fill`; a pair as for `fill`. Defaults to the default text colour. */
+  fillText?: FabMenuColor;
   /** The button's mark: three lines that fold into a cross, or a plus that turns into one. */
   glyph?: 'menu' | 'plus';
   /** The open panel's width (any CSS length); capped to the screen less 1.5rem a side. */
@@ -237,9 +243,16 @@ export const FabMenu = forwardRef<HTMLDivElement, FabMenuProps>(function FabMenu
   const cap = 'calc(100dvh - 6rem - var(--safe-top, 0px) - var(--safe-bottom, 0px))';
 
   // the shape and fill go through custom properties the classes below read, one set per state
+  // a { light, dark } pair goes through per-mode properties the dark: classes below pick from
+  const modeVars = (c: FabMenuColor, name: string) =>
+    typeof c === 'string' ? { value: c, vars: {} } : { value: `var(--fab-${name})`, vars: { [`--fab-${name}-light`]: c.light, [`--fab-${name}-dark`]: c.dark } };
+  const bg = modeVars(fill, 'fill');
+  const fg = modeVars(fillText, 'text');
   const panelStyle = {
     '--fab-menu-width': openWidth,
     '--fab-menu-cap': cap,
+    ...bg.vars,
+    ...fg.vars,
     ...(open
       ? {
           '--fab-w': 'var(--fab-menu-width)',
@@ -248,7 +261,7 @@ export const FabMenu = forwardRef<HTMLDivElement, FabMenuProps>(function FabMenu
           '--fab-bg': 'var(--color-surface-elevated)',
           '--fab-fg': 'var(--color-text-default)',
         }
-      : { '--fab-w': `${FAB_SIZE}px`, '--fab-h': `${FAB_SIZE}px`, '--fab-r': `${FAB_SIZE / 2}px`, '--fab-bg': fill, '--fab-fg': fillText }),
+      : { '--fab-w': `${FAB_SIZE}px`, '--fab-h': `${FAB_SIZE}px`, '--fab-r': `${FAB_SIZE / 2}px`, '--fab-bg': bg.value, '--fab-fg': fg.value }),
     transition: tr.panel,
   } as CSSProperties;
 
@@ -267,6 +280,7 @@ export const FabMenu = forwardRef<HTMLDivElement, FabMenuProps>(function FabMenu
         'fixed right-[calc(1.5rem+var(--safe-right))] bottom-[calc(1.5rem+var(--safe-bottom))] z-40 overflow-hidden',
         '[width:var(--fab-w)] [height:var(--fab-h)] [border-radius:var(--fab-r)] [background-color:var(--fab-bg)] [color:var(--fab-fg)]',
         'shadow-[var(--elevation-3),inset_0_0_0_1px_var(--color-border-default)]',
+        '[--fab-fill:var(--fab-fill-light)] [--fab-text:var(--fab-text-light)] dark:[--fab-fill:var(--fab-fill-dark)] dark:[--fab-text:var(--fab-text-dark)]',
         className,
       )}
     >
