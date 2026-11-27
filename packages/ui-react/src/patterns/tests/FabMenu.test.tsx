@@ -267,6 +267,20 @@ describe('FabMenu: the button and the morph', () => {
     expect(contents().style.visibility).toBe('visible');
   });
 
+  it('reopened mid-close on a level: it stays on that level (the reset waits for the settle)', async () => {
+    render(<FabMenu items={items} />);
+    await press(trigger());
+    await press(row('Draft'));
+    const a = fake();
+    await closeWith(a);
+    expect(fab().dataset.level).toBe('Draft');
+    await press(trigger());
+    await act(async () => { a.end(); jest.advanceTimersByTime(1000); });
+    await flush();
+    expect(fab().dataset.open).toBe('true');
+    expect(fab().dataset.level).toBe('Draft');
+  });
+
   it('the glyph: three lines fold into a cross; glyph="plus" turns a plus 45deg', async () => {
     const { unmount } = render(<FabMenu items={items} />);
     const lines = () => [...document.querySelectorAll<HTMLElement>('[data-glyph="menu"] > span')];
@@ -350,7 +364,7 @@ describe('FabMenu: the list and its levels', () => {
     expect(levelOf('Draft').style.visibility).toBe('visible');
   });
 
-  it('a half-typed draft survives going back and forth, and closing and reopening (every level stays mounted)', async () => {
+  it('a half-typed draft survives going back and forth, and closing and reopening on the list (every level stays mounted)', async () => {
     render(<FabMenu items={items} />);
     await press(trigger());
     await press(row('Draft'));
@@ -369,7 +383,9 @@ describe('FabMenu: the list and its levels', () => {
     // closed, the level left on screen is hidden too (a visible child would show through the hidden contents)
     expect(levelOf('Draft').style.visibility).toBe('hidden');
     await press(trigger());
-    // it reopens where it was left, the draft in place
+    // it reopens on the list; choosing the item again shows the draft in place
+    expect(fab().dataset.level).toBe('list');
+    await press(row('Draft'));
     expect(fab().dataset.level).toBe('Draft');
     expect(note.value).toBe('Half a thought');
   });
@@ -462,9 +478,10 @@ describe('FabMenu: closing routes, focus, controlled', () => {
     expect(backOf('Notifications')).toHaveFocus();
     await press(trigger());
     expect(trigger()).toHaveFocus();
-    // reopened on a level, focus goes into that level
+    // reopened, it starts on the list: focus goes to the first row, not the level left
     await press(trigger());
-    expect(backOf('Notifications')).toHaveFocus();
+    expect(fab().dataset.level).toBe('list');
+    expect(row('Notifications')).toHaveFocus();
   });
 
   it('Tab wraps inside the panel: the hidden list and levels are skipped, the cross is in the loop', async () => {
