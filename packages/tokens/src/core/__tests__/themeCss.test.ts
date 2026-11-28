@@ -7,7 +7,7 @@ import * as path from 'path';
 import themes from '../../../generated/themesV2.json';
 import { baseThemesV2 } from '../../data/baseThemesV2';
 import type { ThemesV2Collection } from '../themeTypes';
-import { THEMES_MARKER, themeCSS, themeSelector, themeSlug, themesCSS, themeVars } from '../themeCss';
+import { SCHEME_ATTR, THEMES_MARKER, schemeSelector, themeCSS, themeSelector, themeSlug, themesCSS, themeVars } from '../themeCss';
 
 const collection = themes as unknown as ThemesV2Collection;
 const cssFile = path.join(__dirname, '../../../generated/themes.css');
@@ -22,8 +22,12 @@ describe('generated/themes.css', () => {
   it('has every base theme, light and dark', () => {
     for (const t of baseThemesV2) {
       const slug = themeSlug(t.name);
-      expect(css).toContain(`html[data-levain-theme="${slug}"], [data-levain-theme="${slug}"] {`);
-      expect(css).toContain(`.dark[data-levain-theme="${slug}"], .dark [data-levain-theme="${slug}"] {`);
+      expect(css).toContain(
+        `html[data-levain-theme="${slug}"], [data-levain-theme="${slug}"], [data-levain-theme="${slug}"] [data-levain-scheme="light"] {`
+      );
+      expect(css).toContain(
+        `.dark[data-levain-theme="${slug}"], .dark [data-levain-theme="${slug}"], [data-levain-theme="${slug}"] [data-levain-scheme="dark"] {`
+      );
     }
   });
 
@@ -82,5 +86,51 @@ describe('themeCss helpers', () => {
   it('a mode has one var per name (no duplicates)', () => {
     const names = themeVars(collection['0'].light).map(([k]) => k);
     expect(new Set(names).size).toBe(names.length);
+  });
+});
+
+// T72: data-levain-scheme gives an element below the theme's one mode's colours inside the other.
+describe('scheme scope', () => {
+  const css = fs.readFileSync(cssFile, 'utf8');
+  const blockOf = (selector: string) => {
+    const at = css.indexOf(selector);
+    if (at < 0) return '';
+    const start = css.lastIndexOf('\n', at) + 1; // the whole selector list
+    return css.slice(start, css.indexOf('}', at));
+  };
+
+  it('the attribute and its selector', () => {
+    expect(SCHEME_ATTR).toBe('data-levain-scheme');
+    expect(schemeSelector('cobalt-mono', 'light')).toBe('[data-levain-theme="cobalt-mono"] [data-levain-scheme="light"]');
+    expect(schemeSelector('a"b', 'dark')).toBe('[data-levain-theme="a\\"b"] [data-levain-scheme="dark"]');
+  });
+
+  it('every base theme carries both scopes, each with that mode\'s colours', () => {
+    for (const t of Object.values(collection)) {
+      const slug = themeSlug(t.name);
+      for (const mode of ['light', 'dark'] as const) {
+        const block = blockOf(schemeSelector(slug, mode));
+        expect(block).not.toBe('');
+        // the same block as the mode's own: every var, the mode's values
+        expect(block).toContain(themeSelector(slug, mode));
+        for (const [k, v] of themeVars(t[mode])) expect(block).toContain(`  ${k}: ${v};`);
+      }
+    }
+  });
+
+  it('a runtime theme (a user theme\'s attribute) gets the scopes too', () => {
+    const out = themeCSS('user-abc', collection['0']);
+    expect(out).toContain(`${schemeSelector('user-abc', 'light')} {`);
+    expect(out).toContain(`${schemeSelector('user-abc', 'dark')} {`);
+  });
+
+  // The scoped element matches the rule itself, so it beats what it would inherit from .dark on <html>; it also
+  // outranks shared.css's .dark glow (0,1,0) set on any element carrying .dark.
+  it('matches the scoped element itself and outranks .dark', () => {
+    const sel = schemeSelector('sage', 'light');
+    const attrs = (sel.match(/\[[^\]]+\]/g) ?? []).length;
+    expect(attrs).toBe(2); // (0,2,0) > .dark (0,1,0)
+    // the last compound is the scope attribute: the rule lands on the scoped element, not an ancestor
+    expect(sel.trim().split(/\s+/).pop()).toBe('[data-levain-scheme="light"]');
   });
 });

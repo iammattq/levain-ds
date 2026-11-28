@@ -267,6 +267,20 @@ describe('FabMenu: the button and the morph', () => {
     expect(contents().style.visibility).toBe('visible');
   });
 
+  it('reopened mid-close on a level: it stays on that level (the reset waits for the settle)', async () => {
+    render(<FabMenu items={items} />);
+    await press(trigger());
+    await press(row('Draft'));
+    const a = fake();
+    await closeWith(a);
+    expect(fab().dataset.level).toBe('Draft');
+    await press(trigger());
+    await act(async () => { a.end(); jest.advanceTimersByTime(1000); });
+    await flush();
+    expect(fab().dataset.open).toBe('true');
+    expect(fab().dataset.level).toBe('Draft');
+  });
+
   it('the glyph: three lines fold into a cross; glyph="plus" turns a plus 45deg', async () => {
     const { unmount } = render(<FabMenu items={items} />);
     const lines = () => [...document.querySelectorAll<HTMLElement>('[data-glyph="menu"] > span')];
@@ -292,6 +306,114 @@ describe('FabMenu: the button and the morph', () => {
   });
 });
 
+
+// T72: the open panel in the button's colour, its contents in one mode's colours (data-levain-scheme).
+describe('FabMenu: open fill and open scheme', () => {
+  const v = (name: string) => fab().style.getPropertyValue(name);
+  const scoped = () => [...document.querySelectorAll('[data-levain-scheme]')];
+
+  it('left out: the open panel is the elevated surface and default text, as before; no scope anywhere', async () => {
+    render(<FabMenu items={items} fill={{ light: '#dce5f6', dark: '#f5e9cf' }} fillText={{ light: '#000', dark: '#2b2418' }} />);
+    await press(trigger());
+    expect([v('--fab-bg'), v('--fab-fg')]).toEqual(['var(--color-surface-elevated)', 'var(--color-text-default)']);
+    expect(scoped()).toEqual([]);
+    expect(contents().style.getPropertyValue('--fab-content-fg')).toBe('');
+    expect(contents().className).not.toContain('--fab-content-fg');
+    expect(fab().className).not.toContain('--fab-open-');
+  });
+
+  it('openFill: the open panel keeps the fill and its text (a pair keeps its per-mode switch); the switch is still one step', async () => {
+    render(<FabMenu items={items} fill={{ light: '#dce5f6', dark: '#f5e9cf' }} fillText={{ light: '#000', dark: '#2b2418' }} openFill />);
+    await press(trigger());
+    expect([v('--fab-bg'), v('--fab-fg')]).toEqual(['var(--fab-fill)', 'var(--fab-text)']);
+    expect(fab().style.transition).toContain('background-color 0s 180ms, color 0s 180ms');
+    await closeWith(fake());
+    expect([v('--fab-bg'), v('--fab-fg')]).toEqual(['var(--fab-fill)', 'var(--fab-text)']);
+  });
+
+  it('openFill with no fillText: the open text is the default text colour', async () => {
+    render(<FabMenu items={items} fill="#f5e9cf" openFill />);
+    await press(trigger());
+    expect([v('--fab-bg'), v('--fab-fg')]).toEqual(['#f5e9cf', 'var(--color-text-default)']);
+  });
+
+  it('openFill as its own colour or pair, with openFillText', async () => {
+    render(<FabMenu items={items} fill="#123456" openFill={{ light: '#eeeeee', dark: '#f5e9cf' }} openFillText="#111111" />);
+    expect(v('--fab-bg')).toBe('#123456');
+    await press(trigger());
+    expect([v('--fab-bg'), v('--fab-fg')]).toEqual(['var(--fab-open-fill)', '#111111']);
+    expect([v('--fab-open-fill-light'), v('--fab-open-fill-dark')]).toEqual(['#eeeeee', '#f5e9cf']);
+    const cls = fab().className.split(' ');
+    for (const c of ['[--fab-open-fill:var(--fab-open-fill-light)]', 'dark:[--fab-open-fill:var(--fab-open-fill-dark)]']) expect(cls).toContain(c);
+    expect(fab().className).not.toContain('--fab-open-text:');
+  });
+
+  it('openScheme: the contents carry the scope always, the button only while open; the panel never', async () => {
+    render(<FabMenu items={items} fill={{ light: '#dce5f6', dark: '#f5e9cf' }} openFill openScheme="light" />);
+    expect(contents()).toHaveAttribute('data-levain-scheme', 'light');
+    expect(trigger()).not.toHaveAttribute('data-levain-scheme');
+    expect(fab()).not.toHaveAttribute('data-levain-scheme');
+    // the text resolves inside the scope
+    expect(contents().style.getPropertyValue('--fab-content-fg')).toBe('var(--color-text-default)');
+    expect(contents().className.split(' ')).toContain('[color:var(--fab-content-fg)]');
+    await press(trigger());
+    expect(trigger()).toHaveAttribute('data-levain-scheme', 'light');
+    expect(fab()).not.toHaveAttribute('data-levain-scheme');
+    await closeWith(fake());
+    expect(trigger()).not.toHaveAttribute('data-levain-scheme');
+  });
+
+  it('on an openFill, focus rings take the panel\'s text colour: the contents always, the button while open (Q-t72ring)', async () => {
+    render(<FabMenu items={items} fill={{ light: '#dce5f6', dark: '#f5e9cf' }} fillText={{ light: '#000', dark: '#2b2418' }} openFill openScheme="light" />);
+    const ring = (el: HTMLElement) => el.style.getPropertyValue('--color-border-focus');
+    expect(ring(contents())).toBe('var(--fab-text)');
+    expect(ring(trigger())).toBe('');
+    await press(trigger());
+    expect(ring(trigger())).toBe('var(--fab-text)');
+    expect(ring(fab())).toBe('');
+  });
+
+  it('no openFill: focus rings keep the theme\'s focus colour', async () => {
+    render(<FabMenu items={items} openScheme="light" />);
+    await press(trigger());
+    expect(contents().style.getPropertyValue('--color-border-focus')).toBe('');
+    expect(trigger().style.getPropertyValue('--color-border-focus')).toBe('');
+  });
+
+  it('openScheme with openFillText: the contents take that text', () => {
+    render(<FabMenu items={items} openFill="#f5e9cf" openFillText="#2b2418" openScheme="light" />);
+    expect(contents().style.getPropertyValue('--fab-content-fg')).toBe('#2b2418');
+  });
+
+  // the real generated CSS in jsdom's cascade: a dark page (.dark on <html>), the scope gets the theme's light colours
+  it('in a dark page, the scope takes the theme\'s light colours over the .dark ones', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const fs = require('fs') as typeof import('fs');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const path = require('path') as typeof import('path');
+    const css = fs.readFileSync(path.join(__dirname, '../../../../tokens/generated/themes.css'), 'utf8');
+    const style = document.createElement('style');
+    style.textContent = css;
+    document.head.appendChild(style);
+    const root = document.documentElement;
+    root.classList.add('dark');
+    root.setAttribute('data-levain-theme', 'sage');
+    try {
+      render(<FabMenu items={items} openFill="#f5e9cf" openScheme="light" />);
+      const canvas = (el: Element) => getComputedStyle(el).getPropertyValue('--color-text-default').trim();
+      const lightBlock = css.slice(css.indexOf('html[data-levain-theme="sage"]'));
+      const darkBlock = css.slice(css.indexOf('.dark[data-levain-theme="sage"]'));
+      const valueIn = (block: string) => block.match(/--color-text-default: ([^;]+);/)![1];
+      expect(valueIn(lightBlock)).not.toBe(valueIn(darkBlock));
+      expect(canvas(root)).toBe(valueIn(darkBlock));
+      expect(canvas(contents())).toBe(valueIn(lightBlock));
+    } finally {
+      root.classList.remove('dark');
+      root.removeAttribute('data-levain-theme');
+      style.remove();
+    }
+  });
+});
 
 const row = (name: string) => document.querySelector<HTMLElement>(`[data-fab-item="${name}"]`)!;
 const levelOf = (id: string) => document.querySelector<HTMLElement>(`[data-fab-level="${id}"]`)!;
@@ -350,7 +472,7 @@ describe('FabMenu: the list and its levels', () => {
     expect(levelOf('Draft').style.visibility).toBe('visible');
   });
 
-  it('a half-typed draft survives going back and forth, and closing and reopening (every level stays mounted)', async () => {
+  it('a half-typed draft survives going back and forth, and closing and reopening on the list (every level stays mounted)', async () => {
     render(<FabMenu items={items} />);
     await press(trigger());
     await press(row('Draft'));
@@ -369,7 +491,9 @@ describe('FabMenu: the list and its levels', () => {
     // closed, the level left on screen is hidden too (a visible child would show through the hidden contents)
     expect(levelOf('Draft').style.visibility).toBe('hidden');
     await press(trigger());
-    // it reopens where it was left, the draft in place
+    // it reopens on the list; choosing the item again shows the draft in place
+    expect(fab().dataset.level).toBe('list');
+    await press(row('Draft'));
     expect(fab().dataset.level).toBe('Draft');
     expect(note.value).toBe('Half a thought');
   });
@@ -462,9 +586,10 @@ describe('FabMenu: closing routes, focus, controlled', () => {
     expect(backOf('Notifications')).toHaveFocus();
     await press(trigger());
     expect(trigger()).toHaveFocus();
-    // reopened on a level, focus goes into that level
+    // reopened, it starts on the list: focus goes to the first row, not the level left
     await press(trigger());
-    expect(backOf('Notifications')).toHaveFocus();
+    expect(fab().dataset.level).toBe('list');
+    expect(row('Notifications')).toHaveFocus();
   });
 
   it('Tab wraps inside the panel: the hidden list and levels are skipped, the cross is in the loop', async () => {

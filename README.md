@@ -142,6 +142,8 @@ themeManager.applyTheme(0); // puts <html> in the saved mode and in theme 0
 
 `initTheme()` does the same for the class alone; calling it too, before or after, changes nothing, so the order doesn't matter.
 
+**One area in the other mode.** `data-levain-scheme="light"` on any element below the theme's gives it, and what's inside, the theme's light-mode colours in a dark page (`"dark"` the reverse): a light panel on a dark page, say, keeps dark text, fields and focus rings that read on it. It changes the colour variables only; the `.dark` class, and the components' `dark:` styles that follow it, stay the page's. FabMenu's `openScheme` sets it for its open panel. The scope follows the page's theme; nested theme areas (a second `data-levain-theme` inside the page's) aren't supported, since its selector matches any ancestor theme.
+
 **Colour before JavaScript.** Link the themes' CSS once (`@import '@levain/tokens/generated/themes.css';`, 61 KB, 7 KB gzipped), put the theme on `<html>` in the markup (`<html data-levain-theme="sage">`, each theme's name in lowercase with hyphens: `cobalt-mono`), and set `.dark` in an inline script before paint from the saved mode (`localStorage['levain-theme-mode']`: `dark`, `light` or `system`, dark when unset), as mattquinn.ca does. The first frame then has its colours; `applyTheme` later finds the CSS already there and doesn't add it again.
 
 **Motion.** In CSS, time transitions with the tokens: `transition: width var(--duration-morph) var(--ease-spring)`. In framer-motion, pass a recipe through `motion()`, which reads reduced motion for you:
